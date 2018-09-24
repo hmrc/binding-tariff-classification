@@ -29,6 +29,11 @@ import scala.concurrent.Future
 @Singleton()
 class MicroserviceHelloWorld extends BaseController {
 
+  /*
+      Test Slack integration
+
+   */
+
   def hello(): Action[AnyContent] = Action.async { implicit request =>
 
     lazy val execution = request.headers.toMap.get(LOCATION) match {
