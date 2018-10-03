@@ -14,24 +14,10 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.bindingtariffclassification.model
+package uk.gov.hmrc.bindingtariffclassification
 
-import java.time.ZonedDateTime
+package object model {
 
-case class Decision
-(
-  bindingCommodityCode: String,
-  effectiveStartDate: ZonedDateTime,
-  effectiveEndDate: ZonedDateTime,
-  goodsDescription: String,
-  keywords: Seq[String],
-  methodSearch: String,
-  methodCommercialDenomination: String,
-  appeal: Appeal
-)
+  type IsInsert = Boolean
 
-case class Appeal
-(
-  reviewStatus: String,
-  reviewResult: String
-)
+}

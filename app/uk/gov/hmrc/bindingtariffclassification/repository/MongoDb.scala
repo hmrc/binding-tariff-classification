@@ -14,24 +14,20 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.bindingtariffclassification.model
+package uk.gov.hmrc.bindingtariffclassification.repository
 
-import java.time.ZonedDateTime
+import javax.inject.Singleton
 
-case class Decision
-(
-  bindingCommodityCode: String,
-  effectiveStartDate: ZonedDateTime,
-  effectiveEndDate: ZonedDateTime,
-  goodsDescription: String,
-  keywords: Seq[String],
-  methodSearch: String,
-  methodCommercialDenomination: String,
-  appeal: Appeal
-)
+import com.google.inject.ImplementedBy
+import play.modules.reactivemongo.MongoDbConnection
+import reactivemongo.api.DB
 
-case class Appeal
-(
-  reviewStatus: String,
-  reviewResult: String
-)
+@ImplementedBy(classOf[MongoDb])
+trait MongoDbProvider {
+  def mongo: () => DB
+}
+
+@Singleton
+class MongoDb extends MongoDbConnection with MongoDbProvider {
+  override val mongo: () => DB = db
+}
