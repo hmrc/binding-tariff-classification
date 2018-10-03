@@ -16,18 +16,19 @@
 
 package uk.gov.hmrc.bindingtariffclassification.controllers
 
-import javax.inject.Singleton
+import javax.inject.{Inject, Singleton}
+import play.api.mvc._
 import play.api.{Logger, Play}
+import uk.gov.hmrc.bindingtariffclassification.service.CaseService
+import uk.gov.hmrc.bindingtariffclassification.utils.RandomNumberGenerator
 import uk.gov.hmrc.play.bootstrap.controller.BaseController
 import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext._
-import play.api.mvc._
-import uk.gov.hmrc.bindingtariffclassification.utils.RandomNumberGenerator
 
-import scala.concurrent.duration._
 import scala.concurrent.Future
+import scala.concurrent.duration._
 
 @Singleton()
-class MicroserviceHelloWorld extends BaseController {
+class MicroserviceHelloWorld @Inject()(service: CaseService) extends BaseController {
 
   def hello(): Action[AnyContent] = Action.async { implicit request =>
 
@@ -40,6 +41,7 @@ class MicroserviceHelloWorld extends BaseController {
 
 
     Logger.debug(s"Execution delay: $delay")
+    service.upsert()
     akka.pattern.after(duration = delay, using = Play.current.actorSystem.scheduler)(execution)
   }
 

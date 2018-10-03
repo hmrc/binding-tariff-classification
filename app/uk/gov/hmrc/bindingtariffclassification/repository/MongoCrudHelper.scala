@@ -16,9 +16,7 @@
 
 package uk.gov.hmrc.bindingtariffclassification.repository
 
-import play.api.Logger
-import play.api.libs.json.{JsObject, OFormat, OWrites, Reads}
-import reactivemongo.api.Cursor
+import play.api.libs.json.{JsObject, OFormat, OWrites}
 import reactivemongo.play.json.ImplicitBSONHandlers._
 import reactivemongo.play.json.collection.JSONCollection
 import uk.gov.hmrc.bindingtariffclassification.model.IsInsert
