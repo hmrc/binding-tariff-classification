@@ -16,26 +16,22 @@
 
 package uk.gov.hmrc.bindingtariffclassification.service
 
-import java.util.UUID
-
 import javax.inject._
-import uk.gov.hmrc.bindingtariffclassification.model.{Case, CaseStatus, CaseType, IsInsert}
+import uk.gov.hmrc.bindingtariffclassification.model.{Case, IsInsert}
 import uk.gov.hmrc.bindingtariffclassification.repository.CaseRepository
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-@Singleton
-class UUIDCreator {
-  def uuid(): UUID = UUID.randomUUID()
-}
 
 @Singleton
-class CaseService @Inject()(repository: CaseRepository, uuidCreator: UUIDCreator) {
+class CaseService @Inject()(repository: CaseRepository) {
 
-  def upsert(): Future[(Unit, IsInsert)] = {
-    val fields = Case(uuidCreator.uuid().toString, CaseType.BTI, CaseStatus.DRAFT, "assignee", "queue", None, None, None, null)
-    repository.save(fields).map(response => ((), true))
+  def upsert(c: Case): Future[(Unit, IsInsert)] = {
+
+    repository.save(c).map {
+      case (_: Case, inserted: IsInsert) => ((), inserted)
+    }
   }
 
 }

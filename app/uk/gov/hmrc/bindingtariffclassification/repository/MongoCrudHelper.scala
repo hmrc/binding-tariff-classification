@@ -28,6 +28,7 @@ trait MongoCrudHelper[T] extends MongoIndexCreator with MongoErrorHandler {
 
   protected val mongoCollection: JSONCollection
 
+  // TODO: check if we need it
   def saveAtomic(selector: JsObject, updateOperations: JsObject)(implicit w: OFormat[T]): Future[(T, IsInsert)] = {
     val updateOp = mongoCollection.updateModifier(
       update = updateOperations,
@@ -52,6 +53,7 @@ trait MongoCrudHelper[T] extends MongoIndexCreator with MongoErrorHandler {
     throw new RuntimeException(s"$error lastError: ${findAndModifyResult.lastError}")
   }
 
+  // TODO: save vs. saveAtomic
   def save(entity: T, selector: JsObject)(implicit w: OWrites[T]): Future[(T, IsInsert)] = {
     mongoCollection.update(selector, entity, upsert = true).map {
       updateWriteResult => (entity, handleSaveError(updateWriteResult, s"Could not save entity: $entity"))

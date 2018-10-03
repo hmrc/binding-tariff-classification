@@ -24,13 +24,13 @@ case class Case
   reference: String,
   `type`: CaseType,
   status: CaseStatus,
-  assigneeId: String,
-  queueId: String,
-  financialAccountantsAddress: Option[String],
-  transactionType: Option[String],
-  customsNomenclature: Option[String],
-  //application: Application,
-  decision: Decision
+  assigneeId: Option[String] = None,
+  queueId: Option[String] = None,
+  financialAccountantsAddress: Option[String] = None,
+  transactionType: Option[String] = None,
+  customsNomenclature: Option[String] = None,
+  //application: Application, // TODO: fix JSON & Mongo formatters
+  decision: Option[Decision] = None
 )
 
 object CaseType extends Enumeration {
