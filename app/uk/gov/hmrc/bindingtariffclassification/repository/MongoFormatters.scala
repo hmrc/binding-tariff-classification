@@ -35,6 +35,7 @@ trait MongoFormatters {
 
   implicit val formatAppeal = Json.format[Appeal]
 
+  implicit val applicationReads: Reads[Application] = derived.reads
   implicit val applicationWrites: OWrites[Application] =
     derived.flat.owrites((__ \ "applicationType").write[String])
 
