@@ -17,12 +17,11 @@
 package uk.gov.hmrc.bindingtariffclassification.model
 
 import uk.gov.hmrc.bindingtariffclassification.model.CaseStatus.CaseStatus
-import uk.gov.hmrc.bindingtariffclassification.model.CaseType.CaseType
+
 
 case class Case
 (
   reference: String,
-  `type`: CaseType,
   status: CaseStatus,
   assigneeId: Option[String] = None,
   queueId: Option[String] = None,
@@ -32,11 +31,6 @@ case class Case
   //application: Application, // TODO: fix JSON & Mongo formatters
   decision: Option[Decision] = None
 )
-
-object CaseType extends Enumeration {
-  type CaseType = Value
-  val BTI, LIABILITY_ORDER, OFFLINE_BTI = Value
-}
 
 object CaseStatus extends Enumeration {
   type CaseStatus = Value

@@ -36,12 +36,12 @@ trait CaseRepository {
 @Singleton
 class CaseMongoRepository @Inject()(mongoDbProvider: MongoDbProvider)
   extends ReactiveRepository[Case, BSONObjectID]("cases", mongoDbProvider.mongo,
-    MongoFormatters.caseMongoFormat, ReactiveMongoFormats.objectIdFormats)
+    MongoFormatters.formatCase, ReactiveMongoFormats.objectIdFormats)
     with CaseRepository
     with MongoCrudHelper[Case] {
 
   override val mongoCollection: JSONCollection = collection
-  private implicit val format = MongoFormatters.caseMongoFormat
+  private implicit val format = MongoFormatters.formatCase
 
   override def indexes = Seq(
     createSingleFieldAscendingIndex("reference", Some("referenceIndex"), isUnique = true)

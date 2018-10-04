@@ -19,40 +19,39 @@ package uk.gov.hmrc.bindingtariffclassification.model
 
 import java.time.ZonedDateTime
 
+import uk.gov.hmrc.bindingtariffclassification.model.ApplicationType.{ApplicationType}
 import uk.gov.hmrc.bindingtariffclassification.model.LiabilityOrderType.LiabilityOrderType
 
-abstract class Application
-(
-  holder: EORIDetails,
-  contact: Contact
-)
+sealed trait Application
 
 case class BTIApplication
 (
-  holder: EORIDetails,
-  contact: Contact,
-  agent: EORIDetails,
-  goodsDescription: String,
-  confidentialInformation: String,
-  otherInformation: String,
-  reissuedBTIReference: String,
-  relatedBTIReference: String,
-  knownLegalProceedings: String,
-  envisagesCommodityCode: String,
-  sampleToBeProvided: Boolean,
-  sampleToBeReturned: Boolean,
-  fastTrackBTI: Boolean
-) extends Application(holder, contact)
+  applicationType: ApplicationType,
+  holder: EORIDetails
+  ////  contact: Contact
+  //  agent: EORIDetails,
+  //  goodsDescription: String,
+  //  confidentialInformation: String,
+  //  otherInformation: String,
+  //  reissuedBTIReference: String,
+  //  relatedBTIReference: String,
+  //  knownLegalProceedings: String,
+  //  envisagesCommodityCode: String,
+  //  sampleToBeProvided: Boolean,
+  //  sampleToBeReturned: Boolean,
+  //  fastTrackBTI: Boolean
+) extends Application
 
 case class LiabilityOrder
 (
-  holder: EORIDetails,
-  contact: Contact,
-  `type`: LiabilityOrderType,
-  port: String,
-  entryNumber: String,
-  endDate: ZonedDateTime
-) extends Application(holder, contact)
+  applicationType: ApplicationType,
+  //  holder: EORIDetails,
+  //  contact: Contact,
+  //  liabilityOrderType : LiabilityOrderType,
+  //  port: String,
+  entryNumber: String
+  //  endDate: ZonedDateTime
+) extends Application
 
 case class EORIDetails
 (
@@ -75,4 +74,9 @@ case class Contact
 object LiabilityOrderType extends Enumeration {
   type LiabilityOrderType = Value
   val LIVE, NON_LIVE = Value
+}
+
+object ApplicationType extends Enumeration {
+  type ApplicationType = Value
+  val BTI, LIABILITY_ORDER, OFFLINE_BTI = Value
 }

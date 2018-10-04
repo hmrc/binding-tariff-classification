@@ -16,27 +16,31 @@
 
 package uk.gov.hmrc.bindingtariffclassification.repository
 
-import java.time.ZonedDateTime
-
+import julienrf.json.derived
 import play.api.libs.json._
+import uk.gov.hmrc.bindingtariffclassification.model
 import uk.gov.hmrc.bindingtariffclassification.model._
+
 
 trait MongoFormatters {
 
-  implicit val caseStatusMongoFormat = EnumJson.enumFormat(CaseStatus)
-  implicit val caseTypeMongoFormat = EnumJson.enumFormat(CaseType)
-  implicit val liabilityOrderTypeMongoFormat = EnumJson.enumFormat(LiabilityOrderType)
+  implicit val formatCaseStatus = EnumJson.enumFormat(CaseStatus)
+  implicit val formatApplicationType = EnumJson.enumFormat(ApplicationType)
+  implicit val formatLiabilityOrderType = EnumJson.enumFormat(LiabilityOrderType)
 
-  implicit val eoriDetailsMongoFormat = Json.format[EORIDetails]
-  implicit val contactMongoFormat = Json.format[Contact]
-  implicit val liabilityOrderMongoFormat = Json.format[LiabilityOrder]
+  implicit val formatEORIDetails = Json.format[EORIDetails]
+  implicit val formatContact = Json.format[Contact]
+  implicit val formatLiabilityOrder = Json.format[LiabilityOrder]
+  implicit val formatBTIApplication = Json.format[BTIApplication]
 
+  implicit val formatAppeal = Json.format[Appeal]
 
-  implicit val appealMongoFormat = Json.format[Appeal]
-  //implicit val applicationMongoFormat = Json.format[Application]
-  implicit val decisionMongoFormat = Json.format[Decision]
-  implicit val caseMongoFormat = Json.format[Case]
+  implicit val applicationWrites: OWrites[Application] =
+    derived.flat.owrites((__ \ "applicationType").write[String])
 
+  // implicit val formatApplication = Json.format[Application]
+  implicit val formatDecision = Json.format[Decision]
+  implicit val formatCase = Json.format[Case]
 }
 
 object MongoFormatters extends MongoFormatters
@@ -64,6 +68,7 @@ object EnumJson {
   implicit def enumFormat[E <: Enumeration](enum: E): Format[E#Value] = {
     Format(enumReads(enum), enumWrites)
   }
+
 }
 
 class InvalidEnumException(className: String, input: String) extends RuntimeException(s"Enumeration expected of type: '$className', but it does not contain '$input'")
