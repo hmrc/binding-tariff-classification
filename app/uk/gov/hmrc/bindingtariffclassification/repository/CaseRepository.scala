@@ -49,7 +49,7 @@ class CaseMongoRepository @Inject()(mongoDbProvider: MongoDbProvider)
   )
 
   override def save(c: Case): Future[(Case, IsInsert)] = {
-    save(c, selectorByReference(c.reference))
+    createOrUpdate(c, selectorByReference(c.reference))
   }
 
   private def selectorByReference(reference: String): JsObject = {

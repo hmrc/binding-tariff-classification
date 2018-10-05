@@ -27,11 +27,8 @@ import scala.concurrent.Future
 class EventService @Inject()(repository: EventRepository) {
 
   // TODO: we should allow only insert for events!
-  def upsert(e: Event): Future[(IsInsert, Event)] = {
-
-    repository.save(e).map {
-      case (_: Event, inserted: IsInsert) => (inserted, e)
-    }
+  def upsert(e: Event): Future[Event] = {
+    repository.save(e)
   }
 
   def getOne(id: String): Future[Event] = {
@@ -39,5 +36,4 @@ class EventService @Inject()(repository: EventRepository) {
       case Some(x) => x
     }
   }
-
 }

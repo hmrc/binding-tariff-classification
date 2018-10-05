@@ -72,6 +72,8 @@ class MicroserviceHelloWorld @Inject()(caseService: CaseService, eventService: E
     // GET BY REF
     val readEvent1 = Await.result(eventService.getOne(e1.id), 2.seconds)
     Logger.debug(s"$readEvent1")
+
+    Await.result(eventService.upsert(e3), 2.seconds)
   }
 
   private def createCaseData(): Unit = {

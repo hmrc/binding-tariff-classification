@@ -21,10 +21,6 @@ import uk.gov.hmrc.bindingtariffclassification.model.IsInsert
 
 trait MongoErrorHandler {
 
-  def handleDeleteError(result: WriteResult, exceptionMsg: => String): Boolean = {
-    handleError(result, databaseAltered, exceptionMsg)
-  }
-
   def handleSaveError(updateWriteResult: UpdateWriteResult, exceptionMsg: => String): IsInsert = {
 
     def handleUpsertError(result: WriteResult) =

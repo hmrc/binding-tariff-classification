@@ -17,6 +17,7 @@
 package uk.gov.hmrc.bindingtariffclassification.repository
 
 import play.api.libs.json.{JsObject, OFormat, OWrites, Reads}
+import reactivemongo.api.commands.WriteResult
 import reactivemongo.play.json.ImplicitBSONHandlers._
 import reactivemongo.play.json.collection.JSONCollection
 import uk.gov.hmrc.bindingtariffclassification.model.IsInsert
@@ -54,9 +55,19 @@ trait MongoCrudHelper[T] extends MongoIndexCreator with MongoErrorHandler {
   }
 
   // TODO: save vs. saveAtomic
-  def save(entity: T, selector: JsObject)(implicit w: OWrites[T]): Future[(T, IsInsert)] = {
+  def createOrUpdate(entity: T, selector: JsObject)(implicit w: OWrites[T]): Future[(T, IsInsert)] = {
     mongoCollection.update(selector, entity, upsert = true).map {
-      updateWriteResult => (entity, handleSaveError(updateWriteResult, s"Could not save entity: $entity"))
+      updateWriteResult => (entity, handleSaveError(updateWriteResult, s"Could not create or update the entity: $entity"))
+    }
+  }
+
+  def create(entity: T)(implicit w: OWrites[T]): Future[T] = {
+    mongoCollection.insert(entity).map {
+      createResult =>
+        if (!createResult.ok)
+          throw new RuntimeException(createResult.writeErrors.toString())
+        else
+          entity
     }
   }
 
