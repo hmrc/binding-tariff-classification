@@ -28,7 +28,7 @@ case class Event
   details: Details,
   userId: String,
   caseReference: String,
-  timestamp: ZonedDateTime
+  timestamp: ZonedDateTime = ZonedDateTime.now()
 )
 
 sealed trait Details {
@@ -40,7 +40,7 @@ case class Attachment
 (
   url: String,
   mimeType: String,
-  override val comment: Option[String]
+  override val comment: Option[String] = None
 
 ) extends Details {
   override val `type` = EventType.ATTACHMENT
@@ -50,7 +50,7 @@ case class CaseStatusChange
 (
   from: CaseStatus,
   to: CaseStatus,
-  override val comment: Option[String]
+  override val comment: Option[String] = None
 
 ) extends Details {
   override val `type` = EventType.CASE_STATUS_CHANGE

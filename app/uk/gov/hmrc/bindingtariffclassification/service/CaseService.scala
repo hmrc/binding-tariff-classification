@@ -35,15 +35,9 @@ class CaseService @Inject()(repository: CaseRepository) {
   }
 
   def getOne(reference: String): Future[Case] = {
-
     repository.getOne(reference).map {
-//      case None => 1 //throw RuntimeException
       case Some(x) => x
-    }recover recovery
-
+    }
   }
 
-  def recovery: PartialFunction[Throwable, Case] = {
-    case e => throw e
-  }
 }

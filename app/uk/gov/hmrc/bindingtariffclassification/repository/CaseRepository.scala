@@ -31,7 +31,6 @@ import scala.concurrent.Future
 trait CaseRepository {
 
   def save(c: Case): Future[(Case, IsInsert)]
-
   def getOne(reference: String): Future[Option[Case]]
 }
 
@@ -50,16 +49,14 @@ class CaseMongoRepository @Inject()(mongoDbProvider: MongoDbProvider)
   )
 
   override def save(c: Case): Future[(Case, IsInsert)] = {
-    save(c, selector(c.reference))
+    save(c, selectorByReference(c.reference))
   }
 
-  private def selector(reference: String): JsObject = {
-    Json.obj(
-      "reference" -> reference
-    )
+  private def selectorByReference(reference: String): JsObject = {
+    Json.obj("reference" -> reference)
   }
 
   override def getOne(reference: String): Future[Option[Case]] = {
-    getOne(selector(reference))
+    getOne(selectorByReference(reference))
   }
 }

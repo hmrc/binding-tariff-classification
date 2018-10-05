@@ -21,7 +21,7 @@ import com.google.inject.ImplementedBy
 import play.api.libs.json._
 import reactivemongo.bson.BSONObjectID
 import reactivemongo.play.json.collection.JSONCollection
-import uk.gov.hmrc.bindingtariffclassification.model.{Event, IsInsert}
+import uk.gov.hmrc.bindingtariffclassification.model.{Case, Event, IsInsert}
 import uk.gov.hmrc.bindingtariffclassification.repository.MongoFormatters._
 import uk.gov.hmrc.mongo.ReactiveRepository
 import uk.gov.hmrc.mongo.json.ReactiveMongoFormats
@@ -32,6 +32,7 @@ import scala.concurrent.Future
 trait EventRepository {
 
   def save(e: Event): Future[(Event, IsInsert)]
+  def getOne(id: String): Future[Option[Event]]
 }
 
 @Singleton
@@ -55,6 +56,11 @@ class EventMongoRepository @Inject()(mongoDbProvider: MongoDbProvider)
 
   private def selectorById(id: String): JsObject = {
     Json.obj("id" -> id)
+  }
+
+
+  override def getOne(id: String): Future[Option[Event]] = {
+    getOne(selectorById(id))
   }
 
 }

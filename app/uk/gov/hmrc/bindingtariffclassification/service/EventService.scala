@@ -33,4 +33,11 @@ class EventService @Inject()(repository: EventRepository) {
       case (_: Event, inserted: IsInsert) => (inserted, e)
     }
   }
+
+  def getOne(id: String): Future[Event] = {
+    repository.getOne(id).map {
+      case Some(x) => x
+    }
+  }
+
 }

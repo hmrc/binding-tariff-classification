@@ -16,8 +16,6 @@
 
 package uk.gov.hmrc.bindingtariffclassification.controllers
 
-import java.time.ZonedDateTime
-
 import javax.inject.{Inject, Singleton}
 import play.api.mvc._
 import play.api.{Logger, Play}
@@ -47,19 +45,33 @@ class MicroserviceHelloWorld @Inject()(caseService: CaseService, eventService: E
     Logger.debug(s"Execution delay: $delay")
 
     createCaseData()
-
     createEventData()
 
     akka.pattern.after(duration = delay, using = Play.current.actorSystem.scheduler)(execution)
   }
 
 
-  private def createEventData() = {
-    val e1 = Event("event_1", Note(Some("hey Note")), "user_1", "REF_1234", ZonedDateTime.now())
-    eventService.upsert(e1)
+  private def createEventData(): Unit = {
+
+    // INSERT
+    val e1 = Event("event_1", Note(Some("hey Note")), "user_1", "REF_1234")
+    val r1 = Await.result(eventService.upsert(e1), 2.seconds)
+    Logger.debug(s"Event JSON document inserted? $r1")
+
+    val e2 = Event("event_2", CaseStatusChange(from=CaseStatus.DRAFT, to=CaseStatus.NEW), "user_1", "REF_1234")
+    val r2 = Await.result(eventService.upsert(e2), 2.seconds)
+    Logger.debug(s"Event JSON document inserted? $r2")
+
+    val e3 = Event(RandomNumberGenerator.next().toString, Attachment(url="URL", mimeType = "media/jpg"), "user_2", "REF_1234")
+    val r3 = Await.result(eventService.upsert(e3), 2.seconds)
+    Logger.debug(s"Event JSON document inserted? $r3")
+
+    // GET BY REF
+    val readEvent1 = Await.result(eventService.getOne("event_1"), 2.seconds)
+    Logger.debug(s"$readEvent1")
   }
 
-  private def createCaseData() = {
+  private def createCaseData(): Unit = {
 
     // INSERT
     val c1 = Case(
@@ -75,7 +87,7 @@ class MicroserviceHelloWorld @Inject()(caseService: CaseService, eventService: E
       "REF_Offline",
       CaseStatus.DRAFT,
       assigneeId = Some(RandomNumberGenerator.next().toString),
-      application = BTIOfflineApplication(holder = EORIDetails("field2", "field2", "field2", "field2", "field2", "field2", "field2"), goodsDescription = "Hello ccc Man!")
+      application = BTIOfflineApplication(holder = EORIDetails("f2", "f2", "f2", "f2", "f2", "f2", "f2"), goodsDescription = "Hello Boy!")
     )
     val r2 = Await.result(caseService.upsert(c2), 2.seconds)
     Logger.debug(s"Case JSON document inserted? $r2")
@@ -105,8 +117,6 @@ class MicroserviceHelloWorld @Inject()(caseService: CaseService, eventService: E
 
     val r2u = Await.result(caseService.upsert(c2.copy(application = c1.application)), 2.seconds)
     Logger.debug(s"Case JSON document inserted? $r2u")
-
-
   }
 
 }
