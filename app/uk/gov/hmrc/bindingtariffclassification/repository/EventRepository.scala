@@ -21,7 +21,7 @@ import com.google.inject.ImplementedBy
 import play.api.libs.json._
 import reactivemongo.bson.BSONObjectID
 import reactivemongo.play.json.collection.JSONCollection
-import uk.gov.hmrc.bindingtariffclassification.model.{Case, Event, IsInsert}
+import uk.gov.hmrc.bindingtariffclassification.model.{Event, IsInsert}
 import uk.gov.hmrc.bindingtariffclassification.repository.MongoFormatters._
 import uk.gov.hmrc.mongo.ReactiveRepository
 import uk.gov.hmrc.mongo.json.ReactiveMongoFormats
@@ -47,7 +47,7 @@ class EventMongoRepository @Inject()(mongoDbProvider: MongoDbProvider)
   override def indexes = Seq(
     // TODO: we need to add all indexes needed by the search functionalities
     createSingleFieldAscendingIndex("id", Some("idIndex"), isUnique = true),
-    createSingleFieldAscendingIndex("caseReference", Some("caseReferenceIndex"), isUnique = true)
+    createSingleFieldAscendingIndex("caseReference", Some("caseReferenceIndex"), isUnique = false)
   )
 
   override def save(e: Event): Future[(Event, IsInsert)] = {

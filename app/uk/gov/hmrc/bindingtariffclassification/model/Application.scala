@@ -16,28 +16,31 @@
 
 package uk.gov.hmrc.bindingtariffclassification.model
 
+import java.time.ZonedDateTime
+
 import uk.gov.hmrc.bindingtariffclassification.model.ApplicationType.ApplicationType
+import uk.gov.hmrc.bindingtariffclassification.model.LiabilityOrderType.LiabilityOrderType
 
 sealed trait Application {
   val applicationType: ApplicationType
 }
-// TODO : uncomment all the other fields
 
 case class BTIApplication
 (
   holder: EORIDetails,
-  ////  contact: Contact
-  //  agent: EORIDetails,
-  goodsDescription: String
-  //  confidentialInformation: String,
-  //  otherInformation: String,
-  //  reissuedBTIReference: String,
-  //  relatedBTIReference: String,
-  //  knownLegalProceedings: String,
-  //  envisagesCommodityCode: String,
-  //  sampleToBeProvided: Boolean,
-  //  sampleToBeReturned: Boolean,
-  //  fastTrackBTI: Boolean
+  contact: Contact,
+  agent: EORIDetails,
+  goodsDescription: String,
+  confidentialInformation: String,
+  otherInformation: String,
+  reissuedBTIReference: String,
+  relatedBTIReference: String,
+  knownLegalProceedings: String,
+  envisagesCommodityCode: String,
+  sampleToBeProvided: Boolean,
+  sampleToBeReturned: Boolean,
+  fastTrackBTI: Boolean
+
 ) extends Application {
   override val applicationType = ApplicationType.BTI
 }
@@ -45,30 +48,32 @@ case class BTIApplication
 case class BTIOfflineApplication
 (
   holder: EORIDetails,
-  ////  contact: Contact
-  //  agent: EORIDetails,
-  goodsDescription: String
-  //  confidentialInformation: String,
-  //  otherInformation: String,
-  //  reissuedBTIReference: String,
-  //  relatedBTIReference: String,
-  //  knownLegalProceedings: String,
-  //  envisagesCommodityCode: String,
-  //  sampleToBeProvided: Boolean,
-  //  sampleToBeReturned: Boolean,
-  //  fastTrackBTI: Boolean
+  contact: Contact,
+  agent: EORIDetails,
+  goodsDescription: String,
+  confidentialInformation: String,
+  otherInformation: String,
+  reissuedBTIReference: String,
+  relatedBTIReference: String,
+  knownLegalProceedings: String,
+  envisagesCommodityCode: String,
+  sampleToBeProvided: Boolean,
+  sampleToBeReturned: Boolean,
+  fastTrackBTI: Boolean
+
 ) extends Application {
   override val applicationType = ApplicationType.OFFLINE_BTI
 }
 
 case class LiabilityOrder
 (
-  //  holder: EORIDetails,
-  //  contact: Contact,
-  //  liabilityOrderType : LiabilityOrderType,
-  //  port: String,
-  entryNumber: String
-  //  endDate: ZonedDateTime
+  holder: EORIDetails,
+  contact: Contact,
+  liabilityOrderType: LiabilityOrderType,
+  port: String,
+  entryNumber: String,
+  endDate: ZonedDateTime
+
 ) extends Application {
   override val applicationType = ApplicationType.LIABILITY_ORDER
 }
