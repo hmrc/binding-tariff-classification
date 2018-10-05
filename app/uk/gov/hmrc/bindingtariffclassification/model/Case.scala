@@ -16,12 +16,15 @@
 
 package uk.gov.hmrc.bindingtariffclassification.model
 
+import java.time.ZonedDateTime
+
 import uk.gov.hmrc.bindingtariffclassification.model.CaseStatus.CaseStatus
 
 case class Case
 (
   reference: String,
   status: CaseStatus,
+  createDate : ZonedDateTime = ZonedDateTime.now(),
   assigneeId: Option[String] = None,
   queueId: Option[String] = None,
   financialAccountantsAddress: Option[String] = None,

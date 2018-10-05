@@ -29,7 +29,7 @@ case class BTIApplication
 (
   holder: EORIDetails,
   contact: Contact,
-  agent: EORIDetails,
+  agent: Option[EORIDetails] = None,
   goodsDescription: String,
   confidentialInformation: String,
   otherInformation: String,
@@ -37,9 +37,9 @@ case class BTIApplication
   relatedBTIReference: String,
   knownLegalProceedings: String,
   envisagesCommodityCode: String,
-  sampleToBeProvided: Boolean,
-  sampleToBeReturned: Boolean,
-  fastTrackBTI: Boolean
+  sampleToBeProvided: Boolean = false,
+  sampleToBeReturned: Boolean = false,
+  fastTrackBTI: Boolean = false
 
 ) extends Application {
   override val applicationType = ApplicationType.BTI
@@ -49,7 +49,7 @@ case class BTIOfflineApplication
 (
   holder: EORIDetails,
   contact: Contact,
-  agent: EORIDetails,
+  agent: Option[EORIDetails] = None,
   goodsDescription: String,
   confidentialInformation: String,
   otherInformation: String,
@@ -57,9 +57,9 @@ case class BTIOfflineApplication
   relatedBTIReference: String,
   knownLegalProceedings: String,
   envisagesCommodityCode: String,
-  sampleToBeProvided: Boolean,
-  sampleToBeReturned: Boolean,
-  fastTrackBTI: Boolean
+  sampleToBeProvided: Boolean = false,
+  sampleToBeReturned: Boolean = false,
+  fastTrackBTI: Boolean = false
 
 ) extends Application {
   override val applicationType = ApplicationType.OFFLINE_BTI
