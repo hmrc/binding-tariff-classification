@@ -18,8 +18,8 @@ lazy val compile = Seq(
   "uk.gov.hmrc" %% "play-reactivemongo" % "6.2.0",
   ws,
   "uk.gov.hmrc" %% "bootstrap-play-25" % "3.3.0",
-
-  "org.julienrf" %% "play-json-derived-codecs" % "3.0"
+  "org.julienrf" %% "play-json-derived-codecs" % "3.0",
+  "uk.gov.hmrc" %% "play-json-union-formatter" % "1.3.0"
 )
 
 lazy val scope: String = "test,it"

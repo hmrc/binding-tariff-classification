@@ -16,21 +16,19 @@
 
 package uk.gov.hmrc.bindingtariffclassification.model
 
+import uk.gov.hmrc.bindingtariffclassification.model.ApplicationType.ApplicationType
 
-import java.time.ZonedDateTime
-
-import uk.gov.hmrc.bindingtariffclassification.model.ApplicationType.{ApplicationType}
-import uk.gov.hmrc.bindingtariffclassification.model.LiabilityOrderType.LiabilityOrderType
-
-sealed trait Application
+sealed trait Application {
+  val applicationType: ApplicationType
+}
+// TODO : uncomment all the other fields
 
 case class BTIApplication
 (
-  applicationType: ApplicationType,
-  holder: EORIDetails
+  holder: EORIDetails,
   ////  contact: Contact
   //  agent: EORIDetails,
-  //  goodsDescription: String,
+  goodsDescription: String
   //  confidentialInformation: String,
   //  otherInformation: String,
   //  reissuedBTIReference: String,
@@ -40,18 +38,40 @@ case class BTIApplication
   //  sampleToBeProvided: Boolean,
   //  sampleToBeReturned: Boolean,
   //  fastTrackBTI: Boolean
-) extends Application
+) extends Application {
+  override val applicationType = ApplicationType.BTI
+}
+
+case class BTIOfflineApplication
+(
+  holder: EORIDetails,
+  ////  contact: Contact
+  //  agent: EORIDetails,
+  goodsDescription: String
+  //  confidentialInformation: String,
+  //  otherInformation: String,
+  //  reissuedBTIReference: String,
+  //  relatedBTIReference: String,
+  //  knownLegalProceedings: String,
+  //  envisagesCommodityCode: String,
+  //  sampleToBeProvided: Boolean,
+  //  sampleToBeReturned: Boolean,
+  //  fastTrackBTI: Boolean
+) extends Application {
+  override val applicationType = ApplicationType.OFFLINE_BTI
+}
 
 case class LiabilityOrder
 (
-  applicationType: ApplicationType,
   //  holder: EORIDetails,
   //  contact: Contact,
   //  liabilityOrderType : LiabilityOrderType,
   //  port: String,
   entryNumber: String
   //  endDate: ZonedDateTime
-) extends Application
+) extends Application {
+  override val applicationType = ApplicationType.LIABILITY_ORDER
+}
 
 case class EORIDetails
 (

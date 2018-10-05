@@ -18,7 +18,6 @@ package uk.gov.hmrc.bindingtariffclassification.model
 
 import uk.gov.hmrc.bindingtariffclassification.model.CaseStatus.CaseStatus
 
-
 case class Case
 (
   reference: String,
@@ -28,7 +27,7 @@ case class Case
   financialAccountantsAddress: Option[String] = None,
   transactionType: Option[String] = None,
   customsNomenclature: Option[String] = None,
-  //application: Application, // TODO: fix JSON & Mongo formatters
+  application: Application,
   decision: Option[Decision] = None
 )
 

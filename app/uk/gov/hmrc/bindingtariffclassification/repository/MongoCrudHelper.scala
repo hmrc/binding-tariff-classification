@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.bindingtariffclassification.repository
 
-import play.api.libs.json.{JsObject, OFormat, OWrites}
+import play.api.libs.json.{JsObject, OFormat, OWrites, Reads}
 import reactivemongo.play.json.ImplicitBSONHandlers._
 import reactivemongo.play.json.collection.JSONCollection
 import uk.gov.hmrc.bindingtariffclassification.model.IsInsert
@@ -59,4 +59,9 @@ trait MongoCrudHelper[T] extends MongoIndexCreator with MongoErrorHandler {
       updateWriteResult => (entity, handleSaveError(updateWriteResult, s"Could not save entity: $entity"))
     }
   }
+
+  def getOne(selector: JsObject)(implicit r: Reads[T]): Future[Option[T]] = {
+    mongoCollection.find(selector).one[T]
+  }
+
 }

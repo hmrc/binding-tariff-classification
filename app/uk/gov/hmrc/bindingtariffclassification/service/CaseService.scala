@@ -17,6 +17,7 @@
 package uk.gov.hmrc.bindingtariffclassification.service
 
 import javax.inject._
+import play.api.mvc.Result
 import uk.gov.hmrc.bindingtariffclassification.model.{Case, IsInsert}
 import uk.gov.hmrc.bindingtariffclassification.repository.CaseRepository
 
@@ -27,11 +28,23 @@ import scala.concurrent.Future
 @Singleton
 class CaseService @Inject()(repository: CaseRepository) {
 
-  def upsert(c: Case): Future[(Unit, IsInsert)] = {
+  def upsert(c: Case): Future[(IsInsert, Case)] = {
 
     repository.save(c).map {
-      case (_: Case, inserted: IsInsert) => ((), inserted)
+      case (_: Case, inserted: IsInsert) => (inserted, c)
     }
   }
 
+  def getOne(reference: String): Future[Case] = {
+
+    repository.getOne(reference).map {
+//      case None => 1 //throw RuntimeException
+      case Some(x) => x
+    }recover recovery
+
+  }
+
+  def recovery: PartialFunction[Throwable, Case] = {
+    case e => throw e
+  }
 }

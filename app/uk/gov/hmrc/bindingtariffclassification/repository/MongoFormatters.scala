@@ -20,6 +20,7 @@ import julienrf.json.derived
 import play.api.libs.json._
 import uk.gov.hmrc.bindingtariffclassification.model
 import uk.gov.hmrc.bindingtariffclassification.model._
+import uk.gov.hmrc.play.json.Union
 
 
 trait MongoFormatters {
@@ -32,14 +33,21 @@ trait MongoFormatters {
   implicit val formatContact = Json.format[Contact]
   implicit val formatLiabilityOrder = Json.format[LiabilityOrder]
   implicit val formatBTIApplication = Json.format[BTIApplication]
+  implicit val formatBTIOfflineApplication = Json.format[BTIOfflineApplication]
 
   implicit val formatAppeal = Json.format[Appeal]
+  //
+  //  implicit val formats: OFormat[Application] = derived.flat.oformat((__ \ "type").format[String])
+  //  //implicit val applicationReads: Reads[Application] = derived.reads
+  //  implicit val applicationWrites: OWrites[Application] =
+  //    derived.flat.owrites((__ \ "type").write[String])
 
-  implicit val applicationReads: Reads[Application] = derived.reads
-  implicit val applicationWrites: OWrites[Application] =
-    derived.flat.owrites((__ \ "applicationType").write[String])
+  implicit val formatApplication = Union.from[Application]("applicationType")
+    .and[BTIApplication](ApplicationType.BTI.toString)
+    .and[BTIOfflineApplication](ApplicationType.OFFLINE_BTI.toString)
+    .and[LiabilityOrder](ApplicationType.LIABILITY_ORDER.toString)
+    .format
 
-  // implicit val formatApplication = Json.format[Application]
   implicit val formatDecision = Json.format[Decision]
   implicit val formatCase = Json.format[Case]
 }
@@ -50,14 +58,13 @@ object EnumJson {
 
   def enumReads[E <: Enumeration](enum: E): Reads[E#Value] = new Reads[E#Value] {
     def reads(json: JsValue): JsResult[E#Value] = json match {
-      case JsString(s) => {
+      case JsString(s) =>
         try {
           JsSuccess(enum.withName(s))
         } catch {
           case _: NoSuchElementException =>
             throw new InvalidEnumException(enum.getClass.getSimpleName, s)
         }
-      }
       case _ => JsError("String value expected")
     }
   }

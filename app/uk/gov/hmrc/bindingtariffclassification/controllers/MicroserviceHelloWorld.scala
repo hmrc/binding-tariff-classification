@@ -19,7 +19,7 @@ package uk.gov.hmrc.bindingtariffclassification.controllers
 import javax.inject.{Inject, Singleton}
 import play.api.mvc._
 import play.api.{Logger, Play}
-import uk.gov.hmrc.bindingtariffclassification.model.{Case, CaseStatus, ApplicationType}
+import uk.gov.hmrc.bindingtariffclassification.model._
 import uk.gov.hmrc.bindingtariffclassification.service.CaseService
 import uk.gov.hmrc.bindingtariffclassification.utils.RandomNumberGenerator
 import uk.gov.hmrc.play.bootstrap.controller.BaseController
@@ -43,11 +43,61 @@ class MicroserviceHelloWorld @Inject()(caseService: CaseService) extends BaseCon
 
     Logger.debug(s"Execution delay: $delay")
 
-    val c = Case("REF_1234", CaseStatus.DRAFT, assigneeId = Some(RandomNumberGenerator.next().toString))
-    val result = Await.result(caseService.upsert(c), 2.seconds)
-    Logger.debug(s"Mongo document inserted? ${result._2}")
+    val f1 = Future.successful(3)
+    val f2 = Future.successful(4)
+
+    val res: Future[(Int, Int)] = for {
+      r1: Int <- f1
+      r2: Int <- f2
+    } yield (r1, r2)
+
+    // INSERT
+    val c1 = Case(
+      "REF_1234",
+      CaseStatus.DRAFT,
+      assigneeId = Some(RandomNumberGenerator.next().toString),
+      application = BTIApplication(holder = EORIDetails("field1", "field1", "field1", "field1", "field1", "field1", "field1"), goodsDescription = "Hello Man!")
+    )
+    val r1 = Await.result(caseService.upsert(c1), 2.seconds)
+    Logger.debug(s"Case JSON document inserted? $r1")
+
+    val c2 = Case(
+      "REF_Offline",
+      CaseStatus.DRAFT,
+      assigneeId = Some(RandomNumberGenerator.next().toString),
+      application = BTIOfflineApplication(holder = EORIDetails("field2", "field2", "field2", "field2", "field2", "field2", "field2"), goodsDescription = "Hello ccc Man!")
+    )
+    val r2 = Await.result(caseService.upsert(c2), 2.seconds)
+    Logger.debug(s"Case JSON document inserted? $r2")
+
+    val c3 = Case(
+      "REf_liability",
+      CaseStatus.DRAFT,
+      assigneeId = Some(RandomNumberGenerator.next().toString),
+      application = LiabilityOrder(entryNumber = "entryNumber")
+    )
+    val r3 = Await.result(caseService.upsert(c3), 2.seconds)
+    Logger.debug(s"Case JSON document inserted? $r3")
+
+    // GET BY REF
+    val readCase1 = Await.result(caseService.getOne("REF_1234"), 2.seconds)
+    Logger.debug(s"$readCase1")
+
+    val readCase2 = Await.result(caseService.getOne("REF_Offline"), 2.seconds)
+    Logger.debug(s"$readCase2")
+
+    val readCase3 = Await.result(caseService.getOne("REf_liability"), 2.seconds)
+    Logger.debug(s"$readCase3")
+
+    // UPDATE
+    val r1u = Await.result(caseService.upsert(c1.copy(application = c2.application)), 2.seconds)
+    Logger.debug(s"Case JSON document inserted? $r1u")
+
+    val r2u = Await.result(caseService.upsert(c2.copy(application = c1.application)), 2.seconds)
+    Logger.debug(s"Case JSON document inserted? $r2u")
+
+    //   Logger.debug(s"Mongo document inserted? ${result._2}")
 
     akka.pattern.after(duration = delay, using = Play.current.actorSystem.scheduler)(execution)
   }
-
 }
