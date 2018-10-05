@@ -36,11 +36,6 @@ trait MongoFormatters {
   implicit val formatBTIOfflineApplication = Json.format[BTIOfflineApplication]
 
   implicit val formatAppeal = Json.format[Appeal]
-  //
-  //  implicit val formats: OFormat[Application] = derived.flat.oformat((__ \ "type").format[String])
-  //  //implicit val applicationReads: Reads[Application] = derived.reads
-  //  implicit val applicationWrites: OWrites[Application] =
-  //    derived.flat.owrites((__ \ "type").write[String])
 
   implicit val formatApplication = Union.from[Application]("applicationType")
     .and[BTIApplication](ApplicationType.BTI.toString)
@@ -50,6 +45,19 @@ trait MongoFormatters {
 
   implicit val formatDecision = Json.format[Decision]
   implicit val formatCase = Json.format[Case]
+
+
+  implicit val formatAttachment = Json.format[Attachment]
+  implicit val formatCaseStatusChange = Json.format[CaseStatusChange]
+  implicit val formatNote = Json.format[Note]
+
+  implicit val formatEventDetail = Union.from[Details]("type")
+    .and[Attachment](EventType.ATTACHMENT.toString)
+    .and[CaseStatusChange](EventType.CASE_STATUS_CHANGE.toString)
+    .and[Note](EventType.NOTE.toString)
+    .format
+
+  implicit val formatEvent = Json.format[Event]
 }
 
 object MongoFormatters extends MongoFormatters

@@ -24,7 +24,7 @@ import play.api.http.Status.{BAD_REQUEST, OK}
 import play.api.test.FakeRequest
 import uk.gov.hmrc.bindingtariffclassification.controllers.MicroserviceHelloWorld
 import uk.gov.hmrc.bindingtariffclassification.model.Case
-import uk.gov.hmrc.bindingtariffclassification.service.CaseService
+import uk.gov.hmrc.bindingtariffclassification.service.{CaseService, EventService}
 import uk.gov.hmrc.play.test.{UnitSpec, WithFakeApplication}
 
 import scala.concurrent.Future.successful
@@ -32,12 +32,14 @@ import scala.concurrent.Future.successful
 class MicroserviceHelloWorldControllerSpec extends UnitSpec with WithFakeApplication with MockitoSugar {
 
   private val fakeRequest = FakeRequest("GET", "/hello")
+  private val mCase = mock[Case]
   private val mockCaseService = mock[CaseService]
-  private val controller = new MicroserviceHelloWorld(mockCaseService)
+  private val mockEventService = mock[EventService]
+  private val controller = new MicroserviceHelloWorld(mockCaseService, mockEventService)
 
   "GET /hello" should {
 
-    when(mockCaseService.upsert(any[Case])).thenReturn(successful(((), true)))
+    when(mockCaseService.upsert(any[Case])).thenReturn(successful((false, mCase)))
 
     "return 200 when the Location header has a unique value" in {
       val result = controller.hello()(fakeRequest.withHeaders(LOCATION -> "Canary Islands"))

@@ -25,29 +25,47 @@ import uk.gov.hmrc.bindingtariffclassification.model.EventType.EventType
 case class Event
 (
   id: String,
-  `type`: EventType,
-  comment: String,
   details: Details,
   userId: String,
+  caseReference: String,
   timestamp: ZonedDateTime
 )
 
-sealed trait Details
+sealed trait Details {
+  val `type`: EventType
+  val comment: Option[String]
+}
 
-case class AttachmentDetails
+case class Attachment
 (
   url: String,
-  mimeType: String
-) extends Details
+  mimeType: String,
+  override val comment: Option[String]
 
-case class StatusChange
+) extends Details {
+  override val `type` = EventType.ATTACHMENT
+}
+
+case class CaseStatusChange
 (
   from: CaseStatus,
-  to: CaseStatus
-)
+  to: CaseStatus,
+  override val comment: Option[String]
+
+) extends Details {
+  override val `type` = EventType.CASE_STATUS_CHANGE
+}
+
+case class Note
+(
+  override val comment: Option[String]
+
+) extends Details {
+  override val `type` = EventType.NOTE
+  require(comment.isDefined) // TODO: to be improved
+}
 
 object EventType extends Enumeration {
   type EventType = Value
-  val ATTACHMENT, CREATE = Value
+  val ATTACHMENT, CASE_STATUS_CHANGE, NOTE = Value
 }
-

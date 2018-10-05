@@ -16,11 +16,13 @@
 
 package uk.gov.hmrc.bindingtariffclassification.controllers
 
+import java.time.ZonedDateTime
+
 import javax.inject.{Inject, Singleton}
 import play.api.mvc._
 import play.api.{Logger, Play}
 import uk.gov.hmrc.bindingtariffclassification.model._
-import uk.gov.hmrc.bindingtariffclassification.service.CaseService
+import uk.gov.hmrc.bindingtariffclassification.service.{CaseService, EventService}
 import uk.gov.hmrc.bindingtariffclassification.utils.RandomNumberGenerator
 import uk.gov.hmrc.play.bootstrap.controller.BaseController
 import uk.gov.hmrc.play.http.logging.MdcLoggingExecutionContext._
@@ -29,7 +31,8 @@ import scala.concurrent.{Await, Future}
 import scala.concurrent.duration._
 
 @Singleton()
-class MicroserviceHelloWorld @Inject()(caseService: CaseService) extends BaseController {
+class MicroserviceHelloWorld @Inject()(caseService: CaseService, eventService: EventService) extends BaseController {
+
 
   def hello(): Action[AnyContent] = Action.async { implicit request =>
 
@@ -43,13 +46,20 @@ class MicroserviceHelloWorld @Inject()(caseService: CaseService) extends BaseCon
 
     Logger.debug(s"Execution delay: $delay")
 
-    val f1 = Future.successful(3)
-    val f2 = Future.successful(4)
+    createCaseData()
 
-    val res: Future[(Int, Int)] = for {
-      r1: Int <- f1
-      r2: Int <- f2
-    } yield (r1, r2)
+    createEventData()
+
+    akka.pattern.after(duration = delay, using = Play.current.actorSystem.scheduler)(execution)
+  }
+
+
+  private def createEventData() = {
+    val e1 = Event("event_1", Note(Some("hey Note")), "user_1", "REF_1234", ZonedDateTime.now())
+    eventService.upsert(e1)
+  }
+
+  private def createCaseData() = {
 
     // INSERT
     val c1 = Case(
@@ -96,8 +106,7 @@ class MicroserviceHelloWorld @Inject()(caseService: CaseService) extends BaseCon
     val r2u = Await.result(caseService.upsert(c2.copy(application = c1.application)), 2.seconds)
     Logger.debug(s"Case JSON document inserted? $r2u")
 
-    //   Logger.debug(s"Mongo document inserted? ${result._2}")
 
-    akka.pattern.after(duration = delay, using = Play.current.actorSystem.scheduler)(execution)
   }
+
 }
