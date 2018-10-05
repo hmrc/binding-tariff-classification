@@ -16,12 +16,9 @@
 
 package uk.gov.hmrc.bindingtariffclassification.repository
 
-import julienrf.json.derived
 import play.api.libs.json._
-import uk.gov.hmrc.bindingtariffclassification.model
 import uk.gov.hmrc.bindingtariffclassification.model._
 import uk.gov.hmrc.play.json.Union
-
 
 trait MongoFormatters {
 

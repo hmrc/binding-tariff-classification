@@ -23,7 +23,7 @@ import play.api.http.HeaderNames.{CACHE_CONTROL, LOCATION}
 import play.api.http.Status.{BAD_REQUEST, OK}
 import play.api.test.FakeRequest
 import uk.gov.hmrc.bindingtariffclassification.controllers.MicroserviceHelloWorld
-import uk.gov.hmrc.bindingtariffclassification.model.Case
+import uk.gov.hmrc.bindingtariffclassification.model.{Case, Event}
 import uk.gov.hmrc.bindingtariffclassification.service.{CaseService, EventService}
 import uk.gov.hmrc.play.test.{UnitSpec, WithFakeApplication}
 
@@ -31,15 +31,23 @@ import scala.concurrent.Future.successful
 
 class MicroserviceHelloWorldControllerSpec extends UnitSpec with WithFakeApplication with MockitoSugar {
 
-  private val fakeRequest = FakeRequest("GET", "/hello")
   private val mCase = mock[Case]
+  private val mEvent = mock[Event]
   private val mockCaseService = mock[CaseService]
   private val mockEventService = mock[EventService]
+
+  private val fakeRequest = FakeRequest("GET", "/hello")
+
   private val controller = new MicroserviceHelloWorld(mockCaseService, mockEventService)
 
   "GET /hello" should {
 
     when(mockCaseService.upsert(any[Case])).thenReturn(successful((false, mCase)))
+    when(mockCaseService.getByReference(any[String])).thenReturn(successful(mCase))
+
+    when(mockEventService.insert(any[Event])).thenReturn(successful(mEvent))
+    when(mockEventService.getById(any[String])).thenReturn(successful(mEvent))
+    when(mockEventService.getByCaseReference(any[String])).thenReturn(successful(List(mEvent)))
 
     "return 200 when the Location header has a unique value" in {
       val result = controller.hello()(fakeRequest.withHeaders(LOCATION -> "Canary Islands"))

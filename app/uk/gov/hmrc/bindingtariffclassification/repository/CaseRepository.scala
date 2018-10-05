@@ -22,6 +22,7 @@ import play.api.libs.json._
 import reactivemongo.bson.BSONObjectID
 import reactivemongo.play.json.collection.JSONCollection
 import uk.gov.hmrc.bindingtariffclassification.model.{Case, IsInsert}
+import uk.gov.hmrc.bindingtariffclassification.repository.MongoFormatters.formatCase
 import uk.gov.hmrc.mongo.ReactiveRepository
 import uk.gov.hmrc.mongo.json.ReactiveMongoFormats
 
@@ -30,8 +31,8 @@ import scala.concurrent.Future
 @ImplementedBy(classOf[CaseMongoRepository])
 trait CaseRepository {
 
-  def save(c: Case): Future[(Case, IsInsert)]
-  def getOne(reference: String): Future[Option[Case]]
+  def createOrUpdate(c: Case): Future[(Case, IsInsert)]
+  def getByReference(reference: String): Future[Option[Case]]
 }
 
 @Singleton
@@ -42,13 +43,12 @@ class CaseMongoRepository @Inject()(mongoDbProvider: MongoDbProvider)
     with MongoCrudHelper[Case] {
 
   override val mongoCollection: JSONCollection = collection
-  private implicit val format = MongoFormatters.formatCase
 
   override def indexes = Seq(
     createSingleFieldAscendingIndex("reference", Some("referenceIndex"), isUnique = true)
   )
 
-  override def save(c: Case): Future[(Case, IsInsert)] = {
+  override def createOrUpdate(c: Case): Future[(Case, IsInsert)] = {
     createOrUpdate(c, selectorByReference(c.reference))
   }
 
@@ -56,7 +56,8 @@ class CaseMongoRepository @Inject()(mongoDbProvider: MongoDbProvider)
     Json.obj("reference" -> reference)
   }
 
-  override def getOne(reference: String): Future[Option[Case]] = {
+  override def getByReference(reference: String): Future[Option[Case]] = {
     getOne(selectorByReference(reference))
   }
+
 }

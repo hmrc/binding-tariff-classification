@@ -23,7 +23,7 @@ trait MongoErrorHandler {
 
   def handleSaveError(updateWriteResult: UpdateWriteResult, exceptionMsg: => String): IsInsert = {
 
-    def handleUpsertError(result: WriteResult) =
+    def handleUpsertError(result: WriteResult): IsInsert =
       if (databaseAltered(result)) {
         updateWriteResult.upserted.nonEmpty
       } else {

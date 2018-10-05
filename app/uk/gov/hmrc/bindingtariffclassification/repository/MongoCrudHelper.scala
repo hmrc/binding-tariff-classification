@@ -17,6 +17,7 @@
 package uk.gov.hmrc.bindingtariffclassification.repository
 
 import play.api.libs.json.{JsObject, OFormat, OWrites, Reads}
+import reactivemongo.api.Cursor
 import reactivemongo.api.commands.WriteResult
 import reactivemongo.play.json.ImplicitBSONHandlers._
 import reactivemongo.play.json.collection.JSONCollection
@@ -30,29 +31,29 @@ trait MongoCrudHelper[T] extends MongoIndexCreator with MongoErrorHandler {
   protected val mongoCollection: JSONCollection
 
   // TODO: check if we need it
-  def saveAtomic(selector: JsObject, updateOperations: JsObject)(implicit w: OFormat[T]): Future[(T, IsInsert)] = {
-    val updateOp = mongoCollection.updateModifier(
-      update = updateOperations,
-      fetchNewObject = true,
-      upsert = true
-    )
+//  def saveAtomic(selector: JsObject, updateOperations: JsObject)(implicit w: OFormat[T]): Future[(T, IsInsert)] = {
+//    val updateOp = mongoCollection.updateModifier(
+//      update = updateOperations,
+//      fetchNewObject = true,
+//      upsert = true
+//    )
+//
+//    mongoCollection.findAndModify(selector, updateOp).map { findAndModifyResult =>
+//      val maybeTuple: Option[(T, IsInsert)] = for {
+//        value <- findAndModifyResult.value
+//        updateLastError <- findAndModifyResult.lastError
+//      } yield (value.as[T], !updateLastError.updatedExisting)
+//
+//      maybeTuple.fold[(T, IsInsert)] {
+//        handleError(selector, findAndModifyResult)
+//      }(tuple => tuple)
+//    }
+//  }
 
-    mongoCollection.findAndModify(selector, updateOp).map { findAndModifyResult =>
-      val maybeTuple: Option[(T, IsInsert)] = for {
-        value <- findAndModifyResult.value
-        updateLastError <- findAndModifyResult.lastError
-      } yield (value.as[T], !updateLastError.updatedExisting)
-
-      maybeTuple.fold[(T, IsInsert)] {
-        handleError(selector, findAndModifyResult)
-      }(tuple => tuple)
-    }
-  }
-
-  private def handleError(selector: JsObject, findAndModifyResult: mongoCollection.BatchCommands.FindAndModifyCommand.FindAndModifyResult) = {
-    val error = s"Error upserting database for $selector."
-    throw new RuntimeException(s"$error lastError: ${findAndModifyResult.lastError}")
-  }
+//  private def handleError(selector: JsObject, findAndModifyResult: mongoCollection.BatchCommands.FindAndModifyCommand.FindAndModifyResult) = {
+//    val error = s"Error upserting database for $selector."
+//    throw new RuntimeException(s"$error lastError: ${findAndModifyResult.lastError}")
+//  }
 
   // TODO: save vs. saveAtomic
   def createOrUpdate(entity: T, selector: JsObject)(implicit w: OWrites[T]): Future[(T, IsInsert)] = {
@@ -62,17 +63,21 @@ trait MongoCrudHelper[T] extends MongoIndexCreator with MongoErrorHandler {
   }
 
   def create(entity: T)(implicit w: OWrites[T]): Future[T] = {
-    mongoCollection.insert(entity).map {
-      createResult =>
-        if (!createResult.ok)
-          throw new RuntimeException(createResult.writeErrors.toString())
-        else
-          entity
+    mongoCollection.insert(entity).map { createResult =>
+      if (!createResult.ok) {
+        throw new RuntimeException(createResult.writeErrors.mkString(", "))
+      } else {
+        entity
+      }
     }
   }
 
   def getOne(selector: JsObject)(implicit r: Reads[T]): Future[Option[T]] = {
     mongoCollection.find(selector).one[T]
+  }
+
+  def getMany(selector: JsObject)(implicit r: Reads[T]): Future[List[T]] = {
+    mongoCollection.find(selector).cursor[T]().collect[List](Int.MaxValue, Cursor.FailOnError[List[T]]())
   }
 
 }

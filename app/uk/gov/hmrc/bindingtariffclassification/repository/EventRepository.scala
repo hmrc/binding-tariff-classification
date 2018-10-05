@@ -21,9 +21,8 @@ import com.google.inject.ImplementedBy
 import play.api.libs.json._
 import reactivemongo.bson.BSONObjectID
 import reactivemongo.play.json.collection.JSONCollection
-import uk.gov.hmrc.bindingtariffclassification.model.{Event, IsInsert}
-import uk.gov.hmrc.bindingtariffclassification.repository
-import uk.gov.hmrc.bindingtariffclassification.repository.MongoFormatters._
+import uk.gov.hmrc.bindingtariffclassification.model.Event
+import uk.gov.hmrc.bindingtariffclassification.repository.MongoFormatters.formatEvent
 import uk.gov.hmrc.mongo.ReactiveRepository
 import uk.gov.hmrc.mongo.json.ReactiveMongoFormats
 
@@ -32,9 +31,9 @@ import scala.concurrent.Future
 @ImplementedBy(classOf[EventMongoRepository])
 trait EventRepository {
 
-  def save(e: Event): Future[Event]
-
-  def getOne(id: String): Future[Option[Event]]
+  def insert(e: Event): Future[Event]
+  def getById(id: String): Future[Option[Event]]
+  def getByCaseReference(caseReference: String): Future[Seq[Event]]
 }
 
 @Singleton
@@ -52,7 +51,7 @@ class EventMongoRepository @Inject()(mongoDbProvider: MongoDbProvider)
     createSingleFieldAscendingIndex("caseReference", Some("caseReferenceIndex"), isUnique = false)
   )
 
-  override def save(e: Event): Future[Event] = {
+  override def insert(e: Event): Future[Event] = {
     create(e)
   }
 
@@ -60,9 +59,16 @@ class EventMongoRepository @Inject()(mongoDbProvider: MongoDbProvider)
     Json.obj("id" -> id)
   }
 
-  // TODO: unmdest`and warm ing
-  override def getOne(id: String): Future[Option[Event]] = {
-    getOne(selectorById(id))(MongoFormatters.formatEvent)
+  private def selectorByCaseReference(caseReference: String): JsObject = {
+    Json.obj("caseReference" -> caseReference)
+  }
+
+  override def getById(id: String): Future[Option[Event]] = {
+    getOne(selectorById(id))
+  }
+
+  override def getByCaseReference(caseReference: String): Future[Seq[Event]] = {
+    getMany(selectorByCaseReference(caseReference))
   }
 
 }

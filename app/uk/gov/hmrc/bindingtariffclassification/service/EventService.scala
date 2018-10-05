@@ -17,7 +17,7 @@
 package uk.gov.hmrc.bindingtariffclassification.service
 
 import javax.inject._
-import uk.gov.hmrc.bindingtariffclassification.model.{Event, IsInsert}
+import uk.gov.hmrc.bindingtariffclassification.model.Event
 import uk.gov.hmrc.bindingtariffclassification.repository.EventRepository
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -26,14 +26,18 @@ import scala.concurrent.Future
 @Singleton
 class EventService @Inject()(repository: EventRepository) {
 
-  // TODO: we should allow only insert for events!
-  def upsert(e: Event): Future[Event] = {
-    repository.save(e)
+  def insert(e: Event): Future[Event] = {
+    repository.insert(e)
   }
 
-  def getOne(id: String): Future[Event] = {
-    repository.getOne(id).map {
+  def getById(id: String): Future[Event] = {
+    repository.getById(id).map {
       case Some(x) => x
     }
   }
+
+  def getByCaseReference(caseReference: String): Future[Seq[Event]] = {
+    repository.getByCaseReference(caseReference)
+  }
+
 }

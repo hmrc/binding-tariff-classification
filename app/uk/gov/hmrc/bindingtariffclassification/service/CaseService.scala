@@ -23,19 +23,17 @@ import uk.gov.hmrc.bindingtariffclassification.repository.CaseRepository
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-
 @Singleton
 class CaseService @Inject()(repository: CaseRepository) {
 
   def upsert(c: Case): Future[(IsInsert, Case)] = {
-
-    repository.save(c).map {
+    repository.createOrUpdate(c).map {
       case (_: Case, inserted: IsInsert) => (inserted, c)
     }
   }
 
-  def getOne(reference: String): Future[Case] = {
-    repository.getOne(reference).map {
+  def getByReference(reference: String): Future[Case] = {
+    repository.getByReference(reference).map {
       case Some(x) => x
     }
   }
