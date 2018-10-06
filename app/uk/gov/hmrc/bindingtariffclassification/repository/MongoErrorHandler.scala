@@ -56,11 +56,3 @@ trait MongoErrorHandler {
   }
 
 }
-
-// examples of how to check mongo errors:
-
-/*
-https://github.com/hmrc/card-payment-history/blob/9e8e784b788b37c05eb94bb4313d4fad0e055d47/app/repositories/OrderRepository.scala
-
-https://github.com/hmrc/pay-api/blob/f24f7ceec9689750969042e7ad0fba4c485f1ef8/app/uk/gov/hmrc/payment/repository/RepoResultChecker.scala
-*/

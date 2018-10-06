@@ -69,27 +69,34 @@ class EventRepositorySpec extends UnitSpec
 
   "insert" should {
 
-    val e: Event = createNoteEvent("")
-
     "insert a new document in the collection" in {
       collectionSize shouldBe 0
 
+      val e: Event = createNoteEvent("")
       await(repository.insert(e)) shouldBe e
       collectionSize shouldBe 1
       await(repository.collection.find(selectorById(e)).one[Event]) shouldBe Some(e)
     }
 
-//    "update the existing document in the collection" in {
-//      collectionSize shouldBe 0
-//
-//      await(repository.insert(e)) shouldBe e
-//      collectionSize shouldBe 1
-//
-//      val updated: Event = e.copy(userId = "AAA")
-//      await(repository.insert(updated)) shouldBe ((false, updated))
-//      collectionSize shouldBe 1
-//      await(repository.collection.find(selectorByReference(updated)).one[Case]) shouldBe Some(updated)
-//    }
+    "fail to update an existing document in the collection" in {
+      collectionSize shouldBe 0
+
+      val e: Event = createNoteEvent("")
+      await(repository.insert(e)) shouldBe e
+
+      collectionSize shouldBe 1
+      await(repository.collection.find(selectorById(e)).one[Event]) shouldBe Some(e)
+
+      val updated: Event = e.copy(userId = "user_A")
+      val caught = intercept[DatabaseException] {
+        await(repository.insert(updated))
+      }
+      caught.code shouldBe Some(11000)
+      caught.message shouldBe s"""E11000 duplicate key error collection: test-EventRepositorySpec.events index: id_Index dup key: { : "${e.id}" }"""
+
+      collectionSize shouldBe 1
+      await(repository.collection.find(selectorById(updated)).one[Event]) shouldBe Some(e)
+    }
   }
 
   "getByCaseReference" should {
