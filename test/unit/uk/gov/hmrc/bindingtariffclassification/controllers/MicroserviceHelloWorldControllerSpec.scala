@@ -63,7 +63,10 @@ class MicroserviceHelloWorldControllerSpec extends UnitSpec with WithFakeApplica
       val headers = Seq(LOCATION -> "Iceland", LOCATION -> "Isle of Man", CACHE_CONTROL -> "Y")
       val result = controller.hello()(fakeRequest.withHeaders(headers: _*))
       status(result) shouldBe BAD_REQUEST
+
+      status(result) shouldBe Status.INTERNAL_SERVER_ERROR
     }
+
   }
 
 }
