@@ -1,0 +1,34 @@
+[
+  {
+    "id": "8cc31381-04bb-48fa-93d7-0d6b8463aff8",
+    "details": {
+      "comment": "This is a note",
+      "type": "NOTE"
+    },
+    "userId": "fe87bc1f-6a0c-480e-93b9-8ef63e7aeae6",
+    "caseReference": "a6d231d0-e24d-44de-ae5d-ef9890c77282",
+    "timestamp": "2018-10-06T15:56:35.601+01:00[Europe/London]"
+  },
+  {
+    "id": "b7da3e2e-0829-4e27-ab20-d9d46981c5e2",
+    "details": {
+      "from": "DRAFT",
+      "to": "NEW",
+      "type": "CASE_STATUS_CHANGE"
+    },
+    "userId": "8b06a663-7fff-4136-851a-b1cbcce79c53",
+    "caseReference": "a6d231d0-e24d-44de-ae5d-ef9890c77282",
+    "timestamp": "2018-10-06T15:56:35.604+01:00[Europe/London]"
+  },
+  {
+    "id": "cbb0ba4b-bb6c-46e3-82fe-64fafd869927",
+    "details": {
+      "url": "URL",
+      "mimeType": "media/jpg",
+      "type": "ATTACHMENT"
+    },
+    "userId": "293bd015-e1aa-4728-8e41-145393649fb6",
+    "caseReference": "REF_xxx",
+    "timestamp": "2018-10-06T15:56:35.607+01:00[Europe/London]"
+  }
+]

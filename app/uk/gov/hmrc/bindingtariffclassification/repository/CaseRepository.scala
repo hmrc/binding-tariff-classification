@@ -21,8 +21,8 @@ import com.google.inject.ImplementedBy
 import play.api.libs.json._
 import reactivemongo.bson.BSONObjectID
 import reactivemongo.play.json.collection.JSONCollection
-import uk.gov.hmrc.bindingtariffclassification.model.{Case, IsInsert}
-import uk.gov.hmrc.bindingtariffclassification.repository.MongoFormatters.formatCase
+import uk.gov.hmrc.bindingtariffclassification.model.{Case, IsInsert, JsonFormatters}
+import uk.gov.hmrc.bindingtariffclassification.model.JsonFormatters.formatCase
 import uk.gov.hmrc.mongo.ReactiveRepository
 import uk.gov.hmrc.mongo.json.ReactiveMongoFormats
 
@@ -31,24 +31,26 @@ import scala.concurrent.Future
 @ImplementedBy(classOf[CaseMongoRepository])
 trait CaseRepository {
 
-  def createOrUpdate(c: Case): Future[(Case, IsInsert)]
+  def insertOrUpdate(c: Case): Future[(IsInsert, Case)]
   def getByReference(reference: String): Future[Option[Case]]
+  def getAll: Future[Seq[Case]]
 }
 
 @Singleton
 class CaseMongoRepository @Inject()(mongoDbProvider: MongoDbProvider)
-  extends ReactiveRepository[Case, BSONObjectID]("cases", mongoDbProvider.mongo,
-    MongoFormatters.formatCase, ReactiveMongoFormats.objectIdFormats)
-    with CaseRepository
-    with MongoCrudHelper[Case] {
+  extends ReactiveRepository[Case, BSONObjectID](
+    collectionName = "cases",
+    mongo = mongoDbProvider.mongo,
+    domainFormat = JsonFormatters.formatCase,
+    idFormat = ReactiveMongoFormats.objectIdFormats) with CaseRepository with MongoCrudHelper[Case] {
 
   override val mongoCollection: JSONCollection = collection
 
   override def indexes = Seq(
-    createSingleFieldAscendingIndex("reference", Some("referenceIndex"), isUnique = true)
+    createSingleFieldAscendingIndex("reference", isUnique = true)
   )
 
-  override def createOrUpdate(c: Case): Future[(Case, IsInsert)] = {
+  override def insertOrUpdate(c: Case): Future[(IsInsert, Case)] = {
     createOrUpdate(c, selectorByReference(c.reference))
   }
 
@@ -58,6 +60,10 @@ class CaseMongoRepository @Inject()(mongoDbProvider: MongoDbProvider)
 
   override def getByReference(reference: String): Future[Option[Case]] = {
     getOne(selectorByReference(reference))
+  }
+
+  override def getAll: Future[Seq[Case]] = {
+    getMany(Json.obj())
   }
 
 }

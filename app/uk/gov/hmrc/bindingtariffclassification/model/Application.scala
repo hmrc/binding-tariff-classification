@@ -22,7 +22,7 @@ import uk.gov.hmrc.bindingtariffclassification.model.ApplicationType.Application
 import uk.gov.hmrc.bindingtariffclassification.model.LiabilityOrderType.LiabilityOrderType
 
 sealed trait Application {
-  val applicationType: ApplicationType
+  val `type`: ApplicationType
 }
 
 case class BTIApplication
@@ -42,7 +42,7 @@ case class BTIApplication
   fastTrackBTI: Boolean = false
 
 ) extends Application {
-  override val applicationType = ApplicationType.BTI
+  override val `type` = ApplicationType.BTI
 }
 
 case class BTIOfflineApplication
@@ -62,7 +62,7 @@ case class BTIOfflineApplication
   fastTrackBTI: Boolean = false
 
 ) extends Application {
-  override val applicationType = ApplicationType.OFFLINE_BTI
+  override val `type` = ApplicationType.OFFLINE_BTI
 }
 
 case class LiabilityOrder
@@ -75,7 +75,7 @@ case class LiabilityOrder
   endDate: ZonedDateTime
 
 ) extends Application {
-  override val applicationType = ApplicationType.LIABILITY_ORDER
+  override val `type` = ApplicationType.LIABILITY_ORDER
 }
 
 case class EORIDetails

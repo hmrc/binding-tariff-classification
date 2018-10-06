@@ -20,7 +20,6 @@ import javax.inject._
 import uk.gov.hmrc.bindingtariffclassification.model.Event
 import uk.gov.hmrc.bindingtariffclassification.repository.EventRepository
 
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 @Singleton
@@ -30,10 +29,8 @@ class EventService @Inject()(repository: EventRepository) {
     repository.insert(e)
   }
 
-  def getById(id: String): Future[Event] = {
-    repository.getById(id).map {
-      case Some(x) => x
-    }
+  def getById(id: String): Future[Option[Event]] = {
+    repository.getById(id)
   }
 
   def getByCaseReference(caseReference: String): Future[Seq[Event]] = {

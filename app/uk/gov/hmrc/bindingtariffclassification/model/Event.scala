@@ -62,7 +62,7 @@ case class Note
 
 ) extends Details {
   override val `type` = EventType.NOTE
-  require(comment.isDefined) // TODO: to be improved
+  // TODO: the `comment` option should be always be defined - to be checked on the frontend
 }
 
 object EventType extends Enumeration {

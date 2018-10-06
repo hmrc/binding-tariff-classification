@@ -43,10 +43,10 @@ class MicroserviceHelloWorldControllerSpec extends UnitSpec with WithFakeApplica
   "GET /hello" should {
 
     when(mockCaseService.upsert(any[Case])).thenReturn(successful((false, mCase)))
-    when(mockCaseService.getByReference(any[String])).thenReturn(successful(mCase))
+    when(mockCaseService.getByReference(any[String])).thenReturn(successful(Some(mCase)))
 
     when(mockEventService.insert(any[Event])).thenReturn(successful(mEvent))
-    when(mockEventService.getById(any[String])).thenReturn(successful(mEvent))
+    when(mockEventService.getById(any[String])).thenReturn(successful(Some(mEvent)))
     when(mockEventService.getByCaseReference(any[String])).thenReturn(successful(List(mEvent)))
 
     "return 200 when the Location header has a unique value" in {

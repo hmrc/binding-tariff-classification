@@ -16,15 +16,21 @@
 
 package uk.gov.hmrc.bindingtariffclassification.utils
 
+import java.util.UUID
+
 import scala.util.Random
 
-object RandomNumberGenerator {
+object RandomGenerator {
 
   private val random = Random
   private val maxDelayInMillis = 3000
 
-  def next(): Int = {
+  def nextDelay(): Int = {
     random.nextInt(maxDelayInMillis)
+  }
+
+  def randomUUID(): String = {
+    UUID.randomUUID().toString
   }
 
 }

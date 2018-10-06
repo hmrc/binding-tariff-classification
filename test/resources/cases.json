@@ -1,0 +1,95 @@
+[
+  {
+    "reference": "a6d231d0-e24d-44de-ae5d-ef9890c77282",
+    "status": "NEW",
+    "createDate": "2018-10-06T15:56:35.563+01:00[Europe/London]",
+    "assigneeId": "b8dd47e4-778a-4cad-b392-9d8b7a187bd7",
+    "application": {
+      "holder": {
+        "eori": "eori_holder_",
+        "traderName": "trader-name_holder_",
+        "addressLine1": "addressLine1_holder_",
+        "addressLine2": "addressLine2_holder_",
+        "addressLine3": "addressLine3_holder_",
+        "postcode": "postcode_holder_",
+        "country": "country_holder_"
+      },
+      "contact": {
+        "name": "",
+        "email": "",
+        "phone": ""
+      },
+      "goodsDescription": "",
+      "confidentialInformation": "",
+      "otherInformation": "",
+      "reissuedBTIReference": "",
+      "relatedBTIReference": "",
+      "knownLegalProceedings": "",
+      "envisagesCommodityCode": "",
+      "sampleToBeProvided": false,
+      "sampleToBeReturned": false,
+      "fastTrackBTI": false,
+      "type": "OFFLINE_BTI"
+    }
+  },
+  {
+    "reference": "532ffa4c-c8d0-443c-9674-98b4451084ad",
+    "status": "NEW",
+    "createDate": "2018-10-06T15:56:35.571+01:00[Europe/London]",
+    "assigneeId": "10b8138b-7c1a-45d5-a0cc-eb32f916f454",
+    "application": {
+      "holder": {
+        "eori": "eori_3065ed91-5865-4b15-a1e0-058369012cf5",
+        "traderName": "trader-name_3065ed91-5865-4b15-a1e0-058369012cf5",
+        "addressLine1": "addressLine1_3065ed91-5865-4b15-a1e0-058369012cf5",
+        "addressLine2": "addressLine2_3065ed91-5865-4b15-a1e0-058369012cf5",
+        "addressLine3": "addressLine3_3065ed91-5865-4b15-a1e0-058369012cf5",
+        "postcode": "postcode_3065ed91-5865-4b15-a1e0-058369012cf5",
+        "country": "country_3065ed91-5865-4b15-a1e0-058369012cf5"
+      },
+      "contact": {
+        "name": "",
+        "email": "",
+        "phone": ""
+      },
+      "goodsDescription": "",
+      "confidentialInformation": "",
+      "otherInformation": "",
+      "reissuedBTIReference": "",
+      "relatedBTIReference": "",
+      "knownLegalProceedings": "",
+      "envisagesCommodityCode": "",
+      "sampleToBeProvided": false,
+      "sampleToBeReturned": false,
+      "fastTrackBTI": false,
+      "type": "BTI"
+    }
+  },
+  {
+    "reference": "feb1248f-53f9-43fd-9927-1ba04b169915",
+    "status": "NEW",
+    "createDate": "2018-10-06T15:56:35.576+01:00[Europe/London]",
+    "assigneeId": "e668abb5-0723-4232-83c1-e2876827e556",
+    "application": {
+      "holder": {
+        "eori": "eori_holder",
+        "traderName": "trader-name_holder",
+        "addressLine1": "addressLine1_holder",
+        "addressLine2": "addressLine2_holder",
+        "addressLine3": "addressLine3_holder",
+        "postcode": "postcode_holder",
+        "country": "country_holder"
+      },
+      "contact": {
+        "name": "",
+        "email": "",
+        "phone": ""
+      },
+      "liabilityOrderType": "LIVE",
+      "port": "port_",
+      "entryNumber": "entryNumber_",
+      "endDate": "2018-10-06T15:56:35.575+01:00[Europe/London]",
+      "type": "LIABILITY_ORDER"
+    }
+  }
+]

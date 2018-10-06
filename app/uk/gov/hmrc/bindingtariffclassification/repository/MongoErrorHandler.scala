@@ -17,27 +17,50 @@
 package uk.gov.hmrc.bindingtariffclassification.repository
 
 import reactivemongo.api.commands.{UpdateWriteResult, WriteResult}
-import uk.gov.hmrc.bindingtariffclassification.model.IsInsert
 
 trait MongoErrorHandler {
 
-  def handleSaveError(updateWriteResult: UpdateWriteResult, exceptionMsg: => String): IsInsert = {
-
-    def handleUpsertError(result: WriteResult): IsInsert =
-      if (databaseAltered(result)) {
-        updateWriteResult.upserted.nonEmpty
-      } else {
-        throw new RuntimeException(exceptionMsg)
-      }
-
-    handleError(updateWriteResult, handleUpsertError, exceptionMsg)
-  }
-
-  private def handleError(result: WriteResult, f: WriteResult => Boolean, exceptionMsg: String): Boolean = {
-    result.writeConcernError.fold(f(result)) {
-      errMsg => throw new RuntimeException(s"""$exceptionMsg. $errMsg""")
+  private def hasErrors(wr: WriteResult): Boolean = {
+    wr match {
+      case uwr: UpdateWriteResult =>
+        !uwr.ok ||
+          uwr.errmsg.isDefined ||
+          uwr.writeConcernError.isDefined ||
+          uwr.writeErrors.nonEmpty
+      case _ =>
+        !wr.ok ||
+          wr.writeConcernError.isDefined ||
+          wr.writeErrors.nonEmpty
     }
   }
 
-  private def databaseAltered(writeResult: WriteResult): Boolean = writeResult.n > 0
+  def handleUpsertError(wResult: WriteResult, errMsg: => String): Boolean = {
+    if (hasErrors(wResult)) {
+      throwDbError(errMsg, wResult)
+    } else {
+      wResult match {
+        case upw: UpdateWriteResult =>
+          if (isDatabaseAltered(wResult)) upw.upserted.nonEmpty
+          else throwDbError(errMsg, wResult)
+        case _ => true
+      }
+    }
+  }
+
+  private def throwDbError(errMsg: => String, wResult: WriteResult)= {
+    throw new RuntimeException(s"$errMsg. Reason: $wResult")
+  }
+
+  private def isDatabaseAltered(writeResult: WriteResult): Boolean = {
+    writeResult.n > 0
+  }
+
 }
+
+// examples of how to check mongo errors:
+
+/*
+https://github.com/hmrc/card-payment-history/blob/9e8e784b788b37c05eb94bb4313d4fad0e055d47/app/repositories/OrderRepository.scala
+
+https://github.com/hmrc/pay-api/blob/f24f7ceec9689750969042e7ad0fba4c485f1ef8/app/uk/gov/hmrc/payment/repository/RepoResultChecker.scala
+*/

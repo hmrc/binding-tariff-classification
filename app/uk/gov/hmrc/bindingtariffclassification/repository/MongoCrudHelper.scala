@@ -16,9 +16,9 @@
 
 package uk.gov.hmrc.bindingtariffclassification.repository
 
-import play.api.libs.json.{JsObject, OFormat, OWrites, Reads}
+import play.api.libs.json.{JsObject, OWrites, Reads}
 import reactivemongo.api.Cursor
-import reactivemongo.api.commands.WriteResult
+import reactivemongo.api.commands.{UpdateWriteResult, WriteResult}
 import reactivemongo.play.json.ImplicitBSONHandlers._
 import reactivemongo.play.json.collection.JSONCollection
 import uk.gov.hmrc.bindingtariffclassification.model.IsInsert
@@ -30,45 +30,17 @@ trait MongoCrudHelper[T] extends MongoIndexCreator with MongoErrorHandler {
 
   protected val mongoCollection: JSONCollection
 
-  // TODO: check if we need it
-//  def saveAtomic(selector: JsObject, updateOperations: JsObject)(implicit w: OFormat[T]): Future[(T, IsInsert)] = {
-//    val updateOp = mongoCollection.updateModifier(
-//      update = updateOperations,
-//      fetchNewObject = true,
-//      upsert = true
-//    )
-//
-//    mongoCollection.findAndModify(selector, updateOp).map { findAndModifyResult =>
-//      val maybeTuple: Option[(T, IsInsert)] = for {
-//        value <- findAndModifyResult.value
-//        updateLastError <- findAndModifyResult.lastError
-//      } yield (value.as[T], !updateLastError.updatedExisting)
-//
-//      maybeTuple.fold[(T, IsInsert)] {
-//        handleError(selector, findAndModifyResult)
-//      }(tuple => tuple)
-//    }
-//  }
-
-//  private def handleError(selector: JsObject, findAndModifyResult: mongoCollection.BatchCommands.FindAndModifyCommand.FindAndModifyResult) = {
-//    val error = s"Error upserting database for $selector."
-//    throw new RuntimeException(s"$error lastError: ${findAndModifyResult.lastError}")
-//  }
-
-  // TODO: save vs. saveAtomic
-  def createOrUpdate(entity: T, selector: JsObject)(implicit w: OWrites[T]): Future[(T, IsInsert)] = {
-    mongoCollection.update(selector, entity, upsert = true).map {
-      updateWriteResult => (entity, handleSaveError(updateWriteResult, s"Could not create or update the entity: $entity"))
+  def create(document: T)(implicit w: OWrites[T]): Future[T] = {
+    mongoCollection.insert(document).map { wResult: WriteResult =>
+      handleUpsertError(wResult, "Cannot insert document")
+      document
     }
   }
 
-  def create(entity: T)(implicit w: OWrites[T]): Future[T] = {
-    mongoCollection.insert(entity).map { createResult =>
-      if (!createResult.ok) {
-        throw new RuntimeException(createResult.writeErrors.mkString(", "))
-      } else {
-        entity
-      }
+  def createOrUpdate(document: T, selector: JsObject)(implicit w: OWrites[T]): Future[(IsInsert, T)] = {
+    mongoCollection.update(selector, document, upsert = true).map { wResult: UpdateWriteResult =>
+      val isInserted = handleUpsertError(wResult, "Cannot insert or update document")
+      (isInserted, document)
     }
   }
 

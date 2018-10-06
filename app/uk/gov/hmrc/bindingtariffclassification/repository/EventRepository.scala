@@ -21,8 +21,8 @@ import com.google.inject.ImplementedBy
 import play.api.libs.json._
 import reactivemongo.bson.BSONObjectID
 import reactivemongo.play.json.collection.JSONCollection
-import uk.gov.hmrc.bindingtariffclassification.model.Event
-import uk.gov.hmrc.bindingtariffclassification.repository.MongoFormatters.formatEvent
+import uk.gov.hmrc.bindingtariffclassification.model.{Event, JsonFormatters}
+import uk.gov.hmrc.bindingtariffclassification.model.JsonFormatters.formatEvent
 import uk.gov.hmrc.mongo.ReactiveRepository
 import uk.gov.hmrc.mongo.json.ReactiveMongoFormats
 
@@ -38,17 +38,18 @@ trait EventRepository {
 
 @Singleton
 class EventMongoRepository @Inject()(mongoDbProvider: MongoDbProvider)
-  extends ReactiveRepository[Event, BSONObjectID]("events", mongoDbProvider.mongo,
-    MongoFormatters.formatEvent, ReactiveMongoFormats.objectIdFormats)
-    with EventRepository
-    with MongoCrudHelper[Event] {
+  extends ReactiveRepository[Event, BSONObjectID](
+    collectionName = "events",
+    mongo = mongoDbProvider.mongo,
+    domainFormat = JsonFormatters.formatEvent,
+    idFormat = ReactiveMongoFormats.objectIdFormats) with EventRepository with MongoCrudHelper[Event] {
 
   override val mongoCollection: JSONCollection = collection
 
   override def indexes = Seq(
     // TODO: we need to add all indexes needed by the search functionalities
-    createSingleFieldAscendingIndex("id", Some("idIndex"), isUnique = true),
-    createSingleFieldAscendingIndex("caseReference", Some("caseReferenceIndex"), isUnique = false)
+    createSingleFieldAscendingIndex(indexFieldKey = "id", isUnique = true),
+    createSingleFieldAscendingIndex(indexFieldKey = "caseReference", isUnique = false)
   )
 
   override def insert(e: Event): Future[Event] = {
