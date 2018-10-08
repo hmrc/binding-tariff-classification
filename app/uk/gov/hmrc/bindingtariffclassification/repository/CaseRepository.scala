@@ -47,7 +47,7 @@ class CaseMongoRepository @Inject()(mongoDbProvider: MongoDbProvider)
   override val mongoCollection: JSONCollection = collection
 
   override def indexes = Seq(
-        // TODO: We need to create an index (composed by a single or multiple fields) considering all possible searches needed by the UI.
+    // TODO: We need to create an index (composed by a single or multiple fields) considering all possible searches needed by the UI.
     createSingleFieldAscendingIndex("reference", isUnique = true)
   )
 
