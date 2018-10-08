@@ -19,7 +19,7 @@ package uk.gov.hmrc.bindingtariffclassification.model
 import java.time.ZonedDateTime
 
 import uk.gov.hmrc.bindingtariffclassification.model.ApplicationType.ApplicationType
-import uk.gov.hmrc.bindingtariffclassification.model.LiabilityStatus.LiabilitStatus
+import uk.gov.hmrc.bindingtariffclassification.model.LiabilityStatus.LiabilityStatus
 
 sealed trait Application {
   val `type`: ApplicationType
@@ -48,7 +48,7 @@ case class LiabilityOrder
 (
   holder: EORIDetails,
   contact: Contact,
-  status: LiabilitStatus,
+  status: LiabilityStatus,
   port: String,
   entryNumber: String,
   endDate: ZonedDateTime
@@ -76,7 +76,7 @@ case class Contact
 )
 
 object LiabilityStatus extends Enumeration {
-  type LiabilitStatus = Value
+  type LiabilityStatus = Value
   val LIVE, NON_LIVE = Value
 }
 
