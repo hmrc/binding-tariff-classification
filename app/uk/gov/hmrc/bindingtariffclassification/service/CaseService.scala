@@ -25,7 +25,7 @@ import scala.concurrent.Future
 @Singleton
 class CaseService @Inject()(repository: CaseRepository) {
 
-  def upsert(c: Case): Future[(IsInsert, Case)] = {
+  def save(c: Case): Future[(IsInsert, Case)] = {
     repository.insertOrUpdate(c)
   }
 

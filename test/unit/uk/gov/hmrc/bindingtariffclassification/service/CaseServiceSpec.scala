@@ -35,17 +35,17 @@ class CaseServiceSpec extends UnitSpec with MockitoSugar {
 
   final val emulatedFailure = new RuntimeException("Emulated failure.")
 
-  "upsert" should {
+  "save" should {
 
     "return the case after it is inserted in the database collection" in {
       Mockito.when(repository.insertOrUpdate(c1)).thenReturn(successful((true, c1)))
-      val result = await(service.upsert(c1))
+      val result = await(service.save(c1))
       result shouldBe ((true, c1))
     }
 
     "return the case after it is updated in the database collection" in {
       Mockito.when(repository.insertOrUpdate(c1)).thenReturn(successful((false, c1)))
-      val result = await(service.upsert(c1))
+      val result = await(service.save(c1))
       result shouldBe ((false, c1))
     }
 
@@ -53,7 +53,7 @@ class CaseServiceSpec extends UnitSpec with MockitoSugar {
       Mockito.when(repository.insertOrUpdate(c1)).thenThrow(emulatedFailure)
 
       val caught = intercept[RuntimeException] {
-        await(service.upsert(c1))
+        await(service.save(c1))
       }
       caught shouldBe emulatedFailure
     }
