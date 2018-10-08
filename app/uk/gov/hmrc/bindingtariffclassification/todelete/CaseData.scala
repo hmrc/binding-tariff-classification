@@ -35,7 +35,7 @@ object CaseData {
     LiabilityOrder(
       holder = createEORIDetails,
       contact = Contact("Alfred", "alfred@me.com", "0198765432"),
-      LiabilityOrderType.LIVE,
+      LiabilityStatus.LIVE,
       "port-A",
       "23-SGD",
       ZonedDateTime.now()

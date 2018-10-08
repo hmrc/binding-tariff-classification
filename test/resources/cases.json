@@ -20,7 +20,7 @@
         "email" : "alfred@me.com",
         "phone" : "0198765432"
       },
-      "liabilityOrderType" : "LIVE",
+      "status" : "LIVE",
       "port" : "port-A",
       "entryNumber" : "23-SGD",
       "endDate" : "2018-10-08T15:25:53.243+01:00[Europe/London]",

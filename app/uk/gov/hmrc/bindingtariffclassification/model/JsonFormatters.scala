@@ -24,7 +24,7 @@ object JsonFormatters {
   // `Case` formatters
   implicit val formatCaseStatus = EnumJson.enumFormat(CaseStatus)
   implicit val formatApplicationType = EnumJson.enumFormat(ApplicationType)
-  implicit val formatLiabilityOrderType = EnumJson.enumFormat(LiabilityOrderType)
+  implicit val formatLiabilityStatus = EnumJson.enumFormat(LiabilityStatus)
 
   implicit val formatEORIDetails = Json.format[EORIDetails]
   implicit val formatContact = Json.format[Contact]
