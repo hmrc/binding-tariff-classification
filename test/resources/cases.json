@@ -1,95 +1,58 @@
 [
   {
-    "reference": "a6d231d0-e24d-44de-ae5d-ef9890c77282",
-    "status": "NEW",
-    "createDate": "2018-10-06T15:56:35.563+01:00[Europe/London]",
-    "assigneeId": "b8dd47e4-778a-4cad-b392-9d8b7a187bd7",
-    "application": {
-      "holder": {
-        "eori": "eori_holder_",
-        "traderName": "trader-name_holder_",
-        "addressLine1": "addressLine1_holder_",
-        "addressLine2": "addressLine2_holder_",
-        "addressLine3": "addressLine3_holder_",
-        "postcode": "postcode_holder_",
-        "country": "country_holder_"
+    "reference" : "5b1b7ab4-f52a-4e26-bdcc-829e538d14d2",
+    "status" : "NEW",
+    "createdDate" : "2018-10-08T15:25:52.936+01:00[Europe/London]",
+    "adjustedCreateDate" : "2018-10-08T15:25:52.938+01:00[Europe/London]",
+    "assigneeId" : "dcb485d4-b75e-4dc7-9728-3fa64312123a",
+    "application" : {
+      "holder" : {
+        "eori" : "06ece984-1eba-4f05-b492-37961f914b45",
+        "traderName" : "John Lewis",
+        "addressLine1" : "23, Leyton St",
+        "addressLine2" : "Leeds",
+        "addressLine3" : "West Yorkshire",
+        "postcode" : "LS4 99AA",
+        "country" : "GB"
       },
-      "contact": {
-        "name": "",
-        "email": "",
-        "phone": ""
+      "contact" : {
+        "name" : "Alfred",
+        "email" : "alfred@me.com",
+        "phone" : "0198765432"
       },
-      "goodsDescription": "",
-      "confidentialInformation": "",
-      "otherInformation": "",
-      "reissuedBTIReference": "",
-      "relatedBTIReference": "",
-      "knownLegalProceedings": "",
-      "envisagesCommodityCode": "",
-      "sampleToBeProvided": false,
-      "sampleToBeReturned": false,
-      "fastTrackBTI": false,
-      "type": "OFFLINE_BTI"
+      "liabilityOrderType" : "LIVE",
+      "port" : "port-A",
+      "entryNumber" : "23-SGD",
+      "endDate" : "2018-10-08T15:25:53.243+01:00[Europe/London]",
+      "type" : "LIABILITY_ORDER"
     }
   },
   {
-    "reference": "532ffa4c-c8d0-443c-9674-98b4451084ad",
-    "status": "NEW",
-    "createDate": "2018-10-06T15:56:35.571+01:00[Europe/London]",
-    "assigneeId": "10b8138b-7c1a-45d5-a0cc-eb32f916f454",
-    "application": {
-      "holder": {
-        "eori": "eori_3065ed91-5865-4b15-a1e0-058369012cf5",
-        "traderName": "trader-name_3065ed91-5865-4b15-a1e0-058369012cf5",
-        "addressLine1": "addressLine1_3065ed91-5865-4b15-a1e0-058369012cf5",
-        "addressLine2": "addressLine2_3065ed91-5865-4b15-a1e0-058369012cf5",
-        "addressLine3": "addressLine3_3065ed91-5865-4b15-a1e0-058369012cf5",
-        "postcode": "postcode_3065ed91-5865-4b15-a1e0-058369012cf5",
-        "country": "country_3065ed91-5865-4b15-a1e0-058369012cf5"
+    "reference" : "cb40732f-77fa-41ca-9e46-98833827f343",
+    "status" : "NEW",
+    "createdDate" : "2018-10-08T15:25:53.243+01:00[Europe/London]",
+    "adjustedCreateDate" : "2018-10-08T15:25:53.243+01:00[Europe/London]",
+    "assigneeId" : "dbe863c7-91e3-4cae-8fd0-8e414c067cc3",
+    "application" : {
+      "offline" : false,
+      "holder" : {
+        "eori" : "7f392f08-7356-49f5-b67e-3b624820f401",
+        "traderName" : "John Lewis",
+        "addressLine1" : "23, Leyton St",
+        "addressLine2" : "Leeds",
+        "addressLine3" : "West Yorkshire",
+        "postcode" : "LS4 99AA",
+        "country" : "GB"
       },
-      "contact": {
-        "name": "",
-        "email": "",
-        "phone": ""
+      "contact" : {
+        "name" : "Marisa",
+        "email" : "marisa@me.com",
+        "phone" : "0123456789"
       },
-      "goodsDescription": "",
-      "confidentialInformation": "",
-      "otherInformation": "",
-      "reissuedBTIReference": "",
-      "relatedBTIReference": "",
-      "knownLegalProceedings": "",
-      "envisagesCommodityCode": "",
-      "sampleToBeProvided": false,
-      "sampleToBeReturned": false,
-      "fastTrackBTI": false,
-      "type": "BTI"
-    }
-  },
-  {
-    "reference": "feb1248f-53f9-43fd-9927-1ba04b169915",
-    "status": "NEW",
-    "createDate": "2018-10-06T15:56:35.576+01:00[Europe/London]",
-    "assigneeId": "e668abb5-0723-4232-83c1-e2876827e556",
-    "application": {
-      "holder": {
-        "eori": "eori_holder",
-        "traderName": "trader-name_holder",
-        "addressLine1": "addressLine1_holder",
-        "addressLine2": "addressLine2_holder",
-        "addressLine3": "addressLine3_holder",
-        "postcode": "postcode_holder",
-        "country": "country_holder"
-      },
-      "contact": {
-        "name": "",
-        "email": "",
-        "phone": ""
-      },
-      "liabilityOrderType": "LIVE",
-      "port": "port_",
-      "entryNumber": "entryNumber_",
-      "endDate": "2018-10-06T15:56:35.575+01:00[Europe/London]",
-      "type": "LIABILITY_ORDER"
+      "goodsDescription" : "mobile phones",
+      "sampleToBeProvided" : false,
+      "sampleToBeReturned" : false,
+      "type" : "BTI"
     }
   }
 ]

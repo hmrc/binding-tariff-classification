@@ -1,34 +1,34 @@
 [
   {
-    "id": "8cc31381-04bb-48fa-93d7-0d6b8463aff8",
-    "details": {
-      "comment": "This is a note",
-      "type": "NOTE"
+    "id" : "87587c85-e8c3-41cd-86c4-3b1111d8168c",
+    "details" : {
+      "comment" : "This is a note",
+      "type" : "NOTE"
     },
-    "userId": "fe87bc1f-6a0c-480e-93b9-8ef63e7aeae6",
-    "caseReference": "a6d231d0-e24d-44de-ae5d-ef9890c77282",
-    "timestamp": "2018-10-06T15:56:35.601+01:00[Europe/London]"
+    "userId" : "10fb1d5a-977f-4d08-a77f-61c6be302610",
+    "caseReference" : "5b1b7ab4-f52a-4e26-bdcc-829e538d14d2",
+    "timestamp" : "2018-10-08T15:25:53.309+01:00[Europe/London]"
   },
   {
-    "id": "b7da3e2e-0829-4e27-ab20-d9d46981c5e2",
-    "details": {
-      "from": "DRAFT",
-      "to": "NEW",
-      "type": "CASE_STATUS_CHANGE"
+    "id" : "b74b0982-d21a-4313-8543-40ec9400d873",
+    "details" : {
+      "from" : "DRAFT",
+      "to" : "NEW",
+      "type" : "CASE_STATUS_CHANGE"
     },
-    "userId": "8b06a663-7fff-4136-851a-b1cbcce79c53",
-    "caseReference": "a6d231d0-e24d-44de-ae5d-ef9890c77282",
-    "timestamp": "2018-10-06T15:56:35.604+01:00[Europe/London]"
+    "userId" : "acdd0fd5-e4fe-414d-813b-35deba126e13",
+    "caseReference" : "5b1b7ab4-f52a-4e26-bdcc-829e538d14d2",
+    "timestamp" : "2018-10-08T15:25:53.32+01:00[Europe/London]"
   },
   {
-    "id": "cbb0ba4b-bb6c-46e3-82fe-64fafd869927",
-    "details": {
-      "url": "URL",
-      "mimeType": "media/jpg",
-      "type": "ATTACHMENT"
+    "id" : "666a51a6-29fc-423e-8a1e-63447cd26de2",
+    "details" : {
+      "url" : "files://aws.bucket/12345",
+      "mimeType" : "media/jpg",
+      "type" : "ATTACHMENT"
     },
-    "userId": "293bd015-e1aa-4728-8e41-145393649fb6",
-    "caseReference": "REF_xxx",
-    "timestamp": "2018-10-06T15:56:35.607+01:00[Europe/London]"
+    "userId" : "24b6fcac-31b0-4d2e-a66a-27d31b69103e",
+    "caseReference" : "REF_xxx",
+    "timestamp" : "2018-10-08T15:25:53.324+01:00[Europe/London]"
   }
 ]

@@ -31,10 +31,8 @@ object JsonFormatters {
 
   implicit val formatLiabilityOrder = Json.format[LiabilityOrder]
   implicit val formatBTIApplication = Json.format[BTIApplication]
-  implicit val formatBTIOfflineApplication = Json.format[BTIOfflineApplication]
   implicit val formatApplication = Union.from[Application]("type")
     .and[BTIApplication](ApplicationType.BTI.toString)
-    .and[BTIOfflineApplication](ApplicationType.OFFLINE_BTI.toString)
     .and[LiabilityOrder](ApplicationType.LIABILITY_ORDER.toString)
     .format
 

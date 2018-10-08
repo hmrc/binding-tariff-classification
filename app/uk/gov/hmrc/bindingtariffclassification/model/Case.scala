@@ -24,12 +24,11 @@ case class Case
 (
   reference: String,
   status: CaseStatus,
-  createDate : ZonedDateTime = ZonedDateTime.now(),
+  createdDate: ZonedDateTime = ZonedDateTime.now(),
+  adjustedCreateDate: ZonedDateTime = ZonedDateTime.now(),
+  closedDate: Option[ZonedDateTime] = None,
   assigneeId: Option[String] = None,
   queueId: Option[String] = None,
-  financialAccountantsAddress: Option[String] = None,
-  transactionType: Option[String] = None,
-  customsNomenclature: Option[String] = None,
   application: Application,
   decision: Option[Decision] = None
 )

@@ -25,48 +25,29 @@ object CaseData {
 
   def createBTIApplication: BTIApplication = {
     BTIApplication(
-      holder = createEORIDetails(RandomGenerator.randomUUID()),
-      contact = Contact("", "", ""),
-      agent = None,
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "")
-  }
-
-  def createOfflineBTI: BTIOfflineApplication = {
-    BTIOfflineApplication(
-      holder = createEORIDetails("holder_"),
-      contact = Contact("", "", ""),
-      agent = None,
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "")
+      holder = createEORIDetails,
+      contact = Contact("Marisa", "marisa@me.com", "0123456789"),
+      goodsDescription = "mobile phones"
+    )
   }
 
   def createLiabilityOrder: LiabilityOrder = {
     LiabilityOrder(
-      holder = createEORIDetails("holder"),
-      contact = Contact("", "", ""),
+      holder = createEORIDetails,
+      contact = Contact("Alfred", "alfred@me.com", "0198765432"),
       LiabilityOrderType.LIVE,
-      s"port_",
-      s"entryNumber_",
+      "port-A",
+      "23-SGD",
       ZonedDateTime.now()
     )
   }
 
-  def createEORIDetails(prefix: String): EORIDetails = {
-    EORIDetails(s"eori_$prefix",
-      s"trader-name_$prefix",
-      s"addressLine1_$prefix", s"addressLine2_$prefix", s"addressLine3_$prefix",
-      s"postcode_$prefix", s"country_$prefix")
+  def createEORIDetails: EORIDetails = {
+    EORIDetails(RandomGenerator.randomUUID(),
+      "John Lewis",
+      "23, Leyton St", "Leeds", "West Yorkshire",
+      "LS4 99AA",
+      "GB")
   }
 
   def createCase(a: Application = createBTIApplication): Case = {

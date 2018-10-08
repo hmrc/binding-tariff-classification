@@ -27,42 +27,21 @@ sealed trait Application {
 
 case class BTIApplication
 (
+  offline: Boolean = false,
   holder: EORIDetails,
   contact: Contact,
   agent: Option[EORIDetails] = None,
   goodsDescription: String,
-  confidentialInformation: String,
-  otherInformation: String,
-  reissuedBTIReference: String,
-  relatedBTIReference: String,
-  knownLegalProceedings: String,
-  envisagesCommodityCode: String,
+  confidentialInformation: Option[String] = None,
+  otherInformation: Option[String] = None,
+  reissuedBTIReference: Option[String] = None,
+  relatedBTIReference: Option[String] = None,
+  knownLegalProceedings: Option[String] = None,
+  envisagesCommodityCode: Option[String] = None,
   sampleToBeProvided: Boolean = false,
-  sampleToBeReturned: Boolean = false,
-  fastTrackBTI: Boolean = false
-
+  sampleToBeReturned: Boolean = false
 ) extends Application {
   override val `type` = ApplicationType.BTI
-}
-
-case class BTIOfflineApplication
-(
-  holder: EORIDetails,
-  contact: Contact,
-  agent: Option[EORIDetails] = None,
-  goodsDescription: String,
-  confidentialInformation: String,
-  otherInformation: String,
-  reissuedBTIReference: String,
-  relatedBTIReference: String,
-  knownLegalProceedings: String,
-  envisagesCommodityCode: String,
-  sampleToBeProvided: Boolean = false,
-  sampleToBeReturned: Boolean = false,
-  fastTrackBTI: Boolean = false
-
-) extends Application {
-  override val `type` = ApplicationType.OFFLINE_BTI
 }
 
 case class LiabilityOrder
@@ -103,5 +82,5 @@ object LiabilityOrderType extends Enumeration {
 
 object ApplicationType extends Enumeration {
   type ApplicationType = Value
-  val BTI, LIABILITY_ORDER, OFFLINE_BTI = Value
+  val BTI, LIABILITY_ORDER = Value
 }

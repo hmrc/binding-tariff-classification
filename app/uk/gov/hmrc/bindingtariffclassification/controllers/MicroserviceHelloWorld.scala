@@ -83,10 +83,6 @@ class MicroserviceHelloWorld @Inject()(caseService: CaseService, eventService: E
     val r1 = Await.result(caseService.upsert(c1), 2.seconds)
     Logger.debug(s"BTI document inserted? $r1")
 
-    val c2 = createCase(createOfflineBTI)
-    val r2 = Await.result(caseService.upsert(c2), 2.seconds)
-    Logger.debug(s"Offline BTI document inserted? $r2")
-
     val c3 = createCase(createLiabilityOrder)
     val r3 = Await.result(caseService.upsert(c3), 2.seconds)
     Logger.debug(s"Liability Order document inserted? $r3")
@@ -95,17 +91,14 @@ class MicroserviceHelloWorld @Inject()(caseService: CaseService, eventService: E
     val rc1 = Await.result(caseService.getByReference(c1.reference), 2.seconds)
     Logger.debug(s"$rc1")
 
-    val rc2 = Await.result(caseService.getByReference(c2.reference), 2.seconds)
-    Logger.debug(s"$rc2")
-
     val rc3 = Await.result(caseService.getByReference(c3.reference), 2.seconds)
     Logger.debug(s"$rc3")
 
     // UPDATE
-    val r1u = Await.result(caseService.upsert(c1.copy(application = c2.application)), 2.seconds)
+    val r1u = Await.result(caseService.upsert(c1.copy(application = c3.application)), 2.seconds)
     Logger.debug(s"Case JSON document inserted? $r1u")
 
-    val r2u = Await.result(caseService.upsert(c2.copy(application = c1.application)), 2.seconds)
+    val r2u = Await.result(caseService.upsert(c3.copy(application = c1.application)), 2.seconds)
     Logger.debug(s"Case JSON document inserted? $r2u")
 
     c1.reference
