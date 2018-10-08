@@ -47,7 +47,7 @@ class EventMongoRepository @Inject()(mongoDbProvider: MongoDbProvider)
   override val mongoCollection: JSONCollection = collection
 
   override def indexes = Seq(
-    // TODO: we need to add all indexes needed by the search functionalities
+    // TODO: We need to create an index (composed by a single or multiple fields) considering all possible searches needed by the UI.
     createSingleFieldAscendingIndex(indexFieldKey = "id", isUnique = true),
     createSingleFieldAscendingIndex(indexFieldKey = "caseReference", isUnique = false)
   )
