@@ -27,7 +27,8 @@ object CaseData {
     BTIApplication(
       holder = createEORIDetails,
       contact = Contact("Marisa", "marisa@me.com", "0123456789"),
-      goodsDescription = "mobile phones"
+      goodsDescription = "this is a BTI application for mobile phones",
+      itemsCategory = "mobile phones"
     )
   }
 

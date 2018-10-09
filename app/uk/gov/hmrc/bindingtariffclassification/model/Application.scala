@@ -27,10 +27,11 @@ sealed trait Application {
 
 case class BTIApplication
 (
-  offline: Boolean = false,
   holder: EORIDetails,
   contact: Contact,
   agent: Option[EORIDetails] = None,
+  offline: Boolean = false,
+  itemsCategory: String,
   goodsDescription: String,
   confidentialInformation: Option[String] = None,
   otherInformation: Option[String] = None,
@@ -46,13 +47,13 @@ case class BTIApplication
 
 case class LiabilityOrder
 (
+  // TODO: check whether we need the same fields we have for the `BTIApplication` type
   holder: EORIDetails,
   contact: Contact,
   status: LiabilityStatus,
   port: String,
   entryNumber: String,
   endDate: ZonedDateTime
-
 ) extends Application {
   override val `type` = ApplicationType.LIABILITY_ORDER
 }

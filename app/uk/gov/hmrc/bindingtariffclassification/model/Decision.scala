@@ -23,6 +23,7 @@ case class Decision
   bindingCommodityCode: String,
   effectiveStartDate: ZonedDateTime,
   effectiveEndDate: ZonedDateTime,
+  justification: String,
   goodsDescription: String,
   keywords: Seq[String],
   methodSearch: Option[String] = None,

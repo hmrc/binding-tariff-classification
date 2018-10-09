@@ -40,6 +40,11 @@ case class Attachment
 (
   url: String,
   mimeType: String,
+  // TODO: we need to specify the attachment "type/stage":
+  // - uploaded by the trader?
+  // - uploaded by a HMRC operator?
+  // - is it a sanitised version for the public ruling?
+  // - do we need to consider attachments also for liability orders?
   override val comment: Option[String] = None
 
 ) extends Details {
