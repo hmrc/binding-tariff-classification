@@ -27,8 +27,8 @@ object CaseData {
     BTIApplication(
       holder = createEORIDetails,
       contact = Contact("Marisa", "marisa@me.com", "0123456789"),
-      goodsDescription = "this is a BTI application for mobile phones",
-      itemsCategory = "mobile phones"
+      goodDescription = "this is a BTI application for mobile phones",
+      goodName = "mobile phones"
     )
   }
 
@@ -54,7 +54,7 @@ object CaseData {
   def createCase(a: Application = createBTIApplication): Case = {
     Case(
       reference = RandomGenerator.randomUUID(),
-      CaseStatus.NEW,
+      status = CaseStatus.NEW,
       assigneeId = Some(RandomGenerator.randomUUID()),
       application = a
     )

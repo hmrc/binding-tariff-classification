@@ -49,8 +49,8 @@
         "phone" : "0123456789"
       },
       "offline" : false,
-      "itemsCategory" : "mobile phones",
-      "goodsDescription" : "this is a BTI application for mobile phones",
+      "goodName" : "mobile phones",
+      "goodDescription" : "this is a BTI application for mobile phones",
       "sampleToBeProvided" : false,
       "sampleToBeReturned" : false,
       "type" : "BTI"

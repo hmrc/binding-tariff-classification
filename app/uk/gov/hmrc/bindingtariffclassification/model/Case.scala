@@ -27,7 +27,7 @@ case class Case
   createdDate: ZonedDateTime = ZonedDateTime.now(),
   adjustedCreateDate: ZonedDateTime = ZonedDateTime.now(),
   closedDate: Option[ZonedDateTime] = None,
-  caseBoardsFileNumber: Option[String],
+  caseBoardsFileNumber: Option[String] = None,
   assigneeId: Option[String] = None,
   queueId: Option[String] = None,
   application: Application,
