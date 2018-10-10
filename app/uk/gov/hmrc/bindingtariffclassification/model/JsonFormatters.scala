@@ -39,15 +39,14 @@ object JsonFormatters {
   implicit val formatAppeal = Json.format[Appeal]
   implicit val formatDecision = Json.format[Decision]
 
+  implicit val formatAttachment = Json.format[Attachment]
   implicit val formatCase = Json.format[Case]
 
   // `Event` formatters
-  implicit val formatAttachment = Json.format[Attachment]
   implicit val formatCaseStatusChange = Json.format[CaseStatusChange]
   implicit val formatNote = Json.format[Note]
 
   implicit val formatEventDetail = Union.from[Details]("type")
-    .and[Attachment](EventType.ATTACHMENT.toString)
     .and[CaseStatusChange](EventType.CASE_STATUS_CHANGE.toString)
     .and[Note](EventType.NOTE.toString)
     .format

@@ -31,7 +31,8 @@ case class Case
   assigneeId: Option[String] = None,
   queueId: Option[String] = None,
   application: Application,
-  decision: Option[Decision] = None
+  decision: Option[Decision] = None,
+  attachments: Seq[Attachment]
 )
 
 object CaseStatus extends Enumeration {

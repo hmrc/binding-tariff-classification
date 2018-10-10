@@ -19,8 +19,7 @@ package uk.gov.hmrc.bindingtariffclassification.model
 import java.time.ZonedDateTime
 
 import uk.gov.hmrc.bindingtariffclassification.model.CaseStatus.CaseStatus
-import uk.gov.hmrc.bindingtariffclassification.model.EventType.EventType
-
+import uk.gov.hmrc.bindingtariffclassification.model.EventType.{EventType, Value}
 
 case class Event
 (
@@ -34,20 +33,6 @@ case class Event
 sealed trait Details {
   val `type`: EventType
   val comment: Option[String]
-}
-
-case class Attachment
-(
-  // TODO: attachments need to be moved under `Case`
-  // we need a boolean flag for identifying attachments sent by the trader in the BTI application
-  // we need a boolean flag for identifying attachments visible in the public rulings UI
-  // we need endpoints (POST, PUT, DELETE) for managing attachments
-  url: String,
-  mimeType: String,
-  override val comment: Option[String] = None
-
-) extends Details {
-  override val `type` = EventType.ATTACHMENT
 }
 
 case class CaseStatusChange
@@ -69,7 +54,8 @@ case class Note
   // TODO: the `comment` option should be always be defined - to be checked on the frontend
 }
 
+
 object EventType extends Enumeration {
   type EventType = Value
-  val ATTACHMENT, CASE_STATUS_CHANGE, NOTE = Value
+  val CASE_STATUS_CHANGE, NOTE = Value
 }

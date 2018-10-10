@@ -56,7 +56,8 @@ object CaseData {
       reference = RandomGenerator.randomUUID(),
       status = CaseStatus.NEW,
       assigneeId = Some(RandomGenerator.randomUUID()),
-      application = a
+      application = a,
+      attachments = Seq()
     )
   }
 
