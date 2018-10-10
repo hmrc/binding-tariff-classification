@@ -1,3 +1,6 @@
 # microservice specific routes
 
 GET        /hello             @uk.gov.hmrc.bindingtariffclassification.controllers.MicroserviceHelloWorld.hello
+
+
+POST        /cases             @uk.gov.hmrc.bindingtariffclassification.controllers.CaseController.createCase
