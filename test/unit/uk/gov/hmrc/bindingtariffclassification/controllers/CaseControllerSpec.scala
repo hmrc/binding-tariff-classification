@@ -14,44 +14,47 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.bindingtariffclassification.controllers
+package unit.uk.gov.hmrc.bindingtariffclassification.controllers
 
+import akka.stream.Materializer
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito.when
 import org.scalatest.mockito.MockitoSugar
-import play.api.http.HeaderNames.CACHE_CONTROL
-import play.api.http.Status.{BAD_REQUEST, OK}
+import play.api.http.Status.{BAD_REQUEST, CREATED}
+import play.api.libs.json.Json.toJson
 import play.api.test.FakeRequest
+import uk.gov.hmrc.bindingtariffclassification.controllers.CaseController
 import uk.gov.hmrc.bindingtariffclassification.model.Case
+import uk.gov.hmrc.bindingtariffclassification.model.JsonFormatters._
 import uk.gov.hmrc.bindingtariffclassification.service.CaseService
+import uk.gov.hmrc.bindingtariffclassification.todelete.CaseData
 import uk.gov.hmrc.play.test.{UnitSpec, WithFakeApplication}
 
-import scala.concurrent.Future
 import scala.concurrent.Future.successful
 
 class CaseControllerSpec extends UnitSpec with WithFakeApplication with MockitoSugar {
 
-  private val mCase = mock[Case]
+  private implicit val mat: Materializer = fakeApplication.materializer
+
+  private val c: Case = CaseData.createCase()
   private val mockCaseService = mock[CaseService]
 
   private val fakeRequest = FakeRequest("POST", "/cases")
 
-  private val test = new CaseController(mockCaseService)
+  private val controller = new CaseController(mockCaseService)
 
   "POST /cases" should {
 
-    when(mockCaseService.save(any[Case])).thenReturn(successful((true, mCase)))
+    when(mockCaseService.save(c)).thenReturn(successful((true, c)))
 
-    "return 200 when the Location header has a unique value" in {
-      val result = test.createCase()(fakeRequest.withBody("test"))
-      status(result) shouldBe OK
+    "return 201 when the case has been created successfully" in {
+      val result = await(controller.createCase()(fakeRequest.withBody(toJson(c))))
+
+      status(result) shouldEqual CREATED
+      jsonBodyOf(result) shouldEqual toJson(c)
     }
 
-//    "return 400 when the Location header is not sent" in {
-//      val result = controller.createCase()(fakeRequest.withHeaders(CACHE_CONTROL -> "Y"))
-//      status(result) shouldBe BAD_REQUEST
-//    }
-
+    // TODO: add more scenarios
   }
 
 }
