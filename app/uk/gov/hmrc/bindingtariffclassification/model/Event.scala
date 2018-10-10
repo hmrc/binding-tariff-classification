@@ -38,13 +38,12 @@ sealed trait Details {
 
 case class Attachment
 (
+  // TODO: attachments need to be moved under `Case`
+  // we need a boolean flag for identifying attachments sent by the trader in the BTI application
+  // we need a boolean flag for identifying attachments visible in the public rulings UI
+  // we need endpoints (POST, PUT, DELETE) for managing attachments
   url: String,
   mimeType: String,
-  // TODO: we need to specify the attachment "type/stage":
-  // - uploaded by the trader?
-  // - uploaded by a HMRC operator?
-  // - is it a sanitised version for the public ruling?
-  // - do we need to consider attachments also for liability orders?
   override val comment: Option[String] = None
 
 ) extends Details {
