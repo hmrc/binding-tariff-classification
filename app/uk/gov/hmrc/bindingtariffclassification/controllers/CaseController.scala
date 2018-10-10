@@ -41,6 +41,7 @@ class CaseController @Inject()(caseService: CaseService) extends BaseController 
         // We probably want to have 2 methods in `CaseService`:
         // - one for update (it should error with 404 if you try to update a non-existing case)
         // - one for create (it should error with 400 or something else if you try to create a case with the same `reference` of an existing case)
+        // Have a look at the `findAndModify` atomic utility in Mongo
       }
     } recover recovery
   }
