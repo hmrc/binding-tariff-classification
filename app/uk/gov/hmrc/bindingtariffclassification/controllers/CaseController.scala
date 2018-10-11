@@ -22,21 +22,21 @@ import play.api.libs.json.{JsValue, Json}
 import play.api.mvc._
 import uk.gov.hmrc.bindingtariffclassification.model.{Case, JsonFormatters}
 import uk.gov.hmrc.bindingtariffclassification.service.CaseService
-import uk.gov.hmrc.play.bootstrap.controller.BaseController
 
 import scala.concurrent.ExecutionContext
 import ExecutionContext.Implicits.global
 
 @Singleton()
-class CaseController @Inject()(caseService: CaseService) extends BaseController {
+class CaseController @Inject()(caseService: CaseService) extends CommonController {
 
   import JsonFormatters._
 
   def createCase(): Action[JsValue] = Action.async(parse.json) { implicit request =>
+    Logger.warn(s"request = ${request.body} ")
     withJsonBody[Case] { c: Case =>
       caseService.save(c) map {
         case (true, response) => Created(Json.toJson(response))
-        case (false, _) => BadRequest
+        case (false, _) => Conflict
         // TODO: the JSON case is now already updated in mongo, so it is too late :-)
         // We probably want to have 2 methods in `CaseService`:
         // - one for update (it should error with 404 if you try to update a non-existing case)

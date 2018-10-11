@@ -16,7 +16,9 @@
 
 package unit.uk.gov.hmrc.bindingtariffclassification.controllers
 
+
 import akka.stream.Materializer
+import javax.naming.ServiceUnavailableException
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito.when
 import org.scalatest.mockito.MockitoSugar
@@ -24,13 +26,14 @@ import play.api.http.Status.{BAD_REQUEST, CREATED}
 import play.api.libs.json.Json.toJson
 import play.api.test.FakeRequest
 import uk.gov.hmrc.bindingtariffclassification.controllers.CaseController
-import uk.gov.hmrc.bindingtariffclassification.model.Case
+import uk.gov.hmrc.bindingtariffclassification.model.{Case, Event}
 import uk.gov.hmrc.bindingtariffclassification.model.JsonFormatters._
 import uk.gov.hmrc.bindingtariffclassification.service.CaseService
 import uk.gov.hmrc.bindingtariffclassification.todelete.CaseData
+import uk.gov.hmrc.http.BadRequestException
 import uk.gov.hmrc.play.test.{UnitSpec, WithFakeApplication}
 
-import scala.concurrent.Future.successful
+import scala.concurrent.Future._
 
 class CaseControllerSpec extends UnitSpec with WithFakeApplication with MockitoSugar {
 
@@ -45,14 +48,36 @@ class CaseControllerSpec extends UnitSpec with WithFakeApplication with MockitoS
 
   "POST /cases" should {
 
-    when(mockCaseService.save(c)).thenReturn(successful((true, c)))
 
     "return 201 when the case has been created successfully" in {
+      when(mockCaseService.save(c)).thenReturn(successful((true, c)))
+
       val result = await(controller.createCase()(fakeRequest.withBody(toJson(c))))
 
       status(result) shouldEqual CREATED
       jsonBodyOf(result) shouldEqual toJson(c)
+
     }
+
+
+    "return 400 when the case json does not match with the object" in {
+      val body = "empty-body"
+      val result = await(controller.createCase()(fakeRequest.withBody(toJson(body))))
+
+      status(result) shouldEqual BAD_REQUEST
+      jsonBodyOf(result) shouldEqual toJson(c)
+
+    }
+
+    //    when(mockCaseService.save(c)).thenThrow(new BadRequestException("bad-request-test"))
+    //
+    //    "return 400 when the save throw any exception" in {
+    //      val result = await(controller.createCase()(fakeRequest.withBody(toJson("any-string"))))
+    //
+    //      status(result) shouldEqual BAD_REQUEST
+    //      jsonBodyOf(result) shouldEqual toJson(c)
+    //
+    //    }
 
     // TODO: add more scenarios
   }
