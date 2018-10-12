@@ -21,7 +21,7 @@ import com.google.inject.ImplementedBy
 import play.api.libs.json._
 import reactivemongo.bson.BSONObjectID
 import reactivemongo.play.json.collection.JSONCollection
-import uk.gov.hmrc.bindingtariffclassification.model.{Case, IsInsert, JsonFormatters}
+import uk.gov.hmrc.bindingtariffclassification.model.{Case, JsonFormatters}
 import uk.gov.hmrc.bindingtariffclassification.model.JsonFormatters.formatCase
 import uk.gov.hmrc.mongo.ReactiveRepository
 import uk.gov.hmrc.mongo.json.ReactiveMongoFormats
@@ -31,7 +31,8 @@ import scala.concurrent.Future
 @ImplementedBy(classOf[CaseMongoRepository])
 trait CaseRepository {
 
-  def insertOrUpdate(c: Case): Future[(IsInsert, Case)]
+  def insert(c: Case): Future[Case]
+  def update(c: Case): Future[Case]
   def getByReference(reference: String): Future[Option[Case]]
   def getAll: Future[Seq[Case]]
 }
@@ -51,8 +52,12 @@ class CaseMongoRepository @Inject()(mongoDbProvider: MongoDbProvider)
     createSingleFieldAscendingIndex("reference", isUnique = true)
   )
 
-  override def insertOrUpdate(c: Case): Future[(IsInsert, Case)] = {
-    createOrUpdate(c, selectorByReference(c.reference))
+  override def insert(c: Case): Future[Case] = {
+    createOne(c)
+  }
+
+  override def update(c: Case): Future[Case] = {
+    modifyOne(c, selectorByReference(c.reference))
   }
 
   private def selectorByReference(reference: String): JsObject = {

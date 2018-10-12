@@ -53,7 +53,7 @@ class EventMongoRepository @Inject()(mongoDbProvider: MongoDbProvider)
   )
 
   override def insert(e: Event): Future[Event] = {
-    create(e)
+    createOne(e)
   }
 
   private def selectorById(id: String): JsObject = {

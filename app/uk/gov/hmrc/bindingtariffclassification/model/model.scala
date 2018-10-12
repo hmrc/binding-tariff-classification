@@ -16,8 +16,26 @@
 
 package uk.gov.hmrc.bindingtariffclassification
 
+import play.api.libs.json.{JsObject, Json}
+import play.api.libs.json.Json.JsValueWrapper
+
 package object model {
 
-  type IsInsert = Boolean
+  object ErrorCode extends Enumeration {
+    type ErrorCode = Value
+
+    val INVALID_REQUEST_PAYLOAD = Value("INVALID_REQUEST_PAYLOAD")
+    val CASE_NOT_FOUND = Value("APPLICATION_NOT_FOUND")
+    val UNKNOWN_ERROR = Value("UNKNOWN_ERROR")
+
+  }
+
+  object JsErrorResponse {
+    def apply(errorCode: ErrorCode.Value, message: JsValueWrapper): JsObject =
+      Json.obj(
+        "code" -> errorCode.toString,
+        "message" -> message
+      )
+  }
 
 }

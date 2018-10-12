@@ -42,7 +42,7 @@ class MicroserviceHelloWorldControllerSpec extends UnitSpec with WithFakeApplica
 
   "GET /hello" should {
 
-    when(mockCaseService.save(any[Case])).thenReturn(successful((false, mCase)))
+    when(mockCaseService.insert(any[Case])).thenReturn(successful(mCase))
     when(mockCaseService.getByReference(any[String])).thenReturn(successful(Some(mCase)))
 
     when(mockEventService.insert(any[Event])).thenReturn(successful(mEvent))

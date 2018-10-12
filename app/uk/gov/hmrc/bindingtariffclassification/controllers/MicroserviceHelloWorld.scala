@@ -80,11 +80,11 @@ class MicroserviceHelloWorld @Inject()(caseService: CaseService, eventService: E
 
     // INSERT
     val c1 = createCase(createBTIApplication)
-    val r1 = Await.result(caseService.save(c1), 2.seconds)
+    val r1 = Await.result(caseService.insert(c1), 2.seconds)
     Logger.debug(s"BTI document inserted? $r1")
 
     val c3 = createCase(createLiabilityOrder)
-    val r3 = Await.result(caseService.save(c3), 2.seconds)
+    val r3 = Await.result(caseService.insert(c3), 2.seconds)
     Logger.debug(s"Liability Order document inserted? $r3")
 
     // GET BY REF
@@ -95,10 +95,10 @@ class MicroserviceHelloWorld @Inject()(caseService: CaseService, eventService: E
     Logger.debug(s"$rc3")
 
     // UPDATE
-    val r1u = Await.result(caseService.save(c1.copy(application = c3.application)), 2.seconds)
+    val r1u = Await.result(caseService.insert(c1.copy(application = c3.application)), 2.seconds)
     Logger.debug(s"Case JSON document inserted? $r1u")
 
-    val r2u = Await.result(caseService.save(c3.copy(application = c1.application)), 2.seconds)
+    val r2u = Await.result(caseService.insert(c3.copy(application = c1.application)), 2.seconds)
     Logger.debug(s"Case JSON document inserted? $r2u")
 
     c1.reference

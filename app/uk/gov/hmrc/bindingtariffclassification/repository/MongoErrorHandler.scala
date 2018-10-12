@@ -16,9 +16,26 @@
 
 package uk.gov.hmrc.bindingtariffclassification.repository
 
+import play.api.Logger
 import reactivemongo.api.commands.{UpdateWriteResult, WriteResult}
 
 trait MongoErrorHandler {
+
+
+  def handleCreateError(wResult: WriteResult, errMsg: => String): Boolean = {
+    Logger.logger.warn(wResult.writeConcernError.toString)
+    Logger.logger.warn(wResult.writeErrors.toString())
+    if (hasErrors(wResult)) {
+      throwDbError(errMsg, wResult)
+    } else {
+      wResult match {
+        case upw: UpdateWriteResult =>
+          if (isDatabaseAltered(wResult)) upw.upserted.nonEmpty
+          else throwDbError(errMsg, wResult)
+        case _ => true
+      }
+    }
+  }
 
   private def hasErrors(wr: WriteResult): Boolean = {
     wr match {
@@ -34,20 +51,7 @@ trait MongoErrorHandler {
     }
   }
 
-  def handleUpsertError(wResult: WriteResult, errMsg: => String): Boolean = {
-    if (hasErrors(wResult)) {
-      throwDbError(errMsg, wResult)
-    } else {
-      wResult match {
-        case upw: UpdateWriteResult =>
-          if (isDatabaseAltered(wResult)) upw.upserted.nonEmpty
-          else throwDbError(errMsg, wResult)
-        case _ => true
-      }
-    }
-  }
-
-  private def throwDbError(errMsg: => String, wResult: WriteResult)= {
+  private def throwDbError(errMsg: => String, wResult: WriteResult) = {
     throw new RuntimeException(s"$errMsg. Reason: $wResult")
   }
 

@@ -19,6 +19,8 @@ package uk.gov.hmrc.bindingtariffclassification.controllers
 import play.api.Logger
 import play.api.libs.json._
 import play.api.mvc.{Request, Result}
+import uk.gov.hmrc.bindingtariffclassification.model._
+import uk.gov.hmrc.http.NotFoundException
 
 import scala.concurrent.Future
 import scala.util.{Failure, Success, Try}
@@ -31,25 +33,21 @@ trait CommonController extends BaseController {
     Logger.warn(s"log for auditing the overridden method. request.body: ${request.body.toString()}")
     Try(request.body.validate[T]) match {
       case Success(JsSuccess(payload, _)) => f(payload)
-      case Success(JsError(errs)) => Future.successful(handleUnprocessableEntity(errs.seq.toString()))
-      case Failure(e) => Future.successful(handleServerError(e.getMessage))
+      case Success(JsError(errs)) =>
+        Future.successful(BadRequest(JsErrorResponse(ErrorCode.INVALID_REQUEST_PAYLOAD, JsError.toJson(errs))))
+      case Failure(e) =>
+        Future.successful(InternalServerError(JsErrorResponse(ErrorCode.UNKNOWN_ERROR, e.getMessage)))
     }
   }
 
-  private def handleUnprocessableEntity(message: String): Result = {
-    UnprocessableEntity(JsErrorResponse("payload.not.valid", message))
+  private[controllers] def recovery: PartialFunction[Throwable, Result] = {
+    case e: Throwable =>
+      Logger.error(s"Error occurred: ${e.getMessage}", e)
+      handleException(e)
   }
 
-  private def handleServerError(message: String): Result = {
-    InternalServerError(JsErrorResponse("unexpected.error", message))
+  private[controllers] def handleException(e: Throwable) = {
+    Logger.error(s"An unexpected error occurred: ${e.getMessage}", e)
+    InternalServerError(JsErrorResponse(ErrorCode.UNKNOWN_ERROR, "An unexpected error occurred"))
   }
-
-  object JsErrorResponse {
-    def apply(errorCode: String, message: String): JsObject =
-      Json.obj(
-        "code" -> errorCode,
-        "message" -> message
-      )
-  }
-
 }

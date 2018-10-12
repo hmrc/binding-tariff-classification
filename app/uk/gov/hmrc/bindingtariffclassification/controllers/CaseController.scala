@@ -32,30 +32,15 @@ class CaseController @Inject()(caseService: CaseService) extends CommonControlle
   import JsonFormatters._
 
   def createCase(): Action[JsValue] = Action.async(parse.json) { implicit request =>
-    Logger.warn(s"request = ${request.body} ")
     withJsonBody[Case] { c: Case =>
-      caseService.save(c) map {
-        case (true, response) => Created(Json.toJson(response))
-        case (false, _) => Conflict
+      caseService.insert(c) map {
+        case (response) => Created(Json.toJson(response))
+        case (_ ) => NotImplemented
         // TODO: the JSON case is now already updated in mongo, so it is too late :-)
         // We probably want to have 2 methods in `CaseService`:
         // - one for update (it should error with 404 if you try to update a non-existing case)
-        // - one for create (it should error with 400 or something else if you try to create a case with the same `reference` of an existing case)
         // Have a look at the `findAndModify` atomic utility in Mongo
       }
     } recover recovery
   }
-
-  def handleException(e: Throwable): Result = {
-    // TODO: we need to distinguish between
-    // - a JSON parsing error (400 Bad Request) - for example if the request is not a valid JSON case
-    // - a system error (500 Internal Server Error) - for example if the database is not running
-    Logger.logger.info(e.getMessage)
-    InternalServerError(e.getMessage)
-  }
-
-  def recovery: PartialFunction[Throwable, Result] = {
-    case e => handleException(e)
-  }
-
 }
