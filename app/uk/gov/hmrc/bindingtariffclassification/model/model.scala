@@ -25,7 +25,7 @@ package object model {
     type ErrorCode = Value
 
     val INVALID_REQUEST_PAYLOAD = Value("INVALID_REQUEST_PAYLOAD")
-    val CASE_NOT_FOUND = Value("APPLICATION_NOT_FOUND")
+    val NOT_FOUND = Value("NOT_FOUND")
     val UNKNOWN_ERROR = Value("UNKNOWN_ERROR")
 
   }

@@ -18,7 +18,6 @@ package unit.uk.gov.hmrc.bindingtariffclassification.repository
 
 import org.scalatest.concurrent.Eventually
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
-import play.api.Logger
 import reactivemongo.api.DB
 import reactivemongo.api.indexes.Index
 import reactivemongo.api.indexes.IndexType.Ascending
@@ -52,6 +51,8 @@ class EventRepositorySpec extends UnitSpec
 
   private val repository = new EventMongoRepository(mongoDbProvider)
 
+  private val e: Event = createNoteEvent("")
+
   override def beforeEach(): Unit = {
     super.beforeEach()
     await(repository.drop)
@@ -72,27 +73,26 @@ class EventRepositorySpec extends UnitSpec
     "insert a new document in the collection" in {
       collectionSize shouldBe 0
 
-      val e: Event = createNoteEvent("")
       await(repository.insert(e)) shouldBe e
       collectionSize shouldBe 1
+
       await(repository.collection.find(selectorById(e)).one[Event]) shouldBe Some(e)
     }
 
-    "fail to update an existing document in the collection" in {
+    "fail to insert an existing document in the collection" in {
       collectionSize shouldBe 0
 
-      val e: Event = createNoteEvent("")
       await(repository.insert(e)) shouldBe e
-
       collectionSize shouldBe 1
+
       await(repository.collection.find(selectorById(e)).one[Event]) shouldBe Some(e)
 
       val updated: Event = e.copy(userId = "user_A")
+
       val caught = intercept[DatabaseException] {
         await(repository.insert(updated))
       }
       caught.code shouldBe Some(11000)
-      caught.message shouldBe s"""E11000 duplicate key error collection: test-EventRepositorySpec.events index: id_Index dup key: { : "${e.id}" }"""
 
       collectionSize shouldBe 1
       await(repository.collection.find(selectorById(updated)).one[Event]) shouldBe Some(e)
@@ -125,7 +125,6 @@ class EventRepositorySpec extends UnitSpec
   "getById" should {
 
     "retrieve the correct record" in {
-      val e = createAttachmentEvent("")
       await(repository.insert(e))
       collectionSize shouldBe 1
 
@@ -146,19 +145,16 @@ class EventRepositorySpec extends UnitSpec
 
     "have a unique index based on the field 'id' " in {
       val eventId = RandomGenerator.randomUUID()
-      val e1 = createAttachmentEvent("ABC").copy(id = eventId)
-      val res1 = await(repository.insert(e1))
-      Logger.debug(s"Inserted event : $res1")
+      val e1 = e.copy(id = eventId)
+      await(repository.insert(e1))
       collectionSize shouldBe 1
 
       val caught = intercept[DatabaseException] {
         val e2 = e1.copy(caseReference = "DEF", userId = "user_123")
-        val res2 = await(repository.insert(e2))
-        Logger.debug(s"Inserted event : $res2")
+        await(repository.insert(e2))
       }
 
       caught.code shouldBe Some(11000)
-      caught.message shouldBe s"""E11000 duplicate key error collection: test-EventRepositorySpec.events index: id_Index dup key: { : "$eventId" }"""
 
       collectionSize shouldBe 1
     }
@@ -179,8 +175,6 @@ class EventRepositorySpec extends UnitSpec
       eventually(timeout(5.seconds), interval(100.milliseconds)) {
         getIndexes(repo).toSet shouldBe expectedIndexes.toSet
       }
-
-      await(repo.drop) shouldBe true
     }
   }
 

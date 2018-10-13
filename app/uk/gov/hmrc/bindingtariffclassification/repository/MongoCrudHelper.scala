@@ -16,17 +16,15 @@
 
 package uk.gov.hmrc.bindingtariffclassification.repository
 
-import play.api.libs.json.{JsObject, OWrites, Reads}
+import play.api.libs.json._
 import reactivemongo.api.Cursor
-import reactivemongo.api.commands.WriteResult
-import reactivemongo.core.errors.DatabaseException
 import reactivemongo.play.json.ImplicitBSONHandlers._
 import reactivemongo.play.json.collection.JSONCollection
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-trait MongoCrudHelper[T] extends MongoIndexCreator with MongoErrorHandler {
+trait MongoCrudHelper[T] extends MongoIndexCreator {
 
   protected val mongoCollection: JSONCollection
 
@@ -34,9 +32,15 @@ trait MongoCrudHelper[T] extends MongoIndexCreator with MongoErrorHandler {
     mongoCollection.insert(document).map { _ => document }
   }
 
-  def modifyOne(document: T, selector: JsObject)(implicit w: OWrites[T]): Future[T] = {
-    mongoCollection.update(selector, document, upsert = false).map { _ => document }
-    //    mongoCollection.findAndModify()
+  def atomicUpdate(selector: JsObject, newDocument: T)(implicit w: OFormat[T]): Future[Option[T]] = {
+    val modifier = mongoCollection.updateModifier(
+      update = newDocument,
+      fetchNewObject = true,
+      upsert = false)
+
+    mongoCollection.findAndModify(selector, modifier).map {
+      _.value.map(_.as[T])
+    }
   }
 
   def getOne(selector: JsObject)(implicit r: Reads[T]): Future[Option[T]] = {

@@ -35,18 +35,12 @@ class CaseServiceSpec extends UnitSpec with MockitoSugar {
 
   final val emulatedFailure = new RuntimeException("Emulated failure.")
 
-  "save" should {
+  "insert" should {
 
     "return the case after it is inserted in the database collection" in {
       Mockito.when(repository.insert(c1)).thenReturn(successful(c1))
       val result = await(service.insert(c1))
-      result shouldBe (c1)
-    }
-
-    "return the case after it is updated in the database collection" in {
-      Mockito.when(repository.insert(c1)).thenReturn(successful(c1))
-      val result = await(service.insert(c1))
-      result shouldBe (c1)
+      result shouldBe c1
     }
 
     "propagate any error" in {
@@ -59,15 +53,39 @@ class CaseServiceSpec extends UnitSpec with MockitoSugar {
     }
   }
 
+  "update" should {
+
+    "return the case after it is updated in the database collection" in {
+      Mockito.when(repository.update(c1)).thenReturn(successful(Some(c1)))
+      val result = await(service.update(c1))
+      result shouldBe Some(c1)
+    }
+
+    "return None if the case does not exist in the database collection" in {
+      Mockito.when(repository.update(c1)).thenReturn(successful(None))
+      val result = await(service.update(c1))
+      result shouldBe None
+    }
+
+    "propagate any error" in {
+      Mockito.when(repository.update(c1)).thenThrow(emulatedFailure)
+
+      val caught = intercept[RuntimeException] {
+        await(service.update(c1))
+      }
+      caught shouldBe emulatedFailure
+    }
+  }
+
   "getByReference" should {
 
-    "return the expected event" in {
+    "return the expected case" in {
       Mockito.when(repository.getByReference(c1.reference)).thenReturn(successful(Some(c1)))
       val result = await(service.getByReference(c1.reference))
       result shouldBe Some(c1)
     }
 
-    "return None when the event is not found" in {
+    "return None when the case is not found" in {
       Mockito.when(repository.getByReference(c1.reference)).thenReturn(successful(None))
       val result = await(service.getByReference(c1.reference))
       result shouldBe None

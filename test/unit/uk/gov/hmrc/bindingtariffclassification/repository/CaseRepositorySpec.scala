@@ -19,7 +19,6 @@ package unit.uk.gov.hmrc.bindingtariffclassification.repository
 import org.scalatest.concurrent.Eventually
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
 import reactivemongo.api.DB
-import reactivemongo.api.commands.LastError
 import reactivemongo.api.indexes.Index
 import reactivemongo.api.indexes.IndexType.Ascending
 import reactivemongo.bson._
@@ -52,13 +51,16 @@ class CaseRepositorySpec extends UnitSpec
 
   private val repository = new CaseMongoRepository(mongoDbProvider)
 
+  private val case1: Case = createCase()
+  private val case2: Case = createCase()
+
   override def beforeEach(): Unit = {
     super.beforeEach()
     await(repository.drop)
     await(repository.ensureIndexes)
   }
 
-  override def afterEach(): Unit = {
+  override def afterAll(): Unit = {
     super.afterAll()
     await(repository.drop)
   }
@@ -69,26 +71,25 @@ class CaseRepositorySpec extends UnitSpec
 
   "insert" should {
 
-    val caseTest: Case = createCase()
-
     "insert a new document in the collection" in {
       collectionSize shouldBe 0
 
-      await(repository.insert(caseTest)) shouldBe caseTest
+      await(repository.insert(case1)) shouldBe case1
       collectionSize shouldBe 1
-      await(repository.collection.find(selectorByReference(caseTest)).one[Case]) shouldBe Some(caseTest)
+      await(repository.collection.find(selectorByReference(case1)).one[Case]) shouldBe Some(case1)
     }
 
-    "insert an existing document in the collection" in {
+    "fail to insert an existing document in the collection" in {
       collectionSize shouldBe 0
 
-      await(repository.insert(caseTest)) shouldBe caseTest
+      await(repository.insert(case1)) shouldBe case1
       collectionSize shouldBe 1
 
       val caught = intercept[DatabaseException] {
-        await(repository.insert(caseTest))
+        await(repository.insert(case1))
       }
       caught.code shouldBe Some(11000)
+
       collectionSize shouldBe 1
     }
 
@@ -96,24 +97,23 @@ class CaseRepositorySpec extends UnitSpec
 
   "update" should {
 
-    val caseTest: Case = createCase()
-
-    "update the existing document in the collection" in {
+    "modify an existing document in the collection" in {
       collectionSize shouldBe 0
 
-      await(repository.insert(caseTest)) shouldBe caseTest
+      await(repository.insert(case1)) shouldBe case1
       collectionSize shouldBe 1
 
-      val updated: Case = caseTest.copy(application = createBTIApplication, status = CaseStatus.CANCELLED)
-      await(repository.update(updated)) shouldBe updated
+      val updated: Case = case1.copy(application = createBTIApplication, status = CaseStatus.CANCELLED)
+      await(repository.update(updated)) shouldBe Some(updated)
       collectionSize shouldBe 1
+
       await(repository.collection.find(selectorByReference(updated)).one[Case]) shouldBe Some(updated)
     }
 
-    "update the non existing document in the collection" in {
+    "do nothing when try to update a non existing document in the collection" in {
       collectionSize shouldBe 0
 
-      await(repository.update(caseTest)) shouldBe caseTest
+      await(repository.update(case1)) shouldBe None
       collectionSize shouldBe 0
     }
   }
@@ -122,14 +122,11 @@ class CaseRepositorySpec extends UnitSpec
   "getAll" should {
 
     "retrieve all cases from the collection" in {
-      val caseTest_1 = createCase()
-      val caseTest_2 = createCase()
-
-      await(repository.insert(caseTest_1))
-      await(repository.insert(caseTest_2))
+      await(repository.insert(case1))
+      await(repository.insert(case2))
       collectionSize shouldBe 2
 
-      await(repository.getAll) shouldBe Seq(caseTest_1, caseTest_2)
+      await(repository.getAll) shouldBe Seq(case1, case2)
     }
 
     "return an empty sequence when there are no cases in the collection" in {
@@ -141,11 +138,10 @@ class CaseRepositorySpec extends UnitSpec
   "getByReference" should {
 
     "retrieve the correct record" in {
-      val caseTest: Case = createCase()
-      await(repository.insert(caseTest))
+      await(repository.insert(case1))
       collectionSize shouldBe 1
 
-      await(repository.getByReference(caseTest.reference)) shouldBe Some(caseTest)
+      await(repository.getByReference(case1.reference)) shouldBe Some(case1)
     }
 
     "return 'None' when the 'reference' doesn't match any record in the collection" in {
@@ -161,11 +157,15 @@ class CaseRepositorySpec extends UnitSpec
   "The 'cases' collection" should {
 
     "have a unique index based on the field 'reference' " in {
-      val caseTest = createCase()
-      await(repository.insert(caseTest))
+      await(repository.insert(case1))
       collectionSize shouldBe 1
 
-      await(repository.insert(caseTest))
+      val caught = intercept[DatabaseException] {
+
+        await(repository.insert(case1.copy(status = CaseStatus.REFERRED)))
+      }
+      caught.code shouldBe Some(11000)
+
       collectionSize shouldBe 1
     }
 
@@ -184,8 +184,6 @@ class CaseRepositorySpec extends UnitSpec
       eventually(timeout(5.seconds), interval(100.milliseconds)) {
         getIndexes(repo).toSet shouldBe expectedIndexes.toSet
       }
-
-      await(repo.drop) shouldBe true
     }
   }
 

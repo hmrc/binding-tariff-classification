@@ -17,10 +17,9 @@
 package uk.gov.hmrc.bindingtariffclassification.controllers
 
 import javax.inject.{Inject, Singleton}
-import play.api.Logger
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc._
-import uk.gov.hmrc.bindingtariffclassification.model.{Case, JsonFormatters}
+import uk.gov.hmrc.bindingtariffclassification.model.{Case, ErrorCode, JsErrorResponse, JsonFormatters}
 import uk.gov.hmrc.bindingtariffclassification.service.CaseService
 
 import scala.concurrent.ExecutionContext
@@ -32,15 +31,19 @@ class CaseController @Inject()(caseService: CaseService) extends CommonControlle
   import JsonFormatters._
 
   def createCase(): Action[JsValue] = Action.async(parse.json) { implicit request =>
-    withJsonBody[Case] { c: Case =>
-      caseService.insert(c) map {
-        case (response) => Created(Json.toJson(response))
-        case (_ ) => NotImplemented
-        // TODO: the JSON case is now already updated in mongo, so it is too late :-)
-        // We probably want to have 2 methods in `CaseService`:
-        // - one for update (it should error with 404 if you try to update a non-existing case)
-        // Have a look at the `findAndModify` atomic utility in Mongo
+    withJsonBody[Case] { caseRequest: Case =>
+      caseService.insert(caseRequest) map { c => Created(Json.toJson(c)) }
+    } recover recovery
+  }
+
+  def updateCase(reference: String): Action[JsValue] = Action.async(parse.json) { implicit request =>
+    withJsonBody[Case] { caseRequest: Case =>
+      // TODO (if `caseRequest` does not contain the reference): val updatedCase = caseRequest.copy(reference = reference)
+      caseService.update(caseRequest) map {
+        case None => NotFound(JsErrorResponse(ErrorCode.NOT_FOUND, "Case not found"))
+        case Some(c: Case) => Ok(Json.toJson(c))
       }
     } recover recovery
   }
+
 }

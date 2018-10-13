@@ -1,5 +1,6 @@
 # microservice specific routes
 
-GET        /hello             @uk.gov.hmrc.bindingtariffclassification.controllers.MicroserviceHelloWorld.hello
+GET        /hello                 @uk.gov.hmrc.bindingtariffclassification.controllers.MicroserviceHelloWorld.hello
 
-POST       /cases             @uk.gov.hmrc.bindingtariffclassification.controllers.CaseController.createCase
+POST       /cases                 @uk.gov.hmrc.bindingtariffclassification.controllers.CaseController.createCase
+PUT        /cases/:reference      @uk.gov.hmrc.bindingtariffclassification.controllers.CaseController.updateCase(reference: String)

@@ -32,7 +32,7 @@ import scala.concurrent.Future
 trait CaseRepository {
 
   def insert(c: Case): Future[Case]
-  def update(c: Case): Future[Case]
+  def update(c: Case): Future[Option[Case]]
   def getByReference(reference: String): Future[Option[Case]]
   def getAll: Future[Seq[Case]]
 }
@@ -56,8 +56,8 @@ class CaseMongoRepository @Inject()(mongoDbProvider: MongoDbProvider)
     createOne(c)
   }
 
-  override def update(c: Case): Future[Case] = {
-    modifyOne(c, selectorByReference(c.reference))
+  override def update(c: Case): Future[Option[Case]] = {
+    atomicUpdate(selectorByReference(c.reference), c)
   }
 
   private def selectorByReference(reference: String): JsObject = {
