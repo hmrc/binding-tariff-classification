@@ -30,19 +30,30 @@ class CaseController @Inject()(caseService: CaseService) extends CommonControlle
 
   import JsonFormatters._
 
-  def createCase(): Action[JsValue] = Action.async(parse.json) { implicit request =>
+  def create: Action[JsValue] = Action.async(parse.json) { implicit request =>
     withJsonBody[Case] { caseRequest: Case =>
       caseService.insert(caseRequest) map { c => Created(Json.toJson(c)) }
     } recover recovery
   }
 
-  def updateCase(reference: String): Action[JsValue] = Action.async(parse.json) { implicit request =>
+  def update(reference: String): Action[JsValue] = Action.async(parse.json) { implicit request =>
     withJsonBody[Case] { caseRequest: Case =>
       // TODO (if `caseRequest` does not contain the reference): val updatedCase = caseRequest.copy(reference = reference)
       caseService.update(caseRequest) map {
         case None => NotFound(JsErrorResponse(ErrorCode.NOT_FOUND, "Case not found"))
         case Some(c: Case) => Ok(Json.toJson(c))
       }
+    } recover recovery
+  }
+
+  def getAll: Action[AnyContent] = Action.async { implicit request =>
+    caseService.getAll map (cases => Ok(Json.toJson(cases))) recover recovery
+  }
+
+  def getByReference(reference: String): Action[AnyContent] = Action.async { implicit request =>
+    caseService.getByReference(reference) map {
+      case None => NotFound(JsErrorResponse(ErrorCode.NOT_FOUND, "Case not found"))
+      case Some(c: Case) => Ok(Json.toJson(c))
     } recover recovery
   }
 

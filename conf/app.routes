@@ -2,5 +2,8 @@
 
 GET        /hello                 @uk.gov.hmrc.bindingtariffclassification.controllers.MicroserviceHelloWorld.hello
 
-POST       /cases                 @uk.gov.hmrc.bindingtariffclassification.controllers.CaseController.createCase
-PUT        /cases/:reference      @uk.gov.hmrc.bindingtariffclassification.controllers.CaseController.updateCase(reference: String)
+GET        /cases                 @uk.gov.hmrc.bindingtariffclassification.controllers.CaseController.getAll
+GET        /cases/:reference      @uk.gov.hmrc.bindingtariffclassification.controllers.CaseController.getByReference(reference: String)
+POST       /cases                 @uk.gov.hmrc.bindingtariffclassification.controllers.CaseController.create
+PUT        /cases/:reference      @uk.gov.hmrc.bindingtariffclassification.controllers.CaseController.update(reference: String)
+

@@ -44,12 +44,12 @@ class CaseControllerSpec extends UnitSpec with WithFakeApplication with MockitoS
 
   private val controller = new CaseController(mockCaseService)
 
-  "POST /cases" should {
+  "create()" should {
 
     "return 201 when the case has been created successfully" in {
       when(mockCaseService.insert(c)).thenReturn(successful(c))
 
-      val result = await(controller.createCase()(fakeRequest.withBody(toJson(c))))
+      val result = await(controller.create()(fakeRequest.withBody(toJson(c))))
 
       status(result) shouldEqual CREATED
       jsonBodyOf(result) shouldEqual toJson(c)
@@ -57,7 +57,7 @@ class CaseControllerSpec extends UnitSpec with WithFakeApplication with MockitoS
 
     "return 400 when the JSON request payload is not a Case" in {
       val body = """{"a":"b"}"""
-      val result = await(controller.createCase()(fakeRequest.withBody(toJson(body))))
+      val result = await(controller.create()(fakeRequest.withBody(toJson(body))))
 
       status(result) shouldEqual BAD_REQUEST
     }
@@ -71,14 +71,14 @@ class CaseControllerSpec extends UnitSpec with WithFakeApplication with MockitoS
 
       when(mockCaseService.insert(c)).thenReturn(failed(error))
 
-      val result = await(controller.createCase()(fakeRequest.withBody(toJson(c))))
+      val result = await(controller.create()(fakeRequest.withBody(toJson(c))))
 
       status(result) shouldEqual INTERNAL_SERVER_ERROR
     }
 
   }
 
-  "PUT /cases" should {
+  "update()" should {
 
     "return 200 when the case has been updated successfully" in {
       // TODO
@@ -96,6 +96,14 @@ class CaseControllerSpec extends UnitSpec with WithFakeApplication with MockitoS
       // TODO
     }
 
+  }
+
+  "getAll()" should {
+    // TODO
+  }
+
+  "getByReference()" should {
+    // TODO
   }
 
 }
