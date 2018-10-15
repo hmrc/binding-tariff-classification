@@ -91,10 +91,10 @@ class MicroserviceHelloWorld @Inject()(caseService: CaseService, eventService: E
     Logger.debug(s"$rc3")
 
     // UPDATE
-    val r1u = Await.result(caseService.insert(c1.copy(application = c3.application)), 2.seconds)
+    val r1u = Await.result(caseService.update(c1.copy(application = c3.application)), 2.seconds)
     Logger.debug(s"Case JSON document inserted? $r1u")
 
-    val r2u = Await.result(caseService.insert(c3.copy(application = c1.application)), 2.seconds)
+    val r2u = Await.result(caseService.update(c3.copy(application = c1.application)), 2.seconds)
     Logger.debug(s"Case JSON document inserted? $r2u")
 
     c1.reference
