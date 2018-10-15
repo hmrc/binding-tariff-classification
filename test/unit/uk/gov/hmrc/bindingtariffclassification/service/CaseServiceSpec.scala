@@ -110,7 +110,7 @@ class CaseServiceSpec extends UnitSpec with MockitoSugar {
     }
 
     "return an empty sequence when there are no cases" in {
-      Mockito.when(repository.getAll).thenReturn(successful(Seq()))
+      Mockito.when(repository.getAll).thenReturn(successful(Nil))
       val result = await(service.getAll)
       result shouldBe Nil
     }

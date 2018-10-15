@@ -38,6 +38,7 @@ class CaseController @Inject()(caseService: CaseService) extends CommonControlle
 
   def update(reference: String): Action[JsValue] = Action.async(parse.json) { implicit request =>
     withJsonBody[Case] { caseRequest: Case =>
+      // TODO: require (reference == caseRequest.reference)
       // TODO (if `caseRequest` does not contain the reference): val updatedCase = caseRequest.copy(reference = reference)
       caseService.update(caseRequest) map {
         case None => NotFound(JsErrorResponse(ErrorCode.NOT_FOUND, "Case not found"))

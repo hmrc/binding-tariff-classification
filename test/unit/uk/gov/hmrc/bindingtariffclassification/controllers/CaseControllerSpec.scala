@@ -19,7 +19,7 @@ package unit.uk.gov.hmrc.bindingtariffclassification.controllers
 import akka.stream.Materializer
 import org.mockito.Mockito.when
 import org.scalatest.mockito.MockitoSugar
-import play.api.http.Status.{BAD_REQUEST, CREATED, INTERNAL_SERVER_ERROR}
+import play.api.http.Status.{BAD_REQUEST, CREATED, INTERNAL_SERVER_ERROR, NOT_FOUND, OK}
 import play.api.libs.json.Json.toJson
 import play.api.test.FakeRequest
 import reactivemongo.bson.BSONDocument
@@ -37,22 +37,24 @@ class CaseControllerSpec extends UnitSpec with WithFakeApplication with MockitoS
 
   private implicit val mat: Materializer = fakeApplication.materializer
 
-  private val c: Case = CaseData.createCase()
+  private val c1: Case = CaseData.createCase()
+  private val c2: Case = CaseData.createCase()
+
   private val mockCaseService = mock[CaseService]
 
-  private val fakeRequest = FakeRequest("POST", "/cases")
+  private val fakeRequest = FakeRequest()
 
   private val controller = new CaseController(mockCaseService)
 
   "create()" should {
 
     "return 201 when the case has been created successfully" in {
-      when(mockCaseService.insert(c)).thenReturn(successful(c))
+      when(mockCaseService.insert(c1)).thenReturn(successful(c1))
 
-      val result = await(controller.create()(fakeRequest.withBody(toJson(c))))
+      val result = await(controller.create()(fakeRequest.withBody(toJson(c1))))
 
       status(result) shouldEqual CREATED
-      jsonBodyOf(result) shouldEqual toJson(c)
+      jsonBodyOf(result) shouldEqual toJson(c1)
     }
 
     "return 400 when the JSON request payload is not a Case" in {
@@ -69,9 +71,9 @@ class CaseControllerSpec extends UnitSpec with WithFakeApplication with MockitoS
         override def message: String = "duplicate value for db index"
       }
 
-      when(mockCaseService.insert(c)).thenReturn(failed(error))
+      when(mockCaseService.insert(c1)).thenReturn(failed(error))
 
-      val result = await(controller.create()(fakeRequest.withBody(toJson(c))))
+      val result = await(controller.create()(fakeRequest.withBody(toJson(c1))))
 
       status(result) shouldEqual INTERNAL_SERVER_ERROR
     }
@@ -81,29 +83,102 @@ class CaseControllerSpec extends UnitSpec with WithFakeApplication with MockitoS
   "update()" should {
 
     "return 200 when the case has been updated successfully" in {
-      // TODO
+      when(mockCaseService.update(c1)).thenReturn(successful(Some(c1)))
+
+      val result = await(controller.update(c1.reference)(fakeRequest.withBody(toJson(c1))))
+
+      status(result) shouldEqual OK
+      jsonBodyOf(result) shouldEqual toJson(c1)
     }
 
     "return 400 when the JSON request payload is not a case" in {
-      // TODO
+      val body = """{"a":"b"}"""
+      val result = await(controller.update("")(fakeRequest.withBody(toJson(body))))
+
+      status(result) shouldEqual BAD_REQUEST
     }
 
     "return 404 when there are no cases with the provided reference" in {
-      // TODO
+      when(mockCaseService.update(c1)).thenReturn(successful(None))
+
+      val result = await(controller.update(c1.reference)(fakeRequest.withBody(toJson(c1))))
+
+      status(result) shouldEqual NOT_FOUND
     }
 
     "return 500 when an error occurred" in {
-      // TODO
+      val error = new RuntimeException
+
+      when(mockCaseService.update(c1)).thenReturn(failed(error))
+
+      val result = await(controller.update("")(fakeRequest.withBody(toJson(c1))))
+
+      status(result) shouldEqual INTERNAL_SERVER_ERROR
     }
 
   }
 
   "getAll()" should {
-    // TODO
+
+    "return 200 with the all cases" in {
+      when(mockCaseService.getAll).thenReturn(successful(Seq(c1, c2)))
+
+      val result = await(controller.getAll(fakeRequest))
+
+      status(result) shouldEqual OK
+      jsonBodyOf(result) shouldEqual toJson(Seq(c1, c2))
+    }
+
+    "return 200 with an empty sequence if there are no cases" in {
+      when(mockCaseService.getAll).thenReturn(successful(Nil))
+
+      val result = await(controller.getAll(fakeRequest))
+
+      status(result) shouldEqual OK
+      jsonBodyOf(result) shouldEqual toJson(Seq[Case]())
+    }
+
+    "return 500 when an error occurred" in {
+      val error = new RuntimeException
+
+      when(mockCaseService.getAll).thenReturn(failed(error))
+
+      val result = await(controller.getAll(fakeRequest))
+
+      status(result) shouldEqual INTERNAL_SERVER_ERROR
+    }
+
   }
 
   "getByReference()" should {
-    // TODO
+
+    "return 200 with the expected case" in {
+      when(mockCaseService.getByReference(c1.reference)).thenReturn(successful(Some(c1)))
+
+      val result = await(controller.getByReference(c1.reference)(fakeRequest))
+
+      status(result) shouldEqual OK
+      jsonBodyOf(result) shouldEqual toJson(c1)
+    }
+
+    "return 404 if there are no cases for the specific reference" in {
+      when(mockCaseService.getByReference(c1.reference)).thenReturn(successful(None))
+
+      val result = await(controller.getByReference(c1.reference)(fakeRequest))
+
+      status(result) shouldEqual NOT_FOUND
+    }
+
+    "return 500 when an error occurred" in {
+      val error = new RuntimeException
+
+      when(mockCaseService.getByReference(c1.reference)).thenReturn(failed(error))
+
+      val result = await(controller.getByReference(c1.reference)(fakeRequest))
+
+      status(result) shouldEqual INTERNAL_SERVER_ERROR
+    }
+
   }
 
 }
