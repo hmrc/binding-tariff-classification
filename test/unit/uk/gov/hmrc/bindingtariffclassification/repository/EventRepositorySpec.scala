@@ -103,15 +103,13 @@ class EventRepositorySpec extends UnitSpec
 
     "retrieve all expected events from the collection" in {
       val e1 = createNoteEvent("REF_1")
-      val e2 = createAttachmentEvent("REF_1")
-      val e3 = createCaseStatusChangeEvent("REF_2")
+      val e2 = createCaseStatusChangeEvent("REF_2")
 
       await(repository.insert(e1))
       await(repository.insert(e2))
-      await(repository.insert(e3))
-      collectionSize shouldBe 3
+      collectionSize shouldBe 2
 
-      await(repository.getByCaseReference("REF_1")) shouldBe Seq(e1, e2)
+      await(repository.getByCaseReference("REF_1")) shouldBe Seq(e1)
     }
 
     "return an empty sequence when there are no events matching the case reference" in {
@@ -133,7 +131,7 @@ class EventRepositorySpec extends UnitSpec
 
     "return 'None' when the 'id' doesn't match any record in the collection" in {
       for (_ <- 1 to 3) {
-        await(repository.insert(createAttachmentEvent("")))
+        await(repository.insert(createNoteEvent("")))
       }
       collectionSize shouldBe 3
 

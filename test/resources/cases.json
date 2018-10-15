@@ -34,7 +34,6 @@
     "adjustedCreateDate" : "2018-10-08T15:25:53.243+01:00[Europe/London]",
     "assigneeId" : "dbe863c7-91e3-4cae-8fd0-8e414c067cc3",
     "application" : {
-      "offline" : false,
       "holder" : {
         "eori" : "7f392f08-7356-49f5-b67e-3b624820f401",
         "traderName" : "John Lewis",
@@ -49,7 +48,9 @@
         "email" : "marisa@me.com",
         "phone" : "0123456789"
       },
-      "goodsDescription" : "mobile phones",
+      "offline" : false,
+      "goodName" : "mobile phones",
+      "goodDescription" : "this is a BTI application for mobile phones",
       "sampleToBeProvided" : false,
       "sampleToBeReturned" : false,
       "type" : "BTI"

@@ -39,13 +39,4 @@ object EventData {
     )
   }
 
-  def createAttachmentEvent(caseReference: String): Event = {
-    Event(
-      id = RandomGenerator.randomUUID(),
-      details = Attachment(url = "files://aws.bucket/12345", mimeType = "media/jpg"),
-      userId = RandomGenerator.randomUUID(),
-      caseReference
-    )
-  }
-
 }

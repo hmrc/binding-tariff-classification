@@ -60,10 +60,6 @@ class MicroserviceHelloWorld @Inject()(caseService: CaseService, eventService: E
     val r2 = Await.result(eventService.insert(e2), 2.seconds)
     Logger.debug(s"Case-Status-Change Event document inserted? $r2")
 
-    val e3 = createAttachmentEvent("REF_xxx")
-    val r3 = Await.result(eventService.insert(e3), 2.seconds)
-    Logger.debug(s"Attachment Event document inserted? $r3")
-
     // GET BY ID
     val e1r = Await.result(eventService.getById(e1.id), 2.seconds)
     Logger.debug(s"$e1r")
