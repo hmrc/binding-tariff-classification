@@ -163,7 +163,7 @@ class EventRepositorySpec extends UnitSpec
 
       import scala.concurrent.duration._
 
-      val indexVersion = Some(1)
+      val indexVersion = Some(2)
       val expectedIndexes = List(
         Index(key = Seq("id" -> Ascending), name = Some("id_Index"), unique = true, background = true, version = indexVersion),
         Index(key = Seq("caseReference" -> Ascending), name = Some("caseReference_Index"), unique = false, background = true, version = indexVersion),

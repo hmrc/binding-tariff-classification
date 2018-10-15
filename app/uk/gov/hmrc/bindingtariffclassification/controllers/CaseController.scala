@@ -56,5 +56,4 @@ class CaseController @Inject()(caseService: CaseService) extends CommonControlle
       case Some(c: Case) => Ok(Json.toJson(c))
     } recover recovery
   }
-
 }

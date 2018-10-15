@@ -173,7 +173,7 @@ class CaseRepositorySpec extends UnitSpec
 
       import scala.concurrent.duration._
 
-      val indexVersion = Some(1)
+      val indexVersion = Some(2)
       val expectedIndexes = List(
         Index(key = Seq("reference" -> Ascending), name = Some("reference_Index"), unique = true, background = true, version = indexVersion),
         Index(key = Seq("_id" -> Ascending), name = Some("_id_"), version = indexVersion)
