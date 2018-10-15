@@ -51,13 +51,22 @@ object CaseData {
       "GB")
   }
 
-  def createCase(a: Application = createBTIApplication): Case = {
+  def createCase(a: Application = createBTIApplication, attachments: Seq[Attachment] = Nil): Case = {
     Case(
       reference = RandomGenerator.randomUUID(),
       status = CaseStatus.NEW,
       assigneeId = Some(RandomGenerator.randomUUID()),
       application = a,
-      attachments = Seq()
+      attachments = attachments
+    )
+  }
+
+  def createAttachment(): Attachment = {
+    Attachment(
+      application = false,
+      public = true,
+      url = "files://aws.bucket/12345",
+      mimeType = "media/jpg"
     )
   }
 

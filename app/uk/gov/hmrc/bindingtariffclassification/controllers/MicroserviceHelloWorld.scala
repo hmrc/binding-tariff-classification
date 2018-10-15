@@ -75,7 +75,7 @@ class MicroserviceHelloWorld @Inject()(caseService: CaseService, eventService: E
   private def createCaseData(): String = {
 
     // INSERT
-    val c1 = createCase(createBTIApplication)
+    val c1 = createCase(createBTIApplication, Seq(createAttachment()))
     val r1 = Await.result(caseService.insert(c1), 2.seconds)
     Logger.debug(s"BTI document inserted? $r1")
 

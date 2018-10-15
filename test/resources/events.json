@@ -19,16 +19,5 @@
     "userId" : "acdd0fd5-e4fe-414d-813b-35deba126e13",
     "caseReference" : "5b1b7ab4-f52a-4e26-bdcc-829e538d14d2",
     "timestamp" : "2018-10-08T15:25:53.32+01:00[Europe/London]"
-  },
-  {
-    "id" : "666a51a6-29fc-423e-8a1e-63447cd26de2",
-    "details" : {
-      "url" : "files://aws.bucket/12345",
-      "mimeType" : "media/jpg",
-      "type" : "ATTACHMENT"
-    },
-    "userId" : "24b6fcac-31b0-4d2e-a66a-27d31b69103e",
-    "caseReference" : "REF_xxx",
-    "timestamp" : "2018-10-08T15:25:53.324+01:00[Europe/London]"
   }
 ]

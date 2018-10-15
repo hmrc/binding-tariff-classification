@@ -25,7 +25,15 @@
       "entryNumber" : "23-SGD",
       "endDate" : "2018-10-08T15:25:53.243+01:00[Europe/London]",
       "type" : "LIABILITY_ORDER"
-    }
+    },
+    "attachments" : [
+      {
+        "application" : false,
+        "public" : true,
+        "url" : "files://aws.bucket/12345",
+        "mimeType" : "media/jpg"
+      }
+    ]
   },
   {
     "reference" : "cb40732f-77fa-41ca-9e46-98833827f343",
@@ -54,6 +62,7 @@
       "sampleToBeProvided" : false,
       "sampleToBeReturned" : false,
       "type" : "BTI"
-    }
+    },
+    "attachments" : []
   }
 ]

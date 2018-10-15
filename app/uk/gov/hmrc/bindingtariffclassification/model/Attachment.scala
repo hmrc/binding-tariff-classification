@@ -23,4 +23,5 @@ case class Attachment
   public: Boolean, // if the attachment is publicly viewable in the public rulings UI
   url: String,
   mimeType: String
+// timestamp: ZonedDateTime = ZonedDateTime.now() // TODO: validate if needed
 )
