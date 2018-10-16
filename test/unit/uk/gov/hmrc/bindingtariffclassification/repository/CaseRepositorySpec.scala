@@ -26,14 +26,13 @@ import reactivemongo.core.errors.DatabaseException
 import reactivemongo.play.json.ImplicitBSONHandlers._
 import uk.gov.hmrc.bindingtariffclassification.model._
 import uk.gov.hmrc.bindingtariffclassification.model.JsonFormatters.formatCase
-import uk.gov.hmrc.bindingtariffclassification.repository.{CaseMongoRepository, MongoDbProvider}
+import uk.gov.hmrc.bindingtariffclassification.repository.{BaseMongoIndexSpec, CaseMongoRepository, MongoDbProvider}
 import uk.gov.hmrc.bindingtariffclassification.todelete.CaseData._
 import uk.gov.hmrc.mongo.MongoSpecSupport
-import uk.gov.hmrc.play.test.UnitSpec
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class CaseRepositorySpec extends UnitSpec
+class CaseRepositorySpec extends BaseMongoIndexSpec
   with BeforeAndAfterAll
   with BeforeAndAfterEach
   with MongoSpecSupport
@@ -130,7 +129,7 @@ class CaseRepositorySpec extends UnitSpec
     }
 
     "return an empty sequence when there are no cases in the collection" in {
-      await(repository.getAll) shouldBe Seq()
+      await(repository.getAll) shouldBe Seq.empty
     }
   }
 
@@ -173,16 +172,15 @@ class CaseRepositorySpec extends UnitSpec
 
       import scala.concurrent.duration._
 
-      val indexVersion = Some(1)
       val expectedIndexes = List(
-        Index(key = Seq("reference" -> Ascending), name = Some("reference_Index"), unique = true, background = true, version = indexVersion),
-        Index(key = Seq("_id" -> Ascending), name = Some("_id_"), version = indexVersion)
+        Index(key = Seq("reference" -> Ascending), name = Some("reference_Index"), unique = true, background = true),
+        Index(key = Seq("_id" -> Ascending), name = Some("_id_"))
       )
 
       val repo = new CaseMongoRepository(mongoDbProvider)
 
       eventually(timeout(5.seconds), interval(100.milliseconds)) {
-        getIndexes(repo).toSet shouldBe expectedIndexes.toSet
+        assertIndex(expectedIndexes.sorted, getIndexes(repo).sorted)
       }
     }
   }

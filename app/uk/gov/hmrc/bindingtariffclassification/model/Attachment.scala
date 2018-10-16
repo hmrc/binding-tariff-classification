@@ -16,12 +16,14 @@
 
 package uk.gov.hmrc.bindingtariffclassification.model
 
+import java.time.ZonedDateTime
+
 case class Attachment
 (
- // TODO: we need endpoints (POST, PUT, DELETE) for managing attachments
+ // TODO: we need endpoints (POST, DELETE) for creating and deleting attachments
   application: Boolean, // if the attachment was sent by the trader in the original BTI application
   public: Boolean, // if the attachment is publicly viewable in the public rulings UI
   url: String,
-  mimeType: String
-// timestamp: ZonedDateTime = ZonedDateTime.now() // TODO: validate if needed
+  mimeType: String,
+  timestamp: ZonedDateTime = ZonedDateTime.now()
 )

@@ -31,7 +31,8 @@
         "application" : false,
         "public" : true,
         "url" : "files://aws.bucket/12345",
-        "mimeType" : "media/jpg"
+        "mimeType" : "media/jpg",
+        "timestamp" : "2018-10-08T15:25:53.309+01:00[Europe/London]"
       }
     ]
   },

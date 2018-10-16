@@ -26,15 +26,14 @@ import reactivemongo.core.errors.DatabaseException
 import reactivemongo.play.json.ImplicitBSONHandlers._
 import uk.gov.hmrc.bindingtariffclassification.model.JsonFormatters.formatEvent
 import uk.gov.hmrc.bindingtariffclassification.model._
-import uk.gov.hmrc.bindingtariffclassification.repository.{EventMongoRepository, MongoDbProvider}
+import uk.gov.hmrc.bindingtariffclassification.repository.{BaseMongoIndexSpec, EventMongoRepository, MongoDbProvider}
 import uk.gov.hmrc.bindingtariffclassification.todelete.EventData._
 import uk.gov.hmrc.bindingtariffclassification.utils.RandomGenerator
 import uk.gov.hmrc.mongo.MongoSpecSupport
-import uk.gov.hmrc.play.test.UnitSpec
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class EventRepositorySpec extends UnitSpec
+class EventRepositorySpec extends BaseMongoIndexSpec
   with BeforeAndAfterAll
   with BeforeAndAfterEach
   with MongoSpecSupport
@@ -116,7 +115,7 @@ class EventRepositorySpec extends UnitSpec
       await(repository.insert(createCaseStatusChangeEvent("REF_1")))
       collectionSize shouldBe 1
 
-      await(repository.getByCaseReference("REF_2")) shouldBe Seq()
+      await(repository.getByCaseReference("REF_2")) shouldBe Seq.empty
     }
   }
 
@@ -161,17 +160,16 @@ class EventRepositorySpec extends UnitSpec
 
       import scala.concurrent.duration._
 
-      val indexVersion = Some(1)
       val expectedIndexes = List(
-        Index(key = Seq("id" -> Ascending), name = Some("id_Index"), unique = true, background = true, version = indexVersion),
-        Index(key = Seq("caseReference" -> Ascending), name = Some("caseReference_Index"), unique = false, background = true, version = indexVersion),
-        Index(key = Seq("_id" -> Ascending), name = Some("_id_"), version = indexVersion)
+        Index(key = Seq("id" -> Ascending), name = Some("id_Index"), unique = true, background = true),
+        Index(key = Seq("caseReference" -> Ascending), name = Some("caseReference_Index"), unique = false, background = true),
+        Index(key = Seq("_id" -> Ascending), name = Some("_id_"))
       )
 
       val repo = new EventMongoRepository(mongoDbProvider)
 
       eventually(timeout(5.seconds), interval(100.milliseconds)) {
-        getIndexes(repo).toSet shouldBe expectedIndexes.toSet
+        assertIndex(expectedIndexes.sorted, getIndexes(repo).sorted)
       }
     }
   }
