@@ -18,6 +18,7 @@ package unit.uk.gov.hmrc.bindingtariffclassification.controllers
 
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito.when
+import org.scalatest.BeforeAndAfterAll
 import org.scalatest.mockito.MockitoSugar
 import play.api.http.HeaderNames.{CACHE_CONTROL, LOCATION}
 import play.api.http.Status.{BAD_REQUEST, OK}
@@ -29,25 +30,32 @@ import uk.gov.hmrc.play.test.{UnitSpec, WithFakeApplication}
 
 import scala.concurrent.Future.successful
 
-class MicroserviceHelloWorldControllerSpec extends UnitSpec with WithFakeApplication with MockitoSugar {
+class MicroserviceHelloWorldControllerSpec extends UnitSpec
+  with WithFakeApplication with MockitoSugar with BeforeAndAfterAll {
 
   private val mCase = mock[Case]
   private val mEvent = mock[Event]
   private val mockCaseService = mock[CaseService]
   private val mockEventService = mock[EventService]
 
-  private val fakeRequest = FakeRequest("GET", "/hello")
+  private val fakeRequest = FakeRequest()
 
   private val controller = new MicroserviceHelloWorld(mockCaseService, mockEventService)
 
-  "GET /hello" should {
+  override def beforeAll(): Unit = {
+    super.beforeAll()
 
     when(mockCaseService.insert(any[Case])).thenReturn(successful(mCase))
+    when(mockCaseService.update(any[Case])).thenReturn(successful(Some(mCase)))
+    when(mockCaseService.getAll).thenReturn(successful(Seq(mCase)))
     when(mockCaseService.getByReference(any[String])).thenReturn(successful(Some(mCase)))
 
     when(mockEventService.insert(any[Event])).thenReturn(successful(mEvent))
     when(mockEventService.getById(any[String])).thenReturn(successful(Some(mEvent)))
     when(mockEventService.getByCaseReference(any[String])).thenReturn(successful(List(mEvent)))
+  }
+
+  "hello()" should {
 
     "return 200 when the Location header has a unique value" in {
       val result = controller.hello()(fakeRequest.withHeaders(LOCATION -> "Canary Islands"))
