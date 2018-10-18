@@ -12,14 +12,16 @@ class CaseSpec extends BaseFeatureSpec {
   val authToken = "auth_token"
   val caseModel = createCase(createBTIApplication)
 
+
   import uk.gov.hmrc.bindingtariffclassification.model.JsonFormatters._
 
   feature("Create Case") {
 
+    val expectedCaseBody = Json.toJson(caseModel)
+
     scenario("Create a new case") {
 
       When("I create a new case")
-      val expectedCaseBody = Json.toJson(caseModel)
       val result = Http(s"$serviceUrl/cases")
         .headers(Seq("Content-Type" -> "application/json")).timeout(5000, 10000)
         .postData(expectedCaseBody.toString()).asString
@@ -37,7 +39,6 @@ class CaseSpec extends BaseFeatureSpec {
       store(caseModel)
 
       When("I create a case that already exist")
-      val expectedCaseBody = Json.toJson(caseModel)
       val result = Http(s"$serviceUrl/cases")
         .headers(Seq("Content-Type" -> "application/json")).timeout(5000, 10000)
         .postData(expectedCaseBody.toString()).asString
