@@ -38,7 +38,7 @@ case class BTIApplication
   reissuedBTIReference: Option[String] = None,
   relatedBTIReference: Option[String] = None,
   knownLegalProceedings: Option[String] = None,
-  envisagesCommodityCode: Option[String] = None,
+  envisagedCommodityCode: Option[String] = None,
   sampleToBeProvided: Boolean = false,
   sampleToBeReturned: Boolean = false
 ) extends Application {

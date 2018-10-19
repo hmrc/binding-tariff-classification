@@ -1,16 +1,31 @@
-package uk.gov.hmrc.component
+/*
+ * Copyright 2018 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
-import it.uk.gov.hmrc.component.BaseFeatureSpec
-import play.api.libs.json.Json
+package it.uk.gov.hmrc.component
+
 import scalaj.http.Http
-import it.uk.gov.hmrc.component.data.CaseData.{createBTIApplication, createCase}
+import play.api.libs.json.Json
+import uk.gov.hmrc.bindingtariffclassification.todelete.CaseData
 
 class CaseSpec extends BaseFeatureSpec {
 
   val userId = "userId"
   val accessToken = "access_token"
   val authToken = "auth_token"
-  val caseModel = createCase(createBTIApplication)
+  val caseModel = CaseData.createCase(CaseData.createBTIApplication)
 
 
   import uk.gov.hmrc.bindingtariffclassification.model.JsonFormatters._
