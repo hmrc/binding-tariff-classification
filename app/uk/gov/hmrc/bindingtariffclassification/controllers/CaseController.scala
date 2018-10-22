@@ -19,6 +19,7 @@ package uk.gov.hmrc.bindingtariffclassification.controllers
 import javax.inject.{Inject, Singleton}
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc._
+import uk.gov.hmrc.bindingtariffclassification.model.search.{SearchCase, SearchCaseBuilder, SortCase}
 import uk.gov.hmrc.bindingtariffclassification.model.{Case, ErrorCode, JsErrorResponse, JsonFormatters}
 import uk.gov.hmrc.bindingtariffclassification.service.CaseService
 
@@ -47,11 +48,15 @@ class CaseController @Inject()(caseService: CaseService) extends CommonControlle
     } recover recovery
   }
 
-  def getAll: Action[AnyContent] = Action.async { implicit request =>
-    caseService.getAll map (cases => Ok(Json.toJson(cases))) recover recovery
+  def get(queueId: Option[String], assigneeId: Option[String], createdDate: Option[String]): Action[AnyContent] = Action.async { implicit request =>
+
+    val searchBy = SearchCaseBuilder.withQueueId(queueId).withAssigneeId(assigneeId).build()
+    val sortBy = SortCase(createdDate)
+    caseService.get(Some(searchBy), Some(sortBy)) map (cases => Ok(Json.toJson(cases))) recover recovery
   }
 
   def getByReference(reference: String): Action[AnyContent] = Action.async { implicit request =>
+
     caseService.getByReference(reference) map {
       case None => NotFound(JsErrorResponse(ErrorCode.NOT_FOUND, "Case not found"))
       case Some(c: Case) => Ok(Json.toJson(c))

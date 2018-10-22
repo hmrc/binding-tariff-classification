@@ -18,6 +18,7 @@ package uk.gov.hmrc.bindingtariffclassification.service
 
 import javax.inject._
 import uk.gov.hmrc.bindingtariffclassification.model.Case
+import uk.gov.hmrc.bindingtariffclassification.model.search.{SearchCase, SortCase}
 import uk.gov.hmrc.bindingtariffclassification.repository.CaseRepository
 
 import scala.concurrent.Future
@@ -29,7 +30,7 @@ class CaseService @Inject()(repository: CaseRepository) {
     repository.insert(c)
   }
 
-  def update(c:Case): Future[Option[Case]] = {
+  def update(c: Case): Future[Option[Case]] = {
     repository.update(c)
   }
 
@@ -37,7 +38,7 @@ class CaseService @Inject()(repository: CaseRepository) {
     repository.getByReference(reference)
   }
 
-  def getAll: Future[Seq[Case]] = {
-    repository.getAll
+  def get(searchBy: Option[SearchCase]= None, sortBy: Option[SortCase] = None): Future[Seq[Case]] = {
+    repository.get(searchBy, sortBy)
   }
 }

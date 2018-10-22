@@ -47,8 +47,8 @@ trait MongoCrudHelper[T] extends MongoIndexCreator {
     mongoCollection.find(selector).one[T]
   }
 
-  def getMany(selector: JsObject)(implicit r: Reads[T]): Future[List[T]] = {
-    mongoCollection.find(selector).cursor[T]().collect[List](Int.MaxValue, Cursor.FailOnError[List[T]]())
+  def getMany(filterBy: JsObject, sortBy: JsObject)(implicit r: Reads[T]): Future[List[T]] = {
+    mongoCollection.find(filterBy).sort(sortBy).cursor[T]().collect[List](Int.MaxValue, Cursor.FailOnError[List[T]]())
   }
 
 }

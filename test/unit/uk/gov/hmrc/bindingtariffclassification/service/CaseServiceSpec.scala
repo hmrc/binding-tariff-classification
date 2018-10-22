@@ -104,22 +104,22 @@ class CaseServiceSpec extends UnitSpec with MockitoSugar {
   "getAll" should {
 
     "return the expected cases" in {
-      Mockito.when(repository.getAll).thenReturn(successful(Seq(c1, c2)))
-      val result = await(service.getAll)
+      Mockito.when(repository.get(None, None)).thenReturn(successful(Seq(c1, c2)))
+      val result = await(service.get())
       result shouldBe Seq(c1, c2)
     }
 
     "return an empty sequence when there are no cases" in {
-      Mockito.when(repository.getAll).thenReturn(successful(Nil))
-      val result = await(service.getAll)
+      Mockito.when(repository.get(None, None)).thenReturn(successful(Nil))
+      val result = await(service.get())
       result shouldBe Nil
     }
 
     "propagate any error" in {
-      Mockito.when(repository.getAll).thenThrow(emulatedFailure)
+      Mockito.when(repository.get(None, None)).thenThrow(emulatedFailure)
 
       val caught = intercept[RuntimeException] {
-        await(service.getAll)
+        await(service.get())
       }
       caught shouldBe emulatedFailure
     }

@@ -47,7 +47,7 @@ class MicroserviceHelloWorldControllerSpec extends UnitSpec
 
     when(mockCaseService.insert(any[Case])).thenReturn(successful(mCase))
     when(mockCaseService.update(any[Case])).thenReturn(successful(Some(mCase)))
-    when(mockCaseService.getAll).thenReturn(successful(Seq(mCase)))
+    when(mockCaseService.get()).thenReturn(successful(Seq(mCase)))
     when(mockCaseService.getByReference(any[String])).thenReturn(successful(Some(mCase)))
 
     when(mockEventService.insert(any[Event])).thenReturn(successful(mEvent))

@@ -23,6 +23,7 @@ import reactivemongo.bson.BSONObjectID
 import reactivemongo.play.json.collection.JSONCollection
 import uk.gov.hmrc.bindingtariffclassification.model.{Case, JsonFormatters}
 import uk.gov.hmrc.bindingtariffclassification.model.JsonFormatters.formatCase
+import uk.gov.hmrc.bindingtariffclassification.model.search.{SearchCase, SearchCaseBuilder, SortCase}
 import uk.gov.hmrc.mongo.ReactiveRepository
 import uk.gov.hmrc.mongo.json.ReactiveMongoFormats
 
@@ -32,9 +33,13 @@ import scala.concurrent.Future
 trait CaseRepository {
 
   def insert(c: Case): Future[Case]
+
   def update(c: Case): Future[Option[Case]]
+
   def getByReference(reference: String): Future[Option[Case]]
-  def getAll: Future[Seq[Case]]
+
+  def get(searchBy: Option[SearchCase] = None, sortedBy: Option[SortCase] = None): Future[Seq[Case]]
+
 }
 
 @Singleton
@@ -57,19 +62,17 @@ class CaseMongoRepository @Inject()(mongoDbProvider: MongoDbProvider)
   }
 
   override def update(c: Case): Future[Option[Case]] = {
-    atomicUpdate(selectorByReference(c.reference), c)
-  }
-
-  private def selectorByReference(reference: String): JsObject = {
-    Json.obj("reference" -> reference)
+    atomicUpdate(SearchCase(reference = Some(c.reference)).buildJson, c)
   }
 
   override def getByReference(reference: String): Future[Option[Case]] = {
-    getOne(selectorByReference(reference))
+    getOne(SearchCase(reference = Some(reference)).buildJson)
   }
 
-  override def getAll: Future[Seq[Case]] = {
-    getMany(Json.obj())
-  }
+  override def get(searchBy: Option[SearchCase] = None, sortedBy: Option[SortCase] = None): Future[Seq[Case]] = {
+    val searchFrom = searchBy.map(_.buildJson).getOrElse(Json.obj())
+    val sortFrom = sortedBy.map(_.buildJson).getOrElse(Json.obj())
 
+    getMany(searchFrom, sortFrom)
+  }
 }

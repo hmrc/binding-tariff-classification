@@ -118,18 +118,18 @@ class CaseRepositorySpec extends BaseMongoIndexSpec
   }
 
 
-  "getAll" should {
+  "get without params should return all cases" should {
 
     "retrieve all cases from the collection" in {
       await(repository.insert(case1))
       await(repository.insert(case2))
       collectionSize shouldBe 2
 
-      await(repository.getAll) shouldBe Seq(case1, case2)
+      await(repository.get()) shouldBe Seq(case1, case2)
     }
 
     "return an empty sequence when there are no cases in the collection" in {
-      await(repository.getAll) shouldBe Seq.empty
+      await(repository.get()) shouldBe Seq.empty
     }
   }
 

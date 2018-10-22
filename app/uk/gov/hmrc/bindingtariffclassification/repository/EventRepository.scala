@@ -32,7 +32,9 @@ import scala.concurrent.Future
 trait EventRepository {
 
   def insert(e: Event): Future[Event]
+
   def getById(id: String): Future[Option[Event]]
+
   def getByCaseReference(caseReference: String): Future[Seq[Event]]
 }
 
@@ -69,7 +71,7 @@ class EventMongoRepository @Inject()(mongoDbProvider: MongoDbProvider)
   }
 
   override def getByCaseReference(caseReference: String): Future[Seq[Event]] = {
-    getMany(selectorByCaseReference(caseReference))
+    getMany(selectorByCaseReference(caseReference), Json.obj())
   }
 
 }
