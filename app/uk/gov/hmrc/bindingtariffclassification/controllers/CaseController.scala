@@ -48,10 +48,10 @@ class CaseController @Inject()(caseService: CaseService) extends CommonControlle
     } recover recovery
   }
 
-  def get(queueId: Option[String], assigneeId: Option[String], createdDate: Option[String]): Action[AnyContent] = Action.async { implicit request =>
+  def get(queue_id: Option[String], assignee_id: Option[String], sort_by: Option[String]): Action[AnyContent] = Action.async { implicit request =>
 
-    val searchBy = SearchCaseBuilder.withQueueId(queueId).withAssigneeId(assigneeId).build()
-    val sortBy = SortCase(createdDate)
+    val searchBy = SearchCaseBuilder.withQueueId(queue_id).withAssigneeId(assignee_id).build()
+    val sortBy = SortCase(sort_by)
     caseService.get(Some(searchBy), Some(sortBy)) map (cases => Ok(Json.toJson(cases))) recover recovery
   }
 

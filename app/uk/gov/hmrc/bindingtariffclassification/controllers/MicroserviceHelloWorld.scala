@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.bindingtariffclassification.controllers
 
-import akka.japi.Option
 import javax.inject.{Inject, Singleton}
 import play.api.mvc._
 import play.api.{Logger, Play}
@@ -85,7 +84,7 @@ class MicroserviceHelloWorld @Inject()(caseService: CaseService, eventService: E
     Logger.debug(s"Liability Order document inserted: $r3")
 
     // GET ALL
-    val r = Await.result(caseService.get(null,null), 2.seconds)
+    val r = Await.result(caseService.get(), 2.seconds)
     Logger.debug(s"All cases: $r")
 
     // GET BY REF
