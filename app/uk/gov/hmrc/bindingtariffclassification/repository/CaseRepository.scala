@@ -53,8 +53,11 @@ class CaseMongoRepository @Inject()(mongoDbProvider: MongoDbProvider)
   override val mongoCollection: JSONCollection = collection
 
   override def indexes = Seq(
-    // TODO: We need to create an index (composed by a single or multiple fields) considering all possible searches needed by the UI.
-    createSingleFieldAscendingIndex("reference", isUnique = true)
+    createSingleFieldAscendingIndex("reference", isUnique = true),
+    createSingleFieldAscendingIndex("queueId", isUnique = false),
+    createSingleFieldAscendingIndex("assigneeId", isUnique = false)
+    // TODO: We need to add relevant indexes for each possible search
+    // TODO: We should add compound indexes for searches involving multiple fields
   )
 
   override def insert(c: Case): Future[Case] = {

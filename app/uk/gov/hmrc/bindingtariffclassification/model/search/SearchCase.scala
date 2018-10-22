@@ -39,26 +39,27 @@ case class SearchCase(
 
 case class SearchCaseBuilder() {
 
+  // TODO: we should not use var !
   private var reference: Option[String] = None
   private var queueId: Option[String] = None
   private var assigneeId: Option[String] = None
 
   def withReference(reference: String) = {
-    this.reference = Some(reference);
+    this.reference = Some(reference)
     this
   }
 
   def withQueueId(queueId: Option[String]) = {
-    this.queueId = queueId;
+    this.queueId = queueId
     this
   }
 
   def withAssigneeId(assigneeId: Option[String]) = {
-    this.assigneeId = assigneeId;
+    this.assigneeId = assigneeId
     this
   }
 
-  def build() = SearchCase(reference, queueId, assigneeId);
+  def build() = SearchCase(reference, queueId, assigneeId)
 
 }
 

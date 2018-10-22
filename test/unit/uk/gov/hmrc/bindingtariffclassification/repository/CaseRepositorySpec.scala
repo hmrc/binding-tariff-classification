@@ -174,6 +174,8 @@ class CaseRepositorySpec extends BaseMongoIndexSpec
 
       val expectedIndexes = List(
         Index(key = Seq("reference" -> Ascending), name = Some("reference_Index"), unique = true, background = true),
+        Index(key = Seq("queueId" -> Ascending), name = Some("queueId_Index"), unique = false, background = true),
+        Index(key = Seq("assigneeId" -> Ascending), name = Some("assigneeId_Index"), unique = false, background = true),
         Index(key = Seq("_id" -> Ascending), name = Some("_id_"))
       )
 
