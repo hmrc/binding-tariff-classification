@@ -16,16 +16,28 @@
 
 package uk.gov.hmrc.bindingtariffclassification.model.search
 
-import play.api.libs.json.{JsObject, JsString, JsValue}
+import play.api.libs.json.Json
+import uk.gov.hmrc.play.test.UnitSpec
 
-case class SortCase(
-                     createdDate: Option[String] = None
-                   ) {
+class SortCaseSpec extends UnitSpec {
 
-  def buildJson: JsObject = {
-    JsObject(
-      Seq[(String, JsValue)]() ++
-        createdDate.map("createdDate" -> JsString(_))
-    )
+  "SortCase" should {
+
+    "covert to Json all the sorting fields provided" in {
+
+      val actual = SortCase(createdDate = Some("valid_date")).buildJson
+
+      actual.toString() shouldBe
+        """{
+          | "createdDate": "valid_date"
+          |}
+        """.stripMargin
+          .replaceAll(" ", "")
+          .replaceAll("\n", "")
+    }
+
+    "covert to Json with no filters" in {
+      SortCase().buildJson shouldBe Json.obj()
+    }
   }
 }
