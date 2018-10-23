@@ -26,11 +26,17 @@ case class SearchCase(
   // Basic functionality of this class is to encapsulate all the parameters
 
   def buildJson: JsObject = {
+
+    def noneOrValue: String => JsValue = { v: String =>
+      if (v.toLowerCase == "none") JsNull
+      else JsString(v)
+    }
+
     JsObject(
       Seq[(String, JsValue)]() ++
         reference.map("reference" -> JsString(_)) ++
-        queueId.map(v => if (v.toLowerCase == "none") JsNull else JsString(v)).map("queueId" -> _) ++
-        assigneeId.map(v => if (v.toLowerCase == "none") JsNull else JsString(v)).map("assigneeId" -> _)
+        queueId.map("queueId" -> noneOrValue(_)) ++
+        assigneeId.map("assigneeId" -> noneOrValue(_))
     )
   }
 }

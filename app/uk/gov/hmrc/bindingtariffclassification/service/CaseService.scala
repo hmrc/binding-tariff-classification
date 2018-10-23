@@ -38,7 +38,7 @@ class CaseService @Inject()(repository: CaseRepository) {
     repository.getByReference(reference)
   }
 
-  def get(searchBy: Option[SearchCase]= None, sortBy: Option[SortCase] = None): Future[Seq[Case]] = {
+  def get(searchBy: Option[SearchCase] = None, sortBy: Option[SortCase] = None): Future[Seq[Case]] = {
     repository.get(searchBy, sortBy)
   }
 }

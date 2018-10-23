@@ -143,6 +143,8 @@ class CaseSpec extends BaseFeatureSpec {
 
   feature("Get All Cases") {
 
+    // TODO: test all possible combinations
+
     scenario("Get cases") {
 
       Given("There are few cases in the database")

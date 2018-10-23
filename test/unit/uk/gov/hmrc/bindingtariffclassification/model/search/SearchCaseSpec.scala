@@ -52,6 +52,18 @@ class SearchCaseSpec extends UnitSpec {
       actual.toString() shouldBe expected
     }
 
+    "by reference should return json with the reference" in {
+
+      val actual = SearchCase(reference = Some("valid_ref")).buildJson
+
+      actual.toString() shouldBe
+        """{
+          | "reference": "valid_ref"
+          |}
+        """.stripMargin.replaceAll(" ", "").replaceAll("\n", "")
+
+    }
+
     "covert to Json with no filters" in {
 
       val actual = SearchCase().buildJson

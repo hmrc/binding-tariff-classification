@@ -118,6 +118,8 @@ class CaseRepositorySpec extends BaseMongoIndexSpec
     }
   }
 
+  // TODO: test all possible combinations
+  // TODO: the test scenarios titles need to be written and grouped properly
 
   "get without params should return all cases" should {
 

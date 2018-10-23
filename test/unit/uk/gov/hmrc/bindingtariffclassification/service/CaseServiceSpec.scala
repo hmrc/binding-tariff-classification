@@ -101,7 +101,9 @@ class CaseServiceSpec extends UnitSpec with MockitoSugar {
     }
   }
 
-  "getAll" should {
+  "get" should {
+
+    // TODO: test all possible combinations
 
     "return the expected cases" in {
       Mockito.when(repository.get(None, None)).thenReturn(successful(Seq(c1, c2)))
