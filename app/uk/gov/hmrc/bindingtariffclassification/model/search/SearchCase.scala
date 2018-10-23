@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.bindingtariffclassification.model.search
 
-import play.api.libs.json.{JsObject, JsString, JsValue}
+import play.api.libs.json.{JsNull, JsObject, JsString, JsValue}
 
 case class SearchCase(
                        reference: Option[String] = None,
@@ -29,11 +29,10 @@ case class SearchCase(
     JsObject(
       Seq[(String, JsValue)]() ++
         reference.map("reference" -> JsString(_)) ++
-        queueId.map("queueId" -> JsString(_)) ++
-        assigneeId.map("assigneeId" -> JsString(_))
+        queueId.map(v => if (v.toLowerCase == "none") JsNull else JsString(v)).map("queueId" -> _) ++
+        assigneeId.map(v => if (v.toLowerCase == "none") JsNull else JsString(v)).map("assigneeId" -> _)
     )
   }
-
 }
 
 

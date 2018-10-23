@@ -38,6 +38,20 @@ class SearchCaseSpec extends UnitSpec {
       actual.toString() shouldBe expected
     }
 
+    "covert to Json queueId and assigneeId with none value " in {
+      val none_str = "none"
+      val expected =
+        """{
+          | "queueId": null,
+          | "assigneeId": null
+          |}
+        """.stripMargin.replaceAll(" ", "").replaceAll("\n", "")
+
+      val actual = SearchCase(queueId = Some(none_str), assigneeId = Some(none_str)).buildJson
+
+      actual.toString() shouldBe expected
+    }
+
     "covert to Json with no filters" in {
 
       val actual = SearchCase().buildJson
