@@ -21,23 +21,9 @@ import uk.gov.hmrc.play.test.UnitSpec
 
 class SortCaseSpec extends UnitSpec {
 
-  "SortCase" should {
 
-    "covert to Json all the sorting fields provided" in {
-
-      val actual = SortCase(createdDate = Some("valid_date")).buildJson
-
-      actual.toString() shouldBe
-        """{
-          | "createdDate": "valid_date"
-          |}
-        """.stripMargin
-          .replaceAll(" ", "")
-          .replaceAll("\n", "")
-    }
-
-    "covert to Json with no filters" in {
-      SortCase().buildJson shouldBe Json.obj()
-    }
+  "covert to Json with no filters" in {
+    SortCase().buildJson shouldBe Json.obj()
   }
+
 }
