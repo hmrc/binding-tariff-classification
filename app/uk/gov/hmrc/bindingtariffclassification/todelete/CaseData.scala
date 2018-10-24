@@ -51,13 +51,16 @@ object CaseData {
       "GB")
   }
 
-  def createCase(a: Application = createBTIApplication, q: Option[String] = None, as: Seq[Attachment] = Seq.empty): Case = {
+  def createCase(app: Application = createBTIApplication,
+                 queue: Option[String] = None,
+                 assignee: Option[String] = None,
+                 as: Seq[Attachment] = Seq.empty): Case = {
     Case(
       reference = RandomGenerator.randomUUID(),
       status = CaseStatus.NEW,
-      queueId = q,
-      assigneeId = Some(RandomGenerator.randomUUID()),
-      application = a,
+      queueId = queue,
+      assigneeId = assignee,
+      application = app,
       attachments = as
     )
   }

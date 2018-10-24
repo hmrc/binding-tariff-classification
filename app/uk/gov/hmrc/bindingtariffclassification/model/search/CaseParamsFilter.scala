@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.bindingtariffclassification.model.search
 
+// TODO: we probably do not need `reference` here. The search by reference is done separately only...
 case class CaseParamsFilter(reference: Option[String] = None,
                             queueId: Option[String] = None,
                             assigneeId: Option[String] = None)

@@ -29,10 +29,11 @@ class CaseSpec extends BaseFeatureSpec {
 
   override lazy val port = 14681
 
-  private val q1 = "12345"
-  private val c1 = createCase(a = createBTIApplication, q = Some(q1))
+  private val q1 = "queue1"
+  private val u1 = "user1"
+  private val c1 = createCase(app = createBTIApplication, queue = Some(q1), assignee = Some(u1))
   private val c1_updated = c1.copy(status = CaseStatus.CANCELLED)
-  private val c2 = createCase(a = createBTIApplication)
+  private val c2 = createCase(app = createBTIApplication)
 
   private val json1 = Json.toJson(c1)
   private val json1_updated = Json.toJson(c1_updated)
@@ -214,6 +215,112 @@ class CaseSpec extends BaseFeatureSpec {
 
       When("I get cases by queue id")
       val result = Http(s"$serviceUrl/cases?queue_id=wrong").asString
+
+      Then("The response code should be OK")
+      result.code shouldEqual OK
+
+      And("No cases are returned in the JSON response")
+      Json.parse(result.body) shouldBe Json.toJson(Seq.empty[Case])
+    }
+
+  }
+
+
+  feature("Get Cases by Assignee Id") {
+
+    scenario("Filtering cases that have undefined assigneeId") {
+
+      Given("There are few cases in the database")
+      store(c1)
+      store(c2)
+
+      When("I get cases by assignee id")
+      val result = Http(s"$serviceUrl/cases?assignee_id=none").asString
+
+      Then("The response code should be OK")
+      result.code shouldEqual OK
+
+      And("The expected cases are returned in the JSON response")
+      Json.parse(result.body) shouldBe Json.toJson(Seq(c2))
+    }
+
+    scenario("Filtering cases by a valid assigneeId") {
+
+      Given("There are few cases in the database")
+      store(c1)
+      store(c2)
+
+      When("I get cases by assignee id")
+      val result = Http(s"$serviceUrl/cases?assignee_id=$u1").asString
+
+      Then("The response code should be OK")
+      result.code shouldEqual OK
+
+      And("The expected cases are returned in the JSON response")
+      Json.parse(result.body) shouldBe Json.toJson(Seq(c1))
+    }
+
+    scenario("Filtering cases by a wrong assigneeId") {
+
+      Given("There are few cases in the database")
+      store(c1)
+      store(c2)
+
+      When("I get cases by assignee id")
+      val result = Http(s"$serviceUrl/cases?assignee_id=wrong").asString
+
+      Then("The response code should be OK")
+      result.code shouldEqual OK
+
+      And("No cases are returned in the JSON response")
+      Json.parse(result.body) shouldBe Json.toJson(Seq.empty[Case])
+    }
+
+  }
+
+
+  feature("Get Cases by Assignee Id and Queue Id") {
+
+    scenario("Filtering cases that have undefined assigneeId and undefined queueId") {
+
+      Given("There are few cases in the database")
+      store(c1)
+      store(c2)
+
+      When("I get cases by assignee id and queue id")
+      val result = Http(s"$serviceUrl/cases?assignee_id=none&queue_id=none").asString
+
+      Then("The response code should be OK")
+      result.code shouldEqual OK
+
+      And("The expected cases are returned in the JSON response")
+      Json.parse(result.body) shouldBe Json.toJson(Seq(c2))
+    }
+
+    scenario("Filtering cases by a valid assigneeId and a valid queueId") {
+
+      Given("There are few cases in the database")
+      store(c1)
+      store(c2)
+
+      When("I get cases by assignee id and queue id")
+      val result = Http(s"$serviceUrl/cases?assignee_id=$u1&queue_id=$q1").asString
+
+      Then("The response code should be OK")
+      result.code shouldEqual OK
+
+      And("The expected cases are returned in the JSON response")
+      Json.parse(result.body) shouldBe Json.toJson(Seq(c1))
+    }
+
+    scenario("Filtering cases by a wrong assigneeId and a valid queueId") {
+
+      Given("There are few cases in the database")
+      store(c1)
+      store(c2)
+
+      When("I get cases by assignee id")
+      val result = Http(s"$serviceUrl/cases?assignee_id=_a_&queue_id=$q1").asString
 
       Then("The response code should be OK")
       result.code shouldEqual OK

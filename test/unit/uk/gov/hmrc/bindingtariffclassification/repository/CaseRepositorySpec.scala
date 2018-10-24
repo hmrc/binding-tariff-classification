@@ -145,23 +145,24 @@ class CaseRepositorySpec extends BaseMongoIndexSpec
   // TODO: the test scenarios titles need to be written and grouped properly
 
   "get without params should return all cases" should {
-    val nofilters = CaseParamsFilter()
-    val nosorter = CaseParamsSorting()
+    val noFiltering = CaseParamsFilter()
+    val noSorting = CaseParamsSorting()
 
     "retrieve all cases from the collection" in {
       await(repository.insert(case1))
       await(repository.insert(case2))
       collectionSize shouldBe 2
 
-      await(repository.get(nofilters, nosorter)) shouldBe Seq(case1, case2)
+      await(repository.get(noFiltering, noSorting)) shouldBe Seq(case1, case2)
     }
 
     "return an empty sequence when there are no cases in the collection" in {
-      await(repository.get(nofilters, nosorter)) shouldBe Seq.empty[Case]
+      await(repository.get(noFiltering, noSorting)) shouldBe Seq.empty[Case]
     }
+
   }
 
-  "get filtering by Queue" should {
+  "get filtering by queueId" should {
 
     val queueIdX = Some("queue_x")
     val queueIdY = Some("queue_y")
@@ -172,26 +173,26 @@ class CaseRepositorySpec extends BaseMongoIndexSpec
     val caseWithQueueX2 = createCase().copy(queueId = queueIdX)
     val caseWithQueueY = createCase().copy(queueId = queueIdY)
 
-    "get by filtering on queueId with no matches should return empty sequence" in {
+    "get by filtering on queueId with no matches should return an empty sequence" in {
 
       store(caseWithEmptyQueue, caseWithQueueX1)
       await(repositoryGet(CaseParamsFilter(queueId = unknownQueueId))) shouldBe Seq.empty
     }
 
-    "get by filtering on queueId with one match should return just this queue" in {
+    "get by filtering on queueId with one match should return the expected document" in {
 
       store(caseWithEmptyQueue, caseWithQueueX1, caseWithQueueY)
       await(repositoryGet(CaseParamsFilter(queueId = queueIdX))) shouldBe Seq(caseWithQueueX1)
     }
 
-    "get by filtering on queueId with two matches should return just those queues" in {
+    "get by filtering on queueId with two matches should return the expected documents" in {
       store(caseWithEmptyQueue, caseWithQueueX1, caseWithQueueX2, caseWithQueueY)
       await(repositoryGet(CaseParamsFilter(queueId = queueIdX))) shouldBe Seq(caseWithQueueX1, caseWithQueueX2)
     }
 
   }
 
-  "get filtering by AssigneeId" should {
+  "get filtering by assigneeId" should {
 
     val assigneeX = Some("assignee_x")
     val assigneeY = Some("assignee_y")
@@ -202,19 +203,19 @@ class CaseRepositorySpec extends BaseMongoIndexSpec
     val caseWithAssigneeX2 = createCase().copy(assigneeId = assigneeX)
     val caseWithAssigneeY1 = createCase().copy(assigneeId = assigneeY)
 
-    "get by filtering on assignee with no matches should return empty sequence" in {
+    "get by filtering on assignee with no matches should return an empty sequence" in {
 
       store(caseWithEmptyAssignee, caseWithAssigneeX1)
       await(repositoryGet(CaseParamsFilter(assigneeId = unknownAssignee))) shouldBe Seq.empty
     }
 
-    "get by filtering on assignee with one match should return just this one" in {
+    "get by filtering on assignee with one match should return the expected document" in {
 
       store(caseWithEmptyAssignee, caseWithAssigneeX1, caseWithAssigneeY1)
       await(repositoryGet(CaseParamsFilter(assigneeId = assigneeX))) shouldBe Seq(caseWithAssigneeX1)
     }
 
-    "get by filtering on assignee with two matches should return just those two" in {
+    "get by filtering on assignee with two matches should return the expected documents" in {
       store(caseWithEmptyAssignee, caseWithAssigneeX1, caseWithAssigneeX2, caseWithAssigneeY1)
       await(repositoryGet(CaseParamsFilter(assigneeId = assigneeX))) shouldBe Seq(caseWithAssigneeX1, caseWithAssigneeX2)
     }
@@ -222,7 +223,7 @@ class CaseRepositorySpec extends BaseMongoIndexSpec
   }
 
 
-  "get filtering by QueueId and AssigneeId" should {
+  "get filtering by queueId and assigneeId" should {
 
     val assigneeX = Some("assignee_x")
     val assigneeY = Some("assignee_y")
@@ -234,8 +235,7 @@ class CaseRepositorySpec extends BaseMongoIndexSpec
     val caseWithQxAndAy = createCase().copy(queueId = queueIdX, assigneeId = assigneeY)
     val caseWithQyAndAx = createCase().copy(queueId = queueIdY, assigneeId = assigneeX)
 
-
-    "get by filtering on assignee and queue with one matches should return just this one" in {
+    "get by filtering on assignee and queue with one match should return the expected case" in {
       store(caseWithNoQueueAndNoAssignee, caseWithQxAndAx, caseWithQxAndAy, caseWithQyAndAx)
       await(repositoryGet(CaseParamsFilter(queueId = queueIdX, assigneeId = assigneeX))) shouldBe Seq(caseWithQxAndAx)
     }
