@@ -18,6 +18,7 @@ package unit.uk.gov.hmrc.bindingtariffclassification.repository
 
 import org.scalatest.concurrent.Eventually
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
+import play.api.libs.json.{JsObject, JsValue, Json}
 import reactivemongo.api.DB
 import reactivemongo.api.indexes.Index
 import reactivemongo.api.indexes.IndexType.Ascending
@@ -26,12 +27,13 @@ import reactivemongo.core.errors.DatabaseException
 import reactivemongo.play.json.ImplicitBSONHandlers._
 import uk.gov.hmrc.bindingtariffclassification.model._
 import uk.gov.hmrc.bindingtariffclassification.model.JsonFormatters.formatCase
-import uk.gov.hmrc.bindingtariffclassification.model.search.SearchCase
-import uk.gov.hmrc.bindingtariffclassification.repository.{BaseMongoIndexSpec, CaseMongoRepository, MongoDbProvider}
+import uk.gov.hmrc.bindingtariffclassification.model.search.{CaseParamsFilter, CaseParamsSorting}
+import uk.gov.hmrc.bindingtariffclassification.repository.{BaseMongoIndexSpec, CaseMongoRepository, MongoDbProvider, FilterParamsMapper}
 import uk.gov.hmrc.bindingtariffclassification.todelete.CaseData._
 import uk.gov.hmrc.mongo.MongoSpecSupport
 
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 
 class CaseRepositorySpec extends BaseMongoIndexSpec
   with BeforeAndAfterAll
@@ -44,12 +46,16 @@ class CaseRepositorySpec extends BaseMongoIndexSpec
     override val mongo: () => DB = self.mongo
   }
 
+  private val searchMapper = new FilterParamsMapper {
+    override def from: CaseParamsFilter => JsObject = CaseParamsMapper//_ => Json.obj()
+  }
+
   private def getIndexes(repo: CaseMongoRepository): List[Index] = {
     val indexesFuture = repo.collection.indexesManager.list()
     await(indexesFuture)
   }
 
-  private val repository = new CaseMongoRepository(mongoDbProvider)
+  private val repository = new CaseMongoRepository(mongoDbProvider, searchMapper)
 
   private val case1: Case = createCase()
   private val case2: Case = createCase()
@@ -122,17 +128,19 @@ class CaseRepositorySpec extends BaseMongoIndexSpec
   // TODO: the test scenarios titles need to be written and grouped properly
 
   "get without params should return all cases" should {
+    val nofilters = CaseParamsFilter()
+    val nosorter = CaseParamsSorting()
 
     "retrieve all cases from the collection" in {
       await(repository.insert(case1))
       await(repository.insert(case2))
       collectionSize shouldBe 2
 
-      await(repository.get()) shouldBe Seq(case1, case2)
+      await(repository.get(nofilters, nosorter)) shouldBe Seq(case1, case2)
     }
 
     "return an empty sequence when there are no cases in the collection" in {
-      await(repository.get()) shouldBe Seq.empty
+      await(repository.get(nofilters, nosorter)) shouldBe Seq.empty
     }
   }
 
@@ -150,18 +158,18 @@ class CaseRepositorySpec extends BaseMongoIndexSpec
     "get by filtering on queueId with no matches should return empty sequence" in {
 
       store(caseWithEmptyQueue, caseWithQueueX1)
-      await(repository.get(Some(SearchCase(queueId = unknownQueueId)))) shouldBe Seq.empty
+      await(repositoryGet(CaseParamsFilter(queueId = unknownQueueId))) shouldBe Seq.empty
     }
 
     "get by filtering on queueId with one match should return just this queue" in {
 
       store(caseWithEmptyQueue, caseWithQueueX1, caseWithQueueY)
-      await(repository.get(Some(SearchCase(queueId = queueIdX)))) shouldBe Seq(caseWithQueueX1)
+      await(repositoryGet(CaseParamsFilter(queueId = queueIdX))) shouldBe Seq(caseWithQueueX1)
     }
 
     "get by filtering on queueId with two matches should return just those queues" in {
       store(caseWithEmptyQueue, caseWithQueueX1, caseWithQueueX2, caseWithQueueY)
-      await(repository.get(Some(SearchCase(queueId = queueIdX)))) shouldBe Seq(caseWithQueueX1, caseWithQueueX2)
+      await(repositoryGet(CaseParamsFilter(queueId = queueIdX))) shouldBe Seq(caseWithQueueX1, caseWithQueueX2)
     }
 
   }
@@ -180,18 +188,18 @@ class CaseRepositorySpec extends BaseMongoIndexSpec
     "get by filtering on assignee with no matches should return empty sequence" in {
 
       store(caseWithEmptyAssignee, caseWithAssigneeX1)
-      await(repository.get(Some(SearchCase(assigneeId = unknownAssignee)))) shouldBe Seq.empty
+      await(repositoryGet(CaseParamsFilter(assigneeId = unknownAssignee))) shouldBe Seq.empty
     }
 
     "get by filtering on assignee with one match should return just this one" in {
 
       store(caseWithEmptyAssignee, caseWithAssigneeX1, caseWithAssigneeY1)
-      await(repository.get(Some(SearchCase(assigneeId = assigneeX)))) shouldBe Seq(caseWithAssigneeX1)
+      await(repositoryGet(CaseParamsFilter(assigneeId = assigneeX))) shouldBe Seq(caseWithAssigneeX1)
     }
 
     "get by filtering on assignee with two matches should return just those two" in {
       store(caseWithEmptyAssignee, caseWithAssigneeX1, caseWithAssigneeX2, caseWithAssigneeY1)
-      await(repository.get(Some(SearchCase(assigneeId = assigneeX)))) shouldBe Seq(caseWithAssigneeX1, caseWithAssigneeX2)
+      await(repositoryGet(CaseParamsFilter(assigneeId = assigneeX))) shouldBe Seq(caseWithAssigneeX1, caseWithAssigneeX2)
     }
 
   }
@@ -212,10 +220,17 @@ class CaseRepositorySpec extends BaseMongoIndexSpec
 
     "get by filtering on assignee and queue with one matches should return just this one" in {
       store(caseWithNoQueueAndNoAssignee, caseWithQxAndAx, caseWithQxAndAy, caseWithQyAndAx)
-      await(repository.get(Some(SearchCase(queueId = queueIdX, assigneeId = assigneeX)))) shouldBe Seq(caseWithQxAndAx)
+      await(repositoryGet(CaseParamsFilter(queueId = queueIdX, assigneeId = assigneeX))) shouldBe Seq(caseWithQxAndAx)
     }
 
   }
+
+
+  private def repositoryGet(paramsFilter: CaseParamsFilter): Future[Seq[Case]] = {
+
+    await(repository.get(paramsFilter, CaseParamsSorting()))
+  }
+
 
   private def store(cases: Case*): Unit = {
     cases.foreach { c: Case => await(repository.insert(c)) }
@@ -266,7 +281,7 @@ class CaseRepositorySpec extends BaseMongoIndexSpec
         Index(key = Seq("_id" -> Ascending), name = Some("_id_"))
       )
 
-      val repo = new CaseMongoRepository(mongoDbProvider)
+      val repo = new CaseMongoRepository(mongoDbProvider, searchMapper)
 
       eventually(timeout(5.seconds), interval(100.milliseconds)) {
         assertIndexes(expectedIndexes.sorted, getIndexes(repo).sorted)

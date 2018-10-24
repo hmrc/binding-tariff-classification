@@ -19,6 +19,7 @@ package unit.uk.gov.hmrc.bindingtariffclassification.service
 import org.mockito.Mockito
 import org.scalatest.mockito.MockitoSugar
 import uk.gov.hmrc.bindingtariffclassification.model.Case
+import uk.gov.hmrc.bindingtariffclassification.model.search.{CaseParamsFilter, CaseParamsSorting}
 import uk.gov.hmrc.bindingtariffclassification.repository.CaseRepository
 import uk.gov.hmrc.bindingtariffclassification.service.CaseService
 import uk.gov.hmrc.play.test.UnitSpec
@@ -101,27 +102,30 @@ class CaseServiceSpec extends UnitSpec with MockitoSugar {
     }
   }
 
-  "get" should {
+  "get all cases" should {
 
     // TODO: test all possible combinations
+    val nofilters = CaseParamsFilter()
+    val nosorter = CaseParamsSorting()
 
     "return the expected cases" in {
-      Mockito.when(repository.get(None, None)).thenReturn(successful(Seq(c1, c2)))
-      val result = await(service.get())
+
+      Mockito.when(repository.get(nofilters, nosorter)).thenReturn(successful(Seq(c1, c2)))
+      val result = await(service.get(nofilters, nosorter))
       result shouldBe Seq(c1, c2)
     }
 
     "return an empty sequence when there are no cases" in {
-      Mockito.when(repository.get(None, None)).thenReturn(successful(Nil))
-      val result = await(service.get())
+      Mockito.when(repository.get(nofilters, nosorter)).thenReturn(successful(Nil))
+      val result = await(service.get(nofilters, nosorter))
       result shouldBe Nil
     }
 
     "propagate any error" in {
-      Mockito.when(repository.get(None, None)).thenThrow(emulatedFailure)
+      Mockito.when(repository.get(nofilters, nosorter)).thenThrow(emulatedFailure)
 
       val caught = intercept[RuntimeException] {
-        await(service.get())
+        await(service.get(nofilters, nosorter))
       }
       caught shouldBe emulatedFailure
     }

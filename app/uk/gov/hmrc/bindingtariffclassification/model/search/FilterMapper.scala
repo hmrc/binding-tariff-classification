@@ -16,14 +16,13 @@
 
 package uk.gov.hmrc.bindingtariffclassification.model.search
 
-import play.api.libs.json.Json
-import uk.gov.hmrc.play.test.UnitSpec
+trait FilterMapper {
+  def from(queueId: Option[String], assigneeId: Option[String]): CaseParamsFilter
+}
 
-class SortCaseSpec extends UnitSpec {
+class FilterCaseMapper extends FilterMapper {
 
-
-  "covert to Json with no filters" in {
-    SortCase().buildJson shouldBe Json.obj()
+  def from(queueId: Option[String], assigneeId: Option[String]): CaseParamsFilter = {
+    CaseParamsFilter(queueId = queueId, assigneeId = assigneeId)
   }
-
 }

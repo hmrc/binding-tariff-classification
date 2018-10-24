@@ -18,12 +18,12 @@ package uk.gov.hmrc.bindingtariffclassification.repository
 
 import javax.inject.{Inject, Singleton}
 import com.google.inject.ImplementedBy
-import play.api.libs.json._
+import play.api.Logger
 import reactivemongo.bson.BSONObjectID
 import reactivemongo.play.json.collection.JSONCollection
 import uk.gov.hmrc.bindingtariffclassification.model.{Case, JsonFormatters}
 import uk.gov.hmrc.bindingtariffclassification.model.JsonFormatters.formatCase
-import uk.gov.hmrc.bindingtariffclassification.model.search.{SearchCase, SearchCaseBuilder, SortCase}
+import uk.gov.hmrc.bindingtariffclassification.model.search.{CaseParamsFilter, CaseParamsSorting}
 import uk.gov.hmrc.mongo.ReactiveRepository
 import uk.gov.hmrc.mongo.json.ReactiveMongoFormats
 
@@ -38,12 +38,12 @@ trait CaseRepository {
 
   def getByReference(reference: String): Future[Option[Case]]
 
-  def get(searchBy: Option[SearchCase] = None, sortedBy: Option[SortCase] = None): Future[Seq[Case]]
+  def get(searchBy: CaseParamsFilter, sortedBy: CaseParamsSorting): Future[Seq[Case]]
 
 }
 
 @Singleton
-class CaseMongoRepository @Inject()(mongoDbProvider: MongoDbProvider)
+class CaseMongoRepository @Inject()(mongoDbProvider: MongoDbProvider, searchMapper: FilterParamsMapper)
   extends ReactiveRepository[Case, BSONObjectID](
     collectionName = "cases",
     mongo = mongoDbProvider.mongo,
@@ -65,17 +65,18 @@ class CaseMongoRepository @Inject()(mongoDbProvider: MongoDbProvider)
   }
 
   override def update(c: Case): Future[Option[Case]] = {
-    atomicUpdate(SearchCase(reference = Some(c.reference)).buildJson, c)
+    val selector = searchMapper.from(CaseParamsFilter(reference = Some(c.reference)))
+    atomicUpdate(selector, c)
   }
 
   override def getByReference(reference: String): Future[Option[Case]] = {
-    getOne(SearchCase(reference = Some(reference)).buildJson)
+    val selector = searchMapper.from(CaseParamsFilter(reference = Some(reference)))
+    getOne(selector)
   }
 
-  override def get(searchBy: Option[SearchCase] = None, sortedBy: Option[SortCase] = None): Future[Seq[Case]] = {
-    val searchFrom = searchBy.map(_.buildJson).getOrElse(Json.obj())
-    val sortFrom = sortedBy.map(_.buildJson).getOrElse(Json.obj())
+  override def get(searchBy: CaseParamsFilter, sortedBy: CaseParamsSorting): Future[Seq[Case]] = {
 
-    getMany(searchFrom, sortFrom)
+    Logger.info(s"json body: ${searchMapper.from(searchBy)}")
+    getMany(searchMapper.from(searchBy), sortedBy.buildJson)
   }
 }

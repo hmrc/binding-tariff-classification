@@ -84,7 +84,7 @@ class MicroserviceHelloWorld @Inject()(caseService: CaseService, eventService: E
     Logger.debug(s"Liability Order document inserted: $r3")
 
     // GET ALL
-    val r = Await.result(caseService.get(), 2.seconds)
+    val r = Await.result(caseService.get, 2.seconds)
     Logger.debug(s"All cases: $r")
 
     // GET BY REF
@@ -114,5 +114,4 @@ class MicroserviceHelloWorld @Inject()(caseService: CaseService, eventService: E
     }
 
   }
-
 }
