@@ -20,6 +20,7 @@ import org.scalatest._
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
 import uk.gov.hmrc.bindingtariffclassification.model.Case
 import uk.gov.hmrc.bindingtariffclassification.repository.CaseMongoRepository
+import uk.gov.hmrc.bindingtariffclassification.utils.CaseParamsMapper
 
 import scala.concurrent.duration._
 import scala.concurrent.Await.result
@@ -33,14 +34,16 @@ abstract class BaseFeatureSpec extends FeatureSpec
   private val timeout = 2.seconds
 
   override protected def beforeEach(): Unit = {
+    result(mongoRepository.drop, timeout)
     result(mongoRepository.ensureIndexes, timeout)
   }
 
-  override protected def afterEach(): Unit = {
+  override protected def afterAll(): Unit = {
     result(mongoRepository.drop, timeout)
   }
 
   protected def mongoRepository: CaseMongoRepository = app.injector.instanceOf[CaseMongoRepository]
+  protected def caseParamsMapper: CaseParamsMapper = app.injector.instanceOf[CaseParamsMapper]
 
   protected def store(c: Case): Case = {
     result(mongoRepository.insert(c), timeout)

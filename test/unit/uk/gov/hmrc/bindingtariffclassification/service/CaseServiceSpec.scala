@@ -102,7 +102,7 @@ class CaseServiceSpec extends UnitSpec with MockitoSugar {
     }
   }
 
-  "get all cases" should {
+  "get" should {
 
     // TODO: test all possible combinations
     val nofilters = CaseParamsFilter()

@@ -26,8 +26,6 @@ import scala.concurrent.Future
 @Singleton
 class CaseService @Inject()(repository: CaseRepository) {
 
-
-
   def insert(c: Case): Future[Case] = {
     repository.insert(c)
   }
@@ -40,14 +38,11 @@ class CaseService @Inject()(repository: CaseRepository) {
     repository.getByReference(reference)
   }
 
-  def get: Future[Seq[Case]] = {
-    repository.get(CaseParamsFilter(), CaseParamsSorting())
-  }
+//  def get: Future[Seq[Case]] = {
+//    repository.get(CaseParamsFilter(), CaseParamsSorting())
+//  }
 
   def get(searchBy: CaseParamsFilter, sortBy: CaseParamsSorting): Future[Seq[Case]] = {
-
-
-
     repository.get(searchBy, sortBy)
   }
 }

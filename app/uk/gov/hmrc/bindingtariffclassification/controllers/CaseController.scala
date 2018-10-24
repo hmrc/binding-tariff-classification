@@ -19,7 +19,7 @@ package uk.gov.hmrc.bindingtariffclassification.controllers
 import javax.inject.{Inject, Singleton}
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc._
-import uk.gov.hmrc.bindingtariffclassification.model.search.{CaseParamsFilter, CaseParamsSorting, FilterMapper}
+import uk.gov.hmrc.bindingtariffclassification.model.search.{CaseParamsSorting, FilterCaseMapper}
 import uk.gov.hmrc.bindingtariffclassification.model.{Case, ErrorCode, JsErrorResponse, JsonFormatters}
 import uk.gov.hmrc.bindingtariffclassification.service.CaseService
 
@@ -27,9 +27,9 @@ import scala.concurrent.{ExecutionContext, Future}
 import ExecutionContext.Implicits.global
 
 @Singleton()
-class CaseController @Inject()(caseService: CaseService, filterMapper: FilterMapper) extends CommonController {
+class CaseController @Inject()(caseService: CaseService) extends CommonController {
 
-  import JsonFormatters._
+  import JsonFormatters.formatCase
 
   def create: Action[JsValue] = Action.async(parse.json) { implicit request =>
     withJsonBody[Case] { caseRequest: Case =>
@@ -50,7 +50,8 @@ class CaseController @Inject()(caseService: CaseService, filterMapper: FilterMap
 
   def get(queue_id: Option[String], assignee_id: Option[String], sort_by: Option[String]): Action[AnyContent] = Action.async { implicit request =>
 
-    val filterParams = filterMapper.from(queue_id, assignee_id)
+    val filterParams = FilterCaseMapper.from(queue_id, assignee_id)
+
     //TODO : Implement Sort by , right now is always sending NONE
     caseService.get(filterParams, CaseParamsSorting()) map (cases => Ok(Json.toJson(cases))) recover recovery
   }

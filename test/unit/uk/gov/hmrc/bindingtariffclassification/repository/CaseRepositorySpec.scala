@@ -18,7 +18,7 @@ package unit.uk.gov.hmrc.bindingtariffclassification.repository
 
 import org.scalatest.concurrent.Eventually
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
-import play.api.libs.json.{JsObject, JsValue, Json}
+import play.api.libs.json._
 import reactivemongo.api.DB
 import reactivemongo.api.indexes.Index
 import reactivemongo.api.indexes.IndexType.Ascending
@@ -28,8 +28,9 @@ import reactivemongo.play.json.ImplicitBSONHandlers._
 import uk.gov.hmrc.bindingtariffclassification.model._
 import uk.gov.hmrc.bindingtariffclassification.model.JsonFormatters.formatCase
 import uk.gov.hmrc.bindingtariffclassification.model.search.{CaseParamsFilter, CaseParamsSorting}
-import uk.gov.hmrc.bindingtariffclassification.repository.{BaseMongoIndexSpec, CaseMongoRepository, MongoDbProvider, FilterParamsMapper}
+import uk.gov.hmrc.bindingtariffclassification.repository.{BaseMongoIndexSpec, CaseMongoRepository, MongoDbProvider}
 import uk.gov.hmrc.bindingtariffclassification.todelete.CaseData._
+import uk.gov.hmrc.bindingtariffclassification.utils.FilterParamsMapper
 import uk.gov.hmrc.mongo.MongoSpecSupport
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -47,7 +48,23 @@ class CaseRepositorySpec extends BaseMongoIndexSpec
   }
 
   private val searchMapper = new FilterParamsMapper {
-    override def from: CaseParamsFilter => JsObject = CaseParamsMapper//_ => Json.obj()
+
+    // TODO: find better way to test this
+    override def from: CaseParamsFilter => JsObject = searchCase => {
+
+      def noneOrValue: String => JsValue = { v: String =>
+        if (v.toLowerCase == "none") JsNull
+        else JsString(v)
+      }
+
+      JsObject(
+        Seq[(String, JsValue)]() ++
+          searchCase.reference.map("reference" -> JsString(_)) ++
+          searchCase.queueId.map("queueId" -> noneOrValue(_)) ++
+          searchCase.assigneeId.map("assigneeId" -> noneOrValue(_))
+      )
+    }
+
   }
 
   private def getIndexes(repo: CaseMongoRepository): List[Index] = {
@@ -140,7 +157,7 @@ class CaseRepositorySpec extends BaseMongoIndexSpec
     }
 
     "return an empty sequence when there are no cases in the collection" in {
-      await(repository.get(nofilters, nosorter)) shouldBe Seq.empty
+      await(repository.get(nofilters, nosorter)) shouldBe Seq.empty[Case]
     }
   }
 

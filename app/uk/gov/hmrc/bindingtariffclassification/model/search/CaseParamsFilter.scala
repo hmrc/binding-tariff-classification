@@ -16,8 +16,6 @@
 
 package uk.gov.hmrc.bindingtariffclassification.model.search
 
-case class CaseParamsFilter(
-                       reference: Option[String] = None,
-                       queueId: Option[String] = None,
-                       assigneeId: Option[String] = None
-                     )
+case class CaseParamsFilter(reference: Option[String] = None,
+                            queueId: Option[String] = None,
+                            assigneeId: Option[String] = None)

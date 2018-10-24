@@ -23,15 +23,16 @@ import play.api.http.Status.{CREATED, INTERNAL_SERVER_ERROR, NOT_FOUND, OK}
 import play.api.libs.json.Json
 import uk.gov.hmrc.bindingtariffclassification.model.{Case, CaseStatus}
 import uk.gov.hmrc.bindingtariffclassification.model.JsonFormatters._
-import uk.gov.hmrc.bindingtariffclassification.todelete.CaseData
+import uk.gov.hmrc.bindingtariffclassification.todelete.CaseData._
 
 class CaseSpec extends BaseFeatureSpec {
 
   override lazy val port = 14681
 
-  private val c1 = CaseData.createCase(CaseData.createBTIApplication)
+  private val q1 = "12345"
+  private val c1 = createCase(a = createBTIApplication, q = Some(q1))
   private val c1_updated = c1.copy(status = CaseStatus.CANCELLED)
-  private val c2 = CaseData.createCase(CaseData.createBTIApplication)
+  private val c2 = createCase(a = createBTIApplication)
 
   private val json1 = Json.toJson(c1)
   private val json1_updated = Json.toJson(c1_updated)
@@ -44,7 +45,6 @@ class CaseSpec extends BaseFeatureSpec {
       When("I create a new case")
       val result = Http(s"$serviceUrl/cases")
         .headers(Seq(CONTENT_TYPE -> JSON))
-        .timeout(5000, 10000)
         .postData(json1.toString()).asString
 
       Then("The case is returned in the JSON response")
@@ -62,7 +62,6 @@ class CaseSpec extends BaseFeatureSpec {
       When("I create a case that already exist")
       val result = Http(s"$serviceUrl/cases")
         .headers(Seq(CONTENT_TYPE -> JSON))
-        .timeout(5000, 10000)
         .postData(json1.toString()).asString
 
       // TODO This should not return an internal server error. Instead it should return a 422
@@ -82,7 +81,6 @@ class CaseSpec extends BaseFeatureSpec {
       When("I update a non-existing case")
       val result = Http(s"$serviceUrl/cases/${c1.reference}")
         .headers(Seq(CONTENT_TYPE -> JSON))
-        .timeout(5000, 10000)
         .put(json1.toString()).asString
 
       Then("The response code should be NOT FOUND")
@@ -97,7 +95,6 @@ class CaseSpec extends BaseFeatureSpec {
       When("I update an existing case")
       val result = Http(s"$serviceUrl/cases/${c1.reference}")
         .headers(Seq(CONTENT_TYPE -> JSON))
-        .timeout(5000, 10000)
         .put(json1_updated.toString()).asString
 
       Then("The response code should be OK")
@@ -118,8 +115,7 @@ class CaseSpec extends BaseFeatureSpec {
       store(c1)
 
       When("I get a case")
-      val result = Http(s"$serviceUrl/cases/${c1.reference}")
-        .timeout(5000, 10000).asString
+      val result = Http(s"$serviceUrl/cases/${c1.reference}").asString
 
       Then("The response code should be OK")
       result.code shouldEqual OK
@@ -131,8 +127,7 @@ class CaseSpec extends BaseFeatureSpec {
     scenario("Get a non-existing case") {
 
       When("I get a case")
-      val result = Http(s"$serviceUrl/cases/${c1.reference}")
-        .timeout(5000, 10000).asString
+      val result = Http(s"$serviceUrl/cases/${c1.reference}").asString
 
       Then("The response code should be NOT FOUND")
       result.code shouldEqual NOT_FOUND
@@ -141,19 +136,16 @@ class CaseSpec extends BaseFeatureSpec {
   }
 
 
-  feature("Get All Cases") {
+  feature("Get Cases") {
 
-    // TODO: test all possible combinations
-
-    scenario("Get cases") {
+    scenario("Get all cases") {
 
       Given("There are few cases in the database")
       store(c1)
       store(c2)
 
       When("I get all cases")
-      val result = Http(s"$serviceUrl/cases")
-        .timeout(5000, 10000).asString
+      val result = Http(s"$serviceUrl/cases").asString
 
       Then("The response code should be OK")
       result.code shouldEqual OK
@@ -167,8 +159,61 @@ class CaseSpec extends BaseFeatureSpec {
       Given("There are no cases in the database")
 
       When("I get all cases")
-      val result = Http(s"$serviceUrl/cases")
-        .timeout(5000, 10000).asString
+      val result = Http(s"$serviceUrl/cases").asString
+
+      Then("The response code should be OK")
+      result.code shouldEqual OK
+
+      And("No cases are returned in the JSON response")
+      Json.parse(result.body) shouldBe Json.toJson(Seq.empty[Case])
+    }
+
+  }
+
+  // TODO: test all possible combinations of get()
+
+  feature("Get Cases by Queue Id") {
+
+    scenario("Filtering cases that have undefined queueId") {
+
+      Given("There are few cases in the database")
+      store(c1)
+      store(c2)
+
+      When("I get cases by queue id")
+      val result = Http(s"$serviceUrl/cases?queue_id=none").asString
+
+      Then("The response code should be OK")
+      result.code shouldEqual OK
+
+      And("The expected cases are returned in the JSON response")
+      Json.parse(result.body) shouldBe Json.toJson(Seq(c2))
+    }
+
+    scenario("Filtering cases by a valid queueId") {
+
+      Given("There are few cases in the database")
+      store(c1)
+      store(c2)
+
+      When("I get cases by queue id")
+      val result = Http(s"$serviceUrl/cases?queue_id=$q1").asString
+
+      Then("The response code should be OK")
+      result.code shouldEqual OK
+
+      And("The expected cases are returned in the JSON response")
+      Json.parse(result.body) shouldBe Json.toJson(Seq(c1))
+    }
+
+    scenario("Filtering cases by a wrong queueId") {
+
+      Given("There are few cases in the database")
+      store(c1)
+      store(c2)
+
+      When("I get cases by queue id")
+      val result = Http(s"$serviceUrl/cases?queue_id=wrong").asString
 
       Then("The response code should be OK")
       result.code shouldEqual OK

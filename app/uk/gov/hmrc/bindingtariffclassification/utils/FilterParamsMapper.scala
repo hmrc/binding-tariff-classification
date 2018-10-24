@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.bindingtariffclassification.repository
+package uk.gov.hmrc.bindingtariffclassification.utils
 
 import com.google.inject.ImplementedBy
 import javax.inject.Singleton
 import play.api.libs.json.{JsNull, JsObject, JsString, JsValue}
-import uk.gov.hmrc.bindingtariffclassification.model.search.{CaseParamsFilter, FilterMapper}
+import uk.gov.hmrc.bindingtariffclassification.model.search.CaseParamsFilter
 
 @ImplementedBy(classOf[CaseParamsMapper])
 trait FilterParamsMapper {

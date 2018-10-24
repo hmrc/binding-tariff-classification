@@ -16,13 +16,10 @@
 
 package uk.gov.hmrc.bindingtariffclassification.model.search
 
-trait FilterMapper {
-  def from(queueId: Option[String], assigneeId: Option[String]): CaseParamsFilter
-}
-
-class FilterCaseMapper extends FilterMapper {
+object FilterCaseMapper {
 
   def from(queueId: Option[String], assigneeId: Option[String]): CaseParamsFilter = {
     CaseParamsFilter(queueId = queueId, assigneeId = assigneeId)
   }
+
 }

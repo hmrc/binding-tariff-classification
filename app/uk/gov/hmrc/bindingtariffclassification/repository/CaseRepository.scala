@@ -18,12 +18,12 @@ package uk.gov.hmrc.bindingtariffclassification.repository
 
 import javax.inject.{Inject, Singleton}
 import com.google.inject.ImplementedBy
-import play.api.Logger
 import reactivemongo.bson.BSONObjectID
 import reactivemongo.play.json.collection.JSONCollection
 import uk.gov.hmrc.bindingtariffclassification.model.{Case, JsonFormatters}
 import uk.gov.hmrc.bindingtariffclassification.model.JsonFormatters.formatCase
 import uk.gov.hmrc.bindingtariffclassification.model.search.{CaseParamsFilter, CaseParamsSorting}
+import uk.gov.hmrc.bindingtariffclassification.utils.FilterParamsMapper
 import uk.gov.hmrc.mongo.ReactiveRepository
 import uk.gov.hmrc.mongo.json.ReactiveMongoFormats
 
@@ -75,8 +75,6 @@ class CaseMongoRepository @Inject()(mongoDbProvider: MongoDbProvider, searchMapp
   }
 
   override def get(searchBy: CaseParamsFilter, sortedBy: CaseParamsSorting): Future[Seq[Case]] = {
-
-    Logger.info(s"json body: ${searchMapper.from(searchBy)}")
     getMany(searchMapper.from(searchBy), sortedBy.buildJson)
   }
 }

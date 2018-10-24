@@ -16,11 +16,9 @@
 
 package uk.gov.hmrc.bindingtariffclassification.model.search
 
-import play.api.libs.json.{JsObject, JsString, JsValue, Json}
+import play.api.libs.json.{JsObject, Json}
 
-case class CaseParamsSorting(
-                     sortBy: Option[String] = None
-                   ) {
+case class CaseParamsSorting(sortBy: Option[String] = None) {
 
   def buildJson: JsObject = {
     // TODO : implement Sort case
