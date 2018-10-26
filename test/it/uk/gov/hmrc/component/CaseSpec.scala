@@ -27,7 +27,12 @@ import uk.gov.hmrc.bindingtariffclassification.todelete.CaseData._
 
 class CaseSpec extends BaseFeatureSpec {
 
+  // TODO: This is an Integration test. Is not testing units. Needs to be move to IT package
+  // and be rewrited to test just the units
+
+
   override lazy val port = 14681
+  protected val serviceUrl = s"http://localhost:$port"
 
   private val q1 = "queue1"
   private val u1 = "user1"
@@ -35,8 +40,8 @@ class CaseSpec extends BaseFeatureSpec {
   private val c1_updated = c1.copy(status = CaseStatus.CANCELLED)
   private val c2 = createCase(app = createBTIApplication)
 
-  private val json1 = Json.toJson(c1)
-  private val json1_updated = Json.toJson(c1_updated)
+  private val c1Json = Json.toJson(c1)
+  private val c1UpdatedJson = Json.toJson(c1_updated)
 
 
   feature("Create Case") {
@@ -46,10 +51,10 @@ class CaseSpec extends BaseFeatureSpec {
       When("I create a new case")
       val result = Http(s"$serviceUrl/cases")
         .headers(Seq(CONTENT_TYPE -> JSON))
-        .postData(json1.toString()).asString
+        .postData(c1Json.toString()).asString
 
       Then("The case is returned in the JSON response")
-      Json.parse(result.body) shouldBe json1
+      Json.parse(result.body) shouldBe c1Json
 
       And("The response code should be created")
       result.code shouldEqual CREATED
@@ -63,7 +68,7 @@ class CaseSpec extends BaseFeatureSpec {
       When("I create a case that already exist")
       val result = Http(s"$serviceUrl/cases")
         .headers(Seq(CONTENT_TYPE -> JSON))
-        .postData(json1.toString()).asString
+        .postData(c1Json.toString()).asString
 
       // TODO This should not return an internal server error. Instead it should return a 422
       // requires a code change to the application but is not currently blocking us so the test has been left
@@ -82,7 +87,7 @@ class CaseSpec extends BaseFeatureSpec {
       When("I update a non-existing case")
       val result = Http(s"$serviceUrl/cases/${c1.reference}")
         .headers(Seq(CONTENT_TYPE -> JSON))
-        .put(json1.toString()).asString
+        .put(c1Json.toString()).asString
 
       Then("The response code should be NOT FOUND")
       result.code shouldEqual NOT_FOUND
@@ -96,13 +101,13 @@ class CaseSpec extends BaseFeatureSpec {
       When("I update an existing case")
       val result = Http(s"$serviceUrl/cases/${c1.reference}")
         .headers(Seq(CONTENT_TYPE -> JSON))
-        .put(json1_updated.toString()).asString
+        .put(c1UpdatedJson.toString()).asString
 
       Then("The response code should be OK")
       result.code shouldEqual OK
 
       And("The case is returned in the JSON response")
-      Json.parse(result.body) shouldBe json1_updated
+      Json.parse(result.body) shouldBe c1UpdatedJson
     }
 
   }
@@ -122,7 +127,7 @@ class CaseSpec extends BaseFeatureSpec {
       result.code shouldEqual OK
 
       And("The case is returned in the JSON response")
-      Json.parse(result.body) shouldBe json1
+      Json.parse(result.body) shouldBe c1Json
     }
 
     scenario("Get a non-existing case") {
@@ -142,8 +147,7 @@ class CaseSpec extends BaseFeatureSpec {
     scenario("Get all cases") {
 
       Given("There are few cases in the database")
-      store(c1)
-      store(c2)
+      store(c1, c2)
 
       When("I get all cases")
       val result = Http(s"$serviceUrl/cases").asString
@@ -178,8 +182,7 @@ class CaseSpec extends BaseFeatureSpec {
     scenario("Filtering cases that have undefined queueId") {
 
       Given("There are few cases in the database")
-      store(c1)
-      store(c2)
+      store(c1, c2)
 
       When("I get cases by queue id")
       val result = Http(s"$serviceUrl/cases?queue_id=none").asString
@@ -194,8 +197,7 @@ class CaseSpec extends BaseFeatureSpec {
     scenario("Filtering cases by a valid queueId") {
 
       Given("There are few cases in the database")
-      store(c1)
-      store(c2)
+      store(c1, c2)
 
       When("I get cases by queue id")
       val result = Http(s"$serviceUrl/cases?queue_id=$q1").asString
@@ -210,8 +212,7 @@ class CaseSpec extends BaseFeatureSpec {
     scenario("Filtering cases by a wrong queueId") {
 
       Given("There are few cases in the database")
-      store(c1)
-      store(c2)
+      store(c1, c2)
 
       When("I get cases by queue id")
       val result = Http(s"$serviceUrl/cases?queue_id=wrong").asString
@@ -231,8 +232,7 @@ class CaseSpec extends BaseFeatureSpec {
     scenario("Filtering cases that have undefined assigneeId") {
 
       Given("There are few cases in the database")
-      store(c1)
-      store(c2)
+      store(c1, c2)
 
       When("I get cases by assignee id")
       val result = Http(s"$serviceUrl/cases?assignee_id=none").asString
@@ -247,8 +247,7 @@ class CaseSpec extends BaseFeatureSpec {
     scenario("Filtering cases by a valid assigneeId") {
 
       Given("There are few cases in the database")
-      store(c1)
-      store(c2)
+      store(c1, c2)
 
       When("I get cases by assignee id")
       val result = Http(s"$serviceUrl/cases?assignee_id=$u1").asString
@@ -263,8 +262,7 @@ class CaseSpec extends BaseFeatureSpec {
     scenario("Filtering cases by a wrong assigneeId") {
 
       Given("There are few cases in the database")
-      store(c1)
-      store(c2)
+      store(c1, c2)
 
       When("I get cases by assignee id")
       val result = Http(s"$serviceUrl/cases?assignee_id=wrong").asString
@@ -284,8 +282,7 @@ class CaseSpec extends BaseFeatureSpec {
     scenario("Filtering cases that have undefined assigneeId and undefined queueId") {
 
       Given("There are few cases in the database")
-      store(c1)
-      store(c2)
+      store(c1, c2)
 
       When("I get cases by assignee id and queue id")
       val result = Http(s"$serviceUrl/cases?assignee_id=none&queue_id=none").asString
@@ -300,8 +297,7 @@ class CaseSpec extends BaseFeatureSpec {
     scenario("Filtering cases by a valid assigneeId and a valid queueId") {
 
       Given("There are few cases in the database")
-      store(c1)
-      store(c2)
+      store(c1, c2)
 
       When("I get cases by assignee id and queue id")
       val result = Http(s"$serviceUrl/cases?assignee_id=$u1&queue_id=$q1").asString
@@ -316,8 +312,7 @@ class CaseSpec extends BaseFeatureSpec {
     scenario("Filtering cases by a wrong assigneeId and a valid queueId") {
 
       Given("There are few cases in the database")
-      store(c1)
-      store(c2)
+      store(c1, c2)
 
       When("I get cases by assignee id")
       val result = Http(s"$serviceUrl/cases?assignee_id=_a_&queue_id=$q1").asString

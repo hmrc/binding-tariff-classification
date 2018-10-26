@@ -18,12 +18,12 @@ package uk.gov.hmrc.bindingtariffclassification.repository
 
 import javax.inject.{Inject, Singleton}
 import com.google.inject.ImplementedBy
+import play.api.libs.json.{JsObject, Json}
 import reactivemongo.bson.BSONObjectID
 import reactivemongo.play.json.collection.JSONCollection
 import uk.gov.hmrc.bindingtariffclassification.model.{Case, JsonFormatters}
 import uk.gov.hmrc.bindingtariffclassification.model.JsonFormatters.formatCase
 import uk.gov.hmrc.bindingtariffclassification.model.search.{CaseParamsFilter, CaseParamsSorting}
-import uk.gov.hmrc.bindingtariffclassification.utils.FilterParamsMapper
 import uk.gov.hmrc.mongo.ReactiveRepository
 import uk.gov.hmrc.mongo.json.ReactiveMongoFormats
 
@@ -43,7 +43,7 @@ trait CaseRepository {
 }
 
 @Singleton
-class CaseMongoRepository @Inject()(mongoDbProvider: MongoDbProvider, searchMapper: FilterParamsMapper)
+class CaseMongoRepository @Inject()(mongoDbProvider: MongoDbProvider, jsonMapper: JsonObjectMapper)
   extends ReactiveRepository[Case, BSONObjectID](
     collectionName = "cases",
     mongo = mongoDbProvider.mongo,
@@ -65,16 +65,14 @@ class CaseMongoRepository @Inject()(mongoDbProvider: MongoDbProvider, searchMapp
   }
 
   override def update(c: Case): Future[Option[Case]] = {
-    val selector = searchMapper.from(CaseParamsFilter(reference = Some(c.reference)))
-    atomicUpdate(selector, c)
+    atomicUpdate(jsonMapper.fromReference(c.reference), c)
   }
 
   override def getByReference(reference: String): Future[Option[Case]] = {
-    val selector = searchMapper.from(CaseParamsFilter(reference = Some(reference)))
-    getOne(selector)
+    getOne(jsonMapper.fromReference(reference))
   }
 
   override def get(searchBy: CaseParamsFilter, sortedBy: CaseParamsSorting): Future[Seq[Case]] = {
-    getMany(searchMapper.from(searchBy), sortedBy.buildJson)
+    getMany(jsonMapper.from(searchBy), sortedBy.buildJson)
   }
 }

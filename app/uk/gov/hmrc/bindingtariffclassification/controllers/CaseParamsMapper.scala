@@ -14,9 +14,13 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.bindingtariffclassification.model.search
+package uk.gov.hmrc.bindingtariffclassification.controllers
 
-object FilterCaseMapper {
+import javax.inject.Singleton
+import uk.gov.hmrc.bindingtariffclassification.model.search.CaseParamsFilter
+
+@Singleton
+class CaseParamsMapper {
 
   def from(queueId: Option[String], assigneeId: Option[String]): CaseParamsFilter = {
     CaseParamsFilter(queueId = queueId, assigneeId = assigneeId)

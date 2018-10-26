@@ -18,7 +18,6 @@ package unit.uk.gov.hmrc.bindingtariffclassification.repository
 
 import org.scalatest.concurrent.Eventually
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
-import play.api.libs.json._
 import reactivemongo.api.DB
 import reactivemongo.api.indexes.Index
 import reactivemongo.api.indexes.IndexType.Ascending
@@ -28,9 +27,8 @@ import reactivemongo.play.json.ImplicitBSONHandlers._
 import uk.gov.hmrc.bindingtariffclassification.model._
 import uk.gov.hmrc.bindingtariffclassification.model.JsonFormatters.formatCase
 import uk.gov.hmrc.bindingtariffclassification.model.search.{CaseParamsFilter, CaseParamsSorting}
-import uk.gov.hmrc.bindingtariffclassification.repository.{BaseMongoIndexSpec, CaseMongoRepository, MongoDbProvider}
+import uk.gov.hmrc.bindingtariffclassification.repository.{JsonObjectMapper, _}
 import uk.gov.hmrc.bindingtariffclassification.todelete.CaseData._
-import uk.gov.hmrc.bindingtariffclassification.utils.FilterParamsMapper
 import uk.gov.hmrc.mongo.MongoSpecSupport
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -47,32 +45,14 @@ class CaseRepositorySpec extends BaseMongoIndexSpec
     override val mongo: () => DB = self.mongo
   }
 
-  private val searchMapper = new FilterParamsMapper {
-
-    // TODO: find better way to test this
-    override def from: CaseParamsFilter => JsObject = searchCase => {
-
-      def noneOrValue: String => JsValue = { v: String =>
-        if (v.toLowerCase == "none") JsNull
-        else JsString(v)
-      }
-
-      JsObject(
-        Seq[(String, JsValue)]() ++
-          searchCase.reference.map("reference" -> JsString(_)) ++
-          searchCase.queueId.map("queueId" -> noneOrValue(_)) ++
-          searchCase.assigneeId.map("assigneeId" -> noneOrValue(_))
-      )
-    }
-
-  }
+  private val jsonMapper = new JsonObjectMapper
 
   private def getIndexes(repo: CaseMongoRepository): List[Index] = {
     val indexesFuture = repo.collection.indexesManager.list()
     await(indexesFuture)
   }
 
-  private val repository = new CaseMongoRepository(mongoDbProvider, searchMapper)
+  private val repository = new CaseMongoRepository(mongoDbProvider, jsonMapper)
 
   private val case1: Case = createCase()
   private val case2: Case = createCase()
@@ -145,10 +125,13 @@ class CaseRepositorySpec extends BaseMongoIndexSpec
   // TODO: the test scenarios titles need to be written and grouped properly
 
   "get without params should return all cases" should {
+
     val noFiltering = CaseParamsFilter()
     val noSorting = CaseParamsSorting()
 
+
     "retrieve all cases from the collection" in {
+
       await(repository.insert(case1))
       await(repository.insert(case2))
       collectionSize shouldBe 2
@@ -298,7 +281,7 @@ class CaseRepositorySpec extends BaseMongoIndexSpec
         Index(key = Seq("_id" -> Ascending), name = Some("_id_"))
       )
 
-      val repo = new CaseMongoRepository(mongoDbProvider, searchMapper)
+      val repo = new CaseMongoRepository(mongoDbProvider, jsonMapper)
 
       eventually(timeout(5.seconds), interval(100.milliseconds)) {
         assertIndexes(expectedIndexes.sorted, getIndexes(repo).sorted)

@@ -14,35 +14,34 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.bindingtariffclassification.utils
+package uk.gov.hmrc.bindingtariffclassification.repository
 
-import com.google.inject.ImplementedBy
 import javax.inject.Singleton
-import play.api.libs.json.{JsNull, JsObject, JsString, JsValue}
+import play.api.libs.json._
 import uk.gov.hmrc.bindingtariffclassification.model.search.CaseParamsFilter
 
-@ImplementedBy(classOf[CaseParamsMapper])
-trait FilterParamsMapper {
-  def from: CaseParamsFilter => JsObject
-}
-
 @Singleton
-class CaseParamsMapper extends FilterParamsMapper {
+class JsonObjectMapper {
 
-  private val NONE = "none"
-
-  override def from: CaseParamsFilter => JsObject = searchCase => {
-
-    def noneOrValue: String => JsValue = { v: String =>
-      if (v.toLowerCase == NONE) JsNull
-      else JsString(v)
+  private def nullifyNoneValues: String => JsValue = { v: String =>
+    v match {
+      case "none" => JsNull
+      case _ => JsString(v)
     }
+  }
+
+  def from: CaseParamsFilter => JsObject = searchCase => {
 
     JsObject(
       Seq[(String, JsValue)]() ++
-        searchCase.reference.map("reference" -> JsString(_)) ++
-        searchCase.queueId.map("queueId" -> noneOrValue(_)) ++
-        searchCase.assigneeId.map("assigneeId" -> noneOrValue(_))
+        searchCase.queueId.map("queueId" -> nullifyNoneValues(_)) ++
+        searchCase.assigneeId.map("assigneeId" -> nullifyNoneValues(_))
     )
   }
+
+  def fromReference(reference: String): JsObject = {
+    Json.obj("reference" -> reference)
+  }
+
+
 }
