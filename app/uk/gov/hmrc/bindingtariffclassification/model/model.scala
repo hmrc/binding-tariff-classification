@@ -16,8 +16,8 @@
 
 package uk.gov.hmrc.bindingtariffclassification
 
-import play.api.libs.json.{JsObject, Json}
 import play.api.libs.json.Json.JsValueWrapper
+import play.api.libs.json.{JsObject, Json}
 
 package object model {
 

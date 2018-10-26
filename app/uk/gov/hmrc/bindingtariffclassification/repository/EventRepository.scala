@@ -16,13 +16,13 @@
 
 package uk.gov.hmrc.bindingtariffclassification.repository
 
-import javax.inject.{Inject, Singleton}
 import com.google.inject.ImplementedBy
+import javax.inject.{Inject, Singleton}
 import play.api.libs.json._
 import reactivemongo.bson.BSONObjectID
 import reactivemongo.play.json.collection.JSONCollection
-import uk.gov.hmrc.bindingtariffclassification.model.{Event, JsonFormatters}
 import uk.gov.hmrc.bindingtariffclassification.model.JsonFormatters.formatEvent
+import uk.gov.hmrc.bindingtariffclassification.model.{Event, JsonFormatters}
 import uk.gov.hmrc.mongo.ReactiveRepository
 import uk.gov.hmrc.mongo.json.ReactiveMongoFormats
 

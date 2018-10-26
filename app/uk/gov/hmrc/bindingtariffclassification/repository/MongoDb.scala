@@ -16,9 +16,8 @@
 
 package uk.gov.hmrc.bindingtariffclassification.repository
 
-import javax.inject.Singleton
-
 import com.google.inject.ImplementedBy
+import javax.inject.Singleton
 import play.modules.reactivemongo.MongoDbConnection
 import reactivemongo.api.DB
 

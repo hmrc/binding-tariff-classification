@@ -22,8 +22,8 @@ import play.api.mvc._
 import uk.gov.hmrc.bindingtariffclassification.model.{Case, ErrorCode, JsErrorResponse, JsonFormatters}
 import uk.gov.hmrc.bindingtariffclassification.service.CaseService
 
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{ExecutionContext, Future}
-import ExecutionContext.Implicits.global
 
 @Singleton()
 class CaseController @Inject()(caseService: CaseService, caseParamsMapper: CaseParamsMapper) extends CommonController {

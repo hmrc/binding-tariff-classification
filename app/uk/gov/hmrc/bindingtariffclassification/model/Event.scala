@@ -19,7 +19,7 @@ package uk.gov.hmrc.bindingtariffclassification.model
 import java.time.ZonedDateTime
 
 import uk.gov.hmrc.bindingtariffclassification.model.CaseStatus.CaseStatus
-import uk.gov.hmrc.bindingtariffclassification.model.EventType.{EventType, Value}
+import uk.gov.hmrc.bindingtariffclassification.model.EventType.EventType
 
 case class Event
 (

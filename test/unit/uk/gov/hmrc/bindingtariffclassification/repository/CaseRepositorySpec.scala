@@ -143,6 +143,12 @@ class CaseRepositorySpec extends BaseMongoIndexSpec
       await(repository.get(noFiltering, noSorting)) shouldBe Seq.empty[Case]
     }
 
+    "fail to retrieve documents if using sorting" in {
+      intercept[NotImplementedError] {
+        await(repository.get(noFiltering, Some("sort_param")))
+      }
+    }
+
   }
 
   "get filtering by queueId" should {

@@ -19,11 +19,11 @@ package it.uk.gov.hmrc.component
 import org.scalatest._
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
 import uk.gov.hmrc.bindingtariffclassification.model.Case
-import uk.gov.hmrc.bindingtariffclassification.repository.{CaseMongoRepository, JsonObjectMapper}
+import uk.gov.hmrc.bindingtariffclassification.repository.CaseMongoRepository
 
-import scala.concurrent.duration._
 import scala.concurrent.Await.result
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.duration._
 
 abstract class BaseFeatureSpec extends FeatureSpec
   with Matchers with GivenWhenThen with GuiceOneServerPerSuite
@@ -42,9 +42,7 @@ abstract class BaseFeatureSpec extends FeatureSpec
     result(repository.drop, timeout)
   }
 
-  protected def store(cases: Case*) = {
-    cases.map(c =>
-      result(repository.insert(c), timeout)
-    )
+  protected def store(cases: Case*): Seq[Case] = {
+    cases.map(c => result(repository.insert(c), timeout))
   }
 }
