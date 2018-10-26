@@ -34,11 +34,11 @@ class JsonObjectMapper {
     list => JsArray(list.map(element => JsString(element)))
   }
 
-  def from: CaseParamsFilter => JsObject = searchCase => {
+  def from: CaseParamsFilter => JsObject = { searchCase =>
     val queueFilter = searchCase.queueId.map("queueId" -> nullifyNoneValues(_))
     val assigneeFilter = searchCase.assigneeId.map("assigneeId" -> nullifyNoneValues(_))
     val statusFilter = searchCase.status
-      .map(toJSArray(_))
+      .map(toJSArray)
       .map(array => JsObject(Map("$in" -> array)))
       .map("status" -> _)
     JsObject(Map() ++ queueFilter ++ assigneeFilter ++ statusFilter)
