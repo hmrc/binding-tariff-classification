@@ -27,10 +27,6 @@ import uk.gov.hmrc.bindingtariffclassification.todelete.CaseData._
 
 class CaseSpec extends BaseFeatureSpec {
 
-  // TODO: This is an Integration test. Is not testing units. Needs to be move to IT package
-  // and be rewrited to test just the units
-
-
   override lazy val port = 14681
   protected val serviceUrl = s"http://localhost:$port"
 
