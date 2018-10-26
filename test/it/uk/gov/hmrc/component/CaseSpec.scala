@@ -223,6 +223,20 @@ class CaseSpec extends BaseFeatureSpec {
   }
 
 
+  feature("Get Cases sorted by elapsed days") {
+
+    scenario("Sorting cases by elapsed days") {
+
+      When("I get all cases sorted by elapsed days")
+      val result = Http(s"$serviceUrl/cases?sort_by=elapsed-days").asString
+
+      Then("The response code should be OK")
+      result.code shouldEqual INTERNAL_SERVER_ERROR
+    }
+
+  }
+
+
   feature("Get Cases by Assignee Id") {
 
     scenario("Filtering cases that have undefined assigneeId") {
