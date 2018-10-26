@@ -29,7 +29,7 @@ import reactivemongo.core.errors.DatabaseException
 import uk.gov.hmrc.bindingtariffclassification.controllers.{CaseController, CaseParamsMapper}
 import uk.gov.hmrc.bindingtariffclassification.model.Case
 import uk.gov.hmrc.bindingtariffclassification.model.JsonFormatters._
-import uk.gov.hmrc.bindingtariffclassification.model.search.{CaseParamsFilter, CaseParamsSorting}
+import uk.gov.hmrc.bindingtariffclassification.model.search.CaseParamsFilter
 import uk.gov.hmrc.bindingtariffclassification.service.CaseService
 import uk.gov.hmrc.bindingtariffclassification.todelete.CaseData
 import uk.gov.hmrc.play.test.{UnitSpec, WithFakeApplication}
@@ -146,7 +146,7 @@ class CaseControllerSpec extends UnitSpec with WithFakeApplication with MockitoS
 
     "return 200 with the all cases" in {
 
-      when(mockCaseService.get(refEq(mockCaseParamsFilter), any[CaseParamsSorting])).thenReturn(successful(Seq(c1, c2)))
+      when(mockCaseService.get(refEq(mockCaseParamsFilter), any[Option[String]])).thenReturn(successful(Seq(c1, c2)))
 
       val result = await(controller.get(queueId, assigneeId, None)(fakeRequest))
 
@@ -156,7 +156,7 @@ class CaseControllerSpec extends UnitSpec with WithFakeApplication with MockitoS
 
     "return 200 with an empty sequence if there are no cases" in {
 
-      when(mockCaseService.get(refEq(mockCaseParamsFilter), any[CaseParamsSorting])).thenReturn(successful(Seq.empty))
+      when(mockCaseService.get(refEq(mockCaseParamsFilter), any[Option[String]])).thenReturn(successful(Seq.empty))
 
       val result = await(controller.get(queueId, assigneeId, None)(fakeRequest))
 
@@ -167,7 +167,7 @@ class CaseControllerSpec extends UnitSpec with WithFakeApplication with MockitoS
     "return 500 when an error occurred" in {
       val error = new RuntimeException
 
-      when(mockCaseService.get(refEq(mockCaseParamsFilter), any[CaseParamsSorting])).thenReturn(failed(error))
+      when(mockCaseService.get(refEq(mockCaseParamsFilter), any[Option[String]])).thenReturn(failed(error))
 
       val result = await(controller.get(queueId, assigneeId, None)(fakeRequest))
 

@@ -19,7 +19,7 @@ package uk.gov.hmrc.bindingtariffclassification.controllers
 import javax.inject.{Inject, Singleton}
 import play.api.mvc._
 import play.api.{Logger, Play}
-import uk.gov.hmrc.bindingtariffclassification.model.search.{CaseParamsFilter, CaseParamsSorting}
+import uk.gov.hmrc.bindingtariffclassification.model.search.{CaseParamsFilter}
 import uk.gov.hmrc.bindingtariffclassification.service.{CaseService, EventService}
 import uk.gov.hmrc.bindingtariffclassification.utils.RandomGenerator
 import uk.gov.hmrc.bindingtariffclassification.todelete.CaseData._
@@ -86,7 +86,7 @@ class MicroserviceHelloWorld @Inject()(caseService: CaseService, eventService: E
 
     // GET ALL
 
-    val r = Await.result(caseService.get(CaseParamsFilter(), CaseParamsSorting()), 2.seconds)
+    val r = Await.result(caseService.get(CaseParamsFilter(), Some("")), 2.seconds)
     Logger.debug(s"All cases: $r")
 
     // GET BY REF

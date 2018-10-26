@@ -19,7 +19,6 @@ package uk.gov.hmrc.bindingtariffclassification.controllers
 import javax.inject.{Inject, Singleton}
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc._
-import uk.gov.hmrc.bindingtariffclassification.model.search.CaseParamsSorting
 import uk.gov.hmrc.bindingtariffclassification.model.{Case, ErrorCode, JsErrorResponse, JsonFormatters}
 import uk.gov.hmrc.bindingtariffclassification.service.CaseService
 
@@ -49,7 +48,7 @@ class CaseController @Inject()(caseService: CaseService, caseParamsMapper: CaseP
   }
 
   def get(queue_id: Option[String], assignee_id: Option[String], sort_by: Option[String]): Action[AnyContent] = Action.async { implicit request =>
-    caseService.get(caseParamsMapper.from(queue_id, assignee_id), CaseParamsSorting()) map (cases => Ok(Json.toJson(cases))) recover recovery
+    caseService.get(caseParamsMapper.from(queue_id, assignee_id), sort_by) map (cases => Ok(Json.toJson(cases))) recover recovery
   }
 
   def getByReference(reference: String): Action[AnyContent] = Action.async { implicit request =>

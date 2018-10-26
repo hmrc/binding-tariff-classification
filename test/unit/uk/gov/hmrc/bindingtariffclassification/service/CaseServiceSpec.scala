@@ -19,7 +19,7 @@ package unit.uk.gov.hmrc.bindingtariffclassification.service
 import org.mockito.Mockito
 import org.scalatest.mockito.MockitoSugar
 import uk.gov.hmrc.bindingtariffclassification.model.Case
-import uk.gov.hmrc.bindingtariffclassification.model.search.{CaseParamsFilter, CaseParamsSorting}
+import uk.gov.hmrc.bindingtariffclassification.model.search.{CaseParamsFilter}
 import uk.gov.hmrc.bindingtariffclassification.repository.CaseRepository
 import uk.gov.hmrc.bindingtariffclassification.service.CaseService
 import uk.gov.hmrc.play.test.UnitSpec
@@ -106,7 +106,7 @@ class CaseServiceSpec extends UnitSpec with MockitoSugar {
 
     // TODO: test all possible combinations
     val nofilters = CaseParamsFilter()
-    val nosorter = CaseParamsSorting()
+    val nosorter = None
 
     "return the expected cases" in {
 

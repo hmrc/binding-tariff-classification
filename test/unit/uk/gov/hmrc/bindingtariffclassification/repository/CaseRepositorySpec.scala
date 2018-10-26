@@ -26,7 +26,7 @@ import reactivemongo.core.errors.DatabaseException
 import reactivemongo.play.json.ImplicitBSONHandlers._
 import uk.gov.hmrc.bindingtariffclassification.model._
 import uk.gov.hmrc.bindingtariffclassification.model.JsonFormatters.formatCase
-import uk.gov.hmrc.bindingtariffclassification.model.search.{CaseParamsFilter, CaseParamsSorting}
+import uk.gov.hmrc.bindingtariffclassification.model.search.CaseParamsFilter
 import uk.gov.hmrc.bindingtariffclassification.repository.{JsonObjectMapper, _}
 import uk.gov.hmrc.bindingtariffclassification.todelete.CaseData._
 import uk.gov.hmrc.mongo.MongoSpecSupport
@@ -127,7 +127,7 @@ class CaseRepositorySpec extends BaseMongoIndexSpec
   "get without params should return all cases" should {
 
     val noFiltering = CaseParamsFilter()
-    val noSorting = CaseParamsSorting()
+    val noSorting = None
 
 
     "retrieve all cases from the collection" in {
@@ -228,7 +228,7 @@ class CaseRepositorySpec extends BaseMongoIndexSpec
 
   private def repositoryGet(paramsFilter: CaseParamsFilter): Future[Seq[Case]] = {
 
-    await(repository.get(paramsFilter, CaseParamsSorting()))
+    await(repository.get(paramsFilter, None))
   }
 
 
