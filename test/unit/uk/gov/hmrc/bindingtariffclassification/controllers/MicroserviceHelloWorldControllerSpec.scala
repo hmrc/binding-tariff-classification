@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package unit.uk.gov.hmrc.bindingtariffclassification.controllers
+package uk.gov.hmrc.bindingtariffclassification.controllers
 
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito.when
@@ -23,7 +23,6 @@ import org.scalatest.mockito.MockitoSugar
 import play.api.http.HeaderNames.{CACHE_CONTROL, LOCATION}
 import play.api.http.Status.{BAD_REQUEST, OK}
 import play.api.test.FakeRequest
-import uk.gov.hmrc.bindingtariffclassification.controllers.MicroserviceHelloWorld
 import uk.gov.hmrc.bindingtariffclassification.model.search.CaseParamsFilter
 import uk.gov.hmrc.bindingtariffclassification.model.{Case, Event}
 import uk.gov.hmrc.bindingtariffclassification.service.{CaseService, EventService}

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package unit.uk.gov.hmrc.bindingtariffclassification.repository
+package uk.gov.hmrc.bindingtariffclassification.repository
 
 import org.scalatest.concurrent.Eventually
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
@@ -26,7 +26,6 @@ import reactivemongo.core.errors.DatabaseException
 import reactivemongo.play.json.ImplicitBSONHandlers._
 import uk.gov.hmrc.bindingtariffclassification.model.JsonFormatters.formatEvent
 import uk.gov.hmrc.bindingtariffclassification.model._
-import uk.gov.hmrc.bindingtariffclassification.repository.{BaseMongoIndexSpec, EventMongoRepository, MongoDbProvider}
 import uk.gov.hmrc.bindingtariffclassification.todelete.EventData._
 import uk.gov.hmrc.bindingtariffclassification.utils.RandomGenerator
 import uk.gov.hmrc.mongo.MongoSpecSupport

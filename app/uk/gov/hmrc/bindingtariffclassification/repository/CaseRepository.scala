@@ -55,7 +55,8 @@ class CaseMongoRepository @Inject()(mongoDbProvider: MongoDbProvider, jsonMapper
   override def indexes = Seq(
     createSingleFieldAscendingIndex("reference", isUnique = true),
     createSingleFieldAscendingIndex("queueId", isUnique = false),
-    createSingleFieldAscendingIndex("assigneeId", isUnique = false)
+    createSingleFieldAscendingIndex("assigneeId", isUnique = false),
+    createSingleFieldAscendingIndex("status", isUnique = false)
     // TODO: We need to add relevant indexes for each possible search
     // TODO: We should add compound indexes for searches involving multiple fields
   )

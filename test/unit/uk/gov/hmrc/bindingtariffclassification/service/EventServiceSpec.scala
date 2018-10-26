@@ -14,13 +14,12 @@
  * limitations under the License.
  */
 
-package unit.uk.gov.hmrc.bindingtariffclassification.service
+package uk.gov.hmrc.bindingtariffclassification.service
 
 import org.mockito.Mockito
 import org.scalatest.mockito.MockitoSugar
 import uk.gov.hmrc.bindingtariffclassification.model.Event
 import uk.gov.hmrc.bindingtariffclassification.repository.EventRepository
-import uk.gov.hmrc.bindingtariffclassification.service.EventService
 import uk.gov.hmrc.play.test.UnitSpec
 
 import scala.concurrent.Future.successful

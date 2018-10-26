@@ -1,7 +1,6 @@
 import play.routes.compiler.StaticRoutesGenerator
 import play.sbt.PlayScala
 import play.sbt.routes.RoutesKeys.routesGenerator
-import sbt.Tests
 import sbt.Tests.{Group, SubProcess}
 import uk.gov.hmrc.DefaultBuildSettings._
 import uk.gov.hmrc.SbtArtifactory
@@ -32,7 +31,6 @@ lazy val microservice = (project in file("."))
   )
   .settings(inConfig(TemplateTest)(Defaults.testSettings): _*)
   .settings(
-    testOptions in Test := Seq(Tests.Filter(unitFilter)),
     unmanagedSourceDirectories in Test := Seq((baseDirectory in Test).value / "test/unit"),
     addTestReportOption(Test, "test-reports")
   )
@@ -56,8 +54,6 @@ lazy val allItPhases = "tit->it;it->it;it->compile;compile->compile"
 
 lazy val TemplateTest = config("tt") extend Test
 lazy val TemplateItTest = config("tit") extend IntegrationTest
-
-def unitFilter(name: String): Boolean = name startsWith "unit"
 
 def oneForkedJvmPerTest(tests: Seq[TestDefinition]): Seq[Group] = {
   tests map {

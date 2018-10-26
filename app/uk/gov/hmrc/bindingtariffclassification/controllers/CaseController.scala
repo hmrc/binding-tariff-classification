@@ -23,7 +23,7 @@ import uk.gov.hmrc.bindingtariffclassification.model.{Case, ErrorCode, JsErrorRe
 import uk.gov.hmrc.bindingtariffclassification.service.CaseService
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.Future
 
 @Singleton()
 class CaseController @Inject()(caseService: CaseService, caseParamsMapper: CaseParamsMapper) extends CommonController {
@@ -47,8 +47,13 @@ class CaseController @Inject()(caseService: CaseService, caseParamsMapper: CaseP
     } recover recovery
   }
 
-  def get(queue_id: Option[String], assignee_id: Option[String], sort_by: Option[String]): Action[AnyContent] = Action.async { implicit request =>
-    caseService.get(caseParamsMapper.from(queue_id, assignee_id), sort_by) map (cases => Ok(Json.toJson(cases))) recover recovery
+  def get(
+           queue_id: Option[String],
+           assignee_id: Option[String],
+           status: Option[String],
+           sort_by: Option[String]
+         ): Action[AnyContent] = Action.async { implicit request =>
+    caseService.get(caseParamsMapper.from(queue_id, assignee_id, status), sort_by) map (cases => Ok(Json.toJson(cases))) recover recovery
   }
 
   def getByReference(reference: String): Action[AnyContent] = Action.async { implicit request =>

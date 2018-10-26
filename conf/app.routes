@@ -2,7 +2,7 @@
 
 GET        /hello                 @uk.gov.hmrc.bindingtariffclassification.controllers.MicroserviceHelloWorld.hello
 
-GET        /cases                 @uk.gov.hmrc.bindingtariffclassification.controllers.CaseController.get(queue_id: Option[String], assignee_id: Option[String], sort_by: Option[String])
+GET        /cases                 @uk.gov.hmrc.bindingtariffclassification.controllers.CaseController.get(queue_id: Option[String], assignee_id: Option[String], status: Option[String], sort_by: Option[String])
 GET        /cases/:reference      @uk.gov.hmrc.bindingtariffclassification.controllers.CaseController.getByReference(reference: String)
 POST       /cases                 @uk.gov.hmrc.bindingtariffclassification.controllers.CaseController.create
 PUT        /cases/:reference      @uk.gov.hmrc.bindingtariffclassification.controllers.CaseController.update(reference: String)

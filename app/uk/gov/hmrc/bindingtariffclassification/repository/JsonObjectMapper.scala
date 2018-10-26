@@ -30,13 +30,17 @@ class JsonObjectMapper {
     }
   }
 
-  def from: CaseParamsFilter => JsObject = searchCase => {
+  private def toJSArray: Seq[String] => JsArray = {
+    list => JsArray(list.map(element => JsString(element)))
+  }
 
-    JsObject(
-      Seq[(String, JsValue)]() ++
-        searchCase.queueId.map("queueId" -> nullifyNoneValues(_)) ++
-        searchCase.assigneeId.map("assigneeId" -> nullifyNoneValues(_))
-    )
+  def from: CaseParamsFilter => JsObject = searchCase => {
+    val queueFilter = searchCase.queueId.map("queueId" -> nullifyNoneValues(_))
+    val assigneeFilter = searchCase.assigneeId.map("assigneeId" -> nullifyNoneValues(_))
+    val statusFilter = searchCase.status
+      .map(toJSArray(_))
+      .map(array => "status" -> JsObject(Map("$in" -> array)))
+    JsObject(Map() ++ queueFilter ++ assigneeFilter ++ statusFilter)
   }
 
   def fromReference(reference: String): JsObject = {

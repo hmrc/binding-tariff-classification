@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package unit.uk.gov.hmrc.bindingtariffclassification.repository
+package uk.gov.hmrc.bindingtariffclassification.repository
 
 import org.scalatest.concurrent.Eventually
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
@@ -24,10 +24,9 @@ import reactivemongo.api.indexes.IndexType.Ascending
 import reactivemongo.bson._
 import reactivemongo.core.errors.DatabaseException
 import reactivemongo.play.json.ImplicitBSONHandlers._
-import uk.gov.hmrc.bindingtariffclassification.model._
 import uk.gov.hmrc.bindingtariffclassification.model.JsonFormatters.formatCase
+import uk.gov.hmrc.bindingtariffclassification.model._
 import uk.gov.hmrc.bindingtariffclassification.model.search.CaseParamsFilter
-import uk.gov.hmrc.bindingtariffclassification.repository.{JsonObjectMapper, _}
 import uk.gov.hmrc.bindingtariffclassification.todelete.CaseData._
 import uk.gov.hmrc.mongo.MongoSpecSupport
 
@@ -211,29 +210,81 @@ class CaseRepositorySpec extends BaseMongoIndexSpec
 
   }
 
+  "get filtering by status" should {
 
-  "get filtering by queueId and assigneeId" should {
+    val statusX = CaseStatus.NEW
+    val statusY = CaseStatus.OPEN
+
+    val caseWithStatusX1 = createCase().copy(status = statusX)
+    val caseWithStatusX2 = createCase().copy(status = statusX)
+    val caseWithStatusY1 = createCase().copy(status = statusY)
+
+    "get by filtering on status with no matches should return an empty sequence" in {
+
+      store(caseWithStatusX1)
+      await(repositoryGet(CaseParamsFilter(status = Some(Seq("DRAFT"))))) shouldBe Seq.empty
+    }
+
+    "get by filtering on status with one match should return the expected document" in {
+
+      store(caseWithStatusX1, caseWithStatusY1)
+      await(repositoryGet(CaseParamsFilter(status = Some(Seq("NEW"))))) shouldBe Seq(caseWithStatusX1)
+    }
+
+    "get by filtering on status with two matches should return the expected documents" in {
+      store(caseWithStatusX1, caseWithStatusX2, caseWithStatusY1)
+      await(repositoryGet(CaseParamsFilter(status = Some(Seq("NEW"))))) shouldBe Seq(caseWithStatusX1, caseWithStatusX2)
+    }
+
+    "get by filtering on statuses with multiple matches should return the expected documents" in {
+
+      store(caseWithStatusX1, caseWithStatusX2, caseWithStatusY1)
+      await(repositoryGet(CaseParamsFilter(status = Some(Seq("NEW", "OPEN"))))) shouldBe Seq(caseWithStatusX1, caseWithStatusX2, caseWithStatusY1)
+    }
+
+    "get by filtering on statuses with some matches should return the expected documents" in {
+
+      store(caseWithStatusX1, caseWithStatusX2, caseWithStatusY1)
+      await(repositoryGet(CaseParamsFilter(status = Some(Seq("NEW", "DRAFT"))))) shouldBe Seq(caseWithStatusX1, caseWithStatusX2)
+    }
+
+  }
+
+
+  "get filtering by queueId, assigneeId and status" should {
 
     val assigneeX = Some("assignee_x")
     val assigneeY = Some("assignee_y")
     val queueIdX = Some("queue_x")
     val queueIdY = Some("queue_y")
+    val statusX = CaseStatus.NEW
+    val statusY = CaseStatus.OPEN
 
     val caseWithNoQueueAndNoAssignee = createCase()
-    val caseWithQxAndAx = createCase().copy(queueId = queueIdX, assigneeId = assigneeX)
-    val caseWithQxAndAy = createCase().copy(queueId = queueIdX, assigneeId = assigneeY)
-    val caseWithQyAndAx = createCase().copy(queueId = queueIdY, assigneeId = assigneeX)
+    val caseWithQxAndAxAndSx = createCase().copy(queueId = queueIdX, assigneeId = assigneeX, status = statusX)
+    val caseWithQxAndAxAndSy = createCase().copy(queueId = queueIdX, assigneeId = assigneeX, status = statusY)
+    val caseWithQxAndAyAndSx = createCase().copy(queueId = queueIdX, assigneeId = assigneeY, status = statusX)
+    val caseWithQxAndAyAndSy = createCase().copy(queueId = queueIdX, assigneeId = assigneeY, status = statusY)
+    val caseWithQyAndAxAndSx = createCase().copy(queueId = queueIdY, assigneeId = assigneeX, status = statusX)
+    val caseWithQyAndAxAndSy = createCase().copy(queueId = queueIdY, assigneeId = assigneeX, status = statusY)
 
-    "get by filtering on assignee and queue with one match should return the expected case" in {
-      store(caseWithNoQueueAndNoAssignee, caseWithQxAndAx, caseWithQxAndAy, caseWithQyAndAx)
-      await(repositoryGet(CaseParamsFilter(queueId = queueIdX, assigneeId = assigneeX))) shouldBe Seq(caseWithQxAndAx)
+    "get by filtering on assignee queue and status with one match should return the expected case" in {
+      store(
+        caseWithNoQueueAndNoAssignee,
+        caseWithQxAndAxAndSx,
+        caseWithQxAndAxAndSy,
+        caseWithQxAndAyAndSx,
+        caseWithQxAndAyAndSy,
+        caseWithQyAndAxAndSx,
+        caseWithQyAndAxAndSy
+      )
+      await(repositoryGet(CaseParamsFilter(queueId = queueIdX, assigneeId = assigneeX, status = Some(Seq("NEW"))))) shouldBe Seq(caseWithQxAndAxAndSx)
     }
 
   }
 
 
   private def repositoryGet(paramsFilter: CaseParamsFilter): Future[Seq[Case]] = {
-
     await(repository.get(paramsFilter, None))
   }
 
@@ -284,6 +335,7 @@ class CaseRepositorySpec extends BaseMongoIndexSpec
         Index(key = Seq("reference" -> Ascending), name = Some("reference_Index"), unique = true, background = true),
         Index(key = Seq("queueId" -> Ascending), name = Some("queueId_Index"), unique = false, background = true),
         Index(key = Seq("assigneeId" -> Ascending), name = Some("assigneeId_Index"), unique = false, background = true),
+        Index(key = Seq("status" -> Ascending), name = Some("status_Index"), unique = false, background = true),
         Index(key = Seq("_id" -> Ascending), name = Some("_id_"))
       )
 

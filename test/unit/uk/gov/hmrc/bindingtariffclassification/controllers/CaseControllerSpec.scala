@@ -14,19 +14,18 @@
  * limitations under the License.
  */
 
-package unit.uk.gov.hmrc.bindingtariffclassification.controllers
+package uk.gov.hmrc.bindingtariffclassification.controllers
 
 import akka.stream.Materializer
 import org.mockito.ArgumentMatchers.{any, refEq}
 import org.mockito.Mockito.when
 import org.scalatest.Matchers
 import org.scalatest.mockito.MockitoSugar
-import play.api.http.Status.{BAD_REQUEST, CREATED, INTERNAL_SERVER_ERROR, NOT_FOUND, OK}
+import play.api.http.Status._
 import play.api.libs.json.Json.toJson
 import play.api.test.FakeRequest
 import reactivemongo.bson.BSONDocument
 import reactivemongo.core.errors.DatabaseException
-import uk.gov.hmrc.bindingtariffclassification.controllers.{CaseController, CaseParamsMapper}
 import uk.gov.hmrc.bindingtariffclassification.model.Case
 import uk.gov.hmrc.bindingtariffclassification.model.JsonFormatters._
 import uk.gov.hmrc.bindingtariffclassification.model.search.CaseParamsFilter
@@ -141,14 +140,15 @@ class CaseControllerSpec extends UnitSpec with WithFakeApplication with MockitoS
 
     val queueId = Some("valid_queueId")
     val assigneeId = Some("valid_assigneeId")
+    val caseStatus = Some("valid_status")
 
-    when(mockCaseParamsMapper.from(queueId, assigneeId)).thenReturn(mockCaseParamsFilter)
+    when(mockCaseParamsMapper.from(queueId, assigneeId, caseStatus)).thenReturn(mockCaseParamsFilter)
 
     "return 200 with the all cases" in {
 
       when(mockCaseService.get(refEq(mockCaseParamsFilter), any[Option[String]])).thenReturn(successful(Seq(c1, c2)))
 
-      val result = await(controller.get(queueId, assigneeId, None)(fakeRequest))
+      val result = await(controller.get(queueId, assigneeId, caseStatus, None)(fakeRequest))
 
       status(result) shouldEqual OK
       jsonBodyOf(result) shouldEqual toJson(Seq(c1, c2))
@@ -158,7 +158,7 @@ class CaseControllerSpec extends UnitSpec with WithFakeApplication with MockitoS
 
       when(mockCaseService.get(refEq(mockCaseParamsFilter), any[Option[String]])).thenReturn(successful(Seq.empty))
 
-      val result = await(controller.get(queueId, assigneeId, None)(fakeRequest))
+      val result = await(controller.get(queueId, assigneeId, caseStatus, None)(fakeRequest))
 
       status(result) shouldEqual OK
       jsonBodyOf(result) shouldEqual toJson(Seq.empty[Case])
@@ -169,7 +169,7 @@ class CaseControllerSpec extends UnitSpec with WithFakeApplication with MockitoS
 
       when(mockCaseService.get(refEq(mockCaseParamsFilter), any[Option[String]])).thenReturn(failed(error))
 
-      val result = await(controller.get(queueId, assigneeId, None)(fakeRequest))
+      val result = await(controller.get(queueId, assigneeId, caseStatus, None)(fakeRequest))
 
       status(result) shouldEqual INTERNAL_SERVER_ERROR
       jsonBodyOf(result).toString() shouldEqual """{"code":"UNKNOWN_ERROR","message":"An unexpected error occurred"}"""

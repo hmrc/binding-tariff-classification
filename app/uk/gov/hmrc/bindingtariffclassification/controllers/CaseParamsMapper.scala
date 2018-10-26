@@ -22,8 +22,12 @@ import uk.gov.hmrc.bindingtariffclassification.model.search.CaseParamsFilter
 @Singleton
 class CaseParamsMapper {
 
-  def from(queueId: Option[String], assigneeId: Option[String]): CaseParamsFilter = {
-    CaseParamsFilter(queueId = queueId, assigneeId = assigneeId)
+  def from(queueId: Option[String], assigneeId: Option[String], status: Option[String]): CaseParamsFilter = {
+    CaseParamsFilter(
+      queueId = queueId,
+      assigneeId = assigneeId,
+      status = status.map(_.split(",").map(_.trim))
+    )
   }
 
 }
