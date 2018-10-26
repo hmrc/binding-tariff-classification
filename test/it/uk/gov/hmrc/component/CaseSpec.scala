@@ -230,7 +230,7 @@ class CaseSpec extends BaseFeatureSpec {
       When("I get all cases sorted by elapsed days")
       val result = Http(s"$serviceUrl/cases?sort_by=elapsed-days").asString
 
-      Then("The response code should be OK")
+      Then("The response code should be 500")
       result.code shouldEqual INTERNAL_SERVER_ERROR
     }
 
