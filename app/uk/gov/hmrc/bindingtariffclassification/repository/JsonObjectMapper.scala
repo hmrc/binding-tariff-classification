@@ -39,7 +39,8 @@ class JsonObjectMapper {
     val assigneeFilter = searchCase.assigneeId.map("assigneeId" -> nullifyNoneValues(_))
     val statusFilter = searchCase.status
       .map(toJSArray(_))
-      .map(array => "status" -> JsObject(Map("$in" -> array)))
+      .map(array => JsObject(Map("$in" -> array)))
+      .map("status" -> _)
     JsObject(Map() ++ queueFilter ++ assigneeFilter ++ statusFilter)
   }
 
