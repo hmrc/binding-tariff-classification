@@ -28,6 +28,7 @@ case class Decision
   keywords: Seq[String],
   methodSearch: Option[String] = None,
   methodCommercialDenomination: Option[String] = None,
+  methodExclusion: Option[String] = None,
   appeal: Option[Appeal] = None
 )
 
