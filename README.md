@@ -4,8 +4,8 @@
 
 This is the Back End for the Binding Tariff Suite of applications e.g.
 
-- [BTI Application Form](https://github.com/hmrc/tariff-classification-frontend) on GOV.UK
-- [BTI Operational Service](https://github.com/hmrc/binding-tariff-trader-frontend) the service HMRC uses to assess BTI Applications
+- [BTI Application Form](https://github.com/hmrc/binding-tariff-trader-frontend) on GOV.UK
+- [BTI Operational Service](https://github.com/hmrc/tariff-classification-frontend) the service HMRC uses to assess BTI Applications
 
 ### Running
 
