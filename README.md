@@ -27,6 +27,12 @@ This application runs on port 9580
 
 Try `GET http://localhost:9580/cases`
 
+### Testing
+
+Run `./run_all_tests.sh`
+
+or `sbt test it:test`
+
 ### License
 
 This code is open source software licensed under the [Apache 2.0 License]("http://www.apache.org/licenses/LICENSE-2.0.html")
