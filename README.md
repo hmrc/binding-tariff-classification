@@ -12,11 +12,20 @@ This is the Back End for the Binding Tariff Suite of applications e.g.
 To run this service you will need:
 
 1) A Local Mongo instance running
-2) Run `sbt run` to run on port `9000` or instead run `sbt 'run 9090'` to run on a different port e.g. `9090`
 
-Try `GET http://localhost:9000/cases`
+##### Running with SBT
 
-Service Manager Set Up TBC
+1) Run `sbt run` to run on port `9000` or instead run `sbt 'run 9580'` to run on a different port e.g. `9580`
+
+Try `GET http://localhost:{port}/cases`
+
+##### Running With Service Manager
+
+This application runs on port 9580
+
+1) Run `sm --start BINDING_TARIF_CLASSIFICATION -f`
+
+Try `GET http://localhost:9580/cases`
 
 ### License
 
