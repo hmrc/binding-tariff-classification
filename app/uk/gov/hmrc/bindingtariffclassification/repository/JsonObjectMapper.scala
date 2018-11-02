@@ -18,6 +18,7 @@ package uk.gov.hmrc.bindingtariffclassification.repository
 
 import javax.inject.Singleton
 import play.api.libs.json._
+import uk.gov.hmrc.bindingtariffclassification.model.CaseStatus.CaseStatus
 import uk.gov.hmrc.bindingtariffclassification.model.search.CaseParamsFilter
 
 @Singleton
@@ -30,14 +31,20 @@ class JsonObjectMapper {
     }
   }
 
+  private def notEqualFilter(forbiddenFieldValue: String): JsObject = {
+    // TODO: extend this to a list of forbidden values
+    Json.obj("$ne" -> forbiddenFieldValue)
+  }
+
   private def toInFilter: Seq[String] => JsObject = {
-    list => JsObject(Map("$in" -> JsArray(list.map(element => JsString(element)))))
+    values => JsObject(Map("$in" -> JsArray(values.map(JsString))))
   }
 
   def from: CaseParamsFilter => JsObject = { searchCase =>
     val queueFilter = searchCase.queueId.map("queueId" -> nullifyNoneValues(_))
     val assigneeFilter = searchCase.assigneeId.map("assigneeId" -> nullifyNoneValues(_))
     val statusFilter = searchCase.status.map(toInFilter).map("status" -> _)
+
     JsObject(Map() ++ queueFilter ++ assigneeFilter ++ statusFilter)
   }
 
@@ -45,5 +52,12 @@ class JsonObjectMapper {
     Json.obj("reference" -> reference)
   }
 
+  def fromReferenceAndStatus(reference: String, notAllowedStatus: CaseStatus): JsObject = {
+    Json.obj("reference" -> reference, "status" -> notEqualFilter(notAllowedStatus.toString))
+  }
+
+  def updateField(fieldName: String, fieldValue: String): JsObject = {
+    Json.obj("$set" -> Json.obj(fieldName -> fieldValue))
+  }
 
 }

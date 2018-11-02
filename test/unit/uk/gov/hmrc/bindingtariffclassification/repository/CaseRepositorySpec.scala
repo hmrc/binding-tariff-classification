@@ -112,10 +112,43 @@ class CaseRepositorySpec extends BaseMongoIndexSpec
       await(repository.collection.find(selectorByReference(updated)).one[Case]) shouldBe Some(updated)
     }
 
-    "do nothing when try to update a non existing document in the collection" in {
+    "do nothing when trying to update a non existing document in the collection" in {
       collectionSize shouldBe 0
 
       await(repository.update(case1)) shouldBe None
+      collectionSize shouldBe 0
+    }
+  }
+
+  "updateStatus" should {
+
+    "modify the status of the existing document and return the original document" in {
+      collectionSize shouldBe 0
+
+      await(repository.insert(case1)) shouldBe case1
+      collectionSize shouldBe 1
+
+      val updated: Case = case1.copy(status = CaseStatus.CANCELLED)
+      await(repository.updateStatus(case1.reference, CaseStatus.CANCELLED)) shouldBe Some(case1)
+      collectionSize shouldBe 1
+
+      await(repository.collection.find(selectorByReference(updated)).one[Case]) shouldBe Some(updated)
+    }
+
+    "do nothing when trying to set the status to the current value" in {
+      collectionSize shouldBe 0
+
+      await(repository.insert(case1)) shouldBe case1
+      collectionSize shouldBe 1
+
+      await(repository.updateStatus(case1.reference, case1.status)) shouldBe None
+      collectionSize shouldBe 1
+    }
+
+    "do nothing when trying to update a non existing document in the collection" in {
+      collectionSize shouldBe 0
+
+      await(repository.updateStatus(case1.reference, CaseStatus.CANCELLED)) shouldBe None
       collectionSize shouldBe 0
     }
   }

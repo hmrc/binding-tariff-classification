@@ -16,9 +16,13 @@
 
 package uk.gov.hmrc.bindingtariffclassification.service
 
-import org.mockito.Mockito
+import java.util.UUID
+
+import org.mockito.Mockito.{never, verify, times, when}
+import org.mockito.ArgumentMatchers.{any, anyString}
 import org.scalatest.mockito.MockitoSugar
-import uk.gov.hmrc.bindingtariffclassification.model.Case
+import uk.gov.hmrc.bindingtariffclassification.model.CaseStatus.CaseStatus
+import uk.gov.hmrc.bindingtariffclassification.model.{Case, CaseStatus, Event}
 import uk.gov.hmrc.bindingtariffclassification.model.search.CaseParamsFilter
 import uk.gov.hmrc.bindingtariffclassification.repository.CaseRepository
 import uk.gov.hmrc.play.test.UnitSpec
@@ -27,78 +31,132 @@ import scala.concurrent.Future.successful
 
 class CaseServiceSpec extends UnitSpec with MockitoSugar {
 
+  final private val e = mock[Event]
+
   final private val c1 = mock[Case]
   final private val c2 = mock[Case]
 
+  final private val reference = UUID.randomUUID().toString
+
   private val repository = mock[CaseRepository]
-  private val service = new CaseService(repository)
+  private val eventService = mock[EventService]
+
+  private val service = new CaseService(repository, eventService)
 
   final val emulatedFailure = new RuntimeException("Emulated failure.")
 
   "insert" should {
 
     "return the case after it is inserted in the database collection" in {
-      Mockito.when(repository.insert(c1)).thenReturn(successful(c1))
+      when(repository.insert(c1)).thenReturn(successful(c1))
       val result = await(service.insert(c1))
       result shouldBe c1
     }
 
     "propagate any error" in {
-      Mockito.when(repository.insert(c1)).thenThrow(emulatedFailure)
+      when(repository.insert(c1)).thenThrow(emulatedFailure)
 
       val caught = intercept[RuntimeException] {
         await(service.insert(c1))
       }
       caught shouldBe emulatedFailure
     }
+
   }
 
   "update" should {
 
     "return the case after it is updated in the database collection" in {
-      Mockito.when(repository.update(c1)).thenReturn(successful(Some(c1)))
+      when(repository.update(c1)).thenReturn(successful(Some(c1)))
       val result = await(service.update(c1))
       result shouldBe Some(c1)
     }
 
     "return None if the case does not exist in the database collection" in {
-      Mockito.when(repository.update(c1)).thenReturn(successful(None))
+      when(repository.update(c1)).thenReturn(successful(None))
       val result = await(service.update(c1))
       result shouldBe None
     }
 
     "propagate any error" in {
-      Mockito.when(repository.update(c1)).thenThrow(emulatedFailure)
+      when(repository.update(c1)).thenThrow(emulatedFailure)
 
       val caught = intercept[RuntimeException] {
         await(service.update(c1))
       }
       caught shouldBe emulatedFailure
     }
+
+  }
+
+  "updateStatus" should {
+
+    "return the case after the status is updated in the database collection" in {
+      when(c1.reference).thenReturn(reference)
+      when(c1.assigneeId).thenReturn(Some("user-plato"))
+      when(c1.status).thenReturn(CaseStatus.NEW)
+      when(eventService.insert(any[Event])).thenReturn(successful(e))
+      when(repository.updateStatus(reference, CaseStatus.OPEN)).thenReturn(successful(Some(c1)))
+      val result = await(service.updateStatus(reference, CaseStatus.OPEN))
+      result shouldBe (Some(c1), Some(c1.copy(status = CaseStatus.OPEN)))
+      verify(eventService, times(1)).insert(any[Event])
+    }
+
+    "return None if there are no cases with the specified reference" in {
+      when(repository.updateStatus(anyString, any[CaseStatus])).thenReturn(successful(None))
+      val result = await(service.updateStatus(reference, CaseStatus.CANCELLED))
+      result shouldBe (None, None)
+      verify(eventService, never).insert(any[Event])
+    }
+
+    // TODO: fix scenario
+    "throw an exception if the case status update is not allowed" in {
+      when(repository.updateStatus(reference, CaseStatus.OPEN)).thenThrow(emulatedFailure)
+
+      val caught = intercept[RuntimeException] {
+        await(service.update(c1))
+      }
+      caught shouldBe emulatedFailure
+
+      verify(eventService, never).insert(any[Event])
+    }
+
+    "propagate any error" in {
+      when(repository.updateStatus(anyString, any[CaseStatus])).thenThrow(emulatedFailure)
+
+      val caught = intercept[RuntimeException] {
+        await(service.update(c1))
+      }
+      caught shouldBe emulatedFailure
+
+      verify(eventService, never).insert(any[Event])
+    }
+
   }
 
   "getByReference" should {
 
     "return the expected case" in {
-      Mockito.when(repository.getByReference(c1.reference)).thenReturn(successful(Some(c1)))
+      when(repository.getByReference(c1.reference)).thenReturn(successful(Some(c1)))
       val result = await(service.getByReference(c1.reference))
       result shouldBe Some(c1)
     }
 
     "return None when the case is not found" in {
-      Mockito.when(repository.getByReference(c1.reference)).thenReturn(successful(None))
+      when(repository.getByReference(c1.reference)).thenReturn(successful(None))
       val result = await(service.getByReference(c1.reference))
       result shouldBe None
     }
 
     "propagate any error" in {
-      Mockito.when(repository.getByReference(c1.reference)).thenThrow(emulatedFailure)
+      when(repository.getByReference(c1.reference)).thenThrow(emulatedFailure)
 
       val caught = intercept[RuntimeException] {
         await(service.getByReference(c1.reference))
       }
       caught shouldBe emulatedFailure
     }
+
   }
 
   "get" should {
@@ -109,25 +167,26 @@ class CaseServiceSpec extends UnitSpec with MockitoSugar {
 
     "return the expected cases" in {
 
-      Mockito.when(repository.get(nofilters, nosorter)).thenReturn(successful(Seq(c1, c2)))
+      when(repository.get(nofilters, nosorter)).thenReturn(successful(Seq(c1, c2)))
       val result = await(service.get(nofilters, nosorter))
       result shouldBe Seq(c1, c2)
     }
 
     "return an empty sequence when there are no cases" in {
-      Mockito.when(repository.get(nofilters, nosorter)).thenReturn(successful(Nil))
+      when(repository.get(nofilters, nosorter)).thenReturn(successful(Nil))
       val result = await(service.get(nofilters, nosorter))
       result shouldBe Nil
     }
 
     "propagate any error" in {
-      Mockito.when(repository.get(nofilters, nosorter)).thenThrow(emulatedFailure)
+      when(repository.get(nofilters, nosorter)).thenThrow(emulatedFailure)
 
       val caught = intercept[RuntimeException] {
         await(service.get(nofilters, nosorter))
       }
       caught shouldBe emulatedFailure
     }
+
   }
 
 }

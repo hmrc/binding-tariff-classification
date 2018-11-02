@@ -16,18 +16,47 @@
 
 package uk.gov.hmrc.bindingtariffclassification.service
 
+import java.util.UUID
+
 import javax.inject._
-import uk.gov.hmrc.bindingtariffclassification.model.Case
+import play.api.Logger
+import uk.gov.hmrc.bindingtariffclassification.model.{Case, CaseStatusChange, Event}
+import uk.gov.hmrc.bindingtariffclassification.model.CaseStatus.CaseStatus
 import uk.gov.hmrc.bindingtariffclassification.model.search.CaseParamsFilter
 import uk.gov.hmrc.bindingtariffclassification.repository.CaseRepository
 
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 @Singleton
-class CaseService @Inject()(repository: CaseRepository) {
+class CaseService @Inject()(repository: CaseRepository, eventService: EventService) {
 
   def insert(c: Case): Future[Case] = {
     repository.insert(c)
+  }
+
+  private def createEvent(originalCase: Case, newStatus: CaseStatus): Future[Event] = {
+    val changeStatusEvent = Event(
+      id = UUID.randomUUID().toString,
+      details = CaseStatusChange(from = originalCase.status, to = newStatus),
+      userId = originalCase.assigneeId.getOrElse(""),
+      caseReference = originalCase.reference)
+
+    eventService.insert(changeStatusEvent)
+  }
+
+  def updateStatus(reference: String, status: CaseStatus): Future[(Option[Case], Option[Case])] = {
+
+    // TODO: use OptionT ?
+    // TODO: use for-comprehension ?
+    repository.updateStatus(reference, status).flatMap {
+      case None => Future.successful(None, None)
+      case Some(original: Case) =>
+        Logger.info("Creating event soon")
+        Logger.info("Original case : " + original)
+        createEvent(original, status).map { _ => (Some(original), Some(original.copy(status = status))) }
+    }
+
   }
 
   def update(c: Case): Future[Option[Case]] = {
@@ -41,4 +70,5 @@ class CaseService @Inject()(repository: CaseRepository) {
   def get(searchBy: CaseParamsFilter, sortBy: Option[String]): Future[Seq[Case]] = {
     repository.get(searchBy, sortBy)
   }
+
 }

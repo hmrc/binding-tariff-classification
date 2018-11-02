@@ -42,6 +42,8 @@ object JsonFormatters {
   implicit val formatAttachment = Json.format[Attachment]
   implicit val formatCase = Json.format[Case]
 
+  implicit val formatStatus = Json.format[Status]
+
   // `Event` formatters
   implicit val formatCaseStatusChange = Json.format[CaseStatusChange]
   implicit val formatNote = Json.format[Note]

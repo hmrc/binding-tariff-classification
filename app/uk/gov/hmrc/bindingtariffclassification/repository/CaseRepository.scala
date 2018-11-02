@@ -21,6 +21,7 @@ import javax.inject.{Inject, Singleton}
 import play.api.libs.json.Json
 import reactivemongo.bson.BSONObjectID
 import reactivemongo.play.json.collection.JSONCollection
+import uk.gov.hmrc.bindingtariffclassification.model.CaseStatus.CaseStatus
 import uk.gov.hmrc.bindingtariffclassification.model.JsonFormatters.formatCase
 import uk.gov.hmrc.bindingtariffclassification.model.search.CaseParamsFilter
 import uk.gov.hmrc.bindingtariffclassification.model.{Case, JsonFormatters}
@@ -35,6 +36,8 @@ trait CaseRepository {
   def insert(c: Case): Future[Case]
 
   def update(c: Case): Future[Option[Case]]
+
+  def updateStatus(reference: String, status: CaseStatus): Future[Option[Case]]
 
   def getByReference(reference: String): Future[Option[Case]]
 
@@ -66,7 +69,14 @@ class CaseMongoRepository @Inject()(mongoDbProvider: MongoDbProvider, jsonMapper
   }
 
   override def update(c: Case): Future[Option[Case]] = {
-    atomicUpdate(jsonMapper.fromReference(c.reference), c)
+    atomicUpdateDocument(jsonMapper.fromReference(c.reference), c)
+  }
+
+  override def updateStatus(reference: String, status: CaseStatus): Future[Option[Case]] = {
+    atomicUpdateField(
+      jsonMapper.fromReferenceAndStatus(reference = reference, notAllowedStatus = status),
+      jsonMapper.updateField("status", status.toString)
+    )
   }
 
   override def getByReference(reference: String): Future[Option[Case]] = {
@@ -82,4 +92,5 @@ class CaseMongoRepository @Inject()(mongoDbProvider: MongoDbProvider, jsonMapper
 
     getMany(jsonMapper.from(searchBy), sorting)
   }
+
 }

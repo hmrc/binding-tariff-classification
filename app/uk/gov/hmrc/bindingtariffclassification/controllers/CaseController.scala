@@ -18,17 +18,18 @@ package uk.gov.hmrc.bindingtariffclassification.controllers
 
 import javax.inject.{Inject, Singleton}
 import play.api.libs.json.{JsValue, Json}
-import play.api.mvc._
-import uk.gov.hmrc.bindingtariffclassification.model.{Case, ErrorCode, JsErrorResponse, JsonFormatters}
+import play.api.mvc.{Action, AnyContent}
+import uk.gov.hmrc.bindingtariffclassification.model.{Case, ErrorCode, JsErrorResponse, JsonFormatters, Status => StatusOfTheCase}
 import uk.gov.hmrc.bindingtariffclassification.service.CaseService
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-@Singleton()
+@Singleton
 class CaseController @Inject()(caseService: CaseService, caseParamsMapper: CaseParamsMapper) extends CommonController {
 
   import JsonFormatters.formatCase
+  import JsonFormatters.formatStatus
 
   def create: Action[JsValue] = Action.async(parse.json) { implicit request =>
     withJsonBody[Case] { caseRequest: Case =>
@@ -47,17 +48,28 @@ class CaseController @Inject()(caseService: CaseService, caseParamsMapper: CaseP
     } recover recovery
   }
 
-  def get(
-           queue_id: Option[String],
-           assignee_id: Option[String],
-           status: Option[String],
-           sort_by: Option[String]
-         ): Action[AnyContent] = Action.async { implicit request =>
-    caseService.get(caseParamsMapper.from(queue_id, assignee_id, status), sort_by) map (cases => Ok(Json.toJson(cases))) recover recovery
+  def updateStatus(reference: String): Action[JsValue] = Action.async(parse.json) { implicit request =>
+    withJsonBody[StatusOfTheCase] { statusRequest: StatusOfTheCase =>
+      caseService.updateStatus(reference, statusRequest.status) map {
+        case (None, _) => NotFound(JsErrorResponse(ErrorCode.NOT_FOUND, "Case not found"))
+        case (Some(_), None) =>
+          // TODO: discuss what is the correct HTTP status code (400, 403, 409, 412, 422)
+          Conflict(JsErrorResponse(ErrorCode.NOT_ALLOWED, s"Case with status already set to ${statusRequest.status}"))
+        case (Some(_: Case), Some(updated: Case)) => Ok(Json.toJson(updated))
+      }
+    } recover recovery
+  }
+
+  def get(queue_id: Option[String],
+          assignee_id: Option[String],
+          status: Option[String],
+          sort_by: Option[String]): Action[AnyContent] = Action.async { implicit request =>
+    caseService.get(caseParamsMapper.from(queue_id, assignee_id, status), sort_by) map { cases =>
+      Ok(Json.toJson(cases))
+    } recover recovery
   }
 
   def getByReference(reference: String): Action[AnyContent] = Action.async { implicit request =>
-
     caseService.getByReference(reference) map {
       case None => NotFound(JsErrorResponse(ErrorCode.NOT_FOUND, "Case not found"))
       case Some(c: Case) => Ok(Json.toJson(c))
