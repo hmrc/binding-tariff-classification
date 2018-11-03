@@ -19,7 +19,6 @@ package uk.gov.hmrc.bindingtariffclassification.service
 import java.util.UUID
 
 import javax.inject._
-import play.api.Logger
 import uk.gov.hmrc.bindingtariffclassification.model.{Case, CaseStatusChange, Event}
 import uk.gov.hmrc.bindingtariffclassification.model.CaseStatus.CaseStatus
 import uk.gov.hmrc.bindingtariffclassification.model.search.CaseParamsFilter
@@ -45,16 +44,14 @@ class CaseService @Inject()(repository: CaseRepository, eventService: EventServi
     eventService.insert(changeStatusEvent)
   }
 
-  def updateStatus(reference: String, status: CaseStatus): Future[(Option[Case], Option[Case])] = {
+  def updateStatus(reference: String, status: CaseStatus): Future[Option[(Case, Case)]] = {
 
     // TODO: use OptionT ?
     // TODO: use for-comprehension ?
     repository.updateStatus(reference, status).flatMap {
-      case None => Future.successful(None, None)
+      case None => Future.successful(None)
       case Some(original: Case) =>
-        Logger.info("Creating event soon")
-        Logger.info("Original case : " + original)
-        createEvent(original, status).map { _ => (Some(original), Some(original.copy(status = status))) }
+        createEvent(original, status).map { _ => Some((original, original.copy(status = status))) }
     }
 
   }

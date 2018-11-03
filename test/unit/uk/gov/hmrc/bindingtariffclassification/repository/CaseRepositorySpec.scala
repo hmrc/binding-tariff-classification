@@ -74,25 +74,23 @@ class CaseRepositorySpec extends BaseMongoIndexSpec
   "insert" should {
 
     "insert a new document in the collection" in {
-      collectionSize shouldBe 0
+      val size = collectionSize
 
       await(repository.insert(case1)) shouldBe case1
-      collectionSize shouldBe 1
+      collectionSize shouldBe 1 + size
       await(repository.collection.find(selectorByReference(case1)).one[Case]) shouldBe Some(case1)
     }
 
     "fail to insert an existing document in the collection" in {
-      collectionSize shouldBe 0
-
       await(repository.insert(case1)) shouldBe case1
-      collectionSize shouldBe 1
+      val size = collectionSize
 
       val caught = intercept[DatabaseException] {
         await(repository.insert(case1))
       }
       caught.code shouldBe Some(11000)
 
-      collectionSize shouldBe 1
+      collectionSize shouldBe size
     }
 
   }
@@ -100,56 +98,50 @@ class CaseRepositorySpec extends BaseMongoIndexSpec
   "update" should {
 
     "modify an existing document in the collection" in {
-      collectionSize shouldBe 0
-
       await(repository.insert(case1)) shouldBe case1
-      collectionSize shouldBe 1
+      val size = collectionSize
 
       val updated: Case = case1.copy(application = createBTIApplication, status = CaseStatus.CANCELLED)
       await(repository.update(updated)) shouldBe Some(updated)
-      collectionSize shouldBe 1
+      collectionSize shouldBe size
 
       await(repository.collection.find(selectorByReference(updated)).one[Case]) shouldBe Some(updated)
     }
 
     "do nothing when trying to update a non existing document in the collection" in {
-      collectionSize shouldBe 0
+      val size = collectionSize
 
       await(repository.update(case1)) shouldBe None
-      collectionSize shouldBe 0
+      collectionSize shouldBe size
     }
   }
 
   "updateStatus" should {
 
     "modify the status of the existing document and return the original document" in {
-      collectionSize shouldBe 0
-
       await(repository.insert(case1)) shouldBe case1
-      collectionSize shouldBe 1
+      val size = collectionSize
 
       val updated: Case = case1.copy(status = CaseStatus.CANCELLED)
       await(repository.updateStatus(case1.reference, CaseStatus.CANCELLED)) shouldBe Some(case1)
-      collectionSize shouldBe 1
+      collectionSize shouldBe size
 
       await(repository.collection.find(selectorByReference(updated)).one[Case]) shouldBe Some(updated)
     }
 
     "do nothing when trying to set the status to the current value" in {
-      collectionSize shouldBe 0
-
       await(repository.insert(case1)) shouldBe case1
-      collectionSize shouldBe 1
+      val size = collectionSize
 
       await(repository.updateStatus(case1.reference, case1.status)) shouldBe None
-      collectionSize shouldBe 1
+      collectionSize shouldBe size
     }
 
     "do nothing when trying to update a non existing document in the collection" in {
-      collectionSize shouldBe 0
+      val size = collectionSize
 
       await(repository.updateStatus(case1.reference, CaseStatus.CANCELLED)) shouldBe None
-      collectionSize shouldBe 0
+      collectionSize shouldBe size
     }
   }
 
@@ -349,7 +341,7 @@ class CaseRepositorySpec extends BaseMongoIndexSpec
 
     "have a unique index based on the field 'reference' " in {
       await(repository.insert(case1))
-      collectionSize shouldBe 1
+      val size = collectionSize
 
       val caught = intercept[DatabaseException] {
 
@@ -357,7 +349,7 @@ class CaseRepositorySpec extends BaseMongoIndexSpec
       }
       caught.code shouldBe Some(11000)
 
-      collectionSize shouldBe 1
+      collectionSize shouldBe size
     }
 
     "have all expected indexes" in {

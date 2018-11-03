@@ -138,7 +138,7 @@ class CaseControllerSpec extends UnitSpec with WithFakeApplication with MockitoS
 
     "return 200 when the case has been updated successfully" in {
       val updated: Case = c1.copy(status = CaseStatus.CANCELLED)
-      when(mockCaseService.updateStatus(c1.reference, updated.status)).thenReturn(successful(Some(c1), Some(updated)))
+      when(mockCaseService.updateStatus(c1.reference, updated.status)).thenReturn(successful(Some((c1, updated))))
 
       val result = await(controller.updateStatus(c1.reference)(fakeRequest.withBody(toJson(Status(updated.status)))))
 
@@ -154,22 +154,22 @@ class CaseControllerSpec extends UnitSpec with WithFakeApplication with MockitoS
     }
 
     "return 404 when there are no cases with the provided reference" in {
-      when(mockCaseService.updateStatus(c1.reference, CaseStatus.CANCELLED)).thenReturn(successful(None, None))
+      when(mockCaseService.updateStatus(c1.reference, CaseStatus.CANCELLED)).thenReturn(successful(None))
 
       val result = await(controller.updateStatus(c1.reference)(fakeRequest.withBody(toJson(Status(CaseStatus.CANCELLED)))))
 
       status(result) shouldEqual NOT_FOUND
-      jsonBodyOf(result).toString() shouldEqual """{"code":"NOT_FOUND","message":"Case not found"}"""
+      jsonBodyOf(result).toString() shouldEqual """{"code":"NOT_FOUND","message":"Case not found or with status already set to CANCELLED"}"""
     }
 
-    "return 409 when the case status has already changed" in {
-      when(mockCaseService.updateStatus(c1.reference, CaseStatus.NEW)).thenReturn(successful(Some(c1), None))
-
-      val result = await(controller.updateStatus(c1.reference)(fakeRequest.withBody(toJson(Status(CaseStatus.NEW)))))
-
-      status(result) shouldEqual CONFLICT
-      jsonBodyOf(result).toString() shouldEqual """{"code":"NOT_ALLOWED","message":"Case with status already set to NEW"}"""
-    }
+//    "return 409 when the case status has already changed" in {
+//      when(mockCaseService.updateStatus(c1.reference, CaseStatus.NEW)).thenReturn(successful(Some(c1), None)))
+//
+//      val result = await(controller.updateStatus(c1.reference)(fakeRequest.withBody(toJson(Status(CaseStatus.NEW)))))
+//
+//      status(result) shouldEqual CONFLICT
+//      jsonBodyOf(result).toString() shouldEqual """{"code":"NOT_ALLOWED","message":"Case with status already set to NEW"}"""
+//    }
 
     "return 500 when an error occurred" in {
       val error = new RuntimeException

@@ -18,6 +18,7 @@ package uk.gov.hmrc.bindingtariffclassification.repository
 
 import com.google.inject.ImplementedBy
 import javax.inject.{Inject, Singleton}
+import reactivemongo.api.indexes.Index
 import play.api.libs.json.Json
 import reactivemongo.bson.BSONObjectID
 import reactivemongo.play.json.collection.JSONCollection
@@ -55,25 +56,30 @@ class CaseMongoRepository @Inject()(mongoDbProvider: MongoDbProvider, jsonMapper
 
   override val mongoCollection: JSONCollection = collection
 
-  override def indexes = Seq(
-    createSingleFieldAscendingIndex("reference", isUnique = true),
-    createSingleFieldAscendingIndex("queueId", isUnique = false),
-    createSingleFieldAscendingIndex("assigneeId", isUnique = false),
-    createSingleFieldAscendingIndex("status", isUnique = false)
+  lazy private val uniqueSingleFieldIndexes = Seq("reference")
+  lazy private val nonUniqueSingleFieldIndexes = Seq(
+    "queueId",
+    "assigneeId",
+    "status"
+  )
+
+  override def indexes: Seq[Index] = {
     // TODO: We need to add relevant indexes for each possible search
     // TODO: We should add compound indexes for searches involving multiple fields
-  )
+    uniqueSingleFieldIndexes.map(createSingleFieldAscendingIndex(_, isUnique = true)) ++
+    nonUniqueSingleFieldIndexes.map(createSingleFieldAscendingIndex(_, isUnique = false))
+  }
 
   override def insert(c: Case): Future[Case] = {
     createOne(c)
   }
 
   override def update(c: Case): Future[Option[Case]] = {
-    atomicUpdateDocument(jsonMapper.fromReference(c.reference), c)
+    updateDocument(jsonMapper.fromReference(c.reference), c)
   }
 
   override def updateStatus(reference: String, status: CaseStatus): Future[Option[Case]] = {
-    atomicUpdateField(
+    updateField(
       jsonMapper.fromReferenceAndStatus(reference = reference, notAllowedStatus = status),
       jsonMapper.updateField("status", status.toString)
     )

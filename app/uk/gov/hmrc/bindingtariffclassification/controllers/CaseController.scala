@@ -51,11 +51,18 @@ class CaseController @Inject()(caseService: CaseService, caseParamsMapper: CaseP
   def updateStatus(reference: String): Action[JsValue] = Action.async(parse.json) { implicit request =>
     withJsonBody[StatusOfTheCase] { statusRequest: StatusOfTheCase =>
       caseService.updateStatus(reference, statusRequest.status) map {
-        case (None, _) => NotFound(JsErrorResponse(ErrorCode.NOT_FOUND, "Case not found"))
-        case (Some(_), None) =>
-          // TODO: discuss what is the correct HTTP status code (400, 403, 409, 412, 422)
-          Conflict(JsErrorResponse(ErrorCode.NOT_ALLOWED, s"Case with status already set to ${statusRequest.status}"))
-        case (Some(_: Case), Some(updated: Case)) => Ok(Json.toJson(updated))
+        case Some((_: Case, updated: Case)) => Ok(Json.toJson(updated))
+        case _ =>
+          // TODO: discuss if this 404 code is appropriate
+          // it is returned in 2 cases:
+          // - case not found
+          // - case found, but with status already set to the desired status
+          NotFound(
+            JsErrorResponse(
+              errorCode = ErrorCode.NOT_FOUND,
+              message = s"Case not found or with status already set to ${statusRequest.status}"
+            )
+          )
       }
     } recover recovery
   }

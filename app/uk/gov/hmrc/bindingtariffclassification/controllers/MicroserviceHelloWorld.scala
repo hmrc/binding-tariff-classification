@@ -34,6 +34,8 @@ import scala.util.{Failure, Success, Try}
 @Singleton()
 class MicroserviceHelloWorld @Inject()(caseService: CaseService, eventService: EventService) extends BaseController {
 
+  // TODO: this controller can be deleted soon
+
   private val timeout = 2.seconds
 
   def hello(): Action[AnyContent] = Action.async { implicit request =>

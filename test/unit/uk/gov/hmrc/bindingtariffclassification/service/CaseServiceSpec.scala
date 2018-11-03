@@ -18,20 +18,19 @@ package uk.gov.hmrc.bindingtariffclassification.service
 
 import java.util.UUID
 
-import org.mockito.Mockito.{never, verify, times, when}
-import org.mockito.ArgumentMatchers.{any, anyString}
+import org.mockito.Mockito.{never, reset, times, verify, when}
+import org.mockito.ArgumentMatchers.{any, anyString, refEq}
+import org.scalatest.BeforeAndAfterEach
 import org.scalatest.mockito.MockitoSugar
 import uk.gov.hmrc.bindingtariffclassification.model.CaseStatus.CaseStatus
-import uk.gov.hmrc.bindingtariffclassification.model.{Case, CaseStatus, Event}
+import uk.gov.hmrc.bindingtariffclassification.model.{Case, CaseStatus, CaseStatusChange, Event}
 import uk.gov.hmrc.bindingtariffclassification.model.search.CaseParamsFilter
 import uk.gov.hmrc.bindingtariffclassification.repository.CaseRepository
 import uk.gov.hmrc.play.test.UnitSpec
 
 import scala.concurrent.Future.successful
 
-class CaseServiceSpec extends UnitSpec with MockitoSugar {
-
-  final private val e = mock[Event]
+class CaseServiceSpec extends UnitSpec with MockitoSugar with BeforeAndAfterEach {
 
   final private val c1 = mock[Case]
   final private val c2 = mock[Case]
@@ -44,6 +43,10 @@ class CaseServiceSpec extends UnitSpec with MockitoSugar {
   private val service = new CaseService(repository, eventService)
 
   final val emulatedFailure = new RuntimeException("Emulated failure.")
+
+  override protected def beforeEach(): Unit = {
+    reset(repository)
+  }
 
   "insert" should {
 
@@ -91,32 +94,11 @@ class CaseServiceSpec extends UnitSpec with MockitoSugar {
 
   "updateStatus" should {
 
-    "return the case after the status is updated in the database collection" in {
-      when(c1.reference).thenReturn(reference)
-      when(c1.assigneeId).thenReturn(Some("user-plato"))
-      when(c1.status).thenReturn(CaseStatus.NEW)
-      when(eventService.insert(any[Event])).thenReturn(successful(e))
-      when(repository.updateStatus(reference, CaseStatus.OPEN)).thenReturn(successful(Some(c1)))
-      val result = await(service.updateStatus(reference, CaseStatus.OPEN))
-      result shouldBe (Some(c1), Some(c1.copy(status = CaseStatus.OPEN)))
-      verify(eventService, times(1)).insert(any[Event])
-    }
-
-    "return None if there are no cases with the specified reference" in {
+    "return (None, None) if there are no cases with the specified reference or if the case has already the status updated" in {
       when(repository.updateStatus(anyString, any[CaseStatus])).thenReturn(successful(None))
+
       val result = await(service.updateStatus(reference, CaseStatus.CANCELLED))
-      result shouldBe (None, None)
-      verify(eventService, never).insert(any[Event])
-    }
-
-    // TODO: fix scenario
-    "throw an exception if the case status update is not allowed" in {
-      when(repository.updateStatus(reference, CaseStatus.OPEN)).thenThrow(emulatedFailure)
-
-      val caught = intercept[RuntimeException] {
-        await(service.update(c1))
-      }
-      caught shouldBe emulatedFailure
+      result shouldBe None
 
       verify(eventService, never).insert(any[Event])
     }
@@ -125,11 +107,35 @@ class CaseServiceSpec extends UnitSpec with MockitoSugar {
       when(repository.updateStatus(anyString, any[CaseStatus])).thenThrow(emulatedFailure)
 
       val caught = intercept[RuntimeException] {
-        await(service.update(c1))
+        await(service.updateStatus(reference, CaseStatus.CANCELLED))
       }
       caught shouldBe emulatedFailure
 
       verify(eventService, never).insert(any[Event])
+    }
+
+    "return the original and the new cases after the status update" in {
+      val newStatus = CaseStatus.OPEN
+
+      when(c1.reference).thenReturn(reference)
+      when(c1.assigneeId).thenReturn(Some("user-plato"))
+      when(c1.status).thenReturn(CaseStatus.NEW)
+
+      val e = Event(
+        id = UUID.randomUUID().toString,
+        details = CaseStatusChange(from = c1.status, to = newStatus),
+        userId = c1.assigneeId.getOrElse(""),
+        caseReference = c1.reference)
+
+      val eventFieldsToExcludeInTheInsertion = List("timestamp", "id")
+      when(eventService.insert(refEq(e, eventFieldsToExcludeInTheInsertion: _*))).thenReturn(successful(e))
+
+      when(repository.updateStatus(reference, newStatus)).thenReturn(successful(Some(c1)))
+
+      val result = await(service.updateStatus(reference, newStatus))
+      result shouldBe Some((c1, c1.copy(status = newStatus)))
+
+      verify(eventService, times(1)).insert(any[Event])
     }
 
   }
