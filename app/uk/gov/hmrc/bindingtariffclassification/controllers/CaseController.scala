@@ -48,6 +48,15 @@ class CaseController @Inject()(caseService: CaseService, caseParamsMapper: CaseP
     } recover recovery
   }
 
+//  TODO: DIT-290
+//  def updateDecision(reference: String): Action[JsValue] = Action.async(parse.json) { implicit request =>
+//    withJsonBody[Decision] { decisionRequest: Decision =>
+//      caseService.updateDecision(reference, decisionRequest.decision) map {
+//        TODO
+//      } recover recovery
+//    }
+//  }
+
   def updateStatus(reference: String): Action[JsValue] = Action.async(parse.json) { implicit request =>
     withJsonBody[StatusOfTheCase] { statusRequest: StatusOfTheCase =>
       caseService.updateStatus(reference, statusRequest.status) map {

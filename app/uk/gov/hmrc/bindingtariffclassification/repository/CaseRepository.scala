@@ -85,6 +85,11 @@ class CaseMongoRepository @Inject()(mongoDbProvider: MongoDbProvider, jsonMapper
     )
   }
 
+//  TODO: DIT-290
+//  override def updateDecision(reference: String, decision: Decision): Future[Option[Case]] = {
+//    TODO
+//  }
+
   override def getByReference(reference: String): Future[Option[Case]] = {
     getOne(jsonMapper.fromReference(reference))
   }
