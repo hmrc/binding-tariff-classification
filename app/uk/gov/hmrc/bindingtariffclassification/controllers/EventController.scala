@@ -36,8 +36,8 @@ class EventController @Inject()(eventService: EventService) extends CommonContro
     } recover recovery
   }
 
-  def getByCaseReference(caseReference: String): Action[AnyContent] = Action.async { implicit request =>
-    eventService.getByCaseReference(caseReference) map {
+  def getByCaseReference(case_reference: String): Action[AnyContent] = Action.async { implicit request =>
+    eventService.getByCaseReference(case_reference) map {
       events => Ok(Json.toJson(events))
     } recover recovery
   }
