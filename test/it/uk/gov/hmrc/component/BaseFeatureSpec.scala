@@ -18,8 +18,8 @@ package it.uk.gov.hmrc.component
 
 import org.scalatest._
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
-import uk.gov.hmrc.bindingtariffclassification.model.Case
-import uk.gov.hmrc.bindingtariffclassification.repository.CaseMongoRepository
+import uk.gov.hmrc.bindingtariffclassification.model.{Case, Event}
+import uk.gov.hmrc.bindingtariffclassification.repository.{CaseMongoRepository, EventMongoRepository}
 
 import scala.concurrent.Await.result
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -31,18 +31,34 @@ abstract class BaseFeatureSpec extends FeatureSpec
 
   private val timeout = 2.seconds
 
-  protected def repository: CaseMongoRepository = app.injector.instanceOf[CaseMongoRepository]
+  private lazy val caseStore: CaseMongoRepository = app.injector.instanceOf[CaseMongoRepository]
+  private lazy val eventStore: EventMongoRepository = app.injector.instanceOf[EventMongoRepository]
+
+  private def dropStores(): Unit = {
+    result(caseStore.drop, timeout)
+    result(eventStore.drop, timeout)
+  }
+
+  private def ensureStoresIndexes(): Unit = {
+    result(caseStore.ensureIndexes, timeout)
+    result(eventStore.ensureIndexes, timeout)
+  }
 
   override protected def beforeEach(): Unit = {
-    result(repository.drop, timeout)
-    result(repository.ensureIndexes, timeout)
+    dropStores()
+    ensureStoresIndexes()
   }
 
   override protected def afterAll(): Unit = {
-    result(repository.drop, timeout)
+    dropStores()
   }
 
-  protected def store(cases: Case*): Seq[Case] = {
-    cases.map(c => result(repository.insert(c), timeout))
+  protected def storeCases(cases: Case*): Seq[Case] = {
+    cases.map(c => result(caseStore.insert(c), timeout))
   }
+
+  protected def storeEvents(events: Event*): Seq[Event] = {
+    events.map(e => result(eventStore.insert(e), timeout))
+  }
+
 }

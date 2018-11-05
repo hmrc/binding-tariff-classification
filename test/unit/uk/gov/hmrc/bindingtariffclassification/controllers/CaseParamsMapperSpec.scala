@@ -24,6 +24,7 @@ class CaseParamsMapperSpec extends UnitSpec with MockitoSugar {
   val mapper = new CaseParamsMapper()
 
   "Case Params Mapper" should {
+
     "map queueId" in {
       mapper.from(Some("id"), None, None).queueId shouldBe Some("id")
     }

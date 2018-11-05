@@ -153,7 +153,8 @@ class CaseControllerSpec extends UnitSpec with WithFakeApplication with MockitoS
       status(result) shouldEqual BAD_REQUEST
     }
 
-    "return 404 when there are no cases with the provided reference" in {
+    "return 404 when there are no cases with the provided reference or with a status different from CANCELLED" in {
+      // TODO: this behaviour needs to be reviewed
       when(mockCaseService.updateStatus(c1.reference, CaseStatus.CANCELLED)).thenReturn(successful(None))
 
       val result = await(controller.updateStatus(c1.reference)(fakeRequest.withBody(toJson(Status(CaseStatus.CANCELLED)))))
@@ -161,15 +162,6 @@ class CaseControllerSpec extends UnitSpec with WithFakeApplication with MockitoS
       status(result) shouldEqual NOT_FOUND
       jsonBodyOf(result).toString() shouldEqual """{"code":"NOT_FOUND","message":"Case not found or with status already set to CANCELLED"}"""
     }
-
-//    "return 409 when the case status has already changed" in {
-//      when(mockCaseService.updateStatus(c1.reference, CaseStatus.NEW)).thenReturn(successful(Some(c1), None)))
-//
-//      val result = await(controller.updateStatus(c1.reference)(fakeRequest.withBody(toJson(Status(CaseStatus.NEW)))))
-//
-//      status(result) shouldEqual CONFLICT
-//      jsonBodyOf(result).toString() shouldEqual """{"code":"NOT_ALLOWED","message":"Case with status already set to NEW"}"""
-//    }
 
     "return 500 when an error occurred" in {
       val error = new RuntimeException

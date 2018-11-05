@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.bindingtariffclassification.repository
 
+import uk.gov.hmrc.bindingtariffclassification.model.CaseStatus
 import uk.gov.hmrc.bindingtariffclassification.model.search.CaseParamsFilter
 import uk.gov.hmrc.play.test.UnitSpec
 
@@ -23,7 +24,7 @@ class JsonObjectMapperTest extends UnitSpec {
 
   private val jsonMapper = new JsonObjectMapper
 
-  "from" should {
+  "from()" should {
 
     "convert to Json with fields status, queueId and assigneeId" in {
 
@@ -78,7 +79,7 @@ class JsonObjectMapperTest extends UnitSpec {
 
   }
 
-  "fromReference" should {
+  "fromReference()" should {
 
     "convert to Json from a valid reference" in {
 
@@ -93,17 +94,42 @@ class JsonObjectMapperTest extends UnitSpec {
 
   }
 
-  "fromReferenceAndStatus" should {
-    // TODO
+  "fromReferenceAndStatus()" should {
+
+    "convert to Json from a valid reference and status" in {
+
+      val validRef = "valid_reference"
+      val notAllowedStatus = CaseStatus.REFERRED
+
+      jsonMapper.fromReferenceAndStatus(validRef, notAllowedStatus).toString() shouldBe
+        s"""{
+           | "reference": "$validRef",
+           | "status": { "$$ne": "$notAllowedStatus" }
+           |}
+        """.stripMargin.replaceAll(" ", "").replaceAll("\n", "")
+    }
+
   }
 
-  "updateField" should {
-    // TODO
+  "updateField()" should {
+
+    "convert to Json" in {
+
+      val fieldName = "employee"
+      val fieldValue = "Alex"
+
+      jsonMapper.updateField(fieldName, fieldValue).toString() shouldBe
+        s"""{
+           | "$$set": { "$fieldName": "$fieldValue" }
+           |}
+        """.stripMargin.replaceAll(" ", "").replaceAll("\n", "")
+
+    }
+
   }
 
   private def mapFrom(filter: CaseParamsFilter): String = {
     jsonMapper.from(filter).toString()
   }
-
 
 }
