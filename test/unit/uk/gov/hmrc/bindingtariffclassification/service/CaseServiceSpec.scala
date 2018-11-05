@@ -94,7 +94,7 @@ class CaseServiceSpec extends UnitSpec with MockitoSugar with BeforeAndAfterEach
 
   "updateStatus" should {
 
-    "return (None, None) if there are no cases with the specified reference or if the case has already the status updated" in {
+    "return None if there are no cases with the specified reference or if the case has already the status updated" in {
       when(repository.updateStatus(anyString, any[CaseStatus])).thenReturn(successful(None))
 
       val result = await(service.updateStatus(reference, CaseStatus.CANCELLED))
