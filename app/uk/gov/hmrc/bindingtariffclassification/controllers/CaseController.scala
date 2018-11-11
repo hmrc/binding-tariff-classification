@@ -19,6 +19,7 @@ package uk.gov.hmrc.bindingtariffclassification.controllers
 import javax.inject.{Inject, Singleton}
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.{Action, AnyContent}
+import uk.gov.hmrc.bindingtariffclassification.config.AppConfig
 import uk.gov.hmrc.bindingtariffclassification.model.{Case, ErrorCode, JsErrorResponse, JsonFormatters, Status => StatusOfTheCase}
 import uk.gov.hmrc.bindingtariffclassification.service.CaseService
 
@@ -26,10 +27,16 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 @Singleton
-class CaseController @Inject()(caseService: CaseService, caseParamsMapper: CaseParamsMapper) extends CommonController {
+class CaseController @Inject()(appConfig: AppConfig, caseService: CaseService, caseParamsMapper: CaseParamsMapper) extends CommonController {
 
   import JsonFormatters.formatCase
   import JsonFormatters.formatStatus
+
+  lazy private val deleteModeFilter = DeleteMode.actionFilter(appConfig)
+
+  def deleteAll(): Action[AnyContent] = deleteModeFilter.async { implicit request =>
+    caseService.deleteAll map ( _ => NoContent ) recover recovery
+  }
 
   def create: Action[JsValue] = Action.async(parse.json) { implicit request =>
     withJsonBody[Case] { caseRequest: Case =>

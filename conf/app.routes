@@ -7,9 +7,8 @@ GET        /cases/:reference                              @uk.gov.hmrc.bindingta
 POST       /cases                                         @uk.gov.hmrc.bindingtariffclassification.controllers.CaseController.create
 PUT        /cases/:reference                              @uk.gov.hmrc.bindingtariffclassification.controllers.CaseController.update(reference: String)
 PUT        /cases/:reference/status                       @uk.gov.hmrc.bindingtariffclassification.controllers.CaseController.updateStatus(reference: String)
-
-# DIT-290
-#PUT       /cases/:reference/decision                     @uk.gov.hmrc.bindingtariffclassification.controllers.CaseController.updateDecision(reference: String)
+DELETE     /cases                                         @uk.gov.hmrc.bindingtariffclassification.controllers.CaseController.deleteAll()
 
 GET        /events/:id                                    @uk.gov.hmrc.bindingtariffclassification.controllers.EventController.getById(id: String)
 GET        /events/case-reference/:case_reference         @uk.gov.hmrc.bindingtariffclassification.controllers.EventController.getByCaseReference(case_reference: String)
+DELETE     /events                                        @uk.gov.hmrc.bindingtariffclassification.controllers.EventController.deleteAll()

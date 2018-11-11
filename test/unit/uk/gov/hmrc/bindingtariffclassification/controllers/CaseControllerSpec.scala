@@ -26,6 +26,7 @@ import play.api.libs.json.Json.toJson
 import play.api.test.FakeRequest
 import reactivemongo.bson.BSONDocument
 import reactivemongo.core.errors.DatabaseException
+import uk.gov.hmrc.bindingtariffclassification.config.AppConfig
 import uk.gov.hmrc.bindingtariffclassification.model.{Case, CaseStatus, Status}
 import uk.gov.hmrc.bindingtariffclassification.model.JsonFormatters._
 import uk.gov.hmrc.bindingtariffclassification.model.search.CaseParamsFilter
@@ -47,8 +48,42 @@ class CaseControllerSpec extends UnitSpec with WithFakeApplication with MockitoS
   private val mockCaseParamsFilter = mock[CaseParamsFilter]
 
   private val fakeRequest = FakeRequest()
+  private val appConfig = mock[AppConfig]
 
-  private val controller = new CaseController(mockCaseService, mockCaseParamsMapper)
+  private val controller = new CaseController(appConfig, mockCaseService, mockCaseParamsMapper)
+
+  "deleteAll()" should {
+
+    "return 403 if the delete mode is disabled" in {
+
+      val result = await(controller.deleteAll()(fakeRequest))
+
+      status(result) shouldEqual FORBIDDEN
+      jsonBodyOf(result).toString() shouldEqual """{"code":"FORBIDDEN","message":"You are not allowed to delete."}"""
+    }
+
+    "return 204 if the delete mode is enabled" in {
+      when(appConfig.isDeleteEnabled).thenReturn(true)
+      when(mockCaseService.deleteAll).thenReturn(successful(()))
+
+      val result = await(controller.deleteAll()(fakeRequest))
+
+      status(result) shouldEqual NO_CONTENT
+    }
+
+    "return 500 when an error occurred" in {
+      val error = new RuntimeException
+
+      when(appConfig.isDeleteEnabled).thenReturn(true)
+      when(mockCaseService.deleteAll).thenReturn(failed(error))
+
+      val result = await(controller.deleteAll()(fakeRequest))
+
+      status(result) shouldEqual INTERNAL_SERVER_ERROR
+      jsonBodyOf(result).toString() shouldEqual """{"code":"UNKNOWN_ERROR","message":"An unexpected error occurred"}"""
+    }
+
+  }
 
   "create()" should {
 

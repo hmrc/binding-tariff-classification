@@ -48,6 +48,23 @@ class CaseServiceSpec extends UnitSpec with MockitoSugar with BeforeAndAfterEach
     reset(repository)
   }
 
+  "deleteAll()" should {
+
+    "return () and clear the database collection" in {
+      when(repository.deleteAll).thenReturn(successful(()))
+      await(service.deleteAll) shouldBe ((): Unit)
+    }
+
+    "propagate any error" in {
+      when(repository.deleteAll).thenThrow(emulatedFailure)
+
+      val caught = intercept[RuntimeException] {
+        await(service.deleteAll)
+      }
+      caught shouldBe emulatedFailure
+    }
+  }
+
   "insert()" should {
 
     "return the case after it is inserted in the database collection" in {

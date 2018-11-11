@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.bindingtariffclassification.service
 
-import org.mockito.Mockito
+import org.mockito.Mockito.when
 import org.scalatest.mockito.MockitoSugar
 import uk.gov.hmrc.bindingtariffclassification.model.Event
 import uk.gov.hmrc.bindingtariffclassification.repository.EventRepository
@@ -34,16 +34,33 @@ class EventServiceSpec extends UnitSpec with MockitoSugar {
 
   final val emulatedFailure = new RuntimeException("Emulated failure.")
 
+  "deleteAll()" should {
+
+    "return () and clear the database collection" in {
+      when(repository.deleteAll).thenReturn(successful(()))
+      await(service.deleteAll) shouldBe ((): Unit)
+    }
+
+    "propagate any error" in {
+      when(repository.deleteAll).thenThrow(emulatedFailure)
+
+      val caught = intercept[RuntimeException] {
+        await(service.deleteAll)
+      }
+      caught shouldBe emulatedFailure
+    }
+  }
+
   "insert" should {
 
     "return the expected event after it is inserted in the database collection" in {
-      Mockito.when(repository.insert(e1)).thenReturn(successful(e1))
+      when(repository.insert(e1)).thenReturn(successful(e1))
       val result = await(service.insert(e1))
       result shouldBe e1
     }
 
     "propagate any error" in {
-      Mockito.when(repository.insert(e1)).thenThrow(emulatedFailure)
+      when(repository.insert(e1)).thenThrow(emulatedFailure)
 
       val caught = intercept[RuntimeException] {
         await(service.insert(e1))
@@ -55,19 +72,19 @@ class EventServiceSpec extends UnitSpec with MockitoSugar {
   "getById" should {
 
     "return the expected event" in {
-      Mockito.when(repository.getById(e1.id)).thenReturn(successful(Some(e1)))
+      when(repository.getById(e1.id)).thenReturn(successful(Some(e1)))
       val result = await(service.getById(e1.id))
       result shouldBe Some(e1)
     }
 
     "return None when the event is not found" in {
-      Mockito.when(repository.getById(e1.id)).thenReturn(successful(None))
+      when(repository.getById(e1.id)).thenReturn(successful(None))
       val result = await(service.getById(e1.id))
       result shouldBe None
     }
 
     "propagate any error" in {
-      Mockito.when(repository.getById(e1.id)).thenThrow(emulatedFailure)
+      when(repository.getById(e1.id)).thenThrow(emulatedFailure)
 
       val caught = intercept[RuntimeException] {
         await(service.getById(e1.id))
@@ -79,19 +96,19 @@ class EventServiceSpec extends UnitSpec with MockitoSugar {
   "getByCaseReference" should {
 
     "return the expected events" in {
-      Mockito.when(repository.getByCaseReference(e1.caseReference)).thenReturn(successful(Seq(e1, e2)))
+      when(repository.getByCaseReference(e1.caseReference)).thenReturn(successful(Seq(e1, e2)))
       val result = await(service.getByCaseReference(e1.caseReference))
       result shouldBe Seq(e1, e2)
     }
 
     "return an empty sequence when events are not found" in {
-      Mockito.when(repository.getByCaseReference(e1.caseReference)).thenReturn(successful(Seq()))
+      when(repository.getByCaseReference(e1.caseReference)).thenReturn(successful(Seq()))
       val result = await(service.getByCaseReference(e1.caseReference))
       result shouldBe Nil
     }
 
     "propagate any error" in {
-      Mockito.when(repository.getByCaseReference(e1.caseReference)).thenThrow(emulatedFailure)
+      when(repository.getByCaseReference(e1.caseReference)).thenThrow(emulatedFailure)
 
       val caught = intercept[RuntimeException] {
         await(service.getByCaseReference(e1.caseReference))

@@ -68,4 +68,8 @@ class CaseService @Inject()(repository: CaseRepository, eventService: EventServi
     repository.get(searchBy, sortBy)
   }
 
+  def deleteAll: Future[Unit] = {
+    repository.deleteAll
+  }
+
 }

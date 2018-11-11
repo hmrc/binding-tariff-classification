@@ -19,7 +19,8 @@ package it.uk.gov.hmrc.component
 import scalaj.http.Http
 import play.api.http.HeaderNames.CONTENT_TYPE
 import play.api.http.ContentTypes.JSON
-import play.api.http.Status.{CREATED, INTERNAL_SERVER_ERROR, NOT_FOUND, OK}
+import play.api.http.HttpVerbs
+import play.api.http.Status.{CREATED, INTERNAL_SERVER_ERROR, NOT_FOUND, NO_CONTENT, OK}
 import play.api.libs.json.Json
 import uk.gov.hmrc.bindingtariffclassification.model._
 import uk.gov.hmrc.bindingtariffclassification.model.JsonFormatters._
@@ -39,6 +40,31 @@ class CaseSpec extends BaseFeatureSpec {
 
   private val c1Json = Json.toJson(c1)
   private val c1UpdatedJson = Json.toJson(c1_updated)
+
+
+  feature("Delete All") {
+
+    scenario("Clear Collection") {
+
+      Given("There are some documents in the collection")
+      storeCases(c1, c2)
+
+      When("I delete all documents")
+      val deleteResult = Http(s"$serviceUrl/cases")
+        .method(HttpVerbs.DELETE)
+        .asString
+
+      Then("The response code should be 204")
+      deleteResult.code shouldEqual NO_CONTENT
+
+      And("The response body is empty")
+      deleteResult.body shouldBe ""
+
+      And("No documents exist in the mongo collection")
+      caseStoreSize() shouldBe 0
+    }
+
+  }
 
 
   feature("Create Case") {
