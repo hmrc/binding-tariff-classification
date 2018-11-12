@@ -70,8 +70,7 @@ class CaseService @Inject()(caseRepository: CaseRepository, sequenceRepository: 
 
   private def newCaseReference: Future[String] = {
     sequenceRepository.incrementAndGetByName("case")
-      .map(seq => seq.value)
-      .map(_.toString)
+      .map(_.value.toString)
   }
 
 }
