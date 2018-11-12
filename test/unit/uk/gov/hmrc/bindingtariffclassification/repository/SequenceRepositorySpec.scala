@@ -87,7 +87,7 @@ class SequenceRepositorySpec extends BaseMongoIndexSpec
       intercept[DatabaseException] {
         await(repository.insert(updated))
       }.code shouldBe Some(11000)
-0
+
       collectionSize shouldBe 1
       await(repository.collection.find(selectorByName("name")).one[Sequence]) shouldBe Some(sequence)
     }
