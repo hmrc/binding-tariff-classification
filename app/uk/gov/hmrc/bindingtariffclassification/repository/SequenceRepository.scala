@@ -55,7 +55,7 @@ class SequenceMongoRepository @Inject()(mongoDbProvider: MongoDbProvider)
 
   override def getByName(name: String): Future[Sequence] = {
     getOne(Json.obj("name" -> name))
-      .map(toValueOrThrowError(name))
+      .flatMap(toValueOrNewSequence(name))
   }
 
   override def incrementAndGetByName(name: String): Future[Sequence] = {
@@ -65,15 +65,15 @@ class SequenceMongoRepository @Inject()(mongoDbProvider: MongoDbProvider)
       fetchNewObject = true
     )
       .map(_.value.map(_.as[Sequence]))
-      .map(toValueOrThrowError(name))
+      .flatMap(toValueOrNewSequence(name))
   }
 
   override def insert(e: Sequence): Future[Sequence] = {
     createOne(e)
   }
 
-  private def toValueOrThrowError(name: String): Option[Sequence] => Sequence = {
-    case Some(s: Sequence) => s
-    case _ => throw new RuntimeException(s"Missing Sequence [$name]")
+  private def toValueOrNewSequence(name: String): Option[Sequence] => Future[Sequence] = {
+    case Some(s: Sequence) => Future.successful(s)
+    case None => insert(Sequence(name, 0))
   }
 }

@@ -94,33 +94,28 @@ class SequenceRepositorySpec extends BaseMongoIndexSpec
   }
 
   "get by name" should {
-    val sequence = Sequence("name", 0)
+    val sequence = Sequence("name", 1)
 
     "return existing sequence" in {
       await(repository.insert(sequence))
       await(repository.getByName("name")) shouldBe sequence
     }
 
-    "return error if not found" in {
-      intercept[RuntimeException] {
-        await(repository.incrementAndGetByName("name"))
-      }.getMessage shouldBe "Missing Sequence [name]"
+    "initialize if not found" in {
+      await(repository.getByName("name")) shouldBe Sequence("name", 0)
     }
   }
 
   "increment and get by name" should {
-    val sequence = Sequence("name", 0)
 
     "return existing sequence" in {
-      await(repository.insert(sequence))
+      await(repository.insert(Sequence("name", 0)))
       await(repository.incrementAndGetByName("name")) shouldBe Sequence("name", 1)
       await(repository.incrementAndGetByName("name")) shouldBe Sequence("name", 2)
     }
 
     "return error if not found" in {
-      intercept[RuntimeException] {
-        await(repository.incrementAndGetByName("name"))
-      }.getMessage shouldBe "Missing Sequence [name]"
+      await(repository.getByName("name")) shouldBe Sequence("name", 0)
     }
   }
 

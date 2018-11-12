@@ -18,7 +18,7 @@ package uk.gov.hmrc.component
 
 import org.scalatest._
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
-import uk.gov.hmrc.bindingtariffclassification.model.{Case, Event}
+import uk.gov.hmrc.bindingtariffclassification.model.{Case, Event, Sequence}
 import uk.gov.hmrc.bindingtariffclassification.repository.{CaseMongoRepository, EventMongoRepository, SequenceMongoRepository}
 
 import scala.concurrent.Await.result
@@ -64,8 +64,8 @@ abstract class BaseFeatureSpec extends FeatureSpec
     events.map(e => result(eventStore.insert(e), timeout))
   }
 
-//  protected def storeSequences(sequences: Sequence*): Seq[Sequence] = {
-//    sequences.map(s => result(sequenceStore.insert(s), timeout))
-//  }
+  protected def storeSequences(sequences: Sequence*): Seq[Sequence] = {
+    sequences.map(s => result(sequenceStore.insert(s), timeout))
+  }
 
 }
