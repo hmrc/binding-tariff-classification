@@ -54,7 +54,7 @@ class EventSpec extends BaseFeatureSpec {
       deleteResult.body shouldBe ""
 
       And("No documents exist in the mongo collection")
-      eventStoreSize() shouldBe 0
+      eventStoreSize shouldBe 0
     }
 
   }

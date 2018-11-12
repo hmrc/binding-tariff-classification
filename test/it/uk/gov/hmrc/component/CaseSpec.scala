@@ -61,7 +61,7 @@ class CaseSpec extends BaseFeatureSpec {
       deleteResult.body shouldBe ""
 
       And("No documents exist in the mongo collection")
-      caseStoreSize() shouldBe 0
+      caseStoreSize shouldBe 0
     }
 
   }

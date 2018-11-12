@@ -61,11 +61,11 @@ abstract class BaseFeatureSpec extends FeatureSpec
     events.map(e => result(eventStore.insert(e), timeout))
   }
 
-  protected def caseStoreSize(): Int = {
+  protected def caseStoreSize: Int = {
     result(caseStore.mongoCollection.count(), timeout)
   }
 
-  protected def eventStoreSize(): Int = {
+  protected def eventStoreSize: Int = {
     result(eventStore.mongoCollection.count(), timeout)
   }
 
