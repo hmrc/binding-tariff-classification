@@ -87,22 +87,22 @@ class SequenceRepositorySpec extends BaseMongoIndexSpec
       intercept[DatabaseException] {
         await(repository.insert(updated))
       }.code shouldBe Some(11000)
-
+0
       collectionSize shouldBe 1
       await(repository.collection.find(selectorByName("name")).one[Sequence]) shouldBe Some(sequence)
     }
   }
 
   "get by name" should {
-    val sequence = Sequence("name", 1)
 
     "return existing sequence" in {
+      val sequence = Sequence("name", 10)
       await(repository.insert(sequence))
       await(repository.getByName("name")) shouldBe sequence
     }
 
     "initialize if not found" in {
-      await(repository.getByName("name")) shouldBe Sequence("name", 0)
+      await(repository.getByName("name")) shouldBe Sequence("name", 1)
     }
   }
 
@@ -114,8 +114,8 @@ class SequenceRepositorySpec extends BaseMongoIndexSpec
       await(repository.incrementAndGetByName("name")) shouldBe Sequence("name", 2)
     }
 
-    "return error if not found" in {
-      await(repository.getByName("name")) shouldBe Sequence("name", 0)
+    "initialize if not found" in {
+      await(repository.getByName("name")) shouldBe Sequence("name", 1)
     }
   }
 

@@ -74,6 +74,6 @@ class SequenceMongoRepository @Inject()(mongoDbProvider: MongoDbProvider)
 
   private def toValueOrNewSequence(name: String): Option[Sequence] => Future[Sequence] = {
     case Some(s: Sequence) => Future.successful(s)
-    case None => insert(Sequence(name, 0))
+    case None => insert(Sequence(name, 1))
   }
 }
