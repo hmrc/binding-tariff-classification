@@ -22,7 +22,6 @@ import org.mockito.ArgumentMatchers.{any, anyString, refEq}
 import org.mockito.Mockito._
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.mockito.MockitoSugar
-import uk.gov.hmrc.bindingtariffclassification.model
 import uk.gov.hmrc.bindingtariffclassification.model.CaseStatus.CaseStatus
 import uk.gov.hmrc.bindingtariffclassification.model._
 import uk.gov.hmrc.bindingtariffclassification.model.search.CaseParamsFilter
@@ -55,7 +54,7 @@ class CaseServiceSpec extends UnitSpec with MockitoSugar with BeforeAndAfterEach
   "insert()" should {
 
     "return the case after it is inserted in the database collection" in {
-      when(sequenceRepository.incrementAndGetByName("case")).thenReturn(successful(model.Sequence("case", 0)))
+      when(sequenceRepository.incrementAndGetByName("case")).thenReturn(successful(Sequence("case", 0)))
       when(c1.copy(reference = "0")).thenReturn(c1WithRef)
       when(caseRepository.insert(c1WithRef)).thenReturn(successful(c1Saved))
       val result = await(service.insert(c1))
@@ -63,7 +62,7 @@ class CaseServiceSpec extends UnitSpec with MockitoSugar with BeforeAndAfterEach
     }
 
     "propagate any error" in {
-      when(sequenceRepository.incrementAndGetByName("case")).thenReturn(successful(model.Sequence("case", 0)))
+      when(sequenceRepository.incrementAndGetByName("case")).thenReturn(successful(Sequence("case", 0)))
       when(c1.copy(reference = "0")).thenReturn(c1WithRef)
       when(caseRepository.insert(c1WithRef)).thenThrow(emulatedFailure)
 

@@ -31,8 +31,7 @@ import scala.concurrent.Future
 class CaseService @Inject()(caseRepository: CaseRepository, sequenceRepository: SequenceRepository, eventService: EventService) {
 
   def insert(c: Case): Future[Case] = {
-    sequenceRepository.incrementAndGetByName("case")
-      .flatMap(seq => caseRepository.insert(c.copy(reference = seq.value.toString)))
+    newCaseReference.flatMap(ref => caseRepository.insert(c.copy(reference = ref)))
   }
 
   private def createEvent(originalCase: Case, newStatus: CaseStatus): Future[Event] = {
@@ -67,6 +66,12 @@ class CaseService @Inject()(caseRepository: CaseRepository, sequenceRepository: 
 
   def get(searchBy: CaseParamsFilter, sortBy: Option[String]): Future[Seq[Case]] = {
     caseRepository.get(searchBy, sortBy)
+  }
+
+  private def newCaseReference: Future[String] = {
+    sequenceRepository.incrementAndGetByName("case")
+      .map(seq => seq.value)
+      .map(_.toString)
   }
 
 }
