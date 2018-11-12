@@ -98,11 +98,13 @@ class SequenceRepositorySpec extends BaseMongoIndexSpec
 
     "return existing sequence" in {
       await(repository.insert(sequence))
-      await(repository.getByName("name")) shouldBe Some(sequence)
+      await(repository.getByName("name")) shouldBe sequence
     }
 
-    "return empty if not found" in {
-      await(repository.getByName("name")) shouldBe None
+    "return error if not found" in {
+      intercept[RuntimeException] {
+        await(repository.incrementAndGetByName("name"))
+      }.getMessage shouldBe "Missing Sequence [name]"
     }
   }
 
@@ -111,12 +113,14 @@ class SequenceRepositorySpec extends BaseMongoIndexSpec
 
     "return existing sequence" in {
       await(repository.insert(sequence))
-      await(repository.incrementAndGetByName("name")) shouldBe Some(Sequence("name", 1))
-      await(repository.incrementAndGetByName("name")) shouldBe Some(Sequence("name", 2))
+      await(repository.incrementAndGetByName("name")) shouldBe Sequence("name", 1)
+      await(repository.incrementAndGetByName("name")) shouldBe Sequence("name", 2)
     }
 
-    "return empty if not found" in {
-      await(repository.incrementAndGetByName("name")) shouldBe None
+    "return error if not found" in {
+      intercept[RuntimeException] {
+        await(repository.incrementAndGetByName("name"))
+      }.getMessage shouldBe "Missing Sequence [name]"
     }
   }
 

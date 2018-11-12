@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-package it.uk.gov.hmrc.component
+package uk.gov.hmrc.component
 
 import org.scalatest._
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
 import uk.gov.hmrc.bindingtariffclassification.model.{Case, Event}
-import uk.gov.hmrc.bindingtariffclassification.repository.{CaseMongoRepository, EventMongoRepository}
+import uk.gov.hmrc.bindingtariffclassification.repository.{CaseMongoRepository, EventMongoRepository, SequenceMongoRepository}
 
 import scala.concurrent.Await.result
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -33,15 +33,18 @@ abstract class BaseFeatureSpec extends FeatureSpec
 
   private lazy val caseStore: CaseMongoRepository = app.injector.instanceOf[CaseMongoRepository]
   private lazy val eventStore: EventMongoRepository = app.injector.instanceOf[EventMongoRepository]
+  private lazy val sequenceStore: SequenceMongoRepository = app.injector.instanceOf[SequenceMongoRepository]
 
   private def dropStores(): Unit = {
     result(caseStore.drop, timeout)
     result(eventStore.drop, timeout)
+    result(sequenceStore.drop, timeout)
   }
 
   private def ensureStoresIndexes(): Unit = {
     result(caseStore.ensureIndexes, timeout)
     result(eventStore.ensureIndexes, timeout)
+    result(sequenceStore.ensureIndexes, timeout)
   }
 
   override protected def beforeEach(): Unit = {
@@ -60,5 +63,9 @@ abstract class BaseFeatureSpec extends FeatureSpec
   protected def storeEvents(events: Event*): Seq[Event] = {
     events.map(e => result(eventStore.insert(e), timeout))
   }
+
+//  protected def storeSequences(sequences: Sequence*): Seq[Sequence] = {
+//    sequences.map(s => result(sequenceStore.insert(s), timeout))
+//  }
 
 }

@@ -19,19 +19,20 @@ package uk.gov.hmrc.bindingtariffclassification.service
 import java.util.UUID
 
 import javax.inject._
-import uk.gov.hmrc.bindingtariffclassification.model.{Case, CaseStatusChange, Event}
 import uk.gov.hmrc.bindingtariffclassification.model.CaseStatus.CaseStatus
 import uk.gov.hmrc.bindingtariffclassification.model.search.CaseParamsFilter
-import uk.gov.hmrc.bindingtariffclassification.repository.CaseRepository
+import uk.gov.hmrc.bindingtariffclassification.model.{Case, CaseStatusChange, Event}
+import uk.gov.hmrc.bindingtariffclassification.repository.{CaseRepository, SequenceRepository}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 @Singleton
-class CaseService @Inject()(repository: CaseRepository, eventService: EventService) {
+class CaseService @Inject()(caseRepository: CaseRepository, sequenceRepository: SequenceRepository, eventService: EventService) {
 
   def insert(c: Case): Future[Case] = {
-    repository.insert(c)
+    sequenceRepository.incrementAndGetByName("case")
+      .flatMap(seq => caseRepository.insert(c.copy(reference = seq.value.toString)))
   }
 
   private def createEvent(originalCase: Case, newStatus: CaseStatus): Future[Event] = {
@@ -48,7 +49,7 @@ class CaseService @Inject()(repository: CaseRepository, eventService: EventServi
 
     // TODO: use OptionT ?
     // TODO: use for-comprehension ?
-    repository.updateStatus(reference, status).flatMap {
+    caseRepository.updateStatus(reference, status).flatMap {
       case None => Future.successful(None)
       case Some(original: Case) =>
         createEvent(original, status).map { _ => Some((original, original.copy(status = status))) }
@@ -57,15 +58,15 @@ class CaseService @Inject()(repository: CaseRepository, eventService: EventServi
   }
 
   def update(c: Case): Future[Option[Case]] = {
-    repository.update(c)
+    caseRepository.update(c)
   }
 
   def getByReference(reference: String): Future[Option[Case]] = {
-    repository.getByReference(reference)
+    caseRepository.getByReference(reference)
   }
 
   def get(searchBy: CaseParamsFilter, sortBy: Option[String]): Future[Seq[Case]] = {
-    repository.get(searchBy, sortBy)
+    caseRepository.get(searchBy, sortBy)
   }
 
 }

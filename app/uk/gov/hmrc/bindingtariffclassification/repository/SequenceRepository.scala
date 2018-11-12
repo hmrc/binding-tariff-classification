@@ -34,9 +34,9 @@ trait SequenceRepository {
 
   def insert(e: Sequence): Future[Sequence]
 
-  def getByName(name: String): Future[Option[Sequence]]
+  def getByName(name: String): Future[Sequence]
 
-  def incrementAndGetByName(name: String): Future[Option[Sequence]]
+  def incrementAndGetByName(name: String): Future[Sequence]
 }
 
 @Singleton
@@ -53,19 +53,27 @@ class SequenceMongoRepository @Inject()(mongoDbProvider: MongoDbProvider)
     createSingleFieldAscendingIndex(indexFieldKey = "name", isUnique = true)
   )
 
-  override def getByName(name: String): Future[Option[Sequence]] = {
+  override def getByName(name: String): Future[Sequence] = {
     getOne(Json.obj("name" -> name))
+      .map(toValueOrThrowError(name))
   }
 
-  override def incrementAndGetByName(name: String): Future[Option[Sequence]] = {
+  override def incrementAndGetByName(name: String): Future[Sequence] = {
     findAndUpdate(
       query = Json.obj("name" -> name),
       update = Json.obj("$inc" -> Json.obj("value" -> 1)),
       fetchNewObject = true
-    ).map( _.value.map(_.as[Sequence]))
+    )
+      .map(_.value.map(_.as[Sequence]))
+      .map(toValueOrThrowError(name))
   }
 
   override def insert(e: Sequence): Future[Sequence] = {
     createOne(e)
+  }
+
+  private def toValueOrThrowError(name: String): Option[Sequence] => Sequence = {
+    case Some(s: Sequence) => s
+    case _ => throw new RuntimeException(s"Missing Sequence [$name]")
   }
 }

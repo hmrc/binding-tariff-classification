@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-package it.uk.gov.hmrc.component
+package uk.gov.hmrc.component
 
 import java.util.UUID
 
-import play.api.libs.json.Json
 import play.api.http.Status.{NOT_FOUND, OK}
+import play.api.libs.json.Json
 import scalaj.http.Http
 import uk.gov.hmrc.bindingtariffclassification.model.JsonFormatters.formatEvent
 import uk.gov.hmrc.bindingtariffclassification.todelete.EventData._

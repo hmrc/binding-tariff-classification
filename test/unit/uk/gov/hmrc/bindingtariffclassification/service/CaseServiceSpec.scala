@@ -18,14 +18,15 @@ package uk.gov.hmrc.bindingtariffclassification.service
 
 import java.util.UUID
 
-import org.mockito.Mockito.{never, reset, times, verify, when}
 import org.mockito.ArgumentMatchers.{any, anyString, refEq}
+import org.mockito.Mockito._
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.mockito.MockitoSugar
+import uk.gov.hmrc.bindingtariffclassification.model
 import uk.gov.hmrc.bindingtariffclassification.model.CaseStatus.CaseStatus
-import uk.gov.hmrc.bindingtariffclassification.model.{Case, CaseStatus, CaseStatusChange, Event}
+import uk.gov.hmrc.bindingtariffclassification.model._
 import uk.gov.hmrc.bindingtariffclassification.model.search.CaseParamsFilter
-import uk.gov.hmrc.bindingtariffclassification.repository.CaseRepository
+import uk.gov.hmrc.bindingtariffclassification.repository.{CaseRepository, SequenceRepository}
 import uk.gov.hmrc.play.test.UnitSpec
 
 import scala.concurrent.Future.successful
@@ -33,56 +34,62 @@ import scala.concurrent.Future.successful
 class CaseServiceSpec extends UnitSpec with MockitoSugar with BeforeAndAfterEach {
 
   final private val c1 = mock[Case]
+  final private val c1WithRef = mock[Case]
+  final private val c1Saved = mock[Case]
   final private val c2 = mock[Case]
 
   final private val reference = UUID.randomUUID().toString
 
-  private val repository = mock[CaseRepository]
+  private val caseRepository = mock[CaseRepository]
+  private val sequenceRepository = mock[SequenceRepository]
   private val eventService = mock[EventService]
 
-  private val service = new CaseService(repository, eventService)
+  private val service = new CaseService(caseRepository, sequenceRepository, eventService)
 
   final val emulatedFailure = new RuntimeException("Emulated failure.")
 
   override protected def beforeEach(): Unit = {
-    reset(repository)
+    reset(caseRepository)
   }
 
   "insert()" should {
 
     "return the case after it is inserted in the database collection" in {
-      when(repository.insert(c1)).thenReturn(successful(c1))
+      when(sequenceRepository.incrementAndGetByName("case")).thenReturn(successful(model.Sequence("case", 0)))
+      when(c1.copy(reference = "0")).thenReturn(c1WithRef)
+      when(caseRepository.insert(c1WithRef)).thenReturn(successful(c1Saved))
       val result = await(service.insert(c1))
-      result shouldBe c1
+      result shouldBe c1Saved
     }
 
     "propagate any error" in {
-      when(repository.insert(c1)).thenThrow(emulatedFailure)
+      when(sequenceRepository.incrementAndGetByName("case")).thenReturn(successful(model.Sequence("case", 0)))
+      when(c1.copy(reference = "0")).thenReturn(c1WithRef)
+      when(caseRepository.insert(c1WithRef)).thenThrow(emulatedFailure)
 
       val caught = intercept[RuntimeException] {
         await(service.insert(c1))
       }
       caught shouldBe emulatedFailure
     }
-
   }
 
   "update()" should {
 
     "return the case after it is updated in the database collection" in {
-      when(repository.update(c1)).thenReturn(successful(Some(c1)))
+      when(caseRepository.update(c1)).thenReturn(successful(Some(c1)))
       val result = await(service.update(c1))
       result shouldBe Some(c1)
     }
 
     "return None if the case does not exist in the database collection" in {
-      when(repository.update(c1)).thenReturn(successful(None))
+      when(caseRepository.update(c1)).thenReturn(successful(None))
       val result = await(service.update(c1))
       result shouldBe None
     }
 
     "propagate any error" in {
-      when(repository.update(c1)).thenThrow(emulatedFailure)
+      when(caseRepository.update(c1)).thenThrow(emulatedFailure)
 
       val caught = intercept[RuntimeException] {
         await(service.update(c1))
@@ -95,7 +102,7 @@ class CaseServiceSpec extends UnitSpec with MockitoSugar with BeforeAndAfterEach
   "updateStatus()" should {
 
     "return None if there are no cases with the specified reference or if the case has already the status updated" in {
-      when(repository.updateStatus(anyString, any[CaseStatus])).thenReturn(successful(None))
+      when(caseRepository.updateStatus(anyString, any[CaseStatus])).thenReturn(successful(None))
 
       val result = await(service.updateStatus(reference, CaseStatus.CANCELLED))
       result shouldBe None
@@ -104,7 +111,7 @@ class CaseServiceSpec extends UnitSpec with MockitoSugar with BeforeAndAfterEach
     }
 
     "propagate any error" in {
-      when(repository.updateStatus(anyString, any[CaseStatus])).thenThrow(emulatedFailure)
+      when(caseRepository.updateStatus(anyString, any[CaseStatus])).thenThrow(emulatedFailure)
 
       val caught = intercept[RuntimeException] {
         await(service.updateStatus(reference, CaseStatus.CANCELLED))
@@ -129,7 +136,7 @@ class CaseServiceSpec extends UnitSpec with MockitoSugar with BeforeAndAfterEach
       val eventFieldsToExcludeInTheInsertion = List("timestamp", "id")
       when(eventService.insert(refEq(e, eventFieldsToExcludeInTheInsertion: _*))).thenReturn(successful(e))
 
-      when(repository.updateStatus(reference, newStatus)).thenReturn(successful(Some(c1)))
+      when(caseRepository.updateStatus(reference, newStatus)).thenReturn(successful(Some(c1)))
 
       val result = await(service.updateStatus(reference, newStatus))
       result shouldBe Some((c1, c1.copy(status = newStatus)))
@@ -142,19 +149,19 @@ class CaseServiceSpec extends UnitSpec with MockitoSugar with BeforeAndAfterEach
   "getByReference()" should {
 
     "return the expected case" in {
-      when(repository.getByReference(c1.reference)).thenReturn(successful(Some(c1)))
+      when(caseRepository.getByReference(c1.reference)).thenReturn(successful(Some(c1)))
       val result = await(service.getByReference(c1.reference))
       result shouldBe Some(c1)
     }
 
     "return None when the case is not found" in {
-      when(repository.getByReference(c1.reference)).thenReturn(successful(None))
+      when(caseRepository.getByReference(c1.reference)).thenReturn(successful(None))
       val result = await(service.getByReference(c1.reference))
       result shouldBe None
     }
 
     "propagate any error" in {
-      when(repository.getByReference(c1.reference)).thenThrow(emulatedFailure)
+      when(caseRepository.getByReference(c1.reference)).thenThrow(emulatedFailure)
 
       val caught = intercept[RuntimeException] {
         await(service.getByReference(c1.reference))
@@ -172,19 +179,19 @@ class CaseServiceSpec extends UnitSpec with MockitoSugar with BeforeAndAfterEach
 
     "return the expected cases" in {
 
-      when(repository.get(nofilters, nosorter)).thenReturn(successful(Seq(c1, c2)))
+      when(caseRepository.get(nofilters, nosorter)).thenReturn(successful(Seq(c1, c2)))
       val result = await(service.get(nofilters, nosorter))
       result shouldBe Seq(c1, c2)
     }
 
     "return an empty sequence when there are no cases" in {
-      when(repository.get(nofilters, nosorter)).thenReturn(successful(Nil))
+      when(caseRepository.get(nofilters, nosorter)).thenReturn(successful(Nil))
       val result = await(service.get(nofilters, nosorter))
       result shouldBe Nil
     }
 
     "propagate any error" in {
-      when(repository.get(nofilters, nosorter)).thenThrow(emulatedFailure)
+      when(caseRepository.get(nofilters, nosorter)).thenThrow(emulatedFailure)
 
       val caught = intercept[RuntimeException] {
         await(service.get(nofilters, nosorter))

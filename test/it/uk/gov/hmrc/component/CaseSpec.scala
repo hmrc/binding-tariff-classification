@@ -14,15 +14,15 @@
  * limitations under the License.
  */
 
-package it.uk.gov.hmrc.component
+package uk.gov.hmrc.component
 
-import scalaj.http.Http
-import play.api.http.HeaderNames.CONTENT_TYPE
 import play.api.http.ContentTypes.JSON
+import play.api.http.HeaderNames.CONTENT_TYPE
 import play.api.http.Status.{CREATED, INTERNAL_SERVER_ERROR, NOT_FOUND, OK}
 import play.api.libs.json.Json
-import uk.gov.hmrc.bindingtariffclassification.model._
+import scalaj.http.Http
 import uk.gov.hmrc.bindingtariffclassification.model.JsonFormatters._
+import uk.gov.hmrc.bindingtariffclassification.model._
 import uk.gov.hmrc.bindingtariffclassification.todelete.CaseData._
 
 class CaseSpec extends BaseFeatureSpec {
