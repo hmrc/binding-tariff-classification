@@ -28,12 +28,15 @@ import scala.concurrent.Future
 @Singleton
 class CaseController @Inject()(caseService: CaseService, caseParamsMapper: CaseParamsMapper) extends CommonController {
 
-  import JsonFormatters.formatCase
-  import JsonFormatters.formatStatus
+  import JsonFormatters.{formatCase, formatStatus}
 
   def create: Action[JsValue] = Action.async(parse.json) { implicit request =>
     withJsonBody[Case] { caseRequest: Case =>
-      caseService.insert(caseRequest) map { c => Created(Json.toJson(c)) }
+      if(caseRequest.reference != null) {
+        Future.successful(BadRequest("Case reference is not permitted for a Create Request"))
+      } else {
+        caseService.insert(caseRequest) map { c => Created(Json.toJson(c)) }
+      }
     } recover recovery
   }
 

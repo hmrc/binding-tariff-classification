@@ -26,9 +26,9 @@ import play.api.libs.json.Json.toJson
 import play.api.test.FakeRequest
 import reactivemongo.bson.BSONDocument
 import reactivemongo.core.errors.DatabaseException
-import uk.gov.hmrc.bindingtariffclassification.model.{Case, CaseStatus, Status}
 import uk.gov.hmrc.bindingtariffclassification.model.JsonFormatters._
 import uk.gov.hmrc.bindingtariffclassification.model.search.CaseParamsFilter
+import uk.gov.hmrc.bindingtariffclassification.model.{Case, CaseStatus, Status}
 import uk.gov.hmrc.bindingtariffclassification.service.CaseService
 import uk.gov.hmrc.bindingtariffclassification.todelete.CaseData
 import uk.gov.hmrc.play.test.{UnitSpec, WithFakeApplication}
@@ -39,6 +39,7 @@ class CaseControllerSpec extends UnitSpec with WithFakeApplication with MockitoS
 
   private implicit val mat: Materializer = fakeApplication.materializer
 
+  private val c0: Case = CaseData.createCase().copy(reference = null)
   private val c1: Case = CaseData.createCase()
   private val c2: Case = CaseData.createCase()
 
@@ -53,9 +54,9 @@ class CaseControllerSpec extends UnitSpec with WithFakeApplication with MockitoS
   "create()" should {
 
     "return 201 when the case has been created successfully" in {
-      when(mockCaseService.insert(c1)).thenReturn(successful(c1))
+      when(mockCaseService.insert(c0)).thenReturn(successful(c1))
 
-      val result = await(controller.create()(fakeRequest.withBody(toJson(c1))))
+      val result = await(controller.create()(fakeRequest.withBody(toJson(c0))))
 
       status(result) shouldEqual CREATED
       jsonBodyOf(result) shouldEqual toJson(c1)
@@ -64,6 +65,12 @@ class CaseControllerSpec extends UnitSpec with WithFakeApplication with MockitoS
     "return 400 when the JSON request payload is not a Case" in {
       val body = """{"a":"b"}"""
       val result = await(controller.create()(fakeRequest.withBody(toJson(body))))
+
+      status(result) shouldEqual BAD_REQUEST
+    }
+
+    "return 400 when the case reference is supplied" in {
+      val result = await(controller.create()(fakeRequest.withBody(toJson(c1))))
 
       status(result) shouldEqual BAD_REQUEST
     }
@@ -77,9 +84,9 @@ class CaseControllerSpec extends UnitSpec with WithFakeApplication with MockitoS
         override def message: String = "duplicate value for db index"
       }
 
-      when(mockCaseService.insert(c1)).thenReturn(failed(error))
+      when(mockCaseService.insert(c0)).thenReturn(failed(error))
 
-      val result = await(controller.create()(fakeRequest.withBody(toJson(c1))))
+      val result = await(controller.create()(fakeRequest.withBody(toJson(c0))))
 
       status(result) shouldEqual INTERNAL_SERVER_ERROR
       jsonBodyOf(result).toString() shouldEqual """{"code":"UNKNOWN_ERROR","message":"An unexpected error occurred"}"""
