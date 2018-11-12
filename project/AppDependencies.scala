@@ -6,7 +6,7 @@ object AppDependencies {
   lazy val compile = Seq(
     "uk.gov.hmrc" %% "bootstrap-play-25" % "3.14.0",
     "uk.gov.hmrc" %% "play-json-union-formatter" % "1.4.0",
-    "uk.gov.hmrc" %% "play-reactivemongo" % "6.2.0",
+    "uk.gov.hmrc" %% "simple-reactivemongo" % "7.3.0-play-25",
     ws
   )
 
@@ -18,7 +18,7 @@ object AppDependencies {
     "org.scalaj" %% "scalaj-http" % "2.4.1" % scope,
     "org.scalatestplus.play" %% "scalatestplus-play" % "2.0.1" % scope,
     "uk.gov.hmrc" %% "hmrctest" % "3.2.0" % scope,
-    "uk.gov.hmrc" %% "reactivemongo-test" % "3.1.0" % scope
+    "uk.gov.hmrc" %% "reactivemongo-test" % "4.1.0-play-25" % scope
   )
 
 }
