@@ -20,7 +20,7 @@ import play.api.http.ContentTypes.JSON
 import play.api.http.HeaderNames.CONTENT_TYPE
 import play.api.http.Status.{CREATED, INTERNAL_SERVER_ERROR, NOT_FOUND, OK}
 import play.api.libs.json.Json
-import scalaj.http.Http
+import scalaj.http.{Http, HttpResponse}
 import uk.gov.hmrc.bindingtariffclassification.model.JsonFormatters._
 import uk.gov.hmrc.bindingtariffclassification.model._
 import uk.gov.hmrc.bindingtariffclassification.todelete.CaseData._
@@ -32,11 +32,13 @@ class CaseSpec extends BaseFeatureSpec {
 
   private val q1 = "queue1"
   private val u1 = "user1"
+  private val c0 = createNewCase(app = createBTIApplication)
   private val c1 = createCase(app = createBTIApplication, queue = Some(q1), assignee = Some(u1))
   private val status = CaseStatus.CANCELLED
   private val c1_updated = c1.copy(status = status)
   private val c2 = createCase(app = createBTIApplication)
 
+  private val c0Json = Json.toJson(c0)
   private val c1Json = Json.toJson(c1)
   private val c1UpdatedJson = Json.toJson(c1_updated)
 
@@ -46,32 +48,17 @@ class CaseSpec extends BaseFeatureSpec {
     scenario("Create a new case") {
 
       When("I create a new case")
-      val result = Http(s"$serviceUrl/cases")
+      val result: HttpResponse[String] = Http(s"$serviceUrl/cases")
         .headers(Seq(CONTENT_TYPE -> JSON))
-        .postData(c1Json.toString()).asString
+        .postData(c0Json.toString()).asString
 
-      Then("The case is returned in the JSON response")
-      Json.parse(result.body) shouldBe c1Json
-
-      And("The response code should be created")
+      Then("The response code should be created")
       result.code shouldEqual CREATED
-    }
 
-    scenario("Create an existing case") {
-
-      Given("There is a case in the database")
-      storeCases(c1)
-
-      When("I create a case that already exist")
-      val result = Http(s"$serviceUrl/cases")
-        .headers(Seq(CONTENT_TYPE -> JSON))
-        .postData(c1Json.toString()).asString
-
-      // TODO This should not return an internal server error. Instead it should return a 422
-      // requires a code change to the application but is not currently blocking us so the test has been left
-      // testing for a 500 internal server error.
-      Then("The response code should be internal server error")
-      result.code shouldEqual INTERNAL_SERVER_ERROR
+      And("The case is returned in the JSON response")
+      val responseCase = Json.parse(result.body).as[Case]
+      responseCase.reference shouldBe "1"
+      responseCase.status shouldBe CaseStatus.NEW
     }
 
   }

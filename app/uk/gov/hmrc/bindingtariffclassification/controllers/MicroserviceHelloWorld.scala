@@ -80,11 +80,11 @@ class MicroserviceHelloWorld @Inject()(caseService: CaseService, eventService: E
   private def createCaseData(): String = {
 
     // INSERT
-    val c1 = createCase(app = createBTIApplication, d = Some(createDecision), attachments = Seq(createAttachment))
+    val c1 = createNewCase(app = createBTIApplication, attachments = Seq(createAttachment))
     val r1 = Await.result(caseService.insert(c1), timeout)
     Logger.debug(s"BTI document inserted: $r1")
 
-    val c3 = createCase(createLiabilityOrder)
+    val c3 = createNewCase(createLiabilityOrder)
     val r3 = Await.result(caseService.insert(c3), timeout)
     Logger.debug(s"Liability Order document inserted: $r3")
 
@@ -93,22 +93,22 @@ class MicroserviceHelloWorld @Inject()(caseService: CaseService, eventService: E
     Logger.debug(s"All cases: $r")
 
     // GET BY REF
-    val rc1 = Await.result(caseService.getByReference(c1.reference), timeout)
-    Logger.debug(s"Cases with reference = ${c1.reference}: $rc1")
+    val rc1 = Await.result(caseService.getByReference(r1.reference), timeout)
+    Logger.debug(s"Cases with reference = ${r1.reference}: $rc1")
 
-    val rc3 = Await.result(caseService.getByReference(c3.reference), timeout)
-    Logger.debug(s"Cases with reference = ${c3.reference}: $rc3")
+    val rc3 = Await.result(caseService.getByReference(r3.reference), timeout)
+    Logger.debug(s"Cases with reference = ${r3.reference}: $rc3")
 
     // UPDATE
-    val r1u = Await.result(caseService.update(c1.copy(application = c3.application)), timeout)
+    val r1u = Await.result(caseService.update(r1.copy(application = c3.application)), timeout)
     Logger.debug(s"Case JSON document updated: $r1u")
 
-    val r2u = Await.result(caseService.update(c3.copy(application = c1.application)), timeout)
+    val r2u = Await.result(caseService.update(r3.copy(application = c1.application)), timeout)
     Logger.debug(s"Case JSON document updated: $r2u")
 
     tryDuplicateInsertion(caseService.insert(c1))
 
-    c1.reference
+    r1.reference
   }
 
   private def tryDuplicateInsertion(executionBlock: Future[Any]): Unit = {

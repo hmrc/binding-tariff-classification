@@ -20,6 +20,17 @@ import java.time.ZonedDateTime
 
 import uk.gov.hmrc.bindingtariffclassification.model.CaseStatus.CaseStatus
 
+case class NewCase
+(
+  application: Application,
+  attachments: Seq[Attachment] = Seq.empty
+) {
+  def toCase(reference: String): Case = {
+    val now = ZonedDateTime.now()
+    Case(reference, CaseStatus.NEW, now, now, None, None, None, None, application, None, attachments)
+  }
+}
+
 case class Case
 (
   reference: String,
