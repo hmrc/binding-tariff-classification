@@ -18,8 +18,8 @@ package uk.gov.hmrc.bindingtariffclassification.repository
 
 import com.google.inject.ImplementedBy
 import javax.inject.{Inject, Singleton}
-import reactivemongo.api.indexes.Index
 import play.api.libs.json.Json
+import reactivemongo.api.indexes.Index
 import reactivemongo.bson.BSONObjectID
 import reactivemongo.play.json.collection.JSONCollection
 import uk.gov.hmrc.bindingtariffclassification.model.CaseStatus.CaseStatus
@@ -76,7 +76,7 @@ class CaseMongoRepository @Inject()(mongoDbProvider: MongoDbProvider, jsonMapper
   }
 
   override def update(c: Case): Future[Option[Case]] = {
-    updateDocument(jsonMapper.fromReference(c.reference), c)
+    update(jsonMapper.fromReference(c.reference), c)
   }
 
   override def updateStatus(reference: String, status: CaseStatus): Future[Option[Case]] = {

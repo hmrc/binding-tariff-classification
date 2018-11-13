@@ -59,13 +59,10 @@ class SequenceMongoRepository @Inject()(mongoDbProvider: MongoDbProvider)
   }
 
   override def incrementAndGetByName(name: String): Future[Sequence] = {
-    findAndUpdate(
-      query = Json.obj("name" -> name),
-      update = Json.obj("$inc" -> Json.obj("value" -> 1)),
-      fetchNewObject = true
-    )
-      .map(_.value.map(_.as[Sequence]))
-      .flatMap(toValueOrNewSequence(name))
+    update(
+      selector = Json.obj("name" -> name),
+      update = Json.obj("$inc" -> Json.obj("value" -> 1))
+    ).flatMap(toValueOrNewSequence(name))
   }
 
   override def insert(e: Sequence): Future[Sequence] = {

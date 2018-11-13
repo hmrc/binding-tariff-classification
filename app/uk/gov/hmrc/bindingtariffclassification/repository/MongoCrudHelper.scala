@@ -47,21 +47,28 @@ trait MongoCrudHelper[T] extends MongoIndexCreator {
   // TODO: create a single `updateAtomically` method that can update a whole mongo document or a part of it.
   // Remember the D.R.Y. principle
 
-  def updateDocument(selector: JsObject, newDocument: T)
-                    (implicit returnFormat: OFormat[T]): Future[Option[T]] = {
-
+  def update(selector: JsObject, update: T)
+            (implicit returnFormat: OFormat[T]): Future[Option[T]] = {
     mongoCollection.findAndUpdate(
       selector = selector,
-      update = newDocument,
+      update = update,
       fetchNewObject = true, // returns the new document
       upsert = false
     ).map( _.value.map(_.as[T]) )
+  }
 
+  def update(selector: JsObject, update: JsObject)
+            (implicit returnFormat: OFormat[T]): Future[Option[T]] = {
+    mongoCollection.findAndUpdate(
+      selector = selector,
+      update = update,
+      fetchNewObject = true, // returns the new document
+      upsert = false
+    ).map( _.value.map(_.as[T]) )
   }
 
   def updateField[U](selector: JsObject, updatedField: JsObject)
                     (implicit returnFormat: OFormat[T]): Future[Option[T]] = {
-
     mongoCollection.findAndUpdate(
       selector = selector,
       update = updatedField,
