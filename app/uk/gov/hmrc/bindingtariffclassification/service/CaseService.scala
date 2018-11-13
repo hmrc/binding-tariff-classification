@@ -35,15 +35,17 @@ class CaseService @Inject()(caseRepository: CaseRepository, sequenceRepository: 
   }
 
   def nextCaseReference: Future[String] = {
-    sequenceRepository.incrementAndGetByName("case")
-      .map(_.value.toString)
+    sequenceRepository.incrementAndGetByName("case").map(_.value.toString)
   }
+
+  // TODO: DIT-311 - this should be the currently loggedIn user
+  private val loggedInUser = "0"
 
   private def createEvent(originalCase: Case, newStatus: CaseStatus): Future[Event] = {
     val changeStatusEvent = Event(
       id = UUID.randomUUID().toString,
       details = CaseStatusChange(from = originalCase.status, to = newStatus),
-      userId = "0", // this should be the currently loggedIn user. See DIT-311
+      userId = loggedInUser,
       caseReference = originalCase.reference)
 
     eventService.insert(changeStatusEvent)

@@ -28,38 +28,34 @@ trait MongoCrudHelper[T] extends MongoIndexCreator {
 
   protected val mongoCollection: JSONCollection
 
-  def clearCollection: Future[Unit] = {
-    mongoCollection.remove(selector = Json.obj()).map(_ => ())
-  }
-
-  def getOne(selector: JsObject)(implicit r: OFormat[T]): Future[Option[T]] = {
+  protected def getOne(selector: JsObject)(implicit r: OFormat[T]): Future[Option[T]] = {
     mongoCollection.find[JsObject, T](selector).one[T]
   }
 
-  def getMany(filterBy: JsObject, sortBy: JsObject)(implicit r: OFormat[T]): Future[List[T]] = {
+  protected def getMany(filterBy: JsObject, sortBy: JsObject)(implicit r: OFormat[T]): Future[List[T]] = {
     mongoCollection.find[JsObject, T](filterBy).sort(sortBy).cursor[T]().collect[List](Int.MaxValue, Cursor.FailOnError[List[T]]())
   }
 
-  def createOne(document: T)(implicit w: OWrites[T]): Future[T] = {
+  protected def createOne(document: T)(implicit w: OWrites[T]): Future[T] = {
     mongoCollection.insert(document).map(_ => document)
   }
 
-  def update(selector: JsObject, update: T, fetchNew: Boolean = true)
-            (implicit returnFormat: OFormat[T]): Future[Option[T]] = {
+  protected def updateDocument(selector: JsObject, update: T, fetchNew: Boolean = true)
+                              (implicit returnFormat: OFormat[T]): Future[Option[T]] = {
     updateInternal(selector, Json.toJson(update).as[JsObject], fetchNew)
   }
 
-  def update(selector: JsObject, update: JsObject, fetchNew: Boolean)
-            (implicit returnFormat: OFormat[T]): Future[Option[T]] = {
+  protected def update(selector: JsObject, update: JsObject, fetchNew: Boolean)
+                      (implicit returnFormat: OFormat[T]): Future[Option[T]] = {
     updateInternal(selector, update, fetchNew)
   }
 
   private def updateInternal(selector: JsObject, update: JsObject, fetchNew: Boolean)
-                               (implicit returnFormat: OFormat[T]): Future[Option[T]] = {
+                            (implicit returnFormat: OFormat[T]): Future[Option[T]] = {
     mongoCollection.findAndUpdate(
       selector = selector,
       update = update,
-      fetchNewObject = fetchNew, // returns the original document
+      fetchNewObject = fetchNew,
       upsert = false
     ).map(_.value.map(_.as[T]))
   }

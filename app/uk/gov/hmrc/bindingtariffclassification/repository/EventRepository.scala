@@ -26,6 +26,7 @@ import uk.gov.hmrc.bindingtariffclassification.model.{Event, JsonFormatters}
 import uk.gov.hmrc.mongo.ReactiveRepository
 import uk.gov.hmrc.mongo.json.ReactiveMongoFormats
 
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 @ImplementedBy(classOf[EventMongoRepository])
@@ -60,24 +61,24 @@ class EventMongoRepository @Inject()(mongoDbProvider: MongoDbProvider)
     createOne(e)
   }
 
-  private def selectorById(id: String): JsObject = {
+  private def byId(id: String): JsObject = {
     Json.obj("id" -> id)
   }
 
-  private def selectorByCaseReference(caseReference: String): JsObject = {
+  private def byCaseReference(caseReference: String): JsObject = {
     Json.obj("caseReference" -> caseReference)
   }
 
   override def getById(id: String): Future[Option[Event]] = {
-    getOne(selectorById(id))
+    getOne(byId(id))
   }
 
   override def getByCaseReference(caseReference: String): Future[Seq[Event]] = {
-    getMany(selectorByCaseReference(caseReference), Json.obj())
+    getMany(byCaseReference(caseReference), Json.obj())
   }
 
   override def deleteAll: Future[Unit] = {
-    clearCollection
+    removeAll().map(_ => ())
   }
 
 }

@@ -20,6 +20,7 @@ import org.scalatest.concurrent.Eventually
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
 import reactivemongo.api.DB
 import reactivemongo.api.indexes.Index
+import reactivemongo.api.indexes.IndexType.Ascending
 import reactivemongo.bson._
 import reactivemongo.core.errors.DatabaseException
 import reactivemongo.play.json.ImplicitBSONHandlers._
@@ -116,6 +117,25 @@ class SequenceRepositorySpec extends BaseMongoIndexSpec
 
     "initialize if not found" in {
       await(repository.getByName("name")) shouldBe Sequence("name", 1)
+    }
+  }
+
+  "The 'sequences' collection" should {
+
+    "have all expected indexes" in {
+
+      import scala.concurrent.duration._
+
+      val expectedIndexes = List(
+        Index(key = Seq("name" -> Ascending), name = Some("name_Index"), unique = true, background = true),
+        Index(key = Seq("_id" -> Ascending), name = Some("_id_"))
+      )
+
+      val repo = new SequenceMongoRepository(mongoDbProvider)
+
+      eventually(timeout(5.seconds), interval(100.milliseconds)) {
+        assertIndexes(expectedIndexes.sorted, getIndexes(repo).sorted)
+      }
     }
   }
 

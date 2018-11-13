@@ -54,8 +54,7 @@ class SequenceMongoRepository @Inject()(mongoDbProvider: MongoDbProvider)
   )
 
   override def getByName(name: String): Future[Sequence] = {
-    getOne(byName(name))
-      .flatMap(toValueOrNewSequence(name))
+    getOne(byName(name)).flatMap(valueOrStartSequence(name))
   }
 
   override def incrementAndGetByName(name: String): Future[Sequence] = {
@@ -63,19 +62,20 @@ class SequenceMongoRepository @Inject()(mongoDbProvider: MongoDbProvider)
       selector = byName(name),
       update = Json.obj("$inc" -> Json.obj("value" -> 1)),
       fetchNew = true
-    ).flatMap(toValueOrNewSequence(name))
+    ).flatMap(valueOrStartSequence(name))
   }
 
   override def insert(e: Sequence): Future[Sequence] = {
     createOne(e)
   }
 
-  private def toValueOrNewSequence(name: String): Option[Sequence] => Future[Sequence] = {
+  private def valueOrStartSequence(name: String): Option[Sequence] => Future[Sequence] = {
     case Some(s: Sequence) => Future.successful(s)
-    case None => insert(Sequence(name, 1))
+    case _ => insert(Sequence(name, 1))
   }
 
   private def byName(name: String) = {
     Json.obj("name" -> name)
   }
+
 }

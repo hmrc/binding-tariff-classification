@@ -29,6 +29,7 @@ import uk.gov.hmrc.bindingtariffclassification.model.{Case, JsonFormatters}
 import uk.gov.hmrc.mongo.ReactiveRepository
 import uk.gov.hmrc.mongo.json.ReactiveMongoFormats
 
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 @ImplementedBy(classOf[CaseMongoRepository])
@@ -76,13 +77,13 @@ class CaseMongoRepository @Inject()(mongoDbProvider: MongoDbProvider, jsonMapper
   }
 
   override def update(c: Case): Future[Option[Case]] = {
-    super.update(jsonMapper.fromReference(c.reference), c)
+    updateDocument(selector = jsonMapper.fromReference(c.reference), update = c)
   }
 
   override def updateStatus(reference: String, status: CaseStatus): Future[Option[Case]] = {
     update(
-      jsonMapper.fromReferenceAndStatus(reference = reference, notAllowedStatus = status),
-      jsonMapper.updateField("status", status.toString),
+      selector = jsonMapper.fromReferenceAndStatus(reference = reference, notAllowedStatus = status),
+      update = jsonMapper.updateField("status", status.toString),
       fetchNew = false
     )
   }
@@ -102,7 +103,7 @@ class CaseMongoRepository @Inject()(mongoDbProvider: MongoDbProvider, jsonMapper
   }
 
   override def deleteAll: Future[Unit] = {
-    clearCollection
+    removeAll().map(_ => ())
   }
 
 }
