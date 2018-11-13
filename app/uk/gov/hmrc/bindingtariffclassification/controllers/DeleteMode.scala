@@ -27,12 +27,8 @@ object DeleteMode {
   def actionFilter(appConfig: AppConfig) = new ActionBuilder[Request] with ActionFilter[Request] {
 
     override protected def filter[A](request: Request[A]): Future[Option[Result]] = Future.successful {
-
-      implicit val r: Request[A] = request
-
       if (appConfig.isDeleteEnabled) None
       else Some(play.api.mvc.Results.Forbidden(JsErrorResponse(ErrorCode.FORBIDDEN, "You are not allowed to delete.")))
-
     }
 
   }
