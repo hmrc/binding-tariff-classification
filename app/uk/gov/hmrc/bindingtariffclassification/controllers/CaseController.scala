@@ -33,7 +33,7 @@ class CaseController @Inject()(caseService: CaseService, caseParamsMapper: CaseP
   def create: Action[JsValue] = Action.async(parse.json) { implicit request =>
     withJsonBody[Case] { caseRequest: Case =>
       if(caseRequest.reference != null) {
-        Future.successful(BadRequest("Case reference is not permitted for a Create Request"))
+        Future.successful(UnprocessableEntity("Case reference is not permitted for a Create Request"))
       } else {
         caseService.insert(caseRequest) map { c => Created(Json.toJson(c)) }
       }

@@ -72,7 +72,7 @@ class CaseControllerSpec extends UnitSpec with WithFakeApplication with MockitoS
     "return 400 when the case reference is supplied" in {
       val result = await(controller.create()(fakeRequest.withBody(toJson(c1))))
 
-      status(result) shouldEqual BAD_REQUEST
+      status(result) shouldEqual UNPROCESSABLE_ENTITY
     }
 
     "return 500 when an error occurred" in {
