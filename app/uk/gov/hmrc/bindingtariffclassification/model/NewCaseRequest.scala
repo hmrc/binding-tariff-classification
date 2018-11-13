@@ -16,15 +16,15 @@
 
 package uk.gov.hmrc.bindingtariffclassification.model
 
-import java.time.ZonedDateTime
-
 case class NewCaseRequest
 (
   application: Application,
   attachments: Seq[Attachment] = Seq.empty
 ) {
-  def toCase(reference: String): Case = {
-    val now = ZonedDateTime.now()
-    Case(reference, CaseStatus.NEW, now, now, None, None, None, None, application, None, attachments)
-  }
+  def toCase(reference: String) = Case(
+    reference = reference,
+    status = CaseStatus.NEW,
+    application = application,
+    attachments = attachments
+  )
 }
