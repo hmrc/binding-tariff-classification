@@ -39,9 +39,10 @@ class CaseController @Inject()(appConfig: AppConfig, caseService: CaseService, c
 
   def create: Action[JsValue] = Action.async(parse.json) { implicit request =>
     withJsonBody[NewCaseRequest] { caseRequest: NewCaseRequest =>
-      caseService.nextCaseReference
-        .flatMap(ref => caseService.insert(caseRequest.toCase(ref)))
-        .map(c => Created(Json.toJson(c)))
+      for {
+        r <- caseService.nextCaseReference
+        c <- caseService.insert(caseRequest.toCase(r))
+      } yield Created(Json.toJson(c))
     } recover recovery
   }
 

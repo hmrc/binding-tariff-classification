@@ -21,10 +21,12 @@ case class NewCaseRequest
   application: Application,
   attachments: Seq[Attachment] = Seq.empty
 ) {
+
   def toCase(reference: String) = Case(
     reference = reference,
     status = CaseStatus.NEW,
     application = application,
     attachments = attachments
   )
+
 }
