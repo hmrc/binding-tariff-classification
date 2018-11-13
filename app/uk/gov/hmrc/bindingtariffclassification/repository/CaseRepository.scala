@@ -76,7 +76,7 @@ class CaseMongoRepository @Inject()(mongoDbProvider: MongoDbProvider, jsonMapper
   }
 
   override def update(c: Case): Future[Option[Case]] = {
-    update(jsonMapper.fromReference(c.reference), c)
+    super.update(jsonMapper.fromReference(c.reference), c)
   }
 
   override def updateStatus(reference: String, status: CaseStatus): Future[Option[Case]] = {

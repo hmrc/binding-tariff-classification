@@ -41,41 +41,32 @@ trait MongoCrudHelper[T] extends MongoIndexCreator {
   }
 
   def createOne(document: T)(implicit w: OWrites[T]): Future[T] = {
-    mongoCollection.insert(document).map ( _ => document )
+    mongoCollection.insert(document).map(_ => document)
   }
 
-  // TODO: create a single `updateAtomically` method that can update a whole mongo document or a part of it.
-  // Remember the D.R.Y. principle
-
-  def update(selector: JsObject, update: T)
-            (implicit returnFormat: OFormat[T]): Future[Option[T]] = {
-    mongoCollection.findAndUpdate(
-      selector = selector,
-      update = update,
-      fetchNewObject = true, // returns the new document
-      upsert = false
-    ).map( _.value.map(_.as[T]) )
+  def update[U](selector: JsObject, update: U)
+            (implicit returnFormat: OFormat[U]): Future[Option[U]] = {
+    updateInternal(selector, Json.toJson(update).as[JsObject], fetchNew = true)
   }
 
   def update(selector: JsObject, update: JsObject)
             (implicit returnFormat: OFormat[T]): Future[Option[T]] = {
-    mongoCollection.findAndUpdate(
-      selector = selector,
-      update = update,
-      fetchNewObject = true, // returns the new document
-      upsert = false
-    ).map( _.value.map(_.as[T]) )
+    updateInternal(selector, update, fetchNew = true)
   }
 
   def updateField[U](selector: JsObject, updatedField: JsObject)
                     (implicit returnFormat: OFormat[T]): Future[Option[T]] = {
+    updateInternal(selector, updatedField, fetchNew = false)
+  }
+
+  private def updateInternal[U](selector: JsObject, update: JsObject, fetchNew: Boolean)
+                               (implicit returnFormat: OFormat[U]): Future[Option[U]] = {
     mongoCollection.findAndUpdate(
       selector = selector,
-      update = updatedField,
-      fetchNewObject = false, // returns the original document
+      update = update,
+      fetchNewObject = fetchNew, // returns the original document
       upsert = false
-    ).map( _.value.map(_.as[T]) )
-
+    ).map(_.value.map(_.as[U]))
   }
 
 }
