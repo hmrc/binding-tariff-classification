@@ -14,31 +14,22 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.bindingtariffclassification.service
+package uk.gov.hmrc.bindingtariffclassification.config
 
 import javax.inject._
-import uk.gov.hmrc.bindingtariffclassification.model.Event
-import uk.gov.hmrc.bindingtariffclassification.repository.EventRepository
-
-import scala.concurrent.Future
+import play.api.Mode.Mode
+import play.api.{Configuration, Environment}
+import uk.gov.hmrc.play.config.ServicesConfig
 
 @Singleton
-class EventService @Inject()(repository: EventRepository) {
+class AppConfig @Inject()(val runModeConfiguration: Configuration, environment: Environment) extends ServicesConfig {
 
-  def insert(e: Event): Future[Event] = {
-    repository.insert(e)
-  }
+  override protected def mode: Mode = environment.mode
 
-  def getById(id: String): Future[Option[Event]] = {
-    repository.getById(id)
-  }
+  lazy val isDeleteEnabled: Boolean = getBooleanConfig("deleteEnabled", default = false)
 
-  def getByCaseReference(caseReference: String): Future[Seq[Event]] = {
-    repository.getByCaseReference(caseReference)
-  }
-
-  def deleteAll: Future[Unit] = {
-    repository.deleteAll
+  private def getBooleanConfig(key: String, default: Boolean): Boolean = {
+    runModeConfiguration.getBoolean(key).getOrElse(default)
   }
 
 }

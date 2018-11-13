@@ -36,6 +36,8 @@ trait EventRepository {
   def getById(id: String): Future[Option[Event]]
 
   def getByCaseReference(caseReference: String): Future[Seq[Event]]
+
+  def deleteAll: Future[Unit]
 }
 
 @Singleton
@@ -72,6 +74,10 @@ class EventMongoRepository @Inject()(mongoDbProvider: MongoDbProvider)
 
   override def getByCaseReference(caseReference: String): Future[Seq[Event]] = {
     getMany(selectorByCaseReference(caseReference), Json.obj())
+  }
+
+  override def deleteAll: Future[Unit] = {
+    clearCollection
   }
 
 }

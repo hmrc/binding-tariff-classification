@@ -14,31 +14,23 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.bindingtariffclassification.service
+package uk.gov.hmrc.bindingtariffclassification.controllers
 
-import javax.inject._
-import uk.gov.hmrc.bindingtariffclassification.model.Event
-import uk.gov.hmrc.bindingtariffclassification.repository.EventRepository
+import play.api.mvc._
+import uk.gov.hmrc.bindingtariffclassification.config.AppConfig
+import uk.gov.hmrc.bindingtariffclassification.model.{ErrorCode, JsErrorResponse}
 
 import scala.concurrent.Future
 
-@Singleton
-class EventService @Inject()(repository: EventRepository) {
+object DeleteMode {
 
-  def insert(e: Event): Future[Event] = {
-    repository.insert(e)
-  }
+  def actionFilter(appConfig: AppConfig) = new ActionBuilder[Request] with ActionFilter[Request] {
 
-  def getById(id: String): Future[Option[Event]] = {
-    repository.getById(id)
-  }
+    override protected def filter[A](request: Request[A]): Future[Option[Result]] = Future.successful {
+      if (appConfig.isDeleteEnabled) None
+      else Some(play.api.mvc.Results.Forbidden(JsErrorResponse(ErrorCode.FORBIDDEN, "You are not allowed to delete.")))
+    }
 
-  def getByCaseReference(caseReference: String): Future[Seq[Event]] = {
-    repository.getByCaseReference(caseReference)
-  }
-
-  def deleteAll: Future[Unit] = {
-    repository.deleteAll
   }
 
 }

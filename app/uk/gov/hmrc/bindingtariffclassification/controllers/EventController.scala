@@ -19,15 +19,22 @@ package uk.gov.hmrc.bindingtariffclassification.controllers
 import javax.inject.{Inject, Singleton}
 import play.api.libs.json.Json
 import play.api.mvc._
-import uk.gov.hmrc.bindingtariffclassification.model.{Event, ErrorCode, JsErrorResponse, JsonFormatters}
+import uk.gov.hmrc.bindingtariffclassification.config.AppConfig
+import uk.gov.hmrc.bindingtariffclassification.model.{ErrorCode, Event, JsErrorResponse, JsonFormatters}
 import uk.gov.hmrc.bindingtariffclassification.service.EventService
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
 @Singleton
-class EventController @Inject()(eventService: EventService) extends CommonController {
+class EventController @Inject()(appConfig: AppConfig, eventService: EventService) extends CommonController {
 
   import JsonFormatters.formatEvent
+
+  lazy private val deleteModeFilter = DeleteMode.actionFilter(appConfig)
+
+  def deleteAll(): Action[AnyContent] = deleteModeFilter.async { implicit request =>
+    eventService.deleteAll map ( _ => NoContent ) recover recovery
+  }
 
   def getById(id: String): Action[AnyContent] = Action.async { implicit request =>
     eventService.getById(id) map {

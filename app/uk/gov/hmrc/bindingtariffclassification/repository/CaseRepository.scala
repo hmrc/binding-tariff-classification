@@ -44,6 +44,7 @@ trait CaseRepository {
 
   def get(searchBy: CaseParamsFilter, sortedBy: Option[String]): Future[Seq[Case]]
 
+  def deleteAll: Future[Unit]
 }
 
 @Singleton
@@ -97,6 +98,10 @@ class CaseMongoRepository @Inject()(mongoDbProvider: MongoDbProvider, jsonMapper
     }
 
     getMany(jsonMapper.from(searchBy), sorting)
+  }
+
+  override def deleteAll: Future[Unit] = {
+    clearCollection
   }
 
 }

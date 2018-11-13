@@ -73,4 +73,8 @@ class CaseService @Inject()(caseRepository: CaseRepository, sequenceRepository: 
     caseRepository.get(searchBy, sortBy)
   }
 
+  def deleteAll: Future[Unit] = {
+    caseRepository.deleteAll
+  }
+
 }

@@ -71,6 +71,20 @@ class CaseRepositorySpec extends BaseMongoIndexSpec
     await(repository.collection.count())
   }
 
+  "deleteAll" should {
+
+    "clear the collection" in {
+      val size = collectionSize
+
+      store(case1, case2)
+      collectionSize shouldBe 2 + size
+
+      await(repository.deleteAll) shouldBe ((): Unit)
+      collectionSize shouldBe size
+    }
+
+  }
+
   "insert" should {
 
     "insert a new document in the collection" in {

@@ -28,6 +28,10 @@ trait MongoCrudHelper[T] extends MongoIndexCreator {
 
   protected val mongoCollection: JSONCollection
 
+  def clearCollection: Future[Unit] = {
+    mongoCollection.remove(selector = Json.obj()).map(_ => ())
+  }
+
   def getOne(selector: JsObject)(implicit r: Reads[T]): Future[Option[T]] = {
     mongoCollection.find(selector).one[T]
   }

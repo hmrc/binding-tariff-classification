@@ -68,4 +68,12 @@ abstract class BaseFeatureSpec extends FeatureSpec
     sequences.map(s => result(sequenceStore.insert(s), timeout))
   }
 
+  protected def caseStoreSize: Int = {
+    result(caseStore.mongoCollection.count(), timeout)
+  }
+
+  protected def eventStoreSize: Int = {
+    result(eventStore.mongoCollection.count(), timeout)
+  }
+
 }

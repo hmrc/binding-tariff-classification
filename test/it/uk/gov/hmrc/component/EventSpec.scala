@@ -18,8 +18,9 @@ package uk.gov.hmrc.component
 
 import java.util.UUID
 
-import play.api.http.Status.{NOT_FOUND, OK}
 import play.api.libs.json.Json
+import play.api.http.HttpVerbs
+import play.api.http.Status.{NO_CONTENT, NOT_FOUND, OK}
 import scalaj.http.Http
 import uk.gov.hmrc.bindingtariffclassification.model.JsonFormatters.formatEvent
 import uk.gov.hmrc.bindingtariffclassification.todelete.EventData._
@@ -32,6 +33,32 @@ class EventSpec extends BaseFeatureSpec {
   private val caseRef = UUID.randomUUID().toString
   private val e1 = createCaseStatusChangeEvent(caseReference = caseRef)
   private val e2 = createNoteEvent(caseReference = caseRef)
+
+
+  feature("Delete All") {
+
+    scenario("Clear Collection") {
+
+      Given("There are some documents in the collection")
+      storeEvents(e1, e2)
+
+      When("I delete all documents")
+      val deleteResult = Http(s"$serviceUrl/events")
+        .method(HttpVerbs.DELETE)
+        .asString
+
+      Then("The response code should be 204")
+      deleteResult.code shouldEqual NO_CONTENT
+
+      And("The response body is empty")
+      deleteResult.body shouldBe ""
+
+      And("No documents exist in the mongo collection")
+      eventStoreSize shouldBe 0
+    }
+
+  }
+
 
   feature("Get Event by Id") {
 

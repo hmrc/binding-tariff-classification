@@ -26,6 +26,7 @@ import play.api.libs.json.Json.toJson
 import play.api.test.FakeRequest
 import reactivemongo.bson.BSONDocument
 import reactivemongo.core.errors.DatabaseException
+import uk.gov.hmrc.bindingtariffclassification.config.AppConfig
 import uk.gov.hmrc.bindingtariffclassification.model.JsonFormatters._
 import uk.gov.hmrc.bindingtariffclassification.model.search.CaseParamsFilter
 import uk.gov.hmrc.bindingtariffclassification.model.{Case, CaseStatus, NewCaseRequest, Status}
@@ -46,10 +47,44 @@ class CaseControllerSpec extends UnitSpec with WithFakeApplication with MockitoS
   private val caseService = mock[CaseService]
   private val caseParamsMapper = mock[CaseParamsMapper]
   private val caseParamsFilter = mock[CaseParamsFilter]
+  private val appConfig = mock[AppConfig]
 
   private val fakeRequest = FakeRequest()
 
-  private val controller = new CaseController(caseService, caseParamsMapper)
+  private val controller = new CaseController(appConfig, caseService, caseParamsMapper)
+
+  "deleteAll()" should {
+
+    "return 403 if the delete mode is disabled" in {
+
+      val result = await(controller.deleteAll()(fakeRequest))
+
+      status(result) shouldEqual FORBIDDEN
+      jsonBodyOf(result).toString() shouldEqual """{"code":"FORBIDDEN","message":"You are not allowed to delete."}"""
+    }
+
+    "return 204 if the delete mode is enabled" in {
+      when(appConfig.isDeleteEnabled).thenReturn(true)
+      when(caseService.deleteAll).thenReturn(successful(()))
+
+      val result = await(controller.deleteAll()(fakeRequest))
+
+      status(result) shouldEqual NO_CONTENT
+    }
+
+    "return 500 when an error occurred" in {
+      val error = new RuntimeException
+
+      when(appConfig.isDeleteEnabled).thenReturn(true)
+      when(caseService.deleteAll).thenReturn(failed(error))
+
+      val result = await(controller.deleteAll()(fakeRequest))
+
+      status(result) shouldEqual INTERNAL_SERVER_ERROR
+      jsonBodyOf(result).toString() shouldEqual """{"code":"UNKNOWN_ERROR","message":"An unexpected error occurred"}"""
+    }
+
+  }
 
   "create()" should {
 

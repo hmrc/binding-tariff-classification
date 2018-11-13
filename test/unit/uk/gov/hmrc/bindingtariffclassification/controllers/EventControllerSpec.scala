@@ -25,6 +25,7 @@ import org.scalatest.mockito.MockitoSugar
 import play.api.http.Status._
 import play.api.libs.json.Json.toJson
 import play.api.test.FakeRequest
+import uk.gov.hmrc.bindingtariffclassification.config.AppConfig
 import uk.gov.hmrc.bindingtariffclassification.model.Event
 import uk.gov.hmrc.bindingtariffclassification.model.JsonFormatters._
 import uk.gov.hmrc.bindingtariffclassification.service.EventService
@@ -46,8 +47,42 @@ class EventControllerSpec extends UnitSpec with WithFakeApplication with Mockito
   private val mockEventService = mock[EventService]
 
   private val fakeRequest = FakeRequest()
+  private val appConfig = mock[AppConfig]
 
-  private val controller = new EventController(mockEventService)
+  private val controller = new EventController(appConfig, mockEventService)
+
+  "deleteAll()" should {
+
+    "return 403 if the delete mode is disabled" in {
+
+      val result = await(controller.deleteAll()(fakeRequest))
+
+      status(result) shouldEqual FORBIDDEN
+      jsonBodyOf(result).toString() shouldEqual """{"code":"FORBIDDEN","message":"You are not allowed to delete."}"""
+    }
+
+    "return 204 if the delete mode is enabled" in {
+      when(appConfig.isDeleteEnabled).thenReturn(true)
+      when(mockEventService.deleteAll).thenReturn(successful(()))
+
+      val result = await(controller.deleteAll()(fakeRequest))
+
+      status(result) shouldEqual NO_CONTENT
+    }
+
+    "return 500 when an error occurred" in {
+      val error = new RuntimeException
+
+      when(appConfig.isDeleteEnabled).thenReturn(true)
+      when(mockEventService.deleteAll).thenReturn(failed(error))
+
+      val result = await(controller.deleteAll()(fakeRequest))
+
+      status(result) shouldEqual INTERNAL_SERVER_ERROR
+      jsonBodyOf(result).toString() shouldEqual """{"code":"UNKNOWN_ERROR","message":"An unexpected error occurred"}"""
+    }
+
+  }
 
   "getById()" should {
 
