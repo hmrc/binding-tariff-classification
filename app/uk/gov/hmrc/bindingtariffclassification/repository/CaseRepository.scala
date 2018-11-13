@@ -80,9 +80,10 @@ class CaseMongoRepository @Inject()(mongoDbProvider: MongoDbProvider, jsonMapper
   }
 
   override def updateStatus(reference: String, status: CaseStatus): Future[Option[Case]] = {
-    updateField(
+    update(
       jsonMapper.fromReferenceAndStatus(reference = reference, notAllowedStatus = status),
-      jsonMapper.updateField("status", status.toString)
+      jsonMapper.updateField("status", status.toString),
+      fetchNew = false
     )
   }
 

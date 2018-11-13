@@ -44,19 +44,14 @@ trait MongoCrudHelper[T] extends MongoIndexCreator {
     mongoCollection.insert(document).map(_ => document)
   }
 
-  def update(selector: JsObject, update: T)
+  def update(selector: JsObject, update: T, fetchNew: Boolean = true)
             (implicit returnFormat: OFormat[T]): Future[Option[T]] = {
-    updateInternal(selector, Json.toJson(update).as[JsObject], fetchNew = true)
+    updateInternal(selector, Json.toJson(update).as[JsObject], fetchNew)
   }
 
-  def update(selector: JsObject, update: JsObject)
+  def update(selector: JsObject, update: JsObject, fetchNew: Boolean)
             (implicit returnFormat: OFormat[T]): Future[Option[T]] = {
-    updateInternal(selector, update, fetchNew = true)
-  }
-
-  def updateField(selector: JsObject, updatedField: JsObject)
-                    (implicit returnFormat: OFormat[T]): Future[Option[T]] = {
-    updateInternal(selector, updatedField, fetchNew = false)
+    updateInternal(selector, update, fetchNew)
   }
 
   private def updateInternal(selector: JsObject, update: JsObject, fetchNew: Boolean)
