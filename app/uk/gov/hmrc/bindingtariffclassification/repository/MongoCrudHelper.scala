@@ -32,20 +32,20 @@ trait MongoCrudHelper[T] extends MongoIndexCreator {
     mongoCollection.remove(selector = Json.obj()).map(_ => ())
   }
 
-  def getOne(selector: JsObject)(implicit r: Reads[T]): Future[Option[T]] = {
-    mongoCollection.find(selector).one[T]
+  def getOne(selector: JsObject)(implicit r: OFormat[T]): Future[Option[T]] = {
+    mongoCollection.find[JsObject, T](selector).one[T]
   }
 
-  def getMany(filterBy: JsObject, sortBy: JsObject)(implicit r: Reads[T]): Future[List[T]] = {
-    mongoCollection.find(filterBy).sort(sortBy).cursor[T]().collect[List](Int.MaxValue, Cursor.FailOnError[List[T]]())
+  def getMany(filterBy: JsObject, sortBy: JsObject)(implicit r: OFormat[T]): Future[List[T]] = {
+    mongoCollection.find[JsObject, T](filterBy).sort(sortBy).cursor[T]().collect[List](Int.MaxValue, Cursor.FailOnError[List[T]]())
   }
 
   def createOne(document: T)(implicit w: OWrites[T]): Future[T] = {
     mongoCollection.insert(document).map(_ => document)
   }
 
-  def update[U](selector: JsObject, update: U)
-            (implicit returnFormat: OFormat[U]): Future[Option[U]] = {
+  def update(selector: JsObject, update: T)
+            (implicit returnFormat: OFormat[T]): Future[Option[T]] = {
     updateInternal(selector, Json.toJson(update).as[JsObject], fetchNew = true)
   }
 
@@ -54,19 +54,19 @@ trait MongoCrudHelper[T] extends MongoIndexCreator {
     updateInternal(selector, update, fetchNew = true)
   }
 
-  def updateField[U](selector: JsObject, updatedField: JsObject)
+  def updateField(selector: JsObject, updatedField: JsObject)
                     (implicit returnFormat: OFormat[T]): Future[Option[T]] = {
     updateInternal(selector, updatedField, fetchNew = false)
   }
 
-  private def updateInternal[U](selector: JsObject, update: JsObject, fetchNew: Boolean)
-                               (implicit returnFormat: OFormat[U]): Future[Option[U]] = {
+  private def updateInternal(selector: JsObject, update: JsObject, fetchNew: Boolean)
+                               (implicit returnFormat: OFormat[T]): Future[Option[T]] = {
     mongoCollection.findAndUpdate(
       selector = selector,
       update = update,
       fetchNewObject = fetchNew, // returns the original document
       upsert = false
-    ).map(_.value.map(_.as[U]))
+    ).map(_.value.map(_.as[T]))
   }
 
 }
