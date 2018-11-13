@@ -28,7 +28,7 @@ import reactivemongo.bson.BSONDocument
 import reactivemongo.core.errors.DatabaseException
 import uk.gov.hmrc.bindingtariffclassification.model.JsonFormatters._
 import uk.gov.hmrc.bindingtariffclassification.model.search.CaseParamsFilter
-import uk.gov.hmrc.bindingtariffclassification.model.{Case, CaseStatus, NewCase, Status}
+import uk.gov.hmrc.bindingtariffclassification.model.{Case, CaseStatus, NewCaseRequest, Status}
 import uk.gov.hmrc.bindingtariffclassification.service.CaseService
 import uk.gov.hmrc.bindingtariffclassification.todelete.CaseData
 import uk.gov.hmrc.play.test.{UnitSpec, WithFakeApplication}
@@ -39,22 +39,23 @@ class CaseControllerSpec extends UnitSpec with WithFakeApplication with MockitoS
 
   private implicit val mat: Materializer = fakeApplication.materializer
 
-  private val newCase: NewCase = CaseData.createNewCase()
+  private val newCase: NewCaseRequest = CaseData.createNewCase()
   private val c1: Case = CaseData.createCase()
   private val c2: Case = CaseData.createCase()
 
-  private val mockCaseService = mock[CaseService]
-  private val mockCaseParamsMapper = mock[CaseParamsMapper]
-  private val mockCaseParamsFilter = mock[CaseParamsFilter]
+  private val caseService = mock[CaseService]
+  private val caseParamsMapper = mock[CaseParamsMapper]
+  private val caseParamsFilter = mock[CaseParamsFilter]
 
   private val fakeRequest = FakeRequest()
 
-  private val controller = new CaseController(mockCaseService, mockCaseParamsMapper)
+  private val controller = new CaseController(caseService, caseParamsMapper)
 
   "create()" should {
 
     "return 201 when the case has been created successfully" in {
-      when(mockCaseService.insert(newCase)).thenReturn(successful(c1))
+      when(caseService.nextCaseReference).thenReturn(successful("1"))
+      when(caseService.insert(any[Case])).thenReturn(successful(c1))
 
       val result = await(controller.create()(fakeRequest.withBody(toJson(newCase))))
 
@@ -78,7 +79,8 @@ class CaseControllerSpec extends UnitSpec with WithFakeApplication with MockitoS
         override def message: String = "duplicate value for db index"
       }
 
-      when(mockCaseService.insert(newCase)).thenReturn(failed(error))
+      when(caseService.nextCaseReference).thenReturn(successful("1"))
+      when(caseService.insert(any[Case])).thenReturn(failed(error))
 
       val result = await(controller.create()(fakeRequest.withBody(toJson(newCase))))
 
@@ -91,7 +93,7 @@ class CaseControllerSpec extends UnitSpec with WithFakeApplication with MockitoS
   "update()" should {
 
     "return 200 when the case has been updated successfully" in {
-      when(mockCaseService.update(c1)).thenReturn(successful(Some(c1)))
+      when(caseService.update(c1)).thenReturn(successful(Some(c1)))
 
       val result = await(controller.update(c1.reference)(fakeRequest.withBody(toJson(c1))))
 
@@ -114,7 +116,7 @@ class CaseControllerSpec extends UnitSpec with WithFakeApplication with MockitoS
     }
 
     "return 404 when there are no cases with the provided reference" in {
-      when(mockCaseService.update(c1)).thenReturn(successful(None))
+      when(caseService.update(c1)).thenReturn(successful(None))
 
       val result = await(controller.update(c1.reference)(fakeRequest.withBody(toJson(c1))))
 
@@ -125,7 +127,7 @@ class CaseControllerSpec extends UnitSpec with WithFakeApplication with MockitoS
     "return 500 when an error occurred" in {
       val error = new RuntimeException
 
-      when(mockCaseService.update(c1)).thenReturn(failed(error))
+      when(caseService.update(c1)).thenReturn(failed(error))
 
       val result = await(controller.update(c1.reference)(fakeRequest.withBody(toJson(c1))))
 
@@ -139,7 +141,7 @@ class CaseControllerSpec extends UnitSpec with WithFakeApplication with MockitoS
 
     "return 200 when the case has been updated successfully" in {
       val updated: Case = c1.copy(status = CaseStatus.CANCELLED)
-      when(mockCaseService.updateStatus(c1.reference, updated.status)).thenReturn(successful(Some((c1, updated))))
+      when(caseService.updateStatus(c1.reference, updated.status)).thenReturn(successful(Some((c1, updated))))
 
       val result = await(controller.updateStatus(c1.reference)(fakeRequest.withBody(toJson(Status(updated.status)))))
 
@@ -156,7 +158,7 @@ class CaseControllerSpec extends UnitSpec with WithFakeApplication with MockitoS
 
     "return 404 when there are no cases with the provided reference or with a status different from CANCELLED" in {
       // TODO: DIT-246 - this behaviour needs to be reviewed
-      when(mockCaseService.updateStatus(c1.reference, CaseStatus.CANCELLED)).thenReturn(successful(None))
+      when(caseService.updateStatus(c1.reference, CaseStatus.CANCELLED)).thenReturn(successful(None))
 
       val result = await(controller.updateStatus(c1.reference)(fakeRequest.withBody(toJson(Status(CaseStatus.CANCELLED)))))
 
@@ -167,7 +169,7 @@ class CaseControllerSpec extends UnitSpec with WithFakeApplication with MockitoS
     "return 500 when an error occurred" in {
       val error = new RuntimeException
 
-      when(mockCaseService.updateStatus(c1.reference, CaseStatus.CANCELLED)).thenReturn(failed(error))
+      when(caseService.updateStatus(c1.reference, CaseStatus.CANCELLED)).thenReturn(failed(error))
 
       val result = await(controller.updateStatus(c1.reference)(fakeRequest.withBody(toJson(Status(CaseStatus.CANCELLED)))))
 
@@ -185,11 +187,11 @@ class CaseControllerSpec extends UnitSpec with WithFakeApplication with MockitoS
     val assigneeId = Some("valid_assigneeId")
     val caseStatus = Some("valid_status")
 
-    when(mockCaseParamsMapper.from(queueId, assigneeId, caseStatus)).thenReturn(mockCaseParamsFilter)
+    when(caseParamsMapper.from(queueId, assigneeId, caseStatus)).thenReturn(caseParamsFilter)
 
     "return 200 with the all cases" in {
 
-      when(mockCaseService.get(refEq(mockCaseParamsFilter), any[Option[String]])).thenReturn(successful(Seq(c1, c2)))
+      when(caseService.get(refEq(caseParamsFilter), any[Option[String]])).thenReturn(successful(Seq(c1, c2)))
 
       val result = await(controller.get(queueId, assigneeId, caseStatus, None)(fakeRequest))
 
@@ -199,7 +201,7 @@ class CaseControllerSpec extends UnitSpec with WithFakeApplication with MockitoS
 
     "return 200 with an empty sequence if there are no cases" in {
 
-      when(mockCaseService.get(refEq(mockCaseParamsFilter), any[Option[String]])).thenReturn(successful(Seq.empty))
+      when(caseService.get(refEq(caseParamsFilter), any[Option[String]])).thenReturn(successful(Seq.empty))
 
       val result = await(controller.get(queueId, assigneeId, caseStatus, None)(fakeRequest))
 
@@ -210,7 +212,7 @@ class CaseControllerSpec extends UnitSpec with WithFakeApplication with MockitoS
     "return 500 when an error occurred" in {
       val error = new RuntimeException
 
-      when(mockCaseService.get(refEq(mockCaseParamsFilter), any[Option[String]])).thenReturn(failed(error))
+      when(caseService.get(refEq(caseParamsFilter), any[Option[String]])).thenReturn(failed(error))
 
       val result = await(controller.get(queueId, assigneeId, caseStatus, None)(fakeRequest))
 
@@ -223,7 +225,7 @@ class CaseControllerSpec extends UnitSpec with WithFakeApplication with MockitoS
   "getByReference()" should {
 
     "return 200 with the expected case" in {
-      when(mockCaseService.getByReference(c1.reference)).thenReturn(successful(Some(c1)))
+      when(caseService.getByReference(c1.reference)).thenReturn(successful(Some(c1)))
 
       val result = await(controller.getByReference(c1.reference)(fakeRequest))
 
@@ -232,7 +234,7 @@ class CaseControllerSpec extends UnitSpec with WithFakeApplication with MockitoS
     }
 
     "return 404 if there are no cases for the specific reference" in {
-      when(mockCaseService.getByReference(c1.reference)).thenReturn(successful(None))
+      when(caseService.getByReference(c1.reference)).thenReturn(successful(None))
 
       val result = await(controller.getByReference(c1.reference)(fakeRequest))
 
@@ -243,7 +245,7 @@ class CaseControllerSpec extends UnitSpec with WithFakeApplication with MockitoS
     "return 500 when an error occurred" in {
       val error = new RuntimeException
 
-      when(mockCaseService.getByReference(c1.reference)).thenReturn(failed(error))
+      when(caseService.getByReference(c1.reference)).thenReturn(failed(error))
 
       val result = await(controller.getByReference(c1.reference)(fakeRequest))
 

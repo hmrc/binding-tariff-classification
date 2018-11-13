@@ -80,11 +80,11 @@ class MicroserviceHelloWorld @Inject()(caseService: CaseService, eventService: E
   private def createCaseData(): String = {
 
     // INSERT
-    val c1 = createNewCase(app = createBTIApplication, attachments = Seq(createAttachment))
+    val c1 = createCase(app = createBTIApplication, attachments = Seq(createAttachment))
     val r1 = Await.result(caseService.insert(c1), timeout)
     Logger.debug(s"BTI document inserted: $r1")
 
-    val c3 = createNewCase(createLiabilityOrder)
+    val c3 = createCase(createLiabilityOrder)
     val r3 = Await.result(caseService.insert(c3), timeout)
     Logger.debug(s"Liability Order document inserted: $r3")
 

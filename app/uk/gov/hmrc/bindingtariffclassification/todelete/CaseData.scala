@@ -65,8 +65,8 @@ object CaseData {
   }
 
   def createNewCase(app: Application = createBTIApplication,
-                 attachments: Seq[Attachment] = Seq.empty): NewCase = {
-    NewCase(
+                 attachments: Seq[Attachment] = Seq.empty): NewCaseRequest = {
+    NewCaseRequest(
       application = app,
       attachments = attachments
     )

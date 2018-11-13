@@ -21,7 +21,7 @@ import java.util.UUID
 import javax.inject._
 import uk.gov.hmrc.bindingtariffclassification.model.CaseStatus.CaseStatus
 import uk.gov.hmrc.bindingtariffclassification.model.search.CaseParamsFilter
-import uk.gov.hmrc.bindingtariffclassification.model.{Case, CaseStatusChange, Event, NewCase}
+import uk.gov.hmrc.bindingtariffclassification.model.{Case, CaseStatusChange, Event}
 import uk.gov.hmrc.bindingtariffclassification.repository.{CaseRepository, SequenceRepository}
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -30,8 +30,13 @@ import scala.concurrent.Future
 @Singleton
 class CaseService @Inject()(caseRepository: CaseRepository, sequenceRepository: SequenceRepository, eventService: EventService) {
 
-  def insert(c: NewCase): Future[Case] = {
-    newCaseReference.flatMap(ref => caseRepository.insert(c.toCase(ref)))
+  def insert(c: Case): Future[Case] = {
+    caseRepository.insert(c)
+  }
+
+  def nextCaseReference: Future[String] = {
+    sequenceRepository.incrementAndGetByName("case")
+      .map(_.value.toString)
   }
 
   private def createEvent(originalCase: Case, newStatus: CaseStatus): Future[Event] = {
@@ -66,11 +71,6 @@ class CaseService @Inject()(caseRepository: CaseRepository, sequenceRepository: 
 
   def get(searchBy: CaseParamsFilter, sortBy: Option[String]): Future[Seq[Case]] = {
     caseRepository.get(searchBy, sortBy)
-  }
-
-  private def newCaseReference: Future[String] = {
-    sequenceRepository.incrementAndGetByName("case")
-      .map(_.value.toString)
   }
 
 }

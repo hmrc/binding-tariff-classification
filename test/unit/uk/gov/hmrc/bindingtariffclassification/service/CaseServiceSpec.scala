@@ -32,7 +32,6 @@ import scala.concurrent.Future.successful
 
 class CaseServiceSpec extends UnitSpec with MockitoSugar with BeforeAndAfterEach {
 
-  final private val newCase = mock[NewCase]
   final private val c1 = mock[Case]
   final private val c1Saved = mock[Case]
   final private val c2 = mock[Case]
@@ -55,19 +54,17 @@ class CaseServiceSpec extends UnitSpec with MockitoSugar with BeforeAndAfterEach
 
     "return the case after it is inserted in the database collection" in {
       when(sequenceRepository.incrementAndGetByName("case")).thenReturn(successful(Sequence("case", 0)))
-      when(newCase.toCase("0")).thenReturn(c1)
       when(caseRepository.insert(c1)).thenReturn(successful(c1Saved))
-      val result = await(service.insert(newCase))
+      val result = await(service.insert(c1))
       result shouldBe c1Saved
     }
 
     "propagate any error" in {
       when(sequenceRepository.incrementAndGetByName("case")).thenReturn(successful(Sequence("case", 0)))
-      when(newCase.toCase("0")).thenReturn(c1)
       when(caseRepository.insert(c1)).thenThrow(emulatedFailure)
 
       val caught = intercept[RuntimeException] {
-        await(service.insert(newCase))
+        await(service.insert(c1))
       }
       caught shouldBe emulatedFailure
     }

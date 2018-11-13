@@ -19,7 +19,7 @@ package uk.gov.hmrc.bindingtariffclassification.controllers
 import javax.inject.{Inject, Singleton}
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.{Action, AnyContent}
-import uk.gov.hmrc.bindingtariffclassification.model.{Case, ErrorCode, JsErrorResponse, JsonFormatters, NewCase, Status => StatusOfTheCase}
+import uk.gov.hmrc.bindingtariffclassification.model.{Case, ErrorCode, JsErrorResponse, JsonFormatters, NewCaseRequest, Status => StatusOfTheCase}
 import uk.gov.hmrc.bindingtariffclassification.service.CaseService
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -31,8 +31,10 @@ class CaseController @Inject()(caseService: CaseService, caseParamsMapper: CaseP
   import JsonFormatters.{formatCase, formatNewCase, formatStatus}
 
   def create: Action[JsValue] = Action.async(parse.json) { implicit request =>
-    withJsonBody[NewCase] { caseRequest: NewCase =>
-      caseService.insert(caseRequest) map { c => Created(Json.toJson(c)) }
+    withJsonBody[NewCaseRequest] { caseRequest: NewCaseRequest =>
+      caseService.nextCaseReference
+        .flatMap(ref => caseService.insert(caseRequest.toCase(ref)))
+        .map(c => Created(Json.toJson(c)))
     } recover recovery
   }
 

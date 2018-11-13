@@ -18,29 +18,13 @@ package uk.gov.hmrc.bindingtariffclassification.model
 
 import java.time.ZonedDateTime
 
-import uk.gov.hmrc.bindingtariffclassification.model.CaseStatus.CaseStatus
-
-case class Case
+case class NewCaseRequest
 (
-  reference: String,
-  status: CaseStatus,
-  createdDate: ZonedDateTime = ZonedDateTime.now(),
-  adjustedCreateDate: ZonedDateTime = ZonedDateTime.now(),
-  closedDate: Option[ZonedDateTime] = None,
-  caseBoardsFileNumber: Option[String] = None,
-  assigneeId: Option[String] = None,
-  queueId: Option[String] = None,
   application: Application,
-  decision: Option[Decision] = None,
   attachments: Seq[Attachment] = Seq.empty
-)
-
-object CaseStatus extends Enumeration {
-  type CaseStatus = Value
-  val DRAFT, NEW, OPEN, SUPPRESSED, REFERRED, REJECTED, CANCELLED, SUSPENDED, DECISION_MADE, REVOKED, ANNULLED = Value
+) {
+  def toCase(reference: String): Case = {
+    val now = ZonedDateTime.now()
+    Case(reference, CaseStatus.NEW, now, now, None, None, None, None, application, None, attachments)
+  }
 }
-
-case class Status
-(
-  status: CaseStatus
-)

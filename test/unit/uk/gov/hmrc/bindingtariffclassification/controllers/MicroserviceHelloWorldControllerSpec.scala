@@ -24,7 +24,7 @@ import play.api.http.HeaderNames.{CACHE_CONTROL, LOCATION}
 import play.api.http.Status.{BAD_REQUEST, OK}
 import play.api.test.FakeRequest
 import uk.gov.hmrc.bindingtariffclassification.model.search.CaseParamsFilter
-import uk.gov.hmrc.bindingtariffclassification.model.{Case, Event, NewCase}
+import uk.gov.hmrc.bindingtariffclassification.model.{Case, Event}
 import uk.gov.hmrc.bindingtariffclassification.service.{CaseService, EventService}
 import uk.gov.hmrc.play.test.{UnitSpec, WithFakeApplication}
 
@@ -45,7 +45,7 @@ class MicroserviceHelloWorldControllerSpec extends UnitSpec
   override def beforeAll(): Unit = {
     super.beforeAll()
 
-    when(mockCaseService.insert(any[NewCase])).thenReturn(successful(mCase))
+    when(mockCaseService.insert(any[Case])).thenReturn(successful(mCase))
     when(mockCaseService.update(any[Case])).thenReturn(successful(Some(mCase)))
     when(mockCaseService.get(any[CaseParamsFilter], any[Option[String]])).thenReturn(successful(Seq(mCase)))
     when(mockCaseService.getByReference(any[String])).thenReturn(successful(Some(mCase)))

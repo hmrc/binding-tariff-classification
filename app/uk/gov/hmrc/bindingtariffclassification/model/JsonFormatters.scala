@@ -43,7 +43,7 @@ object JsonFormatters {
 
   implicit val formatAttachment = Json.format[Attachment]
   implicit val formatCase = Json.format[Case]
-  implicit val formatNewCase = Json.format[NewCase]
+  implicit val formatNewCase = Json.format[NewCaseRequest]
 
   implicit val formatStatus = Json.format[Status]
 
