@@ -65,7 +65,7 @@ object CaseData {
   }
 
   def createNewCase(app: Application = createBTIApplication,
-                 attachments: Seq[Attachment] = Seq.empty): NewCaseRequest = {
+                    attachments: Seq[Attachment] = Seq.empty): NewCaseRequest = {
     NewCaseRequest(
       application = app,
       attachments = attachments
@@ -74,7 +74,7 @@ object CaseData {
 
   def createCase(app: Application = createBTIApplication,
                  r: String = RandomGenerator.randomUUID(),
-                 d: Option[Decision] = None,
+                 decision: Option[Decision] = None,
                  queue: Option[String] = None,
                  assignee: Option[String] = None,
                  attachments: Seq[Attachment] = Seq.empty): Case = {
@@ -84,7 +84,7 @@ object CaseData {
       queueId = queue,
       assigneeId = assignee,
       application = app,
-      decision = d,
+      decision = decision,
       attachments = attachments
     )
   }

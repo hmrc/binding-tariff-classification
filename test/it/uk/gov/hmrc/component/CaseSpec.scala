@@ -37,7 +37,9 @@ class CaseSpec extends BaseFeatureSpec {
   private val c1 = createCase(app = createBTIApplication, queue = Some(q1), assignee = Some(u1))
   private val status = CaseStatus.CANCELLED
   private val c1_updated = c1.copy(status = status)
-  private val c2 = createCase(app = createBTIApplication)
+  private val c2 = createCase(app = createLiabilityOrder,
+    decision = Some(createDecision),
+    attachments = Seq(createAttachment))
 
   private val c0Json = Json.toJson(c0)
   private val c1Json = Json.toJson(c1)
