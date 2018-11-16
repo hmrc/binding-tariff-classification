@@ -16,6 +16,8 @@
 
 package uk.gov.hmrc.component
 
+import java.time.ZonedDateTime
+
 import play.api.http.ContentTypes.JSON
 import play.api.http.HeaderNames.CONTENT_TYPE
 import play.api.http.HttpVerbs
@@ -40,10 +42,14 @@ class CaseSpec extends BaseFeatureSpec {
   private val c2 = createCase(app = createLiabilityOrder,
     decision = Some(createDecision),
     attachments = Seq(createAttachment))
+  private val c3 = createNewCaseWithExtraFields()
+  private val c4 = createNewCase(app = createBTIApplicationWithAllFields)
 
   private val c0Json = Json.toJson(c0)
   private val c1Json = Json.toJson(c1)
   private val c1UpdatedJson = Json.toJson(c1_updated)
+  private val c3Json = Json.toJson(c3)
+  private val c4Json = Json.toJson(c4)
 
 
   feature("Delete All") {
@@ -89,6 +95,42 @@ class CaseSpec extends BaseFeatureSpec {
       responseCase.status shouldBe CaseStatus.NEW
     }
 
+    scenario("Extra fields are ignored when creating a case") {
+      When("I create a new case with extra fields")
+      val result: HttpResponse[String] = Http(s"$serviceUrl/cases")
+        .headers(Seq(CONTENT_TYPE -> JSON))
+        .postData(c3Json.toString()).asString
+
+      Then("The response code should be created")
+      result.code shouldEqual CREATED
+
+      And("The case is returned in the JSON response")
+      val responseCase = Json.parse(result.body).as[Case]
+      responseCase.reference shouldBe "1"
+      responseCase.status shouldBe CaseStatus.NEW
+      responseCase.createdDate should not be ZonedDateTime.parse("2000-01-02T00:00:00+01:00[Europe/Paris]")
+      responseCase.assigneeId shouldBe None
+      responseCase.queueId shouldBe None
+      responseCase.decision shouldBe None
+      responseCase.closedDate shouldBe None
+    }
+
+    scenario("Create a new case with all fields") {
+
+      When("I create a new case")
+      val result: HttpResponse[String] = Http(s"$serviceUrl/cases")
+        .headers(Seq(CONTENT_TYPE -> JSON))
+        .postData(c4Json.toString()).asString
+
+      Then("The response code should be created")
+      result.code shouldEqual CREATED
+
+      And("The case is returned in the JSON response")
+      val responseCase = Json.parse(result.body).as[Case]
+      responseCase.reference shouldBe "1"
+      responseCase.status shouldBe CaseStatus.NEW
+    }
+
   }
 
 
@@ -123,7 +165,6 @@ class CaseSpec extends BaseFeatureSpec {
     }
 
   }
-
 
   feature ("Update Case Status") {
 

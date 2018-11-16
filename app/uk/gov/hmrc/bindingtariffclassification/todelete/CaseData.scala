@@ -28,8 +28,24 @@ object CaseData {
       holder = createEORIDetails,
       contact = Contact("Marisa", "marisa@me.com", "0123456789"),
       goodDescription = "this is a BTI application for HTC Wildfire mobile phones",
+      goodName = "HTC Wildfire smartphone"
+    )
+  }
+
+  def createBTIApplicationWithAllFields: BTIApplication = {
+    BTIApplication(
+      holder = createEORIDetails,
+      contact = Contact("Marisa", "marisa@me.com", "0123456789"),
+      goodDescription = "this is a BTI application for HTC Wildfire mobile phones",
       goodName = "HTC Wildfire smartphone",
-      envisagedCommodityCode = Some("AS12345LG")
+      confidentialInformation = Some("This phone has a secret processor."),
+      otherInformation = Some("The phone comes in multiple colors"),
+      reissuedBTIReference = Some("BTI123"),
+      relatedBTIReference = Some("BTI987"),
+      knownLegalProceedings = Some("Someone is suing me!"),
+      envisagedCommodityCode = Some("AS12345LG"),
+      sampleToBeProvided = true,
+      sampleToBeReturned = true
     )
   }
 
@@ -69,6 +85,20 @@ object CaseData {
     NewCaseRequest(
       application = app,
       attachments = attachments
+    )
+  }
+
+  def createNewCaseWithExtraFields(): Case = {
+    Case(
+      reference = "9999999999",
+      status = CaseStatus.OPEN,
+      createdDate = ZonedDateTime.parse("2000-01-02T00:00:00+01:00[Europe/Paris]"),
+      queueId = Some("3"),
+      assigneeId = Some("0"),
+      application = createBTIApplication,
+      decision = Some(createDecision),
+      closedDate = Some(ZonedDateTime.now().minusYears(1)),
+      attachments = Seq.empty
     )
   }
 
