@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.bindingtariffclassification.todelete
+package util
 
 import java.time.ZonedDateTime
 
@@ -23,7 +23,7 @@ import uk.gov.hmrc.bindingtariffclassification.utils.RandomGenerator
 
 object CaseData {
 
-  def createBTIApplication: BTIApplication = {
+  def createBasicBTIApplication: BTIApplication = {
     BTIApplication(
       holder = createEORIDetails,
       contact = Contact("Marisa", "marisa@me.com", "0123456789"),
@@ -80,7 +80,7 @@ object CaseData {
       "GB")
   }
 
-  def createNewCase(app: Application = createBTIApplication,
+  def createNewCase(app: Application = createBasicBTIApplication,
                     attachments: Seq[Attachment] = Seq.empty): NewCaseRequest = {
     NewCaseRequest(
       application = app,
@@ -92,17 +92,17 @@ object CaseData {
     Case(
       reference = "9999999999",
       status = CaseStatus.OPEN,
-      createdDate = ZonedDateTime.parse("2000-01-02T00:00:00+01:00[Europe/Paris]"),
+      createdDate = ZonedDateTime.now.minusYears(1),
       queueId = Some("3"),
       assigneeId = Some("0"),
-      application = createBTIApplication,
+      application = createBasicBTIApplication,
       decision = Some(createDecision),
       closedDate = Some(ZonedDateTime.now().minusYears(1)),
       attachments = Seq.empty
     )
   }
 
-  def createCase(app: Application = createBTIApplication,
+  def createCase(app: Application = createBasicBTIApplication,
                  r: String = RandomGenerator.randomUUID(),
                  decision: Option[Decision] = None,
                  queue: Option[String] = None,

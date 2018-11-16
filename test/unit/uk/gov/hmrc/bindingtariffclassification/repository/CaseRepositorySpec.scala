@@ -27,8 +27,8 @@ import reactivemongo.play.json.ImplicitBSONHandlers._
 import uk.gov.hmrc.bindingtariffclassification.model.JsonFormatters.formatCase
 import uk.gov.hmrc.bindingtariffclassification.model._
 import uk.gov.hmrc.bindingtariffclassification.model.search.CaseParamsFilter
-import uk.gov.hmrc.bindingtariffclassification.todelete.CaseData._
 import uk.gov.hmrc.mongo.MongoSpecSupport
+import util.CaseData._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -115,7 +115,7 @@ class CaseRepositorySpec extends BaseMongoIndexSpec
       await(repository.insert(case1)) shouldBe case1
       val size = collectionSize
 
-      val updated: Case = case1.copy(application = createBTIApplication, status = CaseStatus.CANCELLED)
+      val updated: Case = case1.copy(application = createBasicBTIApplication, status = CaseStatus.CANCELLED)
       await(repository.update(updated)) shouldBe Some(updated)
       collectionSize shouldBe size
 

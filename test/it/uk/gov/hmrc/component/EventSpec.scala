@@ -23,8 +23,8 @@ import play.api.http.Status.{NO_CONTENT, OK}
 import play.api.libs.json.Json
 import scalaj.http.Http
 import uk.gov.hmrc.bindingtariffclassification.model.JsonFormatters.formatEvent
-import uk.gov.hmrc.bindingtariffclassification.todelete.CaseData
-import uk.gov.hmrc.bindingtariffclassification.todelete.EventData._
+import util.CaseData.createCase
+import util.EventData._
 
 class EventSpec extends BaseFeatureSpec {
 
@@ -32,7 +32,7 @@ class EventSpec extends BaseFeatureSpec {
   protected val serviceUrl = s"http://localhost:$port"
 
   private val caseRef = UUID.randomUUID().toString
-  private val c1 = CaseData.createCase(r = caseRef)
+  private val c1 = createCase(r = caseRef)
   private val e1 = createCaseStatusChangeEvent(caseReference = caseRef)
   private val e2 = createNoteEvent(caseReference = caseRef)
 

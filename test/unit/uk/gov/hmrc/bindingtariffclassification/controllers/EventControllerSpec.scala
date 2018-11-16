@@ -29,8 +29,8 @@ import uk.gov.hmrc.bindingtariffclassification.config.AppConfig
 import uk.gov.hmrc.bindingtariffclassification.model.Event
 import uk.gov.hmrc.bindingtariffclassification.model.JsonFormatters._
 import uk.gov.hmrc.bindingtariffclassification.service.EventService
-import uk.gov.hmrc.bindingtariffclassification.todelete.EventData
 import uk.gov.hmrc.play.test.{UnitSpec, WithFakeApplication}
+import util.EventData
 
 import scala.concurrent.Future._
 

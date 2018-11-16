@@ -26,7 +26,8 @@ import play.api.libs.json.Json
 import scalaj.http.{Http, HttpResponse}
 import uk.gov.hmrc.bindingtariffclassification.model.JsonFormatters._
 import uk.gov.hmrc.bindingtariffclassification.model._
-import uk.gov.hmrc.bindingtariffclassification.todelete.CaseData._
+import util.CaseData._
+import util.Matchers.roughlyBe
 
 class CaseSpec extends BaseFeatureSpec {
 
@@ -35,8 +36,8 @@ class CaseSpec extends BaseFeatureSpec {
 
   private val q1 = "queue1"
   private val u1 = "user1"
-  private val c0 = createNewCase(app = createBTIApplication)
-  private val c1 = createCase(app = createBTIApplication, queue = Some(q1), assignee = Some(u1))
+  private val c0 = createNewCase(app = createBasicBTIApplication)
+  private val c1 = createCase(app = createBasicBTIApplication, queue = Some(q1), assignee = Some(u1))
   private val status = CaseStatus.CANCELLED
   private val c1_updated = c1.copy(status = status)
   private val c2 = createCase(app = createLiabilityOrder,
@@ -108,7 +109,7 @@ class CaseSpec extends BaseFeatureSpec {
       val responseCase = Json.parse(result.body).as[Case]
       responseCase.reference shouldBe "1"
       responseCase.status shouldBe CaseStatus.NEW
-      responseCase.createdDate should not be ZonedDateTime.parse("2000-01-02T00:00:00+01:00[Europe/Paris]")
+      responseCase.createdDate should roughlyBe(ZonedDateTime.now())
       responseCase.assigneeId shouldBe None
       responseCase.queueId shouldBe None
       responseCase.decision shouldBe None

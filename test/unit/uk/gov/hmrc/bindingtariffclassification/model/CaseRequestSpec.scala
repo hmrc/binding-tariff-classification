@@ -18,9 +18,9 @@ package uk.gov.hmrc.bindingtariffclassification.model
 
 import java.time.ZonedDateTime
 
-import org.scalatest.matchers.{MatchResult, Matcher}
 import org.scalatest.mockito.MockitoSugar
 import uk.gov.hmrc.play.test.UnitSpec
+import util.Matchers.roughlyBe
 
 class CaseRequestSpec extends UnitSpec with MockitoSugar {
 
@@ -44,14 +44,5 @@ class CaseRequestSpec extends UnitSpec with MockitoSugar {
     }
   }
 
-  def roughlyBe(time: ZonedDateTime) = new RoughlyMatches(time)
-
-  class RoughlyMatches(time: ZonedDateTime) extends Matcher[ZonedDateTime] {
-    override def apply(d: ZonedDateTime): MatchResult = MatchResult(
-        d.isBefore(time.plusMinutes(1)) && d.isAfter(time.minusMinutes(1)),
-        s"date [$d] was not within a minute of [$time]",
-        s"date [$d] was within a minute of [$time]"
-      )
-  }
-
 }
+

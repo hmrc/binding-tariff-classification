@@ -14,14 +14,22 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.bindingtariffclassification.utils
+package util
 
-import java.util.UUID
+import java.time.ZonedDateTime
+import org.scalatest.matchers.{MatchResult, Matcher}
 
-object RandomGenerator {
+object Matchers {
 
-  def randomUUID(): String = {
-    UUID.randomUUID().toString
+  def roughlyBe(time: ZonedDateTime) = new RoughlyMatches(time)
+
+  protected class RoughlyMatches(time: ZonedDateTime) extends Matcher[ZonedDateTime] {
+
+    override def apply(d: ZonedDateTime): MatchResult = MatchResult(
+      d.isBefore(time.plusMinutes(1)) && d.isAfter(time.minusMinutes(1)),
+      s"date [$d] was not within a minute of [$time]",
+      s"date [$d] was within a minute of [$time]"
+    )
   }
 
 }

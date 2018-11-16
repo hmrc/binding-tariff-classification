@@ -31,8 +31,8 @@ import uk.gov.hmrc.bindingtariffclassification.model.JsonFormatters._
 import uk.gov.hmrc.bindingtariffclassification.model.search.CaseParamsFilter
 import uk.gov.hmrc.bindingtariffclassification.model.{Case, CaseStatus, NewCaseRequest, Status}
 import uk.gov.hmrc.bindingtariffclassification.service.CaseService
-import uk.gov.hmrc.bindingtariffclassification.todelete.CaseData
 import uk.gov.hmrc.play.test.{UnitSpec, WithFakeApplication}
+import util.CaseData
 
 import scala.concurrent.Future._
 

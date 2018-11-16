@@ -26,9 +26,9 @@ import reactivemongo.core.errors.DatabaseException
 import reactivemongo.play.json.ImplicitBSONHandlers._
 import uk.gov.hmrc.bindingtariffclassification.model.JsonFormatters.formatEvent
 import uk.gov.hmrc.bindingtariffclassification.model._
-import uk.gov.hmrc.bindingtariffclassification.todelete.EventData._
 import uk.gov.hmrc.bindingtariffclassification.utils.RandomGenerator
 import uk.gov.hmrc.mongo.MongoSpecSupport
+import util.EventData._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
