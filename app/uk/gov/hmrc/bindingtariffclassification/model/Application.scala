@@ -73,7 +73,7 @@ case class Contact
 (
   name: String,
   email: String,
-  phone: String
+  phone: Option[String]
 )
 
 object LiabilityStatus extends Enumeration {

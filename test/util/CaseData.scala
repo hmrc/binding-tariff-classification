@@ -23,10 +23,14 @@ import uk.gov.hmrc.bindingtariffclassification.utils.RandomGenerator
 
 object CaseData {
 
+  private def createContact: Contact = {
+    Contact("Marisa", "marisa@me.com", Some("0123456789"))
+  }
+
   def createBasicBTIApplication: BTIApplication = {
     BTIApplication(
       holder = createEORIDetails,
-      contact = Contact("Marisa", "marisa@me.com", "0123456789"),
+      contact = createContact,
       goodDescription = "this is a BTI application for HTC Wildfire mobile phones",
       goodName = "HTC Wildfire smartphone"
     )
@@ -35,7 +39,7 @@ object CaseData {
   def createBTIApplicationWithAllFields: BTIApplication = {
     BTIApplication(
       holder = createEORIDetails,
-      contact = Contact("Marisa", "marisa@me.com", "0123456789"),
+      contact = createContact,
       goodDescription = "this is a BTI application for HTC Wildfire mobile phones",
       goodName = "HTC Wildfire smartphone",
       confidentialInformation = Some("This phone has a secret processor."),
@@ -64,7 +68,7 @@ object CaseData {
   def createLiabilityOrder: LiabilityOrder = {
     LiabilityOrder(
       holder = createEORIDetails,
-      contact = Contact("Alfred", "alfred@me.com", "0198765432"),
+      contact = createContact,
       LiabilityStatus.LIVE,
       "port-A",
       "23-SGD",
