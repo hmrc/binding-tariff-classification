@@ -71,7 +71,7 @@ case class EORIDetails
 
 case class AgentDetails
 (
-  eori: EORIDetails,
+  eoriDetails: EORIDetails,
   letterOfAuthorisation: Attachment
 )
 
