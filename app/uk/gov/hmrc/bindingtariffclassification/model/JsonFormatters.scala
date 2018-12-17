@@ -29,6 +29,8 @@ object JsonFormatters {
   implicit val formatLiabilityStatus = EnumJson.format(LiabilityStatus)
 
   implicit val formatEORIDetails = Json.format[EORIDetails]
+  implicit val formatAttachment = Json.format[Attachment]
+  implicit val formatAgentDetails = Json.format[AgentDetails]
   implicit val formatContact = Json.format[Contact]
 
   implicit val formatLiabilityOrder = Json.format[LiabilityOrder]
@@ -41,7 +43,6 @@ object JsonFormatters {
   implicit val formatAppeal = Json.format[Appeal]
   implicit val formatDecision = Json.format[Decision]
 
-  implicit val formatAttachment = Json.format[Attachment]
   implicit val formatCase = Json.format[Case]
   implicit val formatNewCase = Json.format[NewCaseRequest]
 

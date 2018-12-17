@@ -29,7 +29,7 @@ case class BTIApplication
 (
   holder: EORIDetails,
   contact: Contact,
-  agent: Option[EORIDetails] = None,
+  agent: Option[AgentDetails] = None,
   offline: Boolean = false,
   goodName: String,
   goodDescription: String,
@@ -67,6 +67,12 @@ case class EORIDetails
   addressLine3: String,
   postcode: String,
   country: String
+)
+
+case class AgentDetails
+(
+  eori: EORIDetails,
+  letterOfAuthorisation: Attachment
 )
 
 case class Contact

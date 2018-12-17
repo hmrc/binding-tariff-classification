@@ -24,7 +24,7 @@ import uk.gov.hmrc.bindingtariffclassification.utils.RandomGenerator
 object CaseData {
 
   private def createContact: Contact = {
-    Contact("Marisa", "marisa@me.com", Some("0123456789"))
+    Contact("Maurizio", "maurizio@me.com", Some("0123456789"))
   }
 
   def createBasicBTIApplication: BTIApplication = {
