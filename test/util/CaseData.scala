@@ -39,6 +39,7 @@ object CaseData {
   def createBTIApplicationWithAllFields: BTIApplication = {
     BTIApplication(
       holder = createEORIDetails,
+      agent = Some(createAgentDetails),
       contact = createContact,
       goodDescription = "this is a BTI application for HTC Wildfire mobile phones",
       goodName = "HTC Wildfire smartphone",
@@ -73,6 +74,13 @@ object CaseData {
       "port-A",
       "23-SGD",
       ZonedDateTime.now()
+    )
+  }
+
+  private def createAgentDetails: AgentDetails = {
+    AgentDetails(
+      eoriDetails = createEORIDetails.copy(traderName = "Frank Agent-Smith"),
+      letterOfAuthorisation = createAttachment.copy(application = true, public = false)
     )
   }
 

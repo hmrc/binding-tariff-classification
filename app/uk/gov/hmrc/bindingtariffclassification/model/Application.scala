@@ -61,7 +61,7 @@ case class LiabilityOrder
 case class EORIDetails
 (
   eori: String,
-  traderName: String,
+  traderName: String, // TODO: change to `name` because it is the name of the application holder (trader) or the name of the agent
   addressLine1: String,
   addressLine2: String,
   addressLine3: String,
