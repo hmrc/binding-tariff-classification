@@ -64,10 +64,10 @@ class CaseController @Inject()(appConfig: AppConfig,
           assignee_id: Option[String],
           status: Option[String],
           sort_by: Option[String],
-          sort_by_direction: Option[String]): Action[AnyContent] = Action.async { implicit request =>
+          sort_direction: Option[String]): Action[AnyContent] = Action.async { implicit request =>
     caseService.get(
       caseParamsMapper.from(queue_id, assignee_id, status),
-      caseSortMapper.from(sort_by, sort_by_direction)
+      caseSortMapper.from(sort_by, sort_direction)
     ) map { cases =>
       Ok(Json.toJson(cases))
     } recover recovery
