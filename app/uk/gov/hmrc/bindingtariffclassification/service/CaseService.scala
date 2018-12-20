@@ -19,6 +19,7 @@ package uk.gov.hmrc.bindingtariffclassification.service
 import javax.inject._
 import uk.gov.hmrc.bindingtariffclassification.model.Case
 import uk.gov.hmrc.bindingtariffclassification.model.search.CaseParamsFilter
+import uk.gov.hmrc.bindingtariffclassification.model.sort.CaseSort
 import uk.gov.hmrc.bindingtariffclassification.repository.{CaseRepository, SequenceRepository}
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -43,7 +44,7 @@ class CaseService @Inject()(caseRepository: CaseRepository, sequenceRepository: 
     caseRepository.getByReference(reference)
   }
 
-  def get(searchBy: CaseParamsFilter, sortBy: Option[String]): Future[Seq[Case]] = {
+  def get(searchBy: CaseParamsFilter, sortBy: Option[CaseSort]): Future[Seq[Case]] = {
     caseRepository.get(searchBy, sortBy)
   }
 

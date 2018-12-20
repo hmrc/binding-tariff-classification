@@ -27,14 +27,17 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 @Singleton
-class CaseController @Inject()(appConfig: AppConfig, caseService: CaseService, caseParamsMapper: CaseParamsMapper) extends CommonController {
+class CaseController @Inject()(appConfig: AppConfig,
+                               caseService: CaseService,
+                               caseParamsMapper: CaseParamsMapper,
+                               caseSortMapper: CaseSortMapper) extends CommonController {
 
   import JsonFormatters.{formatCase, formatNewCase}
 
   lazy private val deleteModeFilter = DeleteMode.actionFilter(appConfig)
 
   def deleteAll(): Action[AnyContent] = deleteModeFilter.async { implicit request =>
-    caseService.deleteAll map ( _ => NoContent ) recover recovery
+    caseService.deleteAll map (_ => NoContent) recover recovery
   }
 
   def create: Action[JsValue] = Action.async(parse.json) { implicit request =>
@@ -60,8 +63,12 @@ class CaseController @Inject()(appConfig: AppConfig, caseService: CaseService, c
   def get(queue_id: Option[String],
           assignee_id: Option[String],
           status: Option[String],
-          sort_by: Option[String]): Action[AnyContent] = Action.async { implicit request =>
-    caseService.get(caseParamsMapper.from(queue_id, assignee_id, status), sort_by) map { cases =>
+          sort_by: Option[String],
+          sort_by_direction: Option[String]): Action[AnyContent] = Action.async { implicit request =>
+    caseService.get(
+      caseParamsMapper.from(queue_id, assignee_id, status),
+      caseSortMapper.from(sort_by, sort_by_direction)
+    ) map { cases =>
       Ok(Json.toJson(cases))
     } recover recovery
   }

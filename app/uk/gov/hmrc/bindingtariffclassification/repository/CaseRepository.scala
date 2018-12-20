@@ -24,6 +24,7 @@ import reactivemongo.bson.BSONObjectID
 import reactivemongo.play.json.collection.JSONCollection
 import uk.gov.hmrc.bindingtariffclassification.model.JsonFormatters.formatCase
 import uk.gov.hmrc.bindingtariffclassification.model.search.CaseParamsFilter
+import uk.gov.hmrc.bindingtariffclassification.model.sort.CaseSort
 import uk.gov.hmrc.bindingtariffclassification.model.{Case, JsonFormatters}
 import uk.gov.hmrc.mongo.ReactiveRepository
 import uk.gov.hmrc.mongo.json.ReactiveMongoFormats
@@ -40,7 +41,7 @@ trait CaseRepository {
 
   def getByReference(reference: String): Future[Option[Case]]
 
-  def get(searchBy: CaseParamsFilter, sortedBy: Option[String]): Future[Seq[Case]]
+  def get(searchBy: CaseParamsFilter, sortedBy: Option[CaseSort]): Future[Seq[Case]]
 
   def deleteAll(): Future[Unit]
 }
@@ -59,7 +60,8 @@ class CaseMongoRepository @Inject()(mongoDbProvider: MongoDbProvider, jsonMapper
   lazy private val nonUniqueSingleFieldIndexes = Seq(
     "queueId",
     "assigneeId",
-    "status"
+    "status",
+    "daysElapsed"
   )
 
   override def indexes: Seq[Index] = {
@@ -81,10 +83,10 @@ class CaseMongoRepository @Inject()(mongoDbProvider: MongoDbProvider, jsonMapper
     getOne(jsonMapper.fromReference(reference))
   }
 
-  override def get(searchBy: CaseParamsFilter, sortedBy: Option[String] = None): Future[Seq[Case]] = {
+  override def get(searchBy: CaseParamsFilter, sortedBy: Option[CaseSort] = None): Future[Seq[Case]] = {
 
     val sorting = sortedBy match {
-      case Some(_) => ??? // TODO
+      case Some(sort: CaseSort) => Json.obj(sort.field.toString -> sort.direction.id)
       case None => Json.obj()
     }
 

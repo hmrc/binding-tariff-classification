@@ -1,6 +1,6 @@
 #microservice specific routes
 
-GET        /cases                                         @uk.gov.hmrc.bindingtariffclassification.controllers.CaseController.get(queue_id: Option[String], assignee_id: Option[String], status: Option[String], sort_by: Option[String])
+GET        /cases                                         @uk.gov.hmrc.bindingtariffclassification.controllers.CaseController.get(queue_id: Option[String], assignee_id: Option[String], status: Option[String], sort_by: Option[String], sort_by_direction: Option[String])
 POST       /cases                                         @uk.gov.hmrc.bindingtariffclassification.controllers.CaseController.create
 DELETE     /cases                                         @uk.gov.hmrc.bindingtariffclassification.controllers.CaseController.deleteAll()
 

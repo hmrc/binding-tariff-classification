@@ -27,6 +27,7 @@ import reactivemongo.play.json.ImplicitBSONHandlers._
 import uk.gov.hmrc.bindingtariffclassification.model.JsonFormatters.formatCase
 import uk.gov.hmrc.bindingtariffclassification.model._
 import uk.gov.hmrc.bindingtariffclassification.model.search.CaseParamsFilter
+import uk.gov.hmrc.bindingtariffclassification.model.sort.{CaseSort, CaseSortField, SortDirection}
 import uk.gov.hmrc.mongo.MongoSpecSupport
 import util.CaseData._
 
@@ -132,13 +133,13 @@ class CaseRepositorySpec extends BaseMongoIndexSpec
   // TODO: test all possible combinations
   // TODO: the test scenarios titles need to be written and grouped properly
 
-  "get without params should return all cases" should {
+  "get without params" should {
 
     val noFiltering = CaseParamsFilter()
     val noSorting = None
 
 
-    "retrieve all cases from the collection" in {
+    "retrieve all cases from the collection unsorted" in {
 
       await(repository.insert(case1))
       await(repository.insert(case2))
@@ -147,14 +148,30 @@ class CaseRepositorySpec extends BaseMongoIndexSpec
       await(repository.get(noFiltering, noSorting)) shouldBe Seq(case1, case2)
     }
 
-    "return an empty sequence when there are no cases in the collection" in {
-      await(repository.get(noFiltering, noSorting)) shouldBe Seq.empty[Case]
+    "return all cases from the collection sorted ascending" in {
+      val oldCase = case1.copy(daysElapsed = 1)
+      val newCase = case2.copy(daysElapsed = 0)
+      await(repository.insert(oldCase))
+      await(repository.insert(newCase))
+
+      collectionSize shouldBe 2
+
+      await(repository.get(noFiltering, Some(CaseSort(CaseSortField.DAYS_ELAPSED, SortDirection.ASCENDING)))) shouldBe Seq(newCase, oldCase)
     }
 
-    "fail to retrieve documents if using sorting" in {
-      intercept[NotImplementedError] {
-        await(repository.get(noFiltering, Some("sort_param")))
-      }
+    "return all cases from the collection sorted descending" in {
+      val oldCase = case1.copy(daysElapsed = 1)
+      val newCase = case2.copy(daysElapsed = 0)
+      await(repository.insert(oldCase))
+      await(repository.insert(newCase))
+
+      collectionSize shouldBe 2
+
+      await(repository.get(noFiltering, Some(CaseSort(CaseSortField.DAYS_ELAPSED, SortDirection.DESCENDING)))) shouldBe Seq(oldCase, newCase)
+    }
+
+    "return an empty sequence when there are no cases in the collection" in {
+      await(repository.get(noFiltering, noSorting)) shouldBe Seq.empty[Case]
     }
 
   }
@@ -343,6 +360,7 @@ class CaseRepositorySpec extends BaseMongoIndexSpec
       val expectedIndexes = List(
         Index(key = Seq("reference" -> Ascending), name = Some("reference_Index"), unique = true, background = true),
         Index(key = Seq("queueId" -> Ascending), name = Some("queueId_Index"), unique = false, background = true),
+        Index(key = Seq("daysElapsed" -> Ascending), name = Some("daysElapsed_Index"), unique = false, background = true),
         Index(key = Seq("assigneeId" -> Ascending), name = Some("assigneeId_Index"), unique = false, background = true),
         Index(key = Seq("status" -> Ascending), name = Some("status_Index"), unique = false, background = true),
         Index(key = Seq("_id" -> Ascending), name = Some("_id_"))
