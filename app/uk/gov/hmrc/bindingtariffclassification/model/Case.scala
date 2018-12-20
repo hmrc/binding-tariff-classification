@@ -25,7 +25,7 @@ case class Case
   reference: String,
   status: CaseStatus,
   createdDate: ZonedDateTime = ZonedDateTime.now(),
-  adjustedCreateDate: ZonedDateTime = ZonedDateTime.now(),
+  daysElapsed: Long = 0,
   closedDate: Option[ZonedDateTime] = None,
   caseBoardsFileNumber: Option[String] = None,
   assigneeId: Option[String] = None,

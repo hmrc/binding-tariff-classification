@@ -33,7 +33,7 @@ class CaseRequestSpec extends UnitSpec with MockitoSugar {
       val c = NewCaseRequest(application, attachments).toCase("reference")
       c.status shouldBe CaseStatus.NEW
       c.createdDate should roughlyBe(ZonedDateTime.now())
-      c.adjustedCreateDate should roughlyBe(ZonedDateTime.now())
+      c.daysElapsed shouldBe 0
       c.assigneeId shouldBe None
       c.queueId shouldBe None
       c.caseBoardsFileNumber shouldBe None
