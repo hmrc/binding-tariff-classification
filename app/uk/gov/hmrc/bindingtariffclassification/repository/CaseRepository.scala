@@ -20,12 +20,13 @@ import com.google.inject.ImplementedBy
 import javax.inject.{Inject, Singleton}
 import play.api.libs.json.Json
 import reactivemongo.api.indexes.Index
-import reactivemongo.bson.BSONObjectID
+import reactivemongo.bson.{BSONArray, BSONDocument, BSONObjectID, BSONString}
+import reactivemongo.play.json.ImplicitBSONHandlers._
 import reactivemongo.play.json.collection.JSONCollection
 import uk.gov.hmrc.bindingtariffclassification.model.JsonFormatters.formatCase
 import uk.gov.hmrc.bindingtariffclassification.model.search.CaseParamsFilter
 import uk.gov.hmrc.bindingtariffclassification.model.sort.CaseSort
-import uk.gov.hmrc.bindingtariffclassification.model.{Case, JsonFormatters}
+import uk.gov.hmrc.bindingtariffclassification.model.{Case, CaseStatus, JsonFormatters}
 import uk.gov.hmrc.mongo.ReactiveRepository
 import uk.gov.hmrc.mongo.json.ReactiveMongoFormats
 
@@ -38,6 +39,8 @@ trait CaseRepository {
   def insert(c: Case): Future[Case]
 
   def update(c: Case): Future[Option[Case]]
+
+  def incrementDaysElapsed(): Future[Int]
 
   def getByReference(reference: String): Future[Option[Case]]
 
@@ -97,4 +100,18 @@ class CaseMongoRepository @Inject()(mongoDbProvider: MongoDbProvider, jsonMapper
     removeAll().map(_ => ())
   }
 
+  override def incrementDaysElapsed(): Future[Int] = {
+    val statuses = List(CaseStatus.OPEN, CaseStatus.NEW)
+    collection.update(
+      selector = BSONDocument(
+        "status" -> BSONDocument(
+          "$in" -> BSONArray(statuses.map(s => BSONString(s.toString)))
+        )
+      ),
+      update = BSONDocument(
+        "$inc" -> BSONDocument("daysElapsed" -> 1)
+      ),
+      multi = true
+    ).map(_.nModified)
+  }
 }

@@ -338,6 +338,46 @@ class CaseRepositorySpec extends BaseMongoIndexSpec
     }
   }
 
+  "incrementDaysElapsed" should {
+
+    "increment NEW cases" in {
+      val newCase1 = case1.copy(status = CaseStatus.NEW, daysElapsed = 0)
+      val newCase2 = case2.copy(status = CaseStatus.NEW, daysElapsed = 1)
+
+      await(repository.insert(newCase1))
+      await(repository.insert(newCase2))
+      collectionSize shouldBe 2
+
+      await(repository.incrementDaysElapsed()) shouldBe 2
+
+      await(repository.collection.find(selectorByReference(newCase1)).one[Case]).map(_.daysElapsed) shouldBe Some(1)
+      await(repository.collection.find(selectorByReference(newCase2)).one[Case]).map(_.daysElapsed) shouldBe Some(2)
+    }
+
+    "increment OPEN cases" in {
+      val openCase1 = case1.copy(status = CaseStatus.OPEN, daysElapsed = 0)
+      val openCase2 = case2.copy(status = CaseStatus.OPEN, daysElapsed = 1)
+
+      await(repository.insert(openCase1))
+      await(repository.insert(openCase2))
+      collectionSize shouldBe 2
+
+      await(repository.incrementDaysElapsed()) shouldBe 2
+
+      await(repository.collection.find(selectorByReference(openCase1)).one[Case]).map(_.daysElapsed) shouldBe Some(1)
+      await(repository.collection.find(selectorByReference(openCase2)).one[Case]).map(_.daysElapsed) shouldBe Some(2)
+    }
+
+    "not increment other cases" in {
+      val otherCase = case1.copy(status = CaseStatus.SUPPRESSED, daysElapsed = 0)
+
+      await(repository.insert(otherCase))
+      collectionSize shouldBe 1
+
+      await(repository.incrementDaysElapsed()) shouldBe 0
+    }
+  }
+
   "The 'cases' collection" should {
 
     "have a unique index based on the field 'reference' " in {
