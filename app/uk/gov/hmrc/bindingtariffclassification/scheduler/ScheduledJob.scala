@@ -26,8 +26,6 @@ trait ScheduledJob {
 
   case class Result(message: String)
 
-  def configKey: String = name
-
   def initialDelay: FiniteDuration
 
   def interval: FiniteDuration
