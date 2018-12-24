@@ -16,6 +16,8 @@
 
 package uk.gov.hmrc.bindingtariffclassification.service
 
+import java.time.{Clock, DayOfWeek, LocalDate}
+
 import javax.inject._
 import uk.gov.hmrc.bindingtariffclassification.model.Case
 import uk.gov.hmrc.bindingtariffclassification.model.search.CaseParamsFilter
@@ -49,7 +51,17 @@ class CaseService @Inject()(caseRepository: CaseRepository, sequenceRepository: 
   }
 
   def deleteAll(): Future[Unit] = {
-    caseRepository.deleteAll
+    caseRepository.deleteAll()
+  }
+
+  def incrementDaysElapsedIfAppropriate(clock: Clock = Clock.systemDefaultZone()): Future[Int] = {
+    val today = LocalDate.now(clock)
+    val dayOfTheWeek = today.getDayOfWeek
+    if(dayOfTheWeek != DayOfWeek.SATURDAY && dayOfTheWeek != DayOfWeek.SUNDAY) {
+      caseRepository.incrementDaysElapsed()
+    } else {
+      Future.successful(0)
+    }
   }
 
 }

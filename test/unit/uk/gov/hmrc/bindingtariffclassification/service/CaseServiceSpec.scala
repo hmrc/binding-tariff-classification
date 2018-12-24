@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.bindingtariffclassification.service
 
+import java.time.{Clock, LocalDate, ZoneId}
 import java.util.UUID
 
 import org.mockito.Mockito._
@@ -44,22 +45,22 @@ class CaseServiceSpec extends UnitSpec with MockitoSugar with BeforeAndAfterEach
 
   final val emulatedFailure = new RuntimeException("Emulated failure.")
 
-  override protected def beforeEach(): Unit = {
+  override protected def afterEach(): Unit = {
     reset(caseRepository)
   }
 
   "deleteAll()" should {
 
     "return () and clear the database collection" in {
-      when(caseRepository.deleteAll).thenReturn(successful(()))
-      await(service.deleteAll) shouldBe ((): Unit)
+      when(caseRepository.deleteAll()).thenReturn(successful(()))
+      await(service.deleteAll()) shouldBe ((): Unit)
     }
 
     "propagate any error" in {
-      when(caseRepository.deleteAll).thenThrow(emulatedFailure)
+      when(caseRepository.deleteAll()).thenThrow(emulatedFailure)
 
       val caught = intercept[RuntimeException] {
-        await(service.deleteAll)
+        await(service.deleteAll())
       }
       caught shouldBe emulatedFailure
     }
@@ -165,6 +166,32 @@ class CaseServiceSpec extends UnitSpec with MockitoSugar with BeforeAndAfterEach
       caught shouldBe emulatedFailure
     }
 
+  }
+
+  "incrementDaysElapsedIfAppropriate()" should {
+    "Do nothing on a Saturday" in {
+      val clock = givenTheDateIsFixedAt("2018-12-29")
+      await(service.incrementDaysElapsedIfAppropriate(clock)) shouldBe 0
+      verifyZeroInteractions(caseRepository)
+    }
+
+    "Do nothing on a Sunday" in {
+      val clock = givenTheDateIsFixedAt("2018-12-30")
+      await(service.incrementDaysElapsedIfAppropriate(clock)) shouldBe 0
+      verifyZeroInteractions(caseRepository)
+    }
+
+    "Delegate to Repository" in {
+      val clock = givenTheDateIsFixedAt("2018-12-24")
+      when(caseRepository.incrementDaysElapsed()).thenReturn(successful(1))
+      await(service.incrementDaysElapsedIfAppropriate(clock)) shouldBe 1
+    }
+  }
+
+  private def givenTheDateIsFixedAt(date: String) : Clock = {
+    val zone = ZoneId.of("UTC")
+    val instant = LocalDate.parse(date).atStartOfDay(zone).toInstant
+    Clock.fixed(instant, zone)
   }
 
 }
