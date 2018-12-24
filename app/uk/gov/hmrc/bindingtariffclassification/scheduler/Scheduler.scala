@@ -14,19 +14,19 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.bindingtariffclassification.repository
+package uk.gov.hmrc.bindingtariffclassification.scheduler
 
-import com.google.inject.ImplementedBy
-import javax.inject.{Inject, Singleton}
-import play.modules.reactivemongo.ReactiveMongoComponent
-import reactivemongo.api.DB
+import akka.actor.ActorSystem
+import javax.inject.Inject
+import play.api.Logger
 
-@ImplementedBy(classOf[MongoDb])
-trait MongoDbProvider {
-  def mongo: () => DB
-}
+import scala.concurrent.ExecutionContext.Implicits.global
 
-@Singleton
-class MongoDb @Inject()(component: ReactiveMongoComponent) extends MongoDbProvider {
-  override val mongo: () => DB = component.mongoConnector.db
+class Scheduler @Inject()(actorSystem: ActorSystem, job: ScheduledJob) {
+
+  actorSystem.scheduler.schedule(job.initialDelay, job.interval) {
+    job.execute
+      .map(result => Logger.info(s"Job [${job.name}] completed with result [$result]"))
+  }
+
 }
