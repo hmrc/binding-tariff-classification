@@ -22,38 +22,33 @@ import java.util.concurrent.TimeUnit
 import javax.inject.{Inject, Singleton}
 import uk.gov.hmrc.bindingtariffclassification.config.AppConfig
 import uk.gov.hmrc.bindingtariffclassification.service.CaseService
-import uk.gov.hmrc.lock.LockRepository
 
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 import scala.concurrent.duration.FiniteDuration
-import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class DaysElapsedJob @Inject()(appConfig: AppConfig,
-                               caseService: CaseService,
-                               override val lockRepository: LockRepository) extends LockedScheduledJob {
+class DaysElapsedJob @Inject()(appConfig: AppConfig, caseService: CaseService) extends ScheduledJob {
 
   private lazy val jobConfig = appConfig.daysElapsed
 
-  override val releaseLockAfter: Duration = Duration.ofMinutes(30)
-
   override def name: String = "DaysElapsed"
-
-  override def initialDelay: FiniteDuration = timeUntilMidnight()
 
   override def interval: FiniteDuration = FiniteDuration(jobConfig.intervalDays, TimeUnit.DAYS)
 
-  override def executeInLock(implicit ec: ExecutionContext): Future[Result] = {
+  override def execute(): Future[String] = {
     caseService.incrementDaysElapsedIfAppropriate(jobConfig.intervalDays, appConfig.clock)
-      .map(count => Result(s"Incremented the Days Elapsed for [$count] cases."))
+      .map(count => s"Incremented the Days Elapsed for [$count] cases.")
   }
 
-  private def timeUntilMidnight(): FiniteDuration = {
+  override def firstRunDate: Instant = {
     val currentTime = LocalDateTime.now(appConfig.clock)
 
     val nextRunTime: LocalTime = jobConfig.elapseTime
     val nextRunDateTimeToday = nextRunTime.atDate(LocalDate.now(appConfig.clock))
     val nextRunDateTimeTomorrow = nextRunTime.atDate(LocalDate.now(appConfig.clock).plusDays(1))
     val nextRunDateTime = if(nextRunDateTimeToday.isAfter(currentTime)) nextRunDateTimeToday else nextRunDateTimeTomorrow
-    FiniteDuration(Duration.between(currentTime, nextRunDateTime).getSeconds, TimeUnit.SECONDS)
+    nextRunDateTime.atZone(appConfig.clock.getZone).toInstant
   }
+
 }

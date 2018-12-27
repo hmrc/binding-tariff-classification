@@ -16,28 +16,18 @@
 
 package uk.gov.hmrc.bindingtariffclassification
 
-import javax.inject.{Inject, Provider, Singleton}
+import javax.inject.Inject
 import play.api.inject.Binding
 import play.api.{Configuration, Environment}
-import reactivemongo.api.DB
-import uk.gov.hmrc.bindingtariffclassification.repository.MongoDbProvider
 import uk.gov.hmrc.bindingtariffclassification.scheduler.{DaysElapsedJob, ScheduledJob, Scheduler}
-import uk.gov.hmrc.lock.{LockMongoRepository, LockRepository}
 
 class Module @Inject()() extends play.api.inject.Module {
   override def bindings(environment: Environment, configuration: Configuration): Seq[Binding[_]] = {
     Seq(
       bind[ScheduledJob].to[DaysElapsedJob],
-      bind[LockRepository].toProvider[LockRepositoryProvider],
       bind[Scheduler].toSelf.eagerly()
     )
   }
-}
-
-@Singleton
-class LockRepositoryProvider @Inject()(mongoDbProvider: MongoDbProvider) extends Provider[LockRepository]{
-  private val mongo: () => DB = () => mongoDbProvider.mongo.apply()
-  override def get(): LockRepository = LockMongoRepository(mongo)
 }
 
 

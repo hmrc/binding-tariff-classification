@@ -59,4 +59,6 @@ object JsonFormatters {
 
   implicit val formatEvent = Json.format[Event]
   implicit val formatNewEventRequest = Json.format[NewEventRequest]
+
+  implicit val formatSchedulerRunEvent = Json.format[SchedulerRunEvent]
 }

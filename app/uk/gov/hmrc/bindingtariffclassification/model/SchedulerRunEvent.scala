@@ -14,16 +14,8 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.bindingtariffclassification.scheduler
+package uk.gov.hmrc.bindingtariffclassification.model
 
 import java.time.Instant
 
-import scala.concurrent.Future
-import scala.concurrent.duration.FiniteDuration
-
-trait ScheduledJob {
-  def name: String
-  def execute(): Future[String]
-  def firstRunDate: Instant
-  def interval: FiniteDuration
-}
+case class SchedulerRunEvent(name: String, runDate: Instant)

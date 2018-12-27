@@ -16,18 +16,54 @@
 
 package uk.gov.hmrc.bindingtariffclassification.scheduler
 
+import java.time.Instant
+import java.time.temporal.{ChronoUnit, Temporal}
+import java.util.concurrent.TimeUnit
+
 import akka.actor.ActorSystem
 import javax.inject.Inject
 import play.api.Logger
+import uk.gov.hmrc.bindingtariffclassification.config.AppConfig
+import uk.gov.hmrc.bindingtariffclassification.model.SchedulerRunEvent
+import uk.gov.hmrc.bindingtariffclassification.repository.SchedulerLockRepository
 
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.duration.FiniteDuration
 
-class Scheduler @Inject()(actorSystem: ActorSystem, job: ScheduledJob) {
+class Scheduler @Inject()(actorSystem: ActorSystem, appConfig: AppConfig, schedulerLockRepository: SchedulerLockRepository, job: ScheduledJob) {
 
-  Logger.info(s"Scheduling Job [${job.name}] to run in [${job.initialDelay.length} ${job.initialDelay.unit}] with interval [${job.interval.length} ${job.interval.unit}]")
-  actorSystem.scheduler.schedule(job.initialDelay, job.interval) {
-    job.execute
-      .map(result => Logger.info(s"Job [${job.name}] completed with result [$result]"))
+  Logger.info(s"Scheduling Job [${job.name}] to run at [${job.firstRunDate}] with interval [${job.interval.length} ${job.interval.unit}]")
+  actorSystem.scheduler.schedule(durationUntil(job.firstRunDate), job.interval, new Runnable(){
+    override def run(): Unit = {
+      val event = SchedulerRunEvent(job.name, expectedRunDate)
+
+      schedulerLockRepository.lock(event) map {
+        case true => Logger.info(s"Running Job [${job.name}]")
+          job.execute() map { result =>
+            Logger.info(s"Job [${job.name}] completed with result [$result]")
+          }
+        case false => Logger.info(s"Failed to acquire Lock for Job [${job.name}]")
+      }
+    }
+  })
+
+  private def expectedRunDate: Instant = {
+    /*
+    Calculates the instant in time the job theoretically SHOULD run at.
+    This needs to be consistent among multiple instances of the service (for locking) and is not necessarily the time
+    the job ACTUALLY runs at (depending on how accurate the scheduler timer is).
+    */
+    val now = Instant.now(appConfig.clock)
+    if(!job.firstRunDate.isBefore(now)) {
+      job.firstRunDate
+    } else {
+      val intervals: Long = Math.floor((now.toEpochMilli - job.firstRunDate.toEpochMilli) / job.interval.toMillis).toLong
+      job.firstRunDate.plusMillis(intervals * job.interval.toMillis)
+    }
+  }
+
+  def durationUntil(temporal: Temporal): FiniteDuration = {
+    FiniteDuration(Instant.now(appConfig.clock).until(temporal, ChronoUnit.MILLIS), TimeUnit.MILLISECONDS)
   }
 
 }
