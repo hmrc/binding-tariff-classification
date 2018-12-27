@@ -20,7 +20,7 @@ import com.google.inject.ImplementedBy
 import javax.inject.{Inject, Singleton}
 import play.api.libs.json.Json
 import reactivemongo.api.indexes.Index
-import reactivemongo.bson.{BSONArray, BSONDocument, BSONObjectID, BSONString}
+import reactivemongo.bson.{BSONArray, BSONDocument, BSONDouble, BSONObjectID, BSONString}
 import reactivemongo.play.json.ImplicitBSONHandlers._
 import reactivemongo.play.json.collection.JSONCollection
 import uk.gov.hmrc.bindingtariffclassification.model.JsonFormatters.formatCase
@@ -40,7 +40,7 @@ trait CaseRepository {
 
   def update(c: Case): Future[Option[Case]]
 
-  def incrementDaysElapsed(): Future[Int]
+  def incrementDaysElapsed(increment: Double): Future[Int]
 
   def getByReference(reference: String): Future[Option[Case]]
 
@@ -100,7 +100,7 @@ class CaseMongoRepository @Inject()(mongoDbProvider: MongoDbProvider, jsonMapper
     removeAll().map(_ => ())
   }
 
-  override def incrementDaysElapsed(): Future[Int] = {
+  override def incrementDaysElapsed(increment: Double = 1): Future[Int] = {
     val statuses = List(CaseStatus.OPEN, CaseStatus.NEW)
     collection.update(
       selector = BSONDocument(
@@ -109,7 +109,7 @@ class CaseMongoRepository @Inject()(mongoDbProvider: MongoDbProvider, jsonMapper
         )
       ),
       update = BSONDocument(
-        "$inc" -> BSONDocument("daysElapsed" -> 1)
+        "$inc" -> BSONDocument("daysElapsed" -> BSONDouble(increment))
       ),
       multi = true
     ).map(_.nModified)

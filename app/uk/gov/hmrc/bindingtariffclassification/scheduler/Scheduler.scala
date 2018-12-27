@@ -24,6 +24,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 class Scheduler @Inject()(actorSystem: ActorSystem, job: ScheduledJob) {
 
+  Logger.info(s"Scheduling Job [${job.name}] to run in [${job.initialDelay.length} ${job.initialDelay.unit}] with interval [${job.interval.length} ${job.interval.unit}]")
   actorSystem.scheduler.schedule(job.initialDelay, job.interval) {
     job.execute
       .map(result => Logger.info(s"Job [${job.name}] completed with result [$result]"))

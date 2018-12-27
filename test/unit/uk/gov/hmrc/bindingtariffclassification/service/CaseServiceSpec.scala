@@ -171,20 +171,20 @@ class CaseServiceSpec extends UnitSpec with MockitoSugar with BeforeAndAfterEach
   "incrementDaysElapsedIfAppropriate()" should {
     "Do nothing on a Saturday" in {
       val clock = givenTheDateIsFixedAt("2018-12-29")
-      await(service.incrementDaysElapsedIfAppropriate(clock)) shouldBe 0
+      await(service.incrementDaysElapsedIfAppropriate(1, clock)) shouldBe 0
       verifyZeroInteractions(caseRepository)
     }
 
     "Do nothing on a Sunday" in {
       val clock = givenTheDateIsFixedAt("2018-12-30")
-      await(service.incrementDaysElapsedIfAppropriate(clock)) shouldBe 0
+      await(service.incrementDaysElapsedIfAppropriate(1, clock)) shouldBe 0
       verifyZeroInteractions(caseRepository)
     }
 
     "Delegate to Repository" in {
       val clock = givenTheDateIsFixedAt("2018-12-24")
-      when(caseRepository.incrementDaysElapsed()).thenReturn(successful(1))
-      await(service.incrementDaysElapsedIfAppropriate(clock)) shouldBe 1
+      when(caseRepository.incrementDaysElapsed(1)).thenReturn(successful(1))
+      await(service.incrementDaysElapsedIfAppropriate(1, clock)) shouldBe 1
     }
   }
 

@@ -16,6 +16,8 @@
 
 package uk.gov.hmrc.bindingtariffclassification.config
 
+import java.time.{Clock, LocalTime}
+
 import javax.inject._
 import play.api.Mode.Mode
 import play.api.{Configuration, Environment}
@@ -28,8 +30,17 @@ class AppConfig @Inject()(val runModeConfiguration: Configuration, environment: 
 
   lazy val isDeleteEnabled: Boolean = getBooleanConfig("deleteEnabled", default = false)
 
+  lazy val clock: Clock = Clock.systemDefaultZone()
+
+  lazy val daysElapsed: DaysElapsedConfig = DaysElapsedConfig(
+    LocalTime.parse(getString("scheduler.days-elapsed.run-time")),
+    getInt("scheduler.days-elapsed.interval-days")
+  )
+
   private def getBooleanConfig(key: String, default: Boolean): Boolean = {
     runModeConfiguration.getBoolean(key).getOrElse(default)
   }
 
 }
+
+case class DaysElapsedConfig(elapseTime: LocalTime, intervalDays: Int)

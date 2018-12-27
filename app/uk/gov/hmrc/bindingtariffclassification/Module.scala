@@ -16,8 +16,6 @@
 
 package uk.gov.hmrc.bindingtariffclassification
 
-import java.time.Clock
-
 import javax.inject.{Inject, Provider, Singleton}
 import play.api.inject.Binding
 import play.api.{Configuration, Environment}
@@ -30,7 +28,6 @@ class Module @Inject()() extends play.api.inject.Module {
   override def bindings(environment: Environment, configuration: Configuration): Seq[Binding[_]] = {
     Seq(
       bind[ScheduledJob].to[DaysElapsedJob],
-      bind[Clock].toInstance(Clock.systemDefaultZone()),
       bind[LockRepository].toProvider[LockRepositoryProvider],
       bind[Scheduler].toSelf.eagerly()
     )

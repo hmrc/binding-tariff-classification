@@ -54,11 +54,11 @@ class CaseService @Inject()(caseRepository: CaseRepository, sequenceRepository: 
     caseRepository.deleteAll()
   }
 
-  def incrementDaysElapsedIfAppropriate(clock: Clock = Clock.systemDefaultZone()): Future[Int] = {
+  def incrementDaysElapsedIfAppropriate(increment: Double, clock: Clock = Clock.systemDefaultZone()): Future[Int] = {
     val today = LocalDate.now(clock)
     val dayOfTheWeek = today.getDayOfWeek
     if(dayOfTheWeek != DayOfWeek.SATURDAY && dayOfTheWeek != DayOfWeek.SUNDAY) {
-      caseRepository.incrementDaysElapsed()
+      caseRepository.incrementDaysElapsed(increment)
     } else {
       Future.successful(0)
     }
