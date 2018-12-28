@@ -358,11 +358,11 @@ class CaseRepositorySpec extends BaseMongoIndexSpec
       import scala.concurrent.duration._
 
       val expectedIndexes = List(
-        Index(key = Seq("reference" -> Ascending), name = Some("reference_Index"), unique = true, background = true),
-        Index(key = Seq("queueId" -> Ascending), name = Some("queueId_Index"), unique = false, background = true),
-        Index(key = Seq("daysElapsed" -> Ascending), name = Some("daysElapsed_Index"), unique = false, background = true),
-        Index(key = Seq("assigneeId" -> Ascending), name = Some("assigneeId_Index"), unique = false, background = true),
-        Index(key = Seq("status" -> Ascending), name = Some("status_Index"), unique = false, background = true),
+        Index(key = Seq("reference" -> Ascending), name = Some("reference_Index"), unique = true),
+        Index(key = Seq("queueId" -> Ascending), name = Some("queueId_Index"), unique = false),
+        Index(key = Seq("daysElapsed" -> Ascending), name = Some("daysElapsed_Index"), unique = false),
+        Index(key = Seq("assigneeId" -> Ascending), name = Some("assigneeId_Index"), unique = false),
+        Index(key = Seq("status" -> Ascending), name = Some("status_Index"), unique = false),
         Index(key = Seq("_id" -> Ascending), name = Some("_id_"))
       )
 

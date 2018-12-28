@@ -32,7 +32,7 @@ trait MongoIndexCreator {
 
   def createCompoundIndex(indexFieldMappings: Seq[(String, IndexType)],
                           isUnique: Boolean,
-                          isBackground: Boolean = true): Index = {
+                          isBackground: Boolean = false): Index = {
 
     Index(
       key = indexFieldMappings,
