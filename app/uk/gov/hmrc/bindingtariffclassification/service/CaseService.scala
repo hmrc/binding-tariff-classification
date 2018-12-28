@@ -19,16 +19,21 @@ package uk.gov.hmrc.bindingtariffclassification.service
 import java.time.{Clock, DayOfWeek, LocalDate}
 
 import javax.inject._
+import uk.gov.hmrc.bindingtariffclassification.connector.BankHolidaysConnector
 import uk.gov.hmrc.bindingtariffclassification.model.Case
 import uk.gov.hmrc.bindingtariffclassification.model.search.CaseParamsFilter
 import uk.gov.hmrc.bindingtariffclassification.model.sort.CaseSort
 import uk.gov.hmrc.bindingtariffclassification.repository.{CaseRepository, SequenceRepository}
+import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 @Singleton
-class CaseService @Inject()(caseRepository: CaseRepository, sequenceRepository: SequenceRepository, eventService: EventService) {
+class CaseService @Inject()(caseRepository: CaseRepository,
+                            sequenceRepository: SequenceRepository,
+                            eventService: EventService,
+                            bankHolidaysConnector: BankHolidaysConnector) {
 
   def insert(c: Case): Future[Case] = {
     caseRepository.insert(c)
@@ -54,13 +59,18 @@ class CaseService @Inject()(caseRepository: CaseRepository, sequenceRepository: 
     caseRepository.deleteAll()
   }
 
-  def incrementDaysElapsedIfAppropriate(increment: Double, clock: Clock = Clock.systemDefaultZone()): Future[Int] = {
+  def incrementDaysElapsedIfAppropriate(increment: Double, clock: Clock = Clock.systemDefaultZone())(implicit hc: HeaderCarrier): Future[Int] = {
     val today = LocalDate.now(clock)
     val dayOfTheWeek = today.getDayOfWeek
-    if(dayOfTheWeek != DayOfWeek.SATURDAY && dayOfTheWeek != DayOfWeek.SUNDAY) {
-      caseRepository.incrementDaysElapsed(increment)
-    } else {
+    if (dayOfTheWeek == DayOfWeek.SATURDAY || dayOfTheWeek == DayOfWeek.SUNDAY) {
       Future.successful(0)
+    } else {
+      bankHolidaysConnector.get()
+        .map(dates => dates.contains(today))
+        .flatMap {
+          case true => Future.successful(0)
+          case false => caseRepository.incrementDaysElapsed(increment)
+        }
     }
   }
 

@@ -19,34 +19,39 @@ package uk.gov.hmrc.bindingtariffclassification.service
 import java.time.{Clock, LocalDate, ZoneId}
 import java.util.UUID
 
+import org.mockito.{ArgumentMatcher, ArgumentMatchers, Mockito}
 import org.mockito.Mockito._
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.mockito.MockitoSugar
+import uk.gov.hmrc.bindingtariffclassification.connector.BankHolidaysConnector
 import uk.gov.hmrc.bindingtariffclassification.model._
 import uk.gov.hmrc.bindingtariffclassification.model.search.CaseParamsFilter
 import uk.gov.hmrc.bindingtariffclassification.repository.{CaseRepository, SequenceRepository}
+import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.test.UnitSpec
 
 import scala.concurrent.Future.successful
 
 class CaseServiceSpec extends UnitSpec with MockitoSugar with BeforeAndAfterEach {
 
-  final private val c1 = mock[Case]
-  final private val c1Saved = mock[Case]
-  final private val c2 = mock[Case]
+  private val c1 = mock[Case]
+  private val c1Saved = mock[Case]
+  private val c2 = mock[Case]
 
-  final private val reference = UUID.randomUUID().toString
+  private val reference = UUID.randomUUID().toString
+  private implicit val hc: HeaderCarrier = HeaderCarrier()
 
   private val caseRepository = mock[CaseRepository]
   private val sequenceRepository = mock[SequenceRepository]
   private val eventService = mock[EventService]
+  private val bankHolidaysConnector = mock[BankHolidaysConnector]
 
-  private val service = new CaseService(caseRepository, sequenceRepository, eventService)
+  private val service = new CaseService(caseRepository, sequenceRepository, eventService, bankHolidaysConnector)
 
   final val emulatedFailure = new RuntimeException("Emulated failure.")
 
   override protected def afterEach(): Unit = {
-    reset(caseRepository)
+    reset(caseRepository, bankHolidaysConnector)
   }
 
   "deleteAll()" should {
@@ -181,11 +186,27 @@ class CaseServiceSpec extends UnitSpec with MockitoSugar with BeforeAndAfterEach
       verifyZeroInteractions(caseRepository)
     }
 
+    "Do nothing on a Bank Holiday" in {
+      givenABankHolidayOn("2018-12-25")
+      val clock = givenTheDateIsFixedAt("2018-12-25")
+      await(service.incrementDaysElapsedIfAppropriate(1, clock)) shouldBe 0
+      verifyZeroInteractions(caseRepository)
+    }
+
     "Delegate to Repository" in {
+      givenItIsNotABankHoliday()
       val clock = givenTheDateIsFixedAt("2018-12-24")
       when(caseRepository.incrementDaysElapsed(1)).thenReturn(successful(1))
       await(service.incrementDaysElapsedIfAppropriate(1, clock)) shouldBe 1
     }
+  }
+
+  private def givenABankHolidayOn(date: String): Unit = {
+    when(bankHolidaysConnector.get()(ArgumentMatchers.any[HeaderCarrier])).thenReturn(Seq(LocalDate.parse(date)))
+  }
+
+  private def givenItIsNotABankHoliday(): Unit = {
+    when(bankHolidaysConnector.get()(ArgumentMatchers.any[HeaderCarrier])).thenReturn(Seq.empty)
   }
 
   private def givenTheDateIsFixedAt(date: String) : Clock = {

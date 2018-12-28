@@ -37,6 +37,8 @@ class AppConfig @Inject()(val runModeConfiguration: Configuration, environment: 
     getInt("scheduler.days-elapsed.interval-days")
   )
 
+  lazy val bankHolidaysUrl: String = baseUrl("bank-holidays")
+
   private def getBooleanConfig(key: String, default: Boolean): Boolean = {
     runModeConfiguration.getBoolean(key).getOrElse(default)
   }

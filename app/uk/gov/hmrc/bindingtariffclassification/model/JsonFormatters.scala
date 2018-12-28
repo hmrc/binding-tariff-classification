@@ -61,4 +61,8 @@ object JsonFormatters {
   implicit val formatNewEventRequest = Json.format[NewEventRequest]
 
   implicit val formatSchedulerRunEvent = Json.format[SchedulerRunEvent]
+
+  implicit val formatBankHoliday = Json.format[BankHoliday]
+  implicit val formatBankHolidaysSet = Json.format[BankHolidaySet]
+  implicit val formatBankHolidaysResponse = Json.format[BankHolidaysResponse]
 }

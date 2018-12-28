@@ -19,12 +19,14 @@ package uk.gov.hmrc.bindingtariffclassification.scheduler
 import java.time._
 import java.util.concurrent.TimeUnit.DAYS
 
+import org.mockito.ArgumentMatchers._
 import org.mockito.BDDMockito.given
 import org.mockito.Mockito.reset
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.mockito.MockitoSugar
 import uk.gov.hmrc.bindingtariffclassification.config.{AppConfig, DaysElapsedConfig}
 import uk.gov.hmrc.bindingtariffclassification.service.CaseService
+import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.test.UnitSpec
 
 import scala.concurrent.Future
@@ -76,7 +78,7 @@ class DaysElapsedJobTest extends UnitSpec with MockitoSugar with BeforeAndAfterE
 
     "Execute" in {
       given(appConfig.daysElapsed).willReturn(DaysElapsedConfig(LocalTime.MIDNIGHT, 1))
-      given(caseService.incrementDaysElapsedIfAppropriate(1, clock)).willReturn(Future.successful(2))
+      given(caseService.incrementDaysElapsedIfAppropriate(refEq(1), refEq(clock))(any[HeaderCarrier])).willReturn(Future.successful(2))
 
       await(new DaysElapsedJob(appConfig, caseService).execute()) shouldBe "Incremented the Days Elapsed for [2] cases."
     }

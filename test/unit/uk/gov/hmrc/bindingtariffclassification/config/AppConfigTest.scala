@@ -46,6 +46,13 @@ class AppConfigTest extends UnitSpec with GuiceOneAppPerSuite {
       config.elapseTime shouldBe LocalTime.of(0, 0, 0)
       config.intervalDays shouldBe 1
     }
+
+    "build 'bankHolidaysUrl" in {
+      configWith(
+        "microservice.services.bank-holidays.host" -> "www.host.co.uk",
+        "microservice.services.bank-holidays.port" -> "123"
+      ).bankHolidaysUrl shouldBe "http://www.host.co.uk:123"
+    }
   }
 
 }

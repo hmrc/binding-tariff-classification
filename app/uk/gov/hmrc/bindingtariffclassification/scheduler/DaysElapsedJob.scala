@@ -22,6 +22,7 @@ import java.util.concurrent.TimeUnit
 import javax.inject.{Inject, Singleton}
 import uk.gov.hmrc.bindingtariffclassification.config.AppConfig
 import uk.gov.hmrc.bindingtariffclassification.service.CaseService
+import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -37,7 +38,7 @@ class DaysElapsedJob @Inject()(appConfig: AppConfig, caseService: CaseService) e
   override def interval: FiniteDuration = FiniteDuration(jobConfig.intervalDays, TimeUnit.DAYS)
 
   override def execute(): Future[String] = {
-    caseService.incrementDaysElapsedIfAppropriate(jobConfig.intervalDays, appConfig.clock)
+    caseService.incrementDaysElapsedIfAppropriate(jobConfig.intervalDays, appConfig.clock)(HeaderCarrier())
       .map(count => s"Incremented the Days Elapsed for [$count] cases.")
   }
 

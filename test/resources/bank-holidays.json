@@ -1,0 +1,27 @@
+{
+  "england-and-wales": {
+    "division": "england-and-wales",
+    "events": [
+      {
+        "title": "New Year’s Day",
+        "date": "2012-01-02",
+        "notes": "Substitute day",
+        "bunting": true
+      },
+      {
+        "title": "Good Friday",
+        "date": "2012-04-06",
+        "notes": "",
+        "bunting": false
+      }
+    ]
+  },
+  "scotland": {
+    "division": "scotland",
+    "events": []
+  },
+  "northern-ireland": {
+    "division": "northern-ireland",
+    "events": []
+  }
+}
