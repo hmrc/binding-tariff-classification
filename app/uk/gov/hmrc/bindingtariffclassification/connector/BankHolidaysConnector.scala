@@ -34,7 +34,7 @@ class BankHolidaysConnector @Inject()(appConfig: AppConfig, http: HttpClient)(
   def get()(implicit headerCarrier: HeaderCarrier): Future[Seq[LocalDate]] = {
     implicit val format: OFormat[BankHolidaysResponse] = JsonFormatters.formatBankHolidaysResponse
     http.GET[BankHolidaysResponse](s"${appConfig.bankHolidaysUrl}/bank-holidays.json")
-      .map(_.`england-and-wales`.events.map(bh => bh.date))
+      .map(_.`england-and-wales`.events.map(_.date))
   }
 
 }
