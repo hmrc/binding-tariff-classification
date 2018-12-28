@@ -173,8 +173,8 @@ class EventRepositorySpec extends BaseMongoIndexSpec
       import scala.concurrent.duration._
 
       val expectedIndexes = List(
-        Index(key = Seq("id" -> Ascending), name = Some("id_Index"), unique = true, background = true),
-        Index(key = Seq("caseReference" -> Ascending), name = Some("caseReference_Index"), unique = false, background = true),
+        Index(key = Seq("id" -> Ascending), name = Some("id_Index"), unique = true),
+        Index(key = Seq("caseReference" -> Ascending), name = Some("caseReference_Index"), unique = false),
         Index(key = Seq("_id" -> Ascending), name = Some("_id_"))
       )
 

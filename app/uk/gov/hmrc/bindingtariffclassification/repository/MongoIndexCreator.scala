@@ -31,7 +31,7 @@ trait MongoIndexCreator {
 
   def createCompoundIndex(fieldNames: Seq[String],
                           isUnique: Boolean,
-                          isBackground: Boolean = true): Index = {
+                          isBackground: Boolean = false): Index = {
 
     Index(
       key = fieldNames.map(_ -> Ascending),

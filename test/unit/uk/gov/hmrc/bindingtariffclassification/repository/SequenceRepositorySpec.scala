@@ -124,7 +124,7 @@ class SequenceRepositorySpec extends BaseMongoIndexSpec
     "have all expected indexes" in {
 
       val expectedIndexes = List(
-        Index(key = Seq("name" -> Ascending), name = Some("name_Index"), unique = true, background = true),
+        Index(key = Seq("name" -> Ascending), name = Some("name_Index"), unique = true),
         Index(key = Seq("_id" -> Ascending), name = Some("_id_"))
       )
 
