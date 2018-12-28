@@ -31,6 +31,8 @@ import scala.concurrent.duration.FiniteDuration
 @Singleton
 class DaysElapsedJob @Inject()(appConfig: AppConfig, caseService: CaseService) extends ScheduledJob {
 
+  private implicit val carrier: HeaderCarrier = HeaderCarrier()
+
   private lazy val jobConfig = appConfig.daysElapsed
 
   override def name: String = "DaysElapsed"
@@ -38,7 +40,7 @@ class DaysElapsedJob @Inject()(appConfig: AppConfig, caseService: CaseService) e
   override def interval: FiniteDuration = FiniteDuration(jobConfig.intervalDays, TimeUnit.DAYS)
 
   override def execute(): Future[String] = {
-    caseService.incrementDaysElapsedIfAppropriate(jobConfig.intervalDays, appConfig.clock)(HeaderCarrier())
+    caseService.incrementDaysElapsedIfAppropriate(jobConfig.intervalDays, appConfig.clock)
       .map(count => s"Incremented the Days Elapsed for [$count] cases.")
   }
 

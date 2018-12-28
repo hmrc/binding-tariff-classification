@@ -66,7 +66,7 @@ class CaseService @Inject()(caseRepository: CaseRepository,
       Future.successful(0)
     } else {
       bankHolidaysConnector.get()
-        .map(dates => dates.contains(today))
+        .map(_.contains(today))
         .flatMap {
           case true => Future.successful(0)
           case false => caseRepository.incrementDaysElapsed(increment)
