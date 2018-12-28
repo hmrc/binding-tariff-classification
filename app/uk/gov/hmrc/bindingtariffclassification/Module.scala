@@ -16,12 +16,11 @@
 
 package uk.gov.hmrc.bindingtariffclassification
 
-import javax.inject.Inject
 import play.api.inject.Binding
 import play.api.{Configuration, Environment}
 import uk.gov.hmrc.bindingtariffclassification.scheduler.{DaysElapsedJob, ScheduledJob, Scheduler}
 
-class Module @Inject()() extends play.api.inject.Module {
+class Module extends play.api.inject.Module {
   override def bindings(environment: Environment, configuration: Configuration): Seq[Binding[_]] = {
     Seq(
       bind[ScheduledJob].to[DaysElapsedJob],
