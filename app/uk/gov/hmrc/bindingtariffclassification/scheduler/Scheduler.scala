@@ -38,9 +38,12 @@ class Scheduler @Inject()(actorSystem: ActorSystem, appConfig: AppConfig, schedu
       val event = SchedulerRunEvent(job.name, expectedRunDate)
 
       schedulerLockRepository.lock(event) map {
-        case true => Logger.info(s"Running Job [${job.name}]")
+        case true =>
+          Logger.info(s"Running Job [${job.name}]")
           job.execute() map { result =>
             Logger.info(s"Job [${job.name}] completed with result [$result]")
+          } recover {
+            case t: Throwable => Logger.error(s"Job [${job.name}] failed", t)
           }
         case false => Logger.info(s"Failed to acquire Lock for Job [${job.name}]")
       }
