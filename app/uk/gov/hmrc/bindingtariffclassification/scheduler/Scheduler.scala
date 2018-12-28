@@ -65,8 +65,13 @@ class Scheduler @Inject()(actorSystem: ActorSystem, appConfig: AppConfig, schedu
     }
   }
 
-  def durationUntil(temporal: Temporal): FiniteDuration = {
-    FiniteDuration(Instant.now(appConfig.clock).until(temporal, ChronoUnit.MILLIS), TimeUnit.MILLISECONDS)
+  def durationUntil(instant: Instant): FiniteDuration = {
+    val now = Instant.now(appConfig.clock)
+    if(now.isBefore(instant)) {
+      FiniteDuration(now.until(instant, ChronoUnit.SECONDS), TimeUnit.SECONDS)
+    } else {
+      FiniteDuration(0, TimeUnit.SECONDS)
+    }
   }
 
 }

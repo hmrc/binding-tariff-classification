@@ -125,6 +125,21 @@ class SchedulerTest extends UnitSpec with MockitoSugar with BeforeAndAfterEach w
       schedule.initialDelay shouldBe FiniteDuration(1, TimeUnit.SECONDS)
     }
 
+    "Run job with starting in the past" in {
+      // Given
+      givenTheLockSucceeds()
+      given(job.interval) willReturn FiniteDuration(1, TimeUnit.SECONDS)
+      given(job.firstRunDate) willReturn now.minusSeconds(1)
+
+      // When
+      new Scheduler(actorSystem, config, schedulerRepository, job)
+
+      // Then
+      val schedule = theSchedule
+      schedule.interval shouldBe FiniteDuration(1, TimeUnit.SECONDS)
+      schedule.initialDelay shouldBe FiniteDuration(0, TimeUnit.SECONDS)
+    }
+
     "Create the lock event with the intended run time" in {
       // Given
       givenTheLockSucceeds()
