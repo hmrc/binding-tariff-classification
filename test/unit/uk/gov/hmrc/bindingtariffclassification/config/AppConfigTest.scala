@@ -38,7 +38,7 @@ class AppConfigTest extends UnitSpec with GuiceOneAppPerSuite {
       configWith("deleteEnabled" -> "false").isDeleteEnabled shouldBe false
     }
 
-    "build 'DaysElapsedCOnfig" in {
+    "build 'DaysElapsedConfig" in {
       val config = configWith(
         "scheduler.days-elapsed.run-time" -> "00:00",
         "scheduler.days-elapsed.interval-days" -> "1"
