@@ -32,20 +32,21 @@ import scala.concurrent.duration.FiniteDuration
 
 class Scheduler @Inject()(actorSystem: ActorSystem, appConfig: AppConfig, schedulerLockRepository: SchedulerLockRepository, job: ScheduledJob) {
 
-  Logger.info(s"Scheduling Job [${job.name}] to run at [${job.firstRunDate}] with interval [${job.interval.length} ${job.interval.unit}]")
+  Logger.info(s"Scheduled Job [${job.name}]: Scheduling to run at [${job.firstRunDate}] with interval [${job.interval.length} ${job.interval.unit}]")
   actorSystem.scheduler.schedule(durationUntil(job.firstRunDate), job.interval, new Runnable(){
     override def run(): Unit = {
       val event = SchedulerRunEvent(job.name, expectedRunDate)
 
+      Logger.info(s"Scheduled Job [${job.name}]: Acquiring Lock")
       schedulerLockRepository.lock(event) map {
         case true =>
-          Logger.info(s"Running Job [${job.name}]")
-          job.execute() map { result =>
-            Logger.info(s"Job [${job.name}] completed with result [$result]")
+          Logger.info(s"Scheduled Job [${job.name}]: Successfully acquired lock, Starting Job.")
+          job.execute() map { _ =>
+            Logger.info(s"Scheduled Job [${job.name}]: Completed Successfully")
           } recover {
-            case t: Throwable => Logger.error(s"Job [${job.name}] failed", t)
+            case t: Throwable => Logger.error(s"Scheduled Job [${job.name}]: Failed", t)
           }
-        case false => Logger.info(s"Failed to acquire Lock for Job [${job.name}]")
+        case false => Logger.info(s"Scheduled Job [${job.name}]: Failed to acquire Lock. It may be running elsewhere.")
       }
     }
   })

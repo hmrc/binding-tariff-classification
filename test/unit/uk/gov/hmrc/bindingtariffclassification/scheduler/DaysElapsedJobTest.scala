@@ -19,10 +19,10 @@ package uk.gov.hmrc.bindingtariffclassification.scheduler
 import java.time._
 import java.util.concurrent.TimeUnit.DAYS
 
-import org.mockito.ArgumentMatchers
+import org.mockito.{ArgumentMatchers, Mockito}
 import org.mockito.ArgumentMatchers._
 import org.mockito.BDDMockito.given
-import org.mockito.Mockito.{reset, verifyZeroInteractions, when}
+import org.mockito.Mockito.{reset, verify, verifyZeroInteractions, when}
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.mockito.MockitoSugar
 import uk.gov.hmrc.bindingtariffclassification.config.{AppConfig, DaysElapsedConfig}
@@ -81,25 +81,27 @@ class DaysElapsedJobTest extends UnitSpec with MockitoSugar with BeforeAndAfterE
       given(appConfig.daysElapsed).willReturn(DaysElapsedConfig(LocalTime.MIDNIGHT, 1))
       given(caseService.incrementDaysElapsed(refEq(1))).willReturn(Future.successful(2))
 
-      await(new DaysElapsedJob(appConfig, caseService, bankHolidaysConnector).execute()) shouldBe "Incremented the Days Elapsed for [2] cases."
+      await(new DaysElapsedJob(appConfig, caseService, bankHolidaysConnector).execute())
+
+      verify(caseService).incrementDaysElapsed(1)
     }
 
     "Do nothing on a Saturday" in {
       givenTheDateIsFixedAt("2018-12-29T00:00:00")
-      await(new DaysElapsedJob(appConfig, caseService, bankHolidaysConnector).execute()) shouldBe "Skipping today as it is a Weekend"
+      await(new DaysElapsedJob(appConfig, caseService, bankHolidaysConnector).execute())
       verifyZeroInteractions(caseService)
     }
 
     "Do nothing on a Sunday" in {
       givenTheDateIsFixedAt("2018-12-30T00:00:00")
-      await(new DaysElapsedJob(appConfig, caseService, bankHolidaysConnector).execute()) shouldBe "Skipping today as it is a Weekend"
+      await(new DaysElapsedJob(appConfig, caseService, bankHolidaysConnector).execute())
       verifyZeroInteractions(caseService)
     }
 
     "Do nothing on a Bank Holiday" in {
       givenABankHolidayOn("2018-12-25")
       givenTheDateIsFixedAt("2018-12-25T00:00:00")
-      await(new DaysElapsedJob(appConfig, caseService, bankHolidaysConnector).execute()) shouldBe "Skipping today as it is a Bank Holiday"
+      await(new DaysElapsedJob(appConfig, caseService, bankHolidaysConnector).execute())
       verifyZeroInteractions(caseService)
     }
 

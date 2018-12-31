@@ -20,6 +20,7 @@ import java.time._
 import java.util.concurrent.TimeUnit
 
 import javax.inject.{Inject, Singleton}
+import play.api.Logger
 import uk.gov.hmrc.bindingtariffclassification.config.AppConfig
 import uk.gov.hmrc.bindingtariffclassification.connector.BankHolidaysConnector
 import uk.gov.hmrc.bindingtariffclassification.service.CaseService
@@ -40,26 +41,28 @@ class DaysElapsedJob @Inject()(appConfig: AppConfig, caseService: CaseService, b
 
   override def interval: FiniteDuration = FiniteDuration(jobConfig.intervalDays, TimeUnit.DAYS)
 
-  override def execute(): Future[String] = {
-    ifTodayIsAWorkingDay { () =>
+  override def execute(): Future[Unit] = {
+    ifTodayIsAWorkingDay {
       caseService.incrementDaysElapsed(jobConfig.intervalDays)
-        .map(count => s"Incremented the Days Elapsed for [$count] cases.")
+        .map(count => Logger.info(s"Scheduled Job [$name]: Incremented the Days Elapsed for [$count] cases."))
     }
   }
 
-  private def ifTodayIsAWorkingDay(function: () => Future[String]): Future[String] = {
+  private def ifTodayIsAWorkingDay(function: => Future[Unit]): Future[Unit] = {
     val today = LocalDate.now(appConfig.clock)
     val dayOfTheWeek = today.getDayOfWeek
     if (dayOfTheWeek == DayOfWeek.SATURDAY || dayOfTheWeek == DayOfWeek.SUNDAY) {
-      Future.successful("Skipping today as it is a Weekend")
+      Logger.info(s"Scheduled Job [$name]: Skipping today as it is a Weekend")
+      Future.successful()
     } else {
       bankHolidaysConnector.get()
         .map(_.contains(today))
         .flatMap {
           case true =>
-            Future.successful("Skipping today as it is a Bank Holiday")
+            Logger.info(s"Scheduled Job [$name]: Skipping today as it is a Bank Holiday")
+            Future.successful()
           case false =>
-            function()
+            function
         }
     }
   }
