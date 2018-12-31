@@ -53,14 +53,14 @@ class DaysElapsedJob @Inject()(appConfig: AppConfig, caseService: CaseService, b
     val dayOfTheWeek = today.getDayOfWeek
     if (dayOfTheWeek == DayOfWeek.SATURDAY || dayOfTheWeek == DayOfWeek.SUNDAY) {
       Logger.info(s"Scheduled Job [$name]: Skipping today as it is a Weekend")
-      Future.successful()
+      Future.successful((): Unit)
     } else {
       bankHolidaysConnector.get()
         .map(_.contains(today))
         .flatMap {
           case true =>
             Logger.info(s"Scheduled Job [$name]: Skipping today as it is a Bank Holiday")
-            Future.successful()
+            Future.successful((): Unit)
           case false =>
             function
         }
