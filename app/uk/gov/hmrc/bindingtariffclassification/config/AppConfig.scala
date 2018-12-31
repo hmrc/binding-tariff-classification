@@ -37,10 +37,15 @@ class AppConfig @Inject()(val runModeConfiguration: Configuration, environment: 
     getInt("scheduler.days-elapsed.interval-days")
   )
 
-  lazy val bankHolidaysUrl: String = baseUrl("bank-holidays")
-
   private def getBooleanConfig(key: String, default: Boolean): Boolean = {
     runModeConfiguration.getBoolean(key).getOrElse(default)
+  }
+
+  def bankHolidaysUrl: String = {
+    val protocol = getString("microservice.services.bank-holidays.protocol")
+    val host = getString("microservice.services.bank-holidays.host")
+    val port = runModeConfiguration.getString("microservice.services.bank-holidays.port")
+    s"$protocol://$host${port.map(p => s":$p").getOrElse("")}"
   }
 
 }

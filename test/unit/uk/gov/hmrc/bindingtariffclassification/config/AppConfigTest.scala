@@ -47,7 +47,14 @@ class AppConfigTest extends UnitSpec with GuiceOneAppPerSuite {
       config.intervalDays shouldBe 1
     }
 
-    "build 'bankHolidaysUrl" in {
+    "build 'bankHolidaysUrl without port" in {
+      configWith(
+        "microservice.services.bank-holidays.protocol" -> "https",
+        "microservice.services.bank-holidays.host" -> "www.host.co.uk"
+      ).bankHolidaysUrl shouldBe "https://www.host.co.uk"
+    }
+
+    "build 'bankHolidaysUrl with port" in {
       configWith(
         "microservice.services.bank-holidays.protocol" -> "https",
         "microservice.services.bank-holidays.host" -> "www.host.co.uk",
