@@ -44,14 +44,13 @@ class CaseServiceSpec extends UnitSpec with MockitoSugar with BeforeAndAfterEach
   private val caseRepository = mock[CaseRepository]
   private val sequenceRepository = mock[SequenceRepository]
   private val eventService = mock[EventService]
-  private val bankHolidaysConnector = mock[BankHolidaysConnector]
 
-  private val service = new CaseService(caseRepository, sequenceRepository, eventService, bankHolidaysConnector)
+  private val service = new CaseService(caseRepository, sequenceRepository, eventService)
 
   final val emulatedFailure = new RuntimeException("Emulated failure.")
 
   override protected def afterEach(): Unit = {
-    reset(caseRepository, bankHolidaysConnector)
+    reset(caseRepository)
   }
 
   "deleteAll()" should {
@@ -173,46 +172,11 @@ class CaseServiceSpec extends UnitSpec with MockitoSugar with BeforeAndAfterEach
 
   }
 
-  "incrementDaysElapsedIfAppropriate()" should {
-    "Do nothing on a Saturday" in {
-      val clock = givenTheDateIsFixedAt("2018-12-29")
-      await(service.incrementDaysElapsedIfAppropriate(1, clock)) shouldBe 0
-      verifyZeroInteractions(caseRepository)
-    }
-
-    "Do nothing on a Sunday" in {
-      val clock = givenTheDateIsFixedAt("2018-12-30")
-      await(service.incrementDaysElapsedIfAppropriate(1, clock)) shouldBe 0
-      verifyZeroInteractions(caseRepository)
-    }
-
-    "Do nothing on a Bank Holiday" in {
-      givenABankHolidayOn("2018-12-25")
-      val clock = givenTheDateIsFixedAt("2018-12-25")
-      await(service.incrementDaysElapsedIfAppropriate(1, clock)) shouldBe 0
-      verifyZeroInteractions(caseRepository)
-    }
-
+  "incrementDaysElapsed()" should {
     "Delegate to Repository" in {
-      givenItIsNotABankHoliday()
-      val clock = givenTheDateIsFixedAt("2018-12-24")
       when(caseRepository.incrementDaysElapsed(1)).thenReturn(successful(1))
-      await(service.incrementDaysElapsedIfAppropriate(1, clock)) shouldBe 1
+      await(service.incrementDaysElapsed(1)) shouldBe 1
     }
-  }
-
-  private def givenABankHolidayOn(date: String): Unit = {
-    when(bankHolidaysConnector.get()(ArgumentMatchers.any[HeaderCarrier])).thenReturn(Seq(LocalDate.parse(date)))
-  }
-
-  private def givenItIsNotABankHoliday(): Unit = {
-    when(bankHolidaysConnector.get()(ArgumentMatchers.any[HeaderCarrier])).thenReturn(Seq.empty)
-  }
-
-  private def givenTheDateIsFixedAt(date: String) : Clock = {
-    val zone = ZoneId.of("UTC")
-    val instant = LocalDate.parse(date).atStartOfDay(zone).toInstant
-    Clock.fixed(instant, zone)
   }
 
 }

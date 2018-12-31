@@ -21,6 +21,7 @@ import java.util.concurrent.TimeUnit
 
 import javax.inject.{Inject, Singleton}
 import uk.gov.hmrc.bindingtariffclassification.config.AppConfig
+import uk.gov.hmrc.bindingtariffclassification.connector.BankHolidaysConnector
 import uk.gov.hmrc.bindingtariffclassification.service.CaseService
 import uk.gov.hmrc.http.HeaderCarrier
 
@@ -29,7 +30,7 @@ import scala.concurrent.Future
 import scala.concurrent.duration.FiniteDuration
 
 @Singleton
-class DaysElapsedJob @Inject()(appConfig: AppConfig, caseService: CaseService) extends ScheduledJob {
+class DaysElapsedJob @Inject()(appConfig: AppConfig, caseService: CaseService, bankHolidaysConnector: BankHolidaysConnector) extends ScheduledJob {
 
   private implicit val carrier: HeaderCarrier = HeaderCarrier()
 
@@ -40,8 +41,27 @@ class DaysElapsedJob @Inject()(appConfig: AppConfig, caseService: CaseService) e
   override def interval: FiniteDuration = FiniteDuration(jobConfig.intervalDays, TimeUnit.DAYS)
 
   override def execute(): Future[String] = {
-    caseService.incrementDaysElapsedIfAppropriate(jobConfig.intervalDays, appConfig.clock)
-      .map(count => s"Incremented the Days Elapsed for [$count] cases.")
+    ifTodayIsAWorkingDay { () =>
+      caseService.incrementDaysElapsed(jobConfig.intervalDays)
+        .map(count => s"Incremented the Days Elapsed for [$count] cases.")
+    }
+  }
+
+  private def ifTodayIsAWorkingDay(function: () => Future[String]): Future[String] = {
+    val today = LocalDate.now(appConfig.clock)
+    val dayOfTheWeek = today.getDayOfWeek
+    if (dayOfTheWeek == DayOfWeek.SATURDAY || dayOfTheWeek == DayOfWeek.SUNDAY) {
+      Future.successful("Skipping today as it is a Weekend")
+    } else {
+      bankHolidaysConnector.get()
+        .map(_.contains(today))
+        .flatMap {
+          case true =>
+            Future.successful("Skipping today as it is a Bank Holiday")
+          case false =>
+            function()
+        }
+    }
   }
 
   override def firstRunDate: Instant = {
@@ -50,7 +70,7 @@ class DaysElapsedJob @Inject()(appConfig: AppConfig, caseService: CaseService) e
     val nextRunTime: LocalTime = jobConfig.elapseTime
     val nextRunDateTimeToday = nextRunTime.atDate(LocalDate.now(appConfig.clock))
     val nextRunDateTimeTomorrow = nextRunTime.atDate(LocalDate.now(appConfig.clock).plusDays(1))
-    val nextRunDateTime = if(nextRunDateTimeToday.isAfter(currentTime)) nextRunDateTimeToday else nextRunDateTimeTomorrow
+    val nextRunDateTime = if (nextRunDateTimeToday.isAfter(currentTime)) nextRunDateTimeToday else nextRunDateTimeTomorrow
     nextRunDateTime.atZone(appConfig.clock.getZone).toInstant
   }
 

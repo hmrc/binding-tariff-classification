@@ -32,8 +32,7 @@ import scala.concurrent.Future
 @Singleton
 class CaseService @Inject()(caseRepository: CaseRepository,
                             sequenceRepository: SequenceRepository,
-                            eventService: EventService,
-                            bankHolidaysConnector: BankHolidaysConnector) {
+                            eventService: EventService) {
 
   def insert(c: Case): Future[Case] = {
     caseRepository.insert(c)
@@ -59,19 +58,8 @@ class CaseService @Inject()(caseRepository: CaseRepository,
     caseRepository.deleteAll()
   }
 
-  def incrementDaysElapsedIfAppropriate(increment: Double, clock: Clock = Clock.systemDefaultZone())(implicit hc: HeaderCarrier): Future[Int] = {
-    val today = LocalDate.now(clock)
-    val dayOfTheWeek = today.getDayOfWeek
-    if (dayOfTheWeek == DayOfWeek.SATURDAY || dayOfTheWeek == DayOfWeek.SUNDAY) {
-      Future.successful(0)
-    } else {
-      bankHolidaysConnector.get()
-        .map(_.contains(today))
-        .flatMap {
-          case true => Future.successful(0)
-          case false => caseRepository.incrementDaysElapsed(increment)
-        }
-    }
+  def incrementDaysElapsed(increment: Double): Future[Int] = {
+    caseRepository.incrementDaysElapsed(increment)
   }
 
 }
