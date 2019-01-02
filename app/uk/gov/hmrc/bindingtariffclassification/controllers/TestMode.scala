@@ -22,13 +22,13 @@ import uk.gov.hmrc.bindingtariffclassification.model.{ErrorCode, JsErrorResponse
 
 import scala.concurrent.Future
 
-object DeleteMode {
+object TestMode {
 
   def actionFilter(appConfig: AppConfig) = new ActionBuilder[Request] with ActionFilter[Request] {
 
     override protected def filter[A](request: Request[A]): Future[Option[Result]] = Future.successful {
-      if (appConfig.isDeleteEnabled) None
-      else Some(play.api.mvc.Results.Forbidden(JsErrorResponse(ErrorCode.FORBIDDEN, "You are not allowed to delete.")))
+      if (appConfig.isTestMode) None
+      else Some(play.api.mvc.Results.Forbidden(JsErrorResponse(ErrorCode.FORBIDDEN, s"You are not allowed to call ${request.method} ${request.uri}")))
     }
 
   }

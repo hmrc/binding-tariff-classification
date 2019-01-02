@@ -24,12 +24,14 @@ import scala.concurrent.Await.result
 
 class DaysElapsedSpec extends BaseFeatureSpec {
 
-  override lazy val port = 14681
+  override lazy val port = 14683
   protected val serviceUrl = s"http://localhost:$port"
 
   private val c: Case = createCase(app = createBasicBTIApplication)
 
   private val job: DaysElapsedJob = app.injector.instanceOf[DaysElapsedJob]
+
+  // TODO: call the endpoint
 
   feature("Days Elapsed Job") {
 

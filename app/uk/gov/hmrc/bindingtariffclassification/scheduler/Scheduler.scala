@@ -21,7 +21,7 @@ import java.time.temporal.ChronoUnit
 import java.util.concurrent.TimeUnit
 
 import akka.actor.ActorSystem
-import javax.inject.Inject
+import javax.inject._
 import play.api.Logger
 import uk.gov.hmrc.bindingtariffclassification.config.AppConfig
 import uk.gov.hmrc.bindingtariffclassification.model.SchedulerRunEvent
@@ -30,6 +30,7 @@ import uk.gov.hmrc.bindingtariffclassification.repository.SchedulerLockRepositor
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.FiniteDuration
 
+@Singleton
 class Scheduler @Inject()(actorSystem: ActorSystem, appConfig: AppConfig, schedulerLockRepository: SchedulerLockRepository, job: ScheduledJob) {
 
   Logger.info(s"Scheduling job [${job.name}] to run periodically at [${job.firstRunTime}] with interval [${job.interval.length} ${job.interval.unit}]")

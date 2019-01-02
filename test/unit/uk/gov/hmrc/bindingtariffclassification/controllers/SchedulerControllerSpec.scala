@@ -14,18 +14,12 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.bindingtariffclassification.scheduler
+package uk.gov.hmrc.bindingtariffclassification.controllers
 
-import java.time.LocalTime
+import uk.gov.hmrc.play.test.UnitSpec
 
-import scala.concurrent.Future
-import scala.concurrent.duration.FiniteDuration
+class SchedulerControllerSpec extends UnitSpec {
 
-trait ScheduledJob {
-
-  def name: String
-  def execute(): Future[Unit]
-  def firstRunTime: LocalTime
-  def interval: FiniteDuration
+  // TODO
 
 }

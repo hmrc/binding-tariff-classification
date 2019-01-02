@@ -15,6 +15,7 @@
  */
 
 package uk.gov.hmrc.bindingtariffclassification.service
+
 import javax.inject._
 import uk.gov.hmrc.bindingtariffclassification.model.Event
 import uk.gov.hmrc.bindingtariffclassification.repository.EventRepository
