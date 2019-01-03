@@ -32,7 +32,7 @@ class AppConfig @Inject()(val runModeConfiguration: Configuration, environment: 
 
   lazy val clock: Clock = Clock.systemDefaultZone()
 
-  lazy val daysElapsed: DaysElapsedConfig = DaysElapsedConfig(
+  lazy val daysElapsed: JobConfig = JobConfig(
     LocalTime.parse(getString("scheduler.days-elapsed.run-time")),
     getInt("scheduler.days-elapsed.interval-days")
   )
@@ -50,4 +50,4 @@ class AppConfig @Inject()(val runModeConfiguration: Configuration, environment: 
 
 }
 
-case class DaysElapsedConfig(elapseTime: LocalTime, intervalDays: Int)
+case class JobConfig(elapseTime: LocalTime, intervalDays: Int)

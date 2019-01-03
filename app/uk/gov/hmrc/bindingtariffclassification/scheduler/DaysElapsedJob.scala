@@ -33,7 +33,9 @@ import scala.concurrent.Future.successful
 import scala.concurrent.duration.FiniteDuration
 
 @Singleton
-class DaysElapsedJob @Inject()(appConfig: AppConfig, caseService: CaseService, bankHolidaysConnector: BankHolidaysConnector) extends ScheduledJob {
+class DaysElapsedJob @Inject()(appConfig: AppConfig,
+                               caseService: CaseService,
+                               bankHolidaysConnector: BankHolidaysConnector) extends ScheduledJob {
 
   private implicit val carrier: HeaderCarrier = HeaderCarrier()
 
