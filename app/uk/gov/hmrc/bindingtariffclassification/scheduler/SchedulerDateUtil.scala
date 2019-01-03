@@ -19,6 +19,8 @@ package uk.gov.hmrc.bindingtariffclassification.scheduler
 import java.time.{Instant, LocalDate, LocalTime}
 
 import javax.inject.{Inject, Singleton}
+import javax.inject.Inject
+
 import uk.gov.hmrc.bindingtariffclassification.config.AppConfig
 
 import scala.concurrent.duration.FiniteDuration
@@ -59,6 +61,7 @@ class SchedulerDateUtil @Inject()(appConfig: AppConfig) {
 
     val intervalRemaining: Long = if(intervalRemainder < 0) intervalRemainder + intervalSeconds else intervalRemainder
     val intervalElapsed: Long = intervalSeconds - intervalRemaining
+
     if (intervalRemaining == 0) {
       LocalDate.now(clock).atTime(time).atZone(clock.getZone).toInstant
     } else if (intervalRemaining < intervalElapsed) {
