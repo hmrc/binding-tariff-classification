@@ -50,14 +50,10 @@ class CaseController @Inject()(appConfig: AppConfig,
     } recover recovery
   }
 
-
-
-
-
   def update(reference: String): Action[JsValue] = Action.async(parse.json) { implicit request =>
     withJsonBody[Case] { caseRequest: Case =>
       if (caseRequest.reference == reference) {
-        caseService.update(caseRequest) map handleCaseNotFound recover recovery
+        caseService.update(caseRequest) map handleNotFound recover recovery
       } else successful(BadRequest(JsErrorResponse(ErrorCode.INVALID_REQUEST_PAYLOAD, "Invalid case reference")))
     } recover recovery
   }
@@ -74,10 +70,10 @@ class CaseController @Inject()(appConfig: AppConfig,
   }
 
   def getByReference(reference: String): Action[AnyContent] = Action.async { implicit request =>
-    caseService.getByReference(reference) map handleCaseNotFound recover recovery
+    caseService.getByReference(reference) map handleNotFound recover recovery
   }
 
-  private[controllers] def handleCaseNotFound: PartialFunction[Option[Case], Result] = {
+  private[controllers] def handleNotFound: PartialFunction[Option[Case], Result] = {
     case Some(c: Case) => Ok(Json.toJson(c))
     case _ => NotFound(JsErrorResponse(NOTFOUND, "Case not found"))
   }

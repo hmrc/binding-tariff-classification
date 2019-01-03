@@ -30,7 +30,7 @@ class SchedulerController @Inject()(appConfig: AppConfig,
   lazy private val testModeFilter = TestMode.actionFilter(appConfig)
 
   def incrementElapsedDays(): Action[AnyContent] = testModeFilter.async { implicit request =>
-    scheduledJob.execute() map (_ => NoContent) recover recovery
+    scheduledJob.execute() map (_ => Ok) recover recovery
   }
 
 }
