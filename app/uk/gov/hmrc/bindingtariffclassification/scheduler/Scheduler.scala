@@ -21,7 +21,7 @@ import java.time.temporal.ChronoUnit
 import java.util.concurrent.TimeUnit
 
 import akka.actor.ActorSystem
-import javax.inject.Inject
+import javax.inject.{Inject, Singleton}
 import play.api.Logger
 import uk.gov.hmrc.bindingtariffclassification.config.AppConfig
 import uk.gov.hmrc.bindingtariffclassification.model.SchedulerRunEvent
@@ -32,6 +32,7 @@ import scala.concurrent.Future
 import scala.concurrent.Future.successful
 import scala.concurrent.duration.FiniteDuration
 
+@Singleton
 class Scheduler @Inject()(actorSystem: ActorSystem,
                           appConfig: AppConfig,
                           schedulerLockRepository: SchedulerLockRepository,
@@ -41,23 +42,23 @@ class Scheduler @Inject()(actorSystem: ActorSystem,
   Logger.info(s"Scheduling job [${job.name}] to run periodically at [${job.firstRunTime}] with interval [${job.interval.length} ${job.interval.unit}]")
   actorSystem.scheduler.schedule(durationUntil(nextRunDate), job.interval, new Runnable() {
     override def run(): Unit = {
-      execute()
+      execute
     }
   })
 
-  def execute(): Future[Boolean] = {
+  // TODO: add tests for this method
+  def execute: Future[Boolean] = {
     val event = SchedulerRunEvent(job.name, closestRunDate)
     Logger.info(s"Scheduled Job [${job.name}]: Acquiring Lock")
     schedulerLockRepository.lock(event).flatMap {
       case true =>
         Logger.info(s"Scheduled Job [${job.name}]: Successfully acquired lock. Starting Job.")
-        job.execute().map { _ =>
+        job.execute().map { _: Unit =>
           Logger.info(s"Scheduled Job [${job.name}]: Completed Successfully")
           true
-        } recover {
-          case t: Throwable =>
-            Logger.error(s"Scheduled Job [${job.name}]: Failed", t)
-            false
+        } recoverWith { case t: Throwable =>
+          Logger.error(s"Scheduled Job [${job.name}]: Failed", t)
+          Future.failed(t)
         }
       case false =>
         Logger.info(s"Scheduled Job [${job.name}]: Failed to acquire Lock. It may have been running already.")

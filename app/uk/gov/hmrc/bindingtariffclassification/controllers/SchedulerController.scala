@@ -19,18 +19,22 @@ package uk.gov.hmrc.bindingtariffclassification.controllers
 import javax.inject.{Inject, Singleton}
 import play.api.mvc.{Action, AnyContent}
 import uk.gov.hmrc.bindingtariffclassification.config.AppConfig
-import uk.gov.hmrc.bindingtariffclassification.scheduler.ScheduledJob
+import uk.gov.hmrc.bindingtariffclassification.model.{ErrorCode, JsErrorResponse}
+import uk.gov.hmrc.bindingtariffclassification.scheduler.Scheduler
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
 @Singleton
 class SchedulerController @Inject()(appConfig: AppConfig,
-                                    scheduledJob: ScheduledJob) extends CommonController {
+                                    scheduler: Scheduler) extends CommonController {
 
   lazy private val testModeFilter = TestMode.actionFilter(appConfig)
 
   def incrementElapsedDays(): Action[AnyContent] = testModeFilter.async { implicit request =>
-    scheduledJob.execute() map (_ => Ok) recover recovery
+    scheduler.execute map {
+      case true => Ok
+      case false => Conflict(JsErrorResponse(ErrorCode.CONFLICT, "Job could bot be executed"))
+    } recover recovery
   }
 
 }

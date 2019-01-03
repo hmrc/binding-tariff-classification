@@ -18,11 +18,12 @@ package uk.gov.hmrc.bindingtariffclassification.scheduler
 
 import java.time.{Instant, LocalDate, LocalTime}
 
-import javax.inject.Inject
+import javax.inject.{Inject, Singleton}
 import uk.gov.hmrc.bindingtariffclassification.config.AppConfig
 
 import scala.concurrent.duration.FiniteDuration
 
+@Singleton
 class SchedulerDateUtil @Inject()(appConfig: AppConfig) {
 
   private lazy val clock = appConfig.clock
@@ -65,6 +66,6 @@ class SchedulerDateUtil @Inject()(appConfig: AppConfig) {
     } else {
       LocalDate.now(clock).atTime(time).minusSeconds(intervalElapsed).atZone(clock.getZone).toInstant
     }
-
   }
+
 }

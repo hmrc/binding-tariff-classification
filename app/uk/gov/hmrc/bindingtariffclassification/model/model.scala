@@ -22,8 +22,10 @@ import play.api.libs.json.{JsObject, Json}
 package object model {
 
   object ErrorCode extends Enumeration {
+
     type ErrorCode = Value
 
+    val CONFLICT = Value("CONFLICT")
     val FORBIDDEN = Value("FORBIDDEN")
     val NOTFOUND = Value("NOT_FOUND")
     val UNKNOWN_ERROR = Value("UNKNOWN_ERROR")
