@@ -38,7 +38,7 @@ class CaseController @Inject()(appConfig: AppConfig,
   lazy private val testModeFilter = TestMode.actionFilter(appConfig)
 
   def deleteAll(): Action[AnyContent] = testModeFilter.async { implicit request =>
-    caseService.deleteAll map (_ => NoContent) recover recovery
+    caseService.deleteAll() map (_ => NoContent) recover recovery
   }
 
   def create: Action[JsValue] = Action.async(parse.json) { implicit request =>

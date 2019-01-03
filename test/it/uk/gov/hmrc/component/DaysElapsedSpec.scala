@@ -42,6 +42,8 @@ class DaysElapsedSpec extends BaseFeatureSpec {
       // Given
       storeCases()
 
+      val locks = schedulerLockStoreSize
+
       When("I hit the elapsed days endpoint")
       val result = Http(s"$serviceUrl/scheduler/elapsed-days")
         .postData("")
@@ -55,6 +57,7 @@ class DaysElapsedSpec extends BaseFeatureSpec {
 
       // Then
       assertDaysElapsed()
+      assertLocksHaveIncremented(locks)
     }
 
   }
@@ -66,11 +69,14 @@ class DaysElapsedSpec extends BaseFeatureSpec {
       // Given
       storeCases()
 
+      val locks = schedulerLockStoreSize
+
       When("The job runs")
       result(job.execute(), timeout)
 
       // Then
       assertDaysElapsed()
+      assertLocksHaveIncremented(locks)
     }
 
   }
@@ -91,6 +97,11 @@ class DaysElapsedSpec extends BaseFeatureSpec {
 
     Then("Other cases should remain the same")
     getCase("other").map(_.daysElapsed) shouldBe Some(0)
+  }
+
+  private def assertLocksHaveIncremented(initialNumberOfLocks: Int): Unit = {
+    Then("A new scheduler lock has been created in mongo")
+    schedulerLockStoreSize shouldBe 1 + initialNumberOfLocks
   }
 
   private def isNonWorkingDay(date: LocalDate): Boolean = {

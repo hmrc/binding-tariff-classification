@@ -71,7 +71,7 @@ class CaseRepositorySpec extends BaseMongoIndexSpec
     await(repository.collection.count())
   }
 
-  "deleteAll" should {
+  "deleteAll()" should {
 
     "clear the collection" in {
       val size = collectionSize
@@ -79,7 +79,7 @@ class CaseRepositorySpec extends BaseMongoIndexSpec
       store(case1, case2)
       collectionSize shouldBe 2 + size
 
-      await(repository.deleteAll) shouldBe ((): Unit)
+      await(repository.deleteAll()) shouldBe ((): Unit)
       collectionSize shouldBe size
     }
 

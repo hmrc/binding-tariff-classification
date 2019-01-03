@@ -35,7 +35,7 @@ class EventController @Inject()(appConfig: AppConfig, eventService: EventService
   lazy private val testModeFilter = TestMode.actionFilter(appConfig)
 
   def deleteAll(): Action[AnyContent] = testModeFilter.async { implicit request =>
-    eventService.deleteAll map ( _ => NoContent ) recover recovery
+    eventService.deleteAll() map ( _ => NoContent ) recover recovery
   }
 
   def getByCaseReference(caseRef: String): Action[AnyContent] = Action.async { implicit request =>

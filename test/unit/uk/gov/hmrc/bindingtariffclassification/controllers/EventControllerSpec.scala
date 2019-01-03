@@ -64,7 +64,7 @@ class EventControllerSpec extends UnitSpec with WithFakeApplication with Mockito
 
     val req = FakeRequest(method = HttpVerbs.DELETE, path = "/events")
 
-    "return 403 if the delete mode is disabled" in {
+    "return 403 if the test mode is disabled" in {
 
       val result = await(controller.deleteAll()(req))
 
@@ -72,9 +72,9 @@ class EventControllerSpec extends UnitSpec with WithFakeApplication with Mockito
       jsonBodyOf(result).toString() shouldEqual s"""{"code":"FORBIDDEN","message":"You are not allowed to call ${req.method} ${req.path}"}"""
     }
 
-    "return 204 if the delete mode is enabled" in {
+    "return 204 if the test mode is enabled" in {
       when(appConfig.isTestMode).thenReturn(true)
-      when(eventService.deleteAll).thenReturn(successful(()))
+      when(eventService.deleteAll()).thenReturn(successful(()))
 
       val result = await(controller.deleteAll()(req))
 
@@ -85,7 +85,7 @@ class EventControllerSpec extends UnitSpec with WithFakeApplication with Mockito
       val error = new RuntimeException
 
       when(appConfig.isTestMode).thenReturn(true)
-      when(eventService.deleteAll).thenReturn(failed(error))
+      when(eventService.deleteAll()).thenReturn(failed(error))
 
       val result = await(controller.deleteAll()(req))
 

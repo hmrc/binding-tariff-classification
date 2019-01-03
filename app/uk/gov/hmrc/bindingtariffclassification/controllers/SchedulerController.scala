@@ -33,7 +33,7 @@ class SchedulerController @Inject()(appConfig: AppConfig,
   def incrementElapsedDays(): Action[AnyContent] = testModeFilter.async { implicit request =>
     scheduler.execute map {
       case true => Ok
-      case false => Conflict(JsErrorResponse(ErrorCode.CONFLICT, "Job could bot be executed"))
+      case false => Conflict(JsErrorResponse(ErrorCode.CONFLICT, "Job could not be executed"))
     } recover recovery
   }
 

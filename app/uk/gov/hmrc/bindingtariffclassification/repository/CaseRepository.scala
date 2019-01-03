@@ -96,7 +96,7 @@ class CaseMongoRepository @Inject()(mongoDbProvider: MongoDbProvider, jsonMapper
     getMany(jsonMapper.from(searchBy), sorting)
   }
 
-  override def deleteAll: Future[Unit] = {
+  override def deleteAll(): Future[Unit] = {
     removeAll().map(_ => ())
   }
 

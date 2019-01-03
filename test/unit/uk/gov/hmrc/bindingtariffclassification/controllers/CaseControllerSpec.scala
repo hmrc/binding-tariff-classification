@@ -61,7 +61,7 @@ class CaseControllerSpec extends UnitSpec with WithFakeApplication with MockitoS
 
     val req = FakeRequest(method = HttpVerbs.DELETE, path = "/cases")
 
-    "return 403 if the delete mode is disabled" in {
+    "return 403 if the test mode is disabled" in {
 
       val result = await(controller.deleteAll()(req))
 
@@ -69,9 +69,9 @@ class CaseControllerSpec extends UnitSpec with WithFakeApplication with MockitoS
       jsonBodyOf(result).toString() shouldEqual s"""{"code":"FORBIDDEN","message":"You are not allowed to call ${req.method} ${req.path}"}"""
     }
 
-    "return 204 if the delete mode is enabled" in {
+    "return 204 if the test mode is enabled" in {
       when(appConfig.isTestMode).thenReturn(true)
-      when(caseService.deleteAll).thenReturn(successful(()))
+      when(caseService.deleteAll()).thenReturn(successful(()))
 
       val result = await(controller.deleteAll()(req))
 
@@ -82,7 +82,7 @@ class CaseControllerSpec extends UnitSpec with WithFakeApplication with MockitoS
       val error = new RuntimeException
 
       when(appConfig.isTestMode).thenReturn(true)
-      when(caseService.deleteAll).thenReturn(failed(error))
+      when(caseService.deleteAll()).thenReturn(failed(error))
 
       val result = await(controller.deleteAll()(req))
 

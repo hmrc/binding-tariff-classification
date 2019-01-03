@@ -16,10 +16,71 @@
 
 package uk.gov.hmrc.bindingtariffclassification.controllers
 
-import uk.gov.hmrc.play.test.UnitSpec
+import akka.stream.Materializer
+import org.mockito.Mockito.when
+import org.scalatest.mockito.MockitoSugar
+import play.api.http.Status._
+import play.api.test.FakeRequest
+import uk.gov.hmrc.bindingtariffclassification.config.AppConfig
+import uk.gov.hmrc.bindingtariffclassification.scheduler.Scheduler
+import uk.gov.hmrc.http.HttpVerbs
+import uk.gov.hmrc.play.test.{UnitSpec, WithFakeApplication}
 
-class SchedulerControllerSpec extends UnitSpec {
+import scala.concurrent.Future.{failed, successful}
 
-  // TODO
+class SchedulerControllerSpec extends UnitSpec with WithFakeApplication with MockitoSugar {
+
+  private implicit val mat: Materializer = fakeApplication.materializer
+
+  private val appConfig = mock[AppConfig]
+  private val scheduler = mock[Scheduler]
+
+  private val fakeRequest = FakeRequest(method = HttpVerbs.POST, path = "/scheduler/elapsed-days")
+
+  private val controller = new SchedulerController(appConfig, scheduler)
+
+  "incrementElapsedDays()" should {
+
+    "return 403 if the test mode is disabled" in {
+
+      val result = await(controller.incrementElapsedDays()(fakeRequest))
+
+      status(result) shouldEqual FORBIDDEN
+      jsonBodyOf(result).toString() shouldEqual s"""{"code":"FORBIDDEN","message":"You are not allowed to call ${fakeRequest.method} ${fakeRequest.path}"}"""
+    }
+
+    "return 200 if the test mode is enabled and the scheduler executed successfully" in {
+      when(appConfig.isTestMode).thenReturn(true)
+      when(scheduler.execute).thenReturn(successful(true))
+
+      val result = await(controller.incrementElapsedDays()(fakeRequest))
+
+      status(result) shouldEqual OK
+      jsonBodyOf(result).toString() shouldEqual ""
+    }
+
+    "return 409 if the test mode is enabled and the scheduler executed but without success" in {
+      when(appConfig.isTestMode).thenReturn(true)
+      when(scheduler.execute).thenReturn(successful(false))
+
+      val result = await(controller.incrementElapsedDays()(fakeRequest))
+
+      status(result) shouldEqual CONFLICT
+      jsonBodyOf(result).toString() shouldEqual "Job could not be executed"
+    }
+
+    "return 500 when an error occurred" in {
+      val error = new RuntimeException
+
+      when(appConfig.isTestMode).thenReturn(true)
+      when(scheduler.execute).thenReturn(failed(error))
+
+      val result = await(controller.incrementElapsedDays()(fakeRequest))
+
+      status(result) shouldEqual INTERNAL_SERVER_ERROR
+      jsonBodyOf(result).toString() shouldEqual """{"code":"UNKNOWN_ERROR","message":"An unexpected error occurred"}"""
+    }
+
+  }
 
 }
