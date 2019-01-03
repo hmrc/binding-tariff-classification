@@ -69,14 +69,11 @@ class DaysElapsedSpec extends BaseFeatureSpec {
       // Given
       storeCases()
 
-      val locks = schedulerLockStoreSize
-
       When("The job runs")
       result(job.execute(), timeout)
 
       // Then
       assertDaysElapsed()
-      assertLocksHaveIncremented(locks)
     }
 
   }
