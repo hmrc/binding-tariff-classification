@@ -25,7 +25,7 @@ import org.mockito.BDDMockito.given
 import org.mockito.Mockito.{reset, verify, verifyZeroInteractions, when}
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.mockito.MockitoSugar
-import uk.gov.hmrc.bindingtariffclassification.config.{AppConfig, DaysElapsedConfig}
+import uk.gov.hmrc.bindingtariffclassification.config.{AppConfig, JobConfig}
 import uk.gov.hmrc.bindingtariffclassification.connector.BankHolidaysConnector
 import uk.gov.hmrc.bindingtariffclassification.service.CaseService
 import uk.gov.hmrc.http.HeaderCarrier
@@ -53,13 +53,13 @@ class DaysElapsedJobTest extends UnitSpec with MockitoSugar with BeforeAndAfterE
 
     "Configure 'firstRunTime'" in {
       val runTime = LocalTime.of(14, 0)
-      given(appConfig.daysElapsed).willReturn(DaysElapsedConfig(runTime, 1))
+      given(appConfig.daysElapsed).willReturn(JobConfig(runTime, 1))
 
       new DaysElapsedJob(appConfig, caseService, bankHolidaysConnector).firstRunTime shouldBe runTime
     }
 
     "Configure 'interval'" in {
-      given(appConfig.daysElapsed).willReturn(DaysElapsedConfig(LocalTime.MIDNIGHT, 1))
+      given(appConfig.daysElapsed).willReturn(JobConfig(LocalTime.MIDNIGHT, 1))
 
       new DaysElapsedJob(appConfig, caseService, bankHolidaysConnector).interval shouldBe FiniteDuration(1, DAYS)
     }
@@ -67,7 +67,7 @@ class DaysElapsedJobTest extends UnitSpec with MockitoSugar with BeforeAndAfterE
     "Execute" in {
       givenItIsNotABankHoliday()
       givenTheDateIsFixedAt("2018-12-25T12:00:00")
-      given(appConfig.daysElapsed).willReturn(DaysElapsedConfig(LocalTime.MIDNIGHT, 1))
+      given(appConfig.daysElapsed).willReturn(JobConfig(LocalTime.MIDNIGHT, 1))
       given(caseService.incrementDaysElapsed(refEq(1))).willReturn(Future.successful(2))
 
       await(new DaysElapsedJob(appConfig, caseService, bankHolidaysConnector).execute())

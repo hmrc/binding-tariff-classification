@@ -23,20 +23,20 @@ import akka.actor.{ActorSystem, Cancellable}
 import org.mockito.ArgumentCaptor
 import org.mockito.ArgumentMatchers.any
 import org.mockito.BDDMockito.given
-import org.mockito.Mockito.{never, reset, verify}
+import org.mockito.Mockito.{never, reset, verify, verifyNoMoreInteractions}
 import org.mockito.invocation.InvocationOnMock
 import org.mockito.stubbing.Answer
+import org.scalatest.BeforeAndAfterEach
 import org.scalatest.concurrent.Eventually
 import org.scalatest.mockito.MockitoSugar
-import org.scalatest.BeforeAndAfterEach
 import uk.gov.hmrc.bindingtariffclassification.config.AppConfig
 import uk.gov.hmrc.bindingtariffclassification.model.SchedulerRunEvent
 import uk.gov.hmrc.bindingtariffclassification.repository.SchedulerLockRepository
 import uk.gov.hmrc.play.test.UnitSpec
 
-import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future.successful
+import scala.concurrent.duration._
 
 class SchedulerTest extends UnitSpec with MockitoSugar with BeforeAndAfterEach with Eventually {
 
@@ -46,17 +46,24 @@ class SchedulerTest extends UnitSpec with MockitoSugar with BeforeAndAfterEach w
   private val actorSystem = mock[ActorSystem]
   private val internalScheduler = mock[akka.actor.Scheduler]
   private val config = mock[AppConfig]
-  private val midday: LocalTime = timeOf("12:00:00")
-  private val now: Instant = instantOf("2018-12-25T12:00:00")
+  private val now: Instant = "2018-12-25T12:00:00"
   private val clock = Clock.fixed(now, zone)
+  private val util = mock[SchedulerDateUtil]
 
-  private def instantOf(datetime: String): Instant = {
+  private def instant(datetime: String) = {
     LocalDateTime.parse(datetime).atZone(zone).toInstant
   }
 
-  private def timeOf(time: String): LocalTime = {
-    LocalTime.parse(time)
+  private implicit def string2Instant: String => Instant = {
+    datetime => instant(datetime)
   }
+
+  private implicit def string2Time: String => LocalTime = {
+    time => LocalTime.parse(time)
+  }
+
+  private implicit def instant2Time: Instant => LocalTime = _.atZone(zone).toLocalTime
+
 
   private def givenTheLockSucceeds(): Unit = {
     given(schedulerRepository.lock(any[SchedulerRunEvent])).willReturn(successful(true))
@@ -84,9 +91,9 @@ class SchedulerTest extends UnitSpec with MockitoSugar with BeforeAndAfterEach w
 
   override protected def beforeEach(): Unit = {
     super.beforeEach()
-    given(config.clock).willReturn(clock)
-    given(actorSystem.scheduler).willReturn(internalScheduler)
-    given(internalScheduler.schedule(any[FiniteDuration], any[FiniteDuration], any[Runnable])(any[ExecutionContext])).will(runTheJobImmediately)
+    given(config.clock) willReturn clock
+    given(actorSystem.scheduler) willReturn internalScheduler
+    given(internalScheduler.schedule(any[FiniteDuration], any[FiniteDuration], any[Runnable])(any[ExecutionContext])) will runTheJobImmediately
   }
 
   override protected def afterEach(): Unit = {
@@ -103,83 +110,74 @@ class SchedulerTest extends UnitSpec with MockitoSugar with BeforeAndAfterEach w
 
   "Scheduler" should {
 
-    "Run job starting now" in {
+    "Run job with valid schedule" in {
       // Given
       givenTheLockSucceeds()
-      given(job.interval) willReturn FiniteDuration(1, TimeUnit.SECONDS)
-      given(job.firstRunTime) willReturn midday
-
-      // When
-      new Scheduler(actorSystem, config, schedulerRepository, job)
-
-      // Then
-      eventually(timeout(5.seconds), interval(100.milliseconds)) {
-        val schedule = theSchedule
-        schedule.interval shouldBe FiniteDuration(1, TimeUnit.SECONDS)
-        schedule.initialDelay shouldBe FiniteDuration(0, TimeUnit.SECONDS)
-      }
-    }
-
-    "Run job starting in the future" in {
-      // Given
-      givenTheLockSucceeds()
-      given(job.interval) willReturn FiniteDuration(1, TimeUnit.SECONDS)
-      given(job.firstRunTime) willReturn midday.plusSeconds(1)
-
-      // When
-      new Scheduler(actorSystem, config, schedulerRepository, job)
-
-      // Then
-      eventually(timeout(5.seconds), interval(100.milliseconds)) {
-        val schedule = theSchedule
-        schedule.interval shouldBe FiniteDuration(1, TimeUnit.SECONDS)
-        schedule.initialDelay shouldBe FiniteDuration(1, TimeUnit.SECONDS)
-      }
-    }
-
-    "Run job starting in the past" in {
-      // Given
-      givenTheLockSucceeds()
-      given(job.interval) willReturn FiniteDuration(1, TimeUnit.SECONDS)
-      given(job.firstRunTime) willReturn midday.minusSeconds(1)
-
-      // When
-      new Scheduler(actorSystem, config, schedulerRepository, job)
-
-      // Then
-      eventually(timeout(5.seconds), interval(100.milliseconds)) {
-        val schedule = theSchedule
-        schedule.interval shouldBe FiniteDuration(1, TimeUnit.SECONDS)
-        schedule.initialDelay shouldBe FiniteDuration(86399, TimeUnit.SECONDS)
-      }
-    }
-
-    "Create the lock event with the intended run time" in {
-      // Given
-      givenTheLockSucceeds()
-      given(job.interval) willReturn FiniteDuration(1, TimeUnit.SECONDS)
-      given(job.firstRunTime) willReturn midday.plusSeconds(1)
+      given(job.interval) willReturn FiniteDuration(3, TimeUnit.SECONDS)
+      given(job.firstRunTime) willReturn "12:00"
       given(job.name) willReturn "name"
+      given(util.nextRun(job.firstRunTime, job.interval)) willReturn "2018-12-25T12:00:00"
+      given(util.closestRun(job.firstRunTime, job.interval)) willReturn "2018-12-25T12:00:00"
 
       // When
-      new Scheduler(actorSystem, config, schedulerRepository, job)
+      new Scheduler(actorSystem, config, schedulerRepository, util, job)
 
       // Then
-      eventually(timeout(5.seconds), interval(100.milliseconds)) {
-        val event = theLockEvent
-        event.name shouldBe "name"
-        event.runDate shouldBe now.plusSeconds(1)
+      val schedule = theSchedule
+      schedule.interval shouldBe FiniteDuration(3, TimeUnit.SECONDS)
+      schedule.initialDelay shouldBe FiniteDuration(0, TimeUnit.SECONDS)
+
+      val lockEvent = theLockEvent
+      lockEvent.name shouldBe "name"
+      lockEvent.runDate shouldBe instant("2018-12-25T12:00:00")
+    }
+
+    "Run job with valid schedule and future run-date" in {
+      // Given
+      givenTheLockSucceeds()
+      given(job.interval) willReturn FiniteDuration(3, TimeUnit.SECONDS)
+      given(job.firstRunTime) willReturn "12:00"
+      given(job.name) willReturn "name"
+      given(util.nextRun(job.firstRunTime, job.interval)).willReturn("2018-12-25T12:00:20")
+      given(util.closestRun(job.firstRunTime, job.interval)) willReturn "2018-12-25T12:00:10"
+
+      // When
+      new Scheduler(actorSystem, config, schedulerRepository, util, job)
+
+      // Then
+      val schedule = theSchedule
+      schedule.interval shouldBe FiniteDuration(3, TimeUnit.SECONDS)
+      schedule.initialDelay shouldBe FiniteDuration(20, TimeUnit.SECONDS)
+
+      val lockEvent = theLockEvent
+      lockEvent.name shouldBe "name"
+      lockEvent.runDate shouldBe instant("2018-12-25T12:00:10")
+    }
+
+    "Fail to schedule job given an invalid run date" in {
+      // Given
+      givenTheLockSucceeds()
+      given(job.interval) willReturn FiniteDuration(3, TimeUnit.SECONDS)
+      given(job.firstRunTime) willReturn "12:00"
+      given(job.name) willReturn "name"
+      given(util.nextRun(job.firstRunTime, job.interval)).willReturn("2018-12-25T11:59:59")
+
+      // When
+      intercept[IllegalArgumentException] {
+        new Scheduler(actorSystem, config, schedulerRepository, util, job)
       }
+      verifyNoMoreInteractions(internalScheduler)
     }
 
     "Not execute the job if the lock fails" in {
       // Given
       givenTheLockFails()
       given(job.interval) willReturn FiniteDuration(1, TimeUnit.SECONDS)
-      given(job.firstRunTime) willReturn midday
+      given(job.firstRunTime) willReturn now
+      given(util.nextRun(job.firstRunTime, job.interval)) willReturn "2018-12-25T12:00:00"
 
       // When
-      new Scheduler(actorSystem, config, schedulerRepository, job)
+      new Scheduler(actorSystem, config, schedulerRepository, util, job)
 
       verify(job, never()).execute()
     }
