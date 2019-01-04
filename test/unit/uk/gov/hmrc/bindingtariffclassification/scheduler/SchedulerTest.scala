@@ -119,7 +119,7 @@ class SchedulerTest extends UnitSpec with MockitoSugar with BeforeAndAfterEach w
       given(util.closestRun(job.firstRunTime, job.interval)) willReturn "2018-12-25T12:00:00"
 
       // When
-      createScheduler
+      whenTheSchedulerStarts
 
       // Then
       val schedule = theSchedule
@@ -141,7 +141,7 @@ class SchedulerTest extends UnitSpec with MockitoSugar with BeforeAndAfterEach w
       given(util.closestRun(job.firstRunTime, job.interval)) willReturn "2018-12-25T12:00:10"
 
       // When
-      createScheduler
+      whenTheSchedulerStarts
 
       // Then
       val schedule = theSchedule
@@ -163,7 +163,7 @@ class SchedulerTest extends UnitSpec with MockitoSugar with BeforeAndAfterEach w
 
       // When
       intercept[IllegalArgumentException] {
-        createScheduler
+        whenTheSchedulerStarts
       }
       verifyNoMoreInteractions(internalScheduler)
     }
@@ -176,14 +176,14 @@ class SchedulerTest extends UnitSpec with MockitoSugar with BeforeAndAfterEach w
       given(util.nextRun(job.firstRunTime, job.interval)) willReturn "2018-12-25T12:00:00"
 
       // When
-      createScheduler
+      whenTheSchedulerStarts
 
       verify(job, never()).execute()
     }
 
   }
 
-  private def createScheduler: Scheduler = {
+  private def whenTheSchedulerStarts: Scheduler = {
     new Scheduler(actorSystem, config, schedulerRepository, util, job)
   }
 

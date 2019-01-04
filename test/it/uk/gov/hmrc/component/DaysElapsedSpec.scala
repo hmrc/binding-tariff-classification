@@ -40,8 +40,8 @@ class DaysElapsedSpec extends BaseFeatureSpec {
 
     scenario("Updates Cases with status NEW and OPEN") {
 
-      // Given
-      storeCases()
+      Given("There are cases with mixed statuses in the database")
+      storeFewCases()
 
       val locks = schedulerLockStoreSize
 
@@ -55,6 +55,8 @@ class DaysElapsedSpec extends BaseFeatureSpec {
 
       // Then
       assertDaysElapsed()
+
+      Then("A new scheduler lock has not been created in mongo")
       assertLocksDidNotIncrement(locks)
     }
 
@@ -64,23 +66,24 @@ class DaysElapsedSpec extends BaseFeatureSpec {
 
     scenario("Updates Cases with status NEW and OPEN") {
 
-      // Given
-      storeCases()
+      Given("There are cases with mixed statuses in the database")
+      storeFewCases()
 
       val locks = schedulerLockStoreSize
 
       When("The job runs")
       result(job.execute(), timeout)
 
-      // Then
+      Then("The days elapsed field is incremented appropriately")
       assertDaysElapsed()
+
+      Then("A new scheduler lock has not been created in mongo")
       assertLocksDidNotIncrement(locks)
     }
 
   }
 
-  private def storeCases(): Unit = {
-    Given("There are cases with mixed statuses in the database")
+  private def storeFewCases(): Unit = {
     val newCase = c.copy(reference = "new", status = CaseStatus.NEW, daysElapsed = 0)
     val openCase = c.copy(reference = "open", status = CaseStatus.OPEN, daysElapsed = 0)
     val otherCase = c.copy(reference = "other", status = CaseStatus.SUSPENDED, daysElapsed = 0)
@@ -93,12 +96,10 @@ class DaysElapsedSpec extends BaseFeatureSpec {
     if (isNonWorkingDay(currentDate)) assertWorkInProgressCases(0)
     else assertWorkInProgressCases(1)
 
-    Then("Other cases should remain the same")
     getCase("other").map(_.daysElapsed) shouldBe Some(0)
   }
 
   private def assertLocksDidNotIncrement(initialNumberOfLocks: Int): Unit = {
-    Then("A new scheduler lock has not been created in mongo")
     schedulerLockStoreSize shouldBe initialNumberOfLocks
   }
 
@@ -107,10 +108,7 @@ class DaysElapsedSpec extends BaseFeatureSpec {
   }
 
   private def assertWorkInProgressCases(expectedDaysElapsed: Int) = {
-    Then(s"NEW cases should have elapsed $expectedDaysElapsed days")
     getCase("new").map(_.daysElapsed) shouldBe Some(expectedDaysElapsed)
-
-    Then(s"OPEN cases should have elapsed $expectedDaysElapsed days")
     getCase("open").map(_.daysElapsed) shouldBe Some(expectedDaysElapsed)
   }
 

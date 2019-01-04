@@ -59,9 +59,7 @@ class Scheduler @Inject()(actorSystem: ActorSystem,
     }
   })
 
-  def execute(): Future[Unit] = {
-    job.execute()
-  }
+  def execute(): Future[Unit] = job.execute()
 
   private def nextRunDate: Instant = {
     schedulerDateUtil.nextRun(job.firstRunTime, job.interval)
