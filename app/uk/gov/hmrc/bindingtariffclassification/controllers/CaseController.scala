@@ -18,13 +18,14 @@ package uk.gov.hmrc.bindingtariffclassification.controllers
 
 import javax.inject.{Inject, Singleton}
 import play.api.libs.json.{JsValue, Json}
-import play.api.mvc.{Action, AnyContent}
+import play.api.mvc.{Action, AnyContent, Result}
 import uk.gov.hmrc.bindingtariffclassification.config.AppConfig
+import uk.gov.hmrc.bindingtariffclassification.model.ErrorCode.NOTFOUND
 import uk.gov.hmrc.bindingtariffclassification.model._
 import uk.gov.hmrc.bindingtariffclassification.service.CaseService
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
+import scala.concurrent.Future.successful
 
 @Singleton
 class CaseController @Inject()(appConfig: AppConfig,
@@ -34,10 +35,10 @@ class CaseController @Inject()(appConfig: AppConfig,
 
   import JsonFormatters.{formatCase, formatNewCase}
 
-  lazy private val deleteModeFilter = DeleteMode.actionFilter(appConfig)
+  lazy private val testModeFilter = TestMode.actionFilter(appConfig)
 
-  def deleteAll(): Action[AnyContent] = deleteModeFilter.async { implicit request =>
-    caseService.deleteAll map (_ => NoContent) recover recovery
+  def deleteAll(): Action[AnyContent] = testModeFilter.async { implicit request =>
+    caseService.deleteAll() map (_ => NoContent) recover recovery
   }
 
   def create: Action[JsValue] = Action.async(parse.json) { implicit request =>
@@ -52,11 +53,8 @@ class CaseController @Inject()(appConfig: AppConfig,
   def update(reference: String): Action[JsValue] = Action.async(parse.json) { implicit request =>
     withJsonBody[Case] { caseRequest: Case =>
       if (caseRequest.reference == reference) {
-        caseService.update(caseRequest) map {
-          case None => NotFound(JsErrorResponse(ErrorCode.NOT_FOUND, "Case not found"))
-          case Some(c: Case) => Ok(Json.toJson(c))
-        }
-      } else Future.successful(BadRequest(JsErrorResponse(ErrorCode.INVALID_REQUEST_PAYLOAD, "Invalid case reference")))
+        caseService.update(caseRequest) map handleNotFound recover recovery
+      } else successful(BadRequest(JsErrorResponse(ErrorCode.INVALID_REQUEST_PAYLOAD, "Invalid case reference")))
     } recover recovery
   }
 
@@ -66,18 +64,18 @@ class CaseController @Inject()(appConfig: AppConfig,
           sort_by: Option[String],
           sort_direction: Option[String]): Action[AnyContent] = Action.async { implicit request =>
     caseService.get(
-      caseParamsMapper.from(queue_id, assignee_id, status),
-      caseSortMapper.from(sort_by, sort_direction)
-    ) map { cases =>
-      Ok(Json.toJson(cases))
-    } recover recovery
+      searchBy = caseParamsMapper.from(queue_id, assignee_id, status),
+      sortBy = caseSortMapper.from(sort_by, sort_direction)
+    ) map { cases => Ok(Json.toJson(cases)) } recover recovery
   }
 
   def getByReference(reference: String): Action[AnyContent] = Action.async { implicit request =>
-    caseService.getByReference(reference) map {
-      case None => NotFound(JsErrorResponse(ErrorCode.NOT_FOUND, "Case not found"))
-      case Some(c: Case) => Ok(Json.toJson(c))
-    } recover recovery
+    caseService.getByReference(reference) map handleNotFound recover recovery
+  }
+
+  private[controllers] def handleNotFound: PartialFunction[Option[Case], Result] = {
+    case Some(c: Case) => Ok(Json.toJson(c))
+    case _ => NotFound(JsErrorResponse(NOTFOUND, "Case not found"))
   }
 
 }

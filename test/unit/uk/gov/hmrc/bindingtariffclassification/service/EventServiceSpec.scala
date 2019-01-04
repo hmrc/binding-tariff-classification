@@ -37,15 +37,15 @@ class EventServiceSpec extends UnitSpec with MockitoSugar {
   "deleteAll()" should {
 
     "return () and clear the database collection" in {
-      when(repository.deleteAll).thenReturn(successful(()))
-      await(service.deleteAll) shouldBe ((): Unit)
+      when(repository.deleteAll()).thenReturn(successful(()))
+      await(service.deleteAll()) shouldBe ((): Unit)
     }
 
     "propagate any error" in {
-      when(repository.deleteAll).thenThrow(emulatedFailure)
+      when(repository.deleteAll()).thenThrow(emulatedFailure)
 
       val caught = intercept[RuntimeException] {
-        await(service.deleteAll)
+        await(service.deleteAll())
       }
       caught shouldBe emulatedFailure
     }

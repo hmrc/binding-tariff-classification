@@ -77,7 +77,7 @@ class EventMongoRepository @Inject()(mongoDbProvider: MongoDbProvider)
     getMany(byCaseReference(caseReference), Json.obj())
   }
 
-  override def deleteAll: Future[Unit] = {
+  override def deleteAll(): Future[Unit] = {
     removeAll().map(_ => ())
   }
 

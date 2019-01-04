@@ -16,21 +16,20 @@
 
 package uk.gov.hmrc.bindingtariffclassification.controllers
 
-import play.api.mvc._
+import javax.inject.{Inject, Singleton}
+import play.api.mvc.{Action, AnyContent}
 import uk.gov.hmrc.bindingtariffclassification.config.AppConfig
-import uk.gov.hmrc.bindingtariffclassification.model.{ErrorCode, JsErrorResponse}
+import uk.gov.hmrc.bindingtariffclassification.scheduler.Scheduler
 
-import scala.concurrent.Future
+import scala.concurrent.ExecutionContext.Implicits.global
 
-object TestMode {
+@Singleton
+class SchedulerController @Inject()(appConfig: AppConfig, scheduler: Scheduler) extends CommonController {
 
-  def actionFilter(appConfig: AppConfig) = new ActionBuilder[Request] with ActionFilter[Request] {
+  lazy private val testModeFilter = TestMode.actionFilter(appConfig)
 
-    override protected def filter[A](request: Request[A]): Future[Option[Result]] = Future.successful {
-      if (appConfig.isTestMode) None
-      else Some(play.api.mvc.Results.Forbidden(JsErrorResponse(ErrorCode.FORBIDDEN, s"You are not allowed to call ${request.method} ${request.uri}")))
-    }
-
+  def incrementElapsedDays(): Action[AnyContent] = testModeFilter.async { implicit request =>
+    scheduler.execute map ( _ => NoContent ) recover recovery
   }
 
 }

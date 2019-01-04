@@ -79,6 +79,10 @@ abstract class BaseFeatureSpec extends FeatureSpec
     result(eventStore.mongoCollection.count(), timeout)
   }
 
+  protected def schedulerLockStoreSize: Int = {
+    result(schedulerLockStore.mongoCollection.count(), timeout)
+  }
+
   protected def getCase(ref: String): Option[Case] = {
     result(caseStore.getByReference(ref), timeout)
   }

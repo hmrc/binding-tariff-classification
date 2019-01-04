@@ -35,9 +35,9 @@ class AppConfigTest extends UnitSpec with GuiceOneAppPerSuite {
       configWith().clock.getZone shouldBe ZoneId.systemDefault()
     }
 
-    "build 'isDeleteEnabled" in {
-      configWith("deleteEnabled" -> "true").isDeleteEnabled shouldBe true
-      configWith("deleteEnabled" -> "false").isDeleteEnabled shouldBe false
+    "build 'isTestMode" in {
+      configWith("testMode" -> "true").isTestMode shouldBe true
+      configWith("testMode" -> "false").isTestMode shouldBe false
     }
 
     "build 'DaysElapsedConfig" in {

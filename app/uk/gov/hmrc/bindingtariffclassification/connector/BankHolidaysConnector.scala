@@ -27,10 +27,11 @@ import uk.gov.hmrc.play.bootstrap.http.HttpClient
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class BankHolidaysConnector @Inject()(appConfig: AppConfig, http: HttpClient)(
-  implicit executionContext: ExecutionContext) {
+class BankHolidaysConnector @Inject()(appConfig: AppConfig, http: HttpClient)
+                                     (implicit executionContext: ExecutionContext) {
 
   def get()(implicit headerCarrier: HeaderCarrier): Future[Seq[LocalDate]] = {
+
     import JsonFormatters.formatBankHolidaysResponse
 
     http.GET[BankHolidaysResponse](s"${appConfig.bankHolidaysUrl}/bank-holidays.json")

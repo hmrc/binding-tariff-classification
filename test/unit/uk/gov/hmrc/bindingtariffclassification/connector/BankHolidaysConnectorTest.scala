@@ -66,4 +66,5 @@ class BankHolidaysConnectorTest extends UnitSpec with WiremockTestServer with Mo
       )
     }
   }
+
 }

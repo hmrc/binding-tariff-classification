@@ -30,7 +30,7 @@ class AppConfig @Inject()(val runModeConfiguration: Configuration, environment: 
 
   override protected def mode: Mode = environment.mode
 
-  lazy val isDeleteEnabled: Boolean = getBooleanConfig("deleteEnabled", default = false)
+  lazy val isTestMode: Boolean = getBooleanConfig("testMode", default = false)
 
   lazy val clock: Clock = Clock.systemDefaultZone()
 

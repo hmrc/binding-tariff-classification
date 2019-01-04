@@ -32,7 +32,9 @@ import scala.concurrent.Future.successful
 import scala.concurrent.duration._
 
 @Singleton
-class DaysElapsedJob @Inject()(appConfig: AppConfig, caseService: CaseService, bankHolidaysConnector: BankHolidaysConnector) extends ScheduledJob {
+class DaysElapsedJob @Inject()(appConfig: AppConfig,
+                               caseService: CaseService,
+                               bankHolidaysConnector: BankHolidaysConnector) extends ScheduledJob {
 
   private implicit val carrier: HeaderCarrier = HeaderCarrier()
   private lazy val jobConfig = appConfig.daysElapsed
@@ -47,19 +49,19 @@ class DaysElapsedJob @Inject()(appConfig: AppConfig, caseService: CaseService, b
     jobConfig.elapseTime
   }
 
+  def isWeekend: LocalDate => Boolean = { d: LocalDate =>
+    weekendDays.contains(d.getDayOfWeek)
+  }
+
+  def isBankHoliday: LocalDate => Future[Boolean] = { d: LocalDate =>
+    bankHolidaysConnector.get().map(_.contains(d))
+  }
+
   override def execute(): Future[Unit] = {
 
     val today = LocalDate.now(appConfig.clock)
 
     lazy val msgPrefix = s"Scheduled Job [$name] run for day $today:"
-
-    def isWeekend: LocalDate => Boolean = { d: LocalDate =>
-      weekendDays.contains(d.getDayOfWeek)
-    }
-
-    def isBankHoliday: LocalDate => Future[Boolean] = { d: LocalDate =>
-      bankHolidaysConnector.get().map(_.contains(d))
-    }
 
     if (isWeekend(today)) {
       Logger.info(s"$msgPrefix Skipped as it is a Weekend")
@@ -76,7 +78,6 @@ class DaysElapsedJob @Inject()(appConfig: AppConfig, caseService: CaseService, b
           }
       }
     }
-
   }
 
 }

@@ -32,23 +32,21 @@ class EventController @Inject()(appConfig: AppConfig, eventService: EventService
 
   import JsonFormatters.formatEvent
 
-  lazy private val deleteModeFilter = DeleteMode.actionFilter(appConfig)
+  lazy private val testModeFilter = TestMode.actionFilter(appConfig)
 
-  def deleteAll(): Action[AnyContent] = deleteModeFilter.async { implicit request =>
-    eventService.deleteAll map ( _ => NoContent ) recover recovery
+  def deleteAll(): Action[AnyContent] = testModeFilter.async { implicit request =>
+    eventService.deleteAll() map ( _ => NoContent ) recover recovery
   }
 
   def getByCaseReference(caseRef: String): Action[AnyContent] = Action.async { implicit request =>
-    eventService.getByCaseReference(caseRef) map {
-      events => Ok(Json.toJson(events))
-    } recover recovery
+    eventService.getByCaseReference(caseRef) map { events => Ok(Json.toJson(events)) } recover recovery
   }
 
   def create(caseRef: String): Action[JsValue] = Action.async(parse.json) { implicit request =>
     withJsonBody[NewEventRequest] { request =>
-      caseService.getByReference(caseRef).flatMap {
+      caseService.getByReference(caseRef) flatMap {
         case Some(c: Case) => eventService.insert(request.toEvent(c.reference)).map(e => Created(Json.toJson(e)))
-        case _ => Future.successful(NotFound(JsErrorResponse(ErrorCode.NOT_FOUND, "Case not found")))
+        case _ => Future.successful(NotFound(JsErrorResponse(ErrorCode.NOTFOUND, "Case not found")))
       }
     }
   }

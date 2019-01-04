@@ -21,7 +21,7 @@ import java.time.temporal.ChronoUnit
 import java.util.concurrent.TimeUnit
 
 import akka.actor.ActorSystem
-import javax.inject.Inject
+import javax.inject.{Inject, Singleton}
 import play.api.Logger
 import uk.gov.hmrc.bindingtariffclassification.config.AppConfig
 import uk.gov.hmrc.bindingtariffclassification.model.SchedulerRunEvent
@@ -29,8 +29,10 @@ import uk.gov.hmrc.bindingtariffclassification.repository.SchedulerLockRepositor
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
+import scala.concurrent.Future.successful
 import scala.concurrent.duration.FiniteDuration
 
+@Singleton
 class Scheduler @Inject()(actorSystem: ActorSystem,
                           appConfig: AppConfig,
                           schedulerLockRepository: SchedulerLockRepository,
@@ -40,24 +42,25 @@ class Scheduler @Inject()(actorSystem: ActorSystem,
   Logger.info(s"Scheduling job [${job.name}] to run periodically at [${job.firstRunTime}] with interval [${job.interval.length} ${job.interval.unit}]")
   actorSystem.scheduler.schedule(durationUntil(nextRunDate), job.interval, new Runnable() {
     override def run(): Unit = {
-      execute()
+      val event = SchedulerRunEvent(job.name, closestRunDate)
+      Logger.info(s"Scheduled Job [${job.name}]: Acquiring Lock")
+      schedulerLockRepository.lock(event).flatMap {
+        case true =>
+          Logger.info(s"Scheduled Job [${job.name}]: Successfully acquired lock. Starting Job.")
+          execute().map { _ =>
+            Logger.info(s"Scheduled Job [${job.name}]: Completed Successfully")
+          } recover { case t: Throwable =>
+            Logger.error(s"Scheduled Job [${job.name}]: Failed", t)
+          }
+        case false =>
+          Logger.info(s"Scheduled Job [${job.name}]: Failed to acquire Lock. It may have been running already.")
+          successful(())
+      }
     }
   })
 
   def execute(): Future[Unit] = {
-    val event = SchedulerRunEvent(job.name, closestRunDate)
-
-    Logger.info(s"Scheduled Job [${job.name}]: Acquiring Lock")
-    schedulerLockRepository.lock(event).map {
-      case true =>
-        Logger.info(s"Scheduled Job [${job.name}]: Successfully acquired lock, Starting Job.")
-        job.execute() map { _ =>
-          Logger.info(s"Scheduled Job [${job.name}]: Completed Successfully")
-        } recover {
-          case t: Throwable => Logger.error(s"Scheduled Job [${job.name}]: Failed", t)
-        }
-      case false => Logger.info(s"Scheduled Job [${job.name}]: Failed to acquire Lock. It may have been running already.")
-    }
+    job.execute()
   }
 
   private def nextRunDate: Instant = {

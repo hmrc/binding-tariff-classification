@@ -16,6 +16,11 @@
 
 package uk.gov.hmrc.component
 
+import java.time.{LocalDate, ZoneOffset, ZonedDateTime}
+
+import play.api.http.HttpVerbs
+import play.api.http.Status._
+import scalaj.http.Http
 import uk.gov.hmrc.bindingtariffclassification.model.{Case, CaseStatus}
 import uk.gov.hmrc.bindingtariffclassification.scheduler.DaysElapsedJob
 import util.CaseData._
@@ -24,35 +29,89 @@ import scala.concurrent.Await.result
 
 class DaysElapsedSpec extends BaseFeatureSpec {
 
-  override lazy val port = 14681
+  override lazy val port = 14683
   protected val serviceUrl = s"http://localhost:$port"
 
   private val c: Case = createCase(app = createBasicBTIApplication)
 
   private val job: DaysElapsedJob = app.injector.instanceOf[DaysElapsedJob]
 
+  feature("Days Elapsed Endpoint") {
+
+    scenario("Updates Cases with status NEW and OPEN") {
+
+      // Given
+      storeCases()
+
+      val locks = schedulerLockStoreSize
+
+      When("I hit the elapsed days endpoint")
+      val result = Http(s"$serviceUrl/scheduler/elapsed-days")
+        .method(HttpVerbs.PUT)
+        .asString
+
+      Then("The response code should be 204")
+      result.code shouldEqual NO_CONTENT
+
+      // Then
+      assertDaysElapsed()
+      assertLocksDidNotIncrement(locks)
+    }
+
+  }
+
   feature("Days Elapsed Job") {
 
     scenario("Updates Cases with status NEW and OPEN") {
-      Given("There is cases with mixed statuses in the database")
-      val newCase = c.copy(reference = "new", status = CaseStatus.NEW, daysElapsed = 0)
-      val openCase = c.copy(reference = "open", status = CaseStatus.OPEN, daysElapsed = 0)
-      val otherCase = c.copy(reference = "other", status = CaseStatus.SUSPENDED, daysElapsed = 0)
-      storeCases(newCase, openCase, otherCase)
+
+      // Given
+      storeCases()
+
+      val locks = schedulerLockStoreSize
 
       When("The job runs")
       result(job.execute(), timeout)
 
-      Then("NEW cases should have elapsed 1 day")
-      getCase("new").map(_.daysElapsed) shouldBe Some(1)
-
-      Then("OPEN cases should have elapsed 1 day")
-      getCase("open").map(_.daysElapsed) shouldBe Some(1)
-
-      Then("Other cases should remain the same")
-      getCase("other").map(_.daysElapsed) shouldBe Some(0)
+      // Then
+      assertDaysElapsed()
+      assertLocksDidNotIncrement(locks)
     }
 
+  }
+
+  private def storeCases(): Unit = {
+    Given("There are cases with mixed statuses in the database")
+    val newCase = c.copy(reference = "new", status = CaseStatus.NEW, daysElapsed = 0)
+    val openCase = c.copy(reference = "open", status = CaseStatus.OPEN, daysElapsed = 0)
+    val otherCase = c.copy(reference = "other", status = CaseStatus.SUSPENDED, daysElapsed = 0)
+    storeCases(newCase, openCase, otherCase)
+  }
+
+  private def assertDaysElapsed(): Unit = {
+    val currentDate = ZonedDateTime.now(ZoneOffset.UTC).toLocalDate
+
+    if (isNonWorkingDay(currentDate)) assertWorkInProgressCases(0)
+    else assertWorkInProgressCases(1)
+
+    Then("Other cases should remain the same")
+    getCase("other").map(_.daysElapsed) shouldBe Some(0)
+  }
+
+  private def assertLocksDidNotIncrement(initialNumberOfLocks: Int): Unit = {
+    Then("A new scheduler lock has not been created in mongo")
+    schedulerLockStoreSize shouldBe initialNumberOfLocks
+  }
+
+  private def isNonWorkingDay(date: LocalDate): Boolean = {
+    job.isWeekend(date) || result[Boolean](job.isBankHoliday(date), timeout)
+  }
+
+  private def assertWorkInProgressCases(expectedDaysElapsed: Int) = {
+    Then(s"NEW cases should have elapsed $expectedDaysElapsed days")
+    getCase("new").map(_.daysElapsed) shouldBe Some(expectedDaysElapsed)
+
+    Then(s"OPEN cases should have elapsed $expectedDaysElapsed days")
+    getCase("open").map(_.daysElapsed) shouldBe Some(expectedDaysElapsed)
   }
 
 }

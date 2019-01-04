@@ -32,6 +32,7 @@ import uk.gov.hmrc.bindingtariffclassification.model.search.CaseParamsFilter
 import uk.gov.hmrc.bindingtariffclassification.model.sort.CaseSort
 import uk.gov.hmrc.bindingtariffclassification.model.{Case, NewCaseRequest}
 import uk.gov.hmrc.bindingtariffclassification.service.CaseService
+import uk.gov.hmrc.http.HttpVerbs
 import uk.gov.hmrc.play.test.{UnitSpec, WithFakeApplication}
 import util.CaseData
 
@@ -58,19 +59,21 @@ class CaseControllerSpec extends UnitSpec with WithFakeApplication with MockitoS
 
   "deleteAll()" should {
 
-    "return 403 if the delete mode is disabled" in {
+    val req = FakeRequest(method = HttpVerbs.DELETE, path = "/cases")
 
-      val result = await(controller.deleteAll()(fakeRequest))
+    "return 403 if the test mode is disabled" in {
+
+      val result = await(controller.deleteAll()(req))
 
       status(result) shouldEqual FORBIDDEN
-      jsonBodyOf(result).toString() shouldEqual """{"code":"FORBIDDEN","message":"You are not allowed to delete."}"""
+      jsonBodyOf(result).toString() shouldEqual s"""{"code":"FORBIDDEN","message":"You are not allowed to call ${req.method} ${req.path}"}"""
     }
 
-    "return 204 if the delete mode is enabled" in {
-      when(appConfig.isDeleteEnabled).thenReturn(true)
-      when(caseService.deleteAll).thenReturn(successful(()))
+    "return 204 if the test mode is enabled" in {
+      when(appConfig.isTestMode).thenReturn(true)
+      when(caseService.deleteAll()).thenReturn(successful(()))
 
-      val result = await(controller.deleteAll()(fakeRequest))
+      val result = await(controller.deleteAll()(req))
 
       status(result) shouldEqual NO_CONTENT
     }
@@ -78,10 +81,10 @@ class CaseControllerSpec extends UnitSpec with WithFakeApplication with MockitoS
     "return 500 when an error occurred" in {
       val error = new RuntimeException
 
-      when(appConfig.isDeleteEnabled).thenReturn(true)
-      when(caseService.deleteAll).thenReturn(failed(error))
+      when(appConfig.isTestMode).thenReturn(true)
+      when(caseService.deleteAll()).thenReturn(failed(error))
 
-      val result = await(controller.deleteAll()(fakeRequest))
+      val result = await(controller.deleteAll()(req))
 
       status(result) shouldEqual INTERNAL_SERVER_ERROR
       jsonBodyOf(result).toString() shouldEqual """{"code":"UNKNOWN_ERROR","message":"An unexpected error occurred"}"""

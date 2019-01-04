@@ -19,10 +19,12 @@ package uk.gov.hmrc.bindingtariffclassification.controllers
 import play.api.Logger
 import play.api.libs.json._
 import play.api.mvc.{Request, Result}
-import uk.gov.hmrc.bindingtariffclassification.model.{ErrorCode, JsErrorResponse}
+import uk.gov.hmrc.bindingtariffclassification.model.JsErrorResponse
+import uk.gov.hmrc.bindingtariffclassification.model.ErrorCode._
 import uk.gov.hmrc.play.bootstrap.controller.BaseController
 
 import scala.concurrent.Future
+import scala.concurrent.Future.successful
 import scala.util.{Failure, Success, Try}
 
 trait CommonController extends BaseController {
@@ -31,8 +33,8 @@ trait CommonController extends BaseController {
   (f: T => Future[Result])(implicit request: Request[JsValue], m: Manifest[T], reads: Reads[T]): Future[Result] = {
     Try(request.body.validate[T]) match {
       case Success(JsSuccess(payload, _)) => f(payload)
-      case Success(JsError(errs)) => Future.successful(BadRequest(JsErrorResponse(ErrorCode.INVALID_REQUEST_PAYLOAD, JsError.toJson(errs))))
-      case Failure(e) => Future.successful(BadRequest(JsErrorResponse(ErrorCode.UNKNOWN_ERROR, e.getMessage)))
+      case Success(JsError(errs)) => successful(BadRequest(JsErrorResponse(INVALID_REQUEST_PAYLOAD, JsError.toJson(errs))))
+      case Failure(e) => successful(BadRequest(JsErrorResponse(UNKNOWN_ERROR, e.getMessage)))
     }
   }
 
@@ -42,7 +44,7 @@ trait CommonController extends BaseController {
 
   private[controllers] def handleException(e: Throwable) = {
     Logger.error(s"An unexpected error occurred: ${e.getMessage}", e)
-    InternalServerError(JsErrorResponse(ErrorCode.UNKNOWN_ERROR, "An unexpected error occurred"))
+    InternalServerError(JsErrorResponse(UNKNOWN_ERROR, "An unexpected error occurred"))
   }
 
 }
