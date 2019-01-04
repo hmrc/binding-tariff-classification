@@ -17,7 +17,7 @@
 package uk.gov.hmrc.bindingtariffclassification.scheduler
 
 import java.time._
-import java.util.concurrent.TimeUnit.DAYS
+import java.util.concurrent.TimeUnit.{DAYS, HOURS}
 
 import org.mockito.ArgumentMatchers
 import org.mockito.ArgumentMatchers._
@@ -68,11 +68,22 @@ class DaysElapsedJobTest extends UnitSpec with MockitoSugar with BeforeAndAfterE
       givenItIsNotABankHoliday()
       givenTheDateIsFixedAt("2018-12-25T12:00:00")
       given(appConfig.daysElapsed).willReturn(JobConfig(LocalTime.MIDNIGHT, FiniteDuration(1, DAYS)))
-      given(caseService.incrementDaysElapsed(refEq(1))).willReturn(Future.successful(2))
+      given(caseService.incrementDaysElapsed(anyDouble())).willReturn(Future.successful(2))
 
       await(new DaysElapsedJob(appConfig, caseService, bankHolidaysConnector).execute())
 
       verify(caseService).incrementDaysElapsed(1)
+    }
+
+    "Execute with decimal interval" in {
+      givenItIsNotABankHoliday()
+      givenTheDateIsFixedAt("2018-12-25T12:00:00")
+      given(appConfig.daysElapsed).willReturn(JobConfig(LocalTime.MIDNIGHT, FiniteDuration(12, HOURS)))
+      given(caseService.incrementDaysElapsed(anyDouble())).willReturn(Future.successful(2))
+
+      await(new DaysElapsedJob(appConfig, caseService, bankHolidaysConnector).execute())
+
+      verify(caseService).incrementDaysElapsed(0.5)
     }
 
     "Do nothing on a Saturday" in {
