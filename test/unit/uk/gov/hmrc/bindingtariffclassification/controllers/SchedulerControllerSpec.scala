@@ -51,22 +51,10 @@ class SchedulerControllerSpec extends UnitSpec with WithFakeApplication with Moc
 
     "return 200 if the test mode is enabled and the scheduler executed successfully" in {
       when(appConfig.isTestMode).thenReturn(true)
-      when(scheduler.execute).thenReturn(successful(true))
+      when(scheduler.execute()).thenReturn(successful(()))
 
       val result = await(controller.incrementElapsedDays()(fakeRequest))
-
       status(result) shouldEqual OK
-      jsonBodyOf(result).toString() shouldEqual ""
-    }
-
-    "return 409 if the test mode is enabled and the scheduler executed but without success" in {
-      when(appConfig.isTestMode).thenReturn(true)
-      when(scheduler.execute).thenReturn(successful(false))
-
-      val result = await(controller.incrementElapsedDays()(fakeRequest))
-
-      status(result) shouldEqual CONFLICT
-      jsonBodyOf(result).toString() shouldEqual "Job could not be executed"
     }
 
     "return 500 when an error occurred" in {

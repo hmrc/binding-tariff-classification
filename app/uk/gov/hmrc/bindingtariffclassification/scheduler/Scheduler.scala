@@ -42,28 +42,25 @@ class Scheduler @Inject()(actorSystem: ActorSystem,
   Logger.info(s"Scheduling job [${job.name}] to run periodically at [${job.firstRunTime}] with interval [${job.interval.length} ${job.interval.unit}]")
   actorSystem.scheduler.schedule(durationUntil(nextRunDate), job.interval, new Runnable() {
     override def run(): Unit = {
-      execute
+      val event = SchedulerRunEvent(job.name, closestRunDate)
+      Logger.info(s"Scheduled Job [${job.name}]: Acquiring Lock")
+      schedulerLockRepository.lock(event).flatMap {
+        case true =>
+          Logger.info(s"Scheduled Job [${job.name}]: Successfully acquired lock. Starting Job.")
+          execute().map { _ =>
+            Logger.info(s"Scheduled Job [${job.name}]: Completed Successfully")
+          } recover { case t: Throwable =>
+            Logger.error(s"Scheduled Job [${job.name}]: Failed", t)
+          }
+        case false =>
+          Logger.info(s"Scheduled Job [${job.name}]: Failed to acquire Lock. It may have been running already.")
+          successful(())
+      }
     }
   })
 
-  // TODO: add tests for this method
-  def execute: Future[Boolean] = {
-    val event = SchedulerRunEvent(job.name, closestRunDate)
-    Logger.info(s"Scheduled Job [${job.name}]: Acquiring Lock")
-    schedulerLockRepository.lock(event).flatMap {
-      case true =>
-        Logger.info(s"Scheduled Job [${job.name}]: Successfully acquired lock. Starting Job.")
-        job.execute().map { _: Unit =>
-          Logger.info(s"Scheduled Job [${job.name}]: Completed Successfully")
-          true
-        } recoverWith { case t: Throwable =>
-          Logger.error(s"Scheduled Job [${job.name}]: Failed", t)
-          Future.failed(t)
-        }
-      case false =>
-        Logger.info(s"Scheduled Job [${job.name}]: Failed to acquire Lock. It may have been running already.")
-        successful(false)
-    }
+  def execute(): Future[Unit] = {
+    job.execute()
   }
 
   private def nextRunDate: Instant = {

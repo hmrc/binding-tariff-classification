@@ -25,16 +25,12 @@ import uk.gov.hmrc.bindingtariffclassification.scheduler.Scheduler
 import scala.concurrent.ExecutionContext.Implicits.global
 
 @Singleton
-class SchedulerController @Inject()(appConfig: AppConfig,
-                                    scheduler: Scheduler) extends CommonController {
+class SchedulerController @Inject()(appConfig: AppConfig, scheduler: Scheduler) extends CommonController {
 
   lazy private val testModeFilter = TestMode.actionFilter(appConfig)
 
   def incrementElapsedDays(): Action[AnyContent] = testModeFilter.async { implicit request =>
-    scheduler.execute map {
-      case true => Ok
-      case false => Conflict(JsErrorResponse(ErrorCode.CONFLICT, "Job could not be executed"))
-    } recover recovery
+    scheduler.execute map ( _ => Ok ) recover recovery
   }
 
 }
