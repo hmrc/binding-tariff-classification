@@ -49,15 +49,12 @@ class DaysElapsedSpec extends BaseFeatureSpec {
         .postData("")
         .asString
 
-      Then("The response code should be 204")
+      Then("The response code should be 200")
       result.code shouldEqual OK
-
-      And("The response body is empty")
-      result.body shouldBe ""
 
       // Then
       assertDaysElapsed()
-      assertLocksHaveIncremented(locks)
+      assertLocksDidNotIncrement(locks)
     }
 
   }
@@ -69,11 +66,14 @@ class DaysElapsedSpec extends BaseFeatureSpec {
       // Given
       storeCases()
 
+      val locks = schedulerLockStoreSize
+
       When("The job runs")
       result(job.execute(), timeout)
 
       // Then
       assertDaysElapsed()
+      assertLocksDidNotIncrement(locks)
     }
 
   }
@@ -96,9 +96,9 @@ class DaysElapsedSpec extends BaseFeatureSpec {
     getCase("other").map(_.daysElapsed) shouldBe Some(0)
   }
 
-  private def assertLocksHaveIncremented(initialNumberOfLocks: Int): Unit = {
-    Then("A new scheduler lock has been created in mongo")
-    schedulerLockStoreSize shouldBe 1 + initialNumberOfLocks
+  private def assertLocksDidNotIncrement(initialNumberOfLocks: Int): Unit = {
+    Then("A new scheduler lock has not been created in mongo")
+    schedulerLockStoreSize shouldBe initialNumberOfLocks
   }
 
   private def isNonWorkingDay(date: LocalDate): Boolean = {
