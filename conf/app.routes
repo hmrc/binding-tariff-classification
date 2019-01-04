@@ -13,4 +13,4 @@ POST       /cases/:reference/events                       @uk.gov.hmrc.bindingta
 # admin/test endpoints
 DELETE     /cases                                         @uk.gov.hmrc.bindingtariffclassification.controllers.CaseController.deleteAll()
 DELETE     /events                                        @uk.gov.hmrc.bindingtariffclassification.controllers.EventController.deleteAll()
-POST       /scheduler/elapsed-days                        @uk.gov.hmrc.bindingtariffclassification.controllers.SchedulerController.incrementElapsedDays()
+PUT        /scheduler/elapsed-days                        @uk.gov.hmrc.bindingtariffclassification.controllers.SchedulerController.incrementElapsedDays()

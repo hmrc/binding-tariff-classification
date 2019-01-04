@@ -35,7 +35,7 @@ class SchedulerControllerSpec extends UnitSpec with WithFakeApplication with Moc
   private val appConfig = mock[AppConfig]
   private val scheduler = mock[Scheduler]
 
-  private val fakeRequest = FakeRequest(method = HttpVerbs.POST, path = "/scheduler/elapsed-days")
+  private val fakeRequest = FakeRequest(method = HttpVerbs.PUT, path = "/scheduler/elapsed-days")
 
   private val controller = new SchedulerController(appConfig, scheduler)
 
@@ -49,12 +49,12 @@ class SchedulerControllerSpec extends UnitSpec with WithFakeApplication with Moc
       jsonBodyOf(result).toString() shouldEqual s"""{"code":"FORBIDDEN","message":"You are not allowed to call ${fakeRequest.method} ${fakeRequest.path}"}"""
     }
 
-    "return 200 if the test mode is enabled and the scheduler executed successfully" in {
+    "return 204 if the test mode is enabled and the scheduler executed successfully" in {
       when(appConfig.isTestMode).thenReturn(true)
       when(scheduler.execute()).thenReturn(successful(()))
 
       val result = await(controller.incrementElapsedDays()(fakeRequest))
-      status(result) shouldEqual OK
+      status(result) shouldEqual NO_CONTENT
     }
 
     "return 500 when an error occurred" in {

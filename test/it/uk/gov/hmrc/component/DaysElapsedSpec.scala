@@ -18,6 +18,7 @@ package uk.gov.hmrc.component
 
 import java.time.{LocalDate, ZoneOffset, ZonedDateTime}
 
+import play.api.http.HttpVerbs
 import play.api.http.Status._
 import scalaj.http.Http
 import uk.gov.hmrc.bindingtariffclassification.model.{Case, CaseStatus}
@@ -46,11 +47,11 @@ class DaysElapsedSpec extends BaseFeatureSpec {
 
       When("I hit the elapsed days endpoint")
       val result = Http(s"$serviceUrl/scheduler/elapsed-days")
-        .postData("")
+        .method(HttpVerbs.PUT)
         .asString
 
-      Then("The response code should be 200")
-      result.code shouldEqual OK
+      Then("The response code should be 204")
+      result.code shouldEqual NO_CONTENT
 
       // Then
       assertDaysElapsed()
