@@ -18,7 +18,7 @@ package uk.gov.hmrc.bindingtariffclassification.scheduler
 
 import java.time._
 
-import org.mockito.ArgumentMatchers
+import org.mockito.ArgumentMatchers.{any, anyDouble}
 import org.mockito.BDDMockito.given
 import org.mockito.Mockito.{reset, verify, verifyZeroInteractions, when}
 import org.scalatest.BeforeAndAfterEach
@@ -46,29 +46,29 @@ class DaysElapsedJobTest extends UnitSpec with MockitoSugar with BeforeAndAfterE
   "Scheduled Job" should {
 
     "Configure 'Name'" in {
-      createDaysElapsedJob.name shouldBe "DaysElapsed"
+      newJob.name shouldBe "DaysElapsed"
     }
 
     "Configure 'firstRunTime'" in {
       val runTime = LocalTime.of(14, 0)
       given(appConfig.daysElapsed).willReturn(JobConfig(runTime, 1.day))
 
-      createDaysElapsedJob.firstRunTime shouldBe runTime
+      newJob.firstRunTime shouldBe runTime
     }
 
     "Configure 'interval'" in {
       given(appConfig.daysElapsed).willReturn(JobConfig(LocalTime.MIDNIGHT, 1.day))
 
-      createDaysElapsedJob.interval shouldBe 1.day
+      newJob.interval shouldBe 1.day
     }
 
     "Execute" in {
       givenItIsNotABankHoliday()
       givenTheDateIsFixedAt("2018-12-25T12:00:00")
       given(appConfig.daysElapsed).willReturn(JobConfig(LocalTime.MIDNIGHT, 1.day))
-      given(caseService.incrementDaysElapsed(1)).willReturn(Future.successful(2))
+      given(caseService.incrementDaysElapsed(anyDouble())).willReturn(Future.successful(2))
 
-      await(createDaysElapsedJob.execute())
+      await(newJob.execute())
 
       verify(caseService).incrementDaysElapsed(1)
     }
@@ -77,44 +77,44 @@ class DaysElapsedJobTest extends UnitSpec with MockitoSugar with BeforeAndAfterE
       givenItIsNotABankHoliday()
       givenTheDateIsFixedAt("2018-12-25T12:00:00")
       given(appConfig.daysElapsed).willReturn(JobConfig(LocalTime.MIDNIGHT, 12.hours))
-      given(caseService.incrementDaysElapsed(0.5)).willReturn(Future.successful(2))
+      given(caseService.incrementDaysElapsed(anyDouble())).willReturn(Future.successful(2))
 
-      await(createDaysElapsedJob.execute())
+      await(newJob.execute())
 
       verify(caseService).incrementDaysElapsed(0.5)
     }
 
     "Do nothing on a Saturday" in {
       givenTheDateIsFixedAt("2018-12-29T00:00:00")
-      await(createDaysElapsedJob.execute())
+      await(newJob.execute())
       verifyZeroInteractions(caseService)
     }
 
     "Do nothing on a Sunday" in {
       givenTheDateIsFixedAt("2018-12-30T00:00:00")
-      await(createDaysElapsedJob.execute())
+      await(newJob.execute())
       verifyZeroInteractions(caseService)
     }
 
     "Do nothing on a Bank Holiday" in {
       givenABankHolidayOn("2018-12-25")
       givenTheDateIsFixedAt("2018-12-25T00:00:00")
-      await(createDaysElapsedJob.execute())
+      await(newJob.execute())
       verifyZeroInteractions(caseService)
     }
 
   }
 
-  private def createDaysElapsedJob: DaysElapsedJob = {
+  private def newJob: DaysElapsedJob = {
     new DaysElapsedJob(appConfig, caseService, bankHolidaysConnector)
   }
 
   private def givenABankHolidayOn(date: String): Unit = {
-    when(bankHolidaysConnector.get()(ArgumentMatchers.any[HeaderCarrier])).thenReturn(Seq(LocalDate.parse(date)))
+    when(bankHolidaysConnector.get()(any[HeaderCarrier])).thenReturn(Seq(LocalDate.parse(date)))
   }
 
   private def givenItIsNotABankHoliday(): Unit = {
-    when(bankHolidaysConnector.get()(ArgumentMatchers.any[HeaderCarrier])).thenReturn(Seq.empty)
+    when(bankHolidaysConnector.get()(any[HeaderCarrier])).thenReturn(Seq.empty)
   }
 
   private def givenTheDateIsFixedAt(date: String) : Unit = {
