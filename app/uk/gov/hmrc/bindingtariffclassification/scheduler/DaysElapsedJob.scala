@@ -29,7 +29,7 @@ import uk.gov.hmrc.http.HeaderCarrier
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.concurrent.Future.successful
-import scala.concurrent.duration.FiniteDuration
+import scala.concurrent.duration._
 
 @Singleton
 class DaysElapsedJob @Inject()(appConfig: AppConfig, caseService: CaseService, bankHolidaysConnector: BankHolidaysConnector) extends ScheduledJob {
@@ -37,7 +37,7 @@ class DaysElapsedJob @Inject()(appConfig: AppConfig, caseService: CaseService, b
   private implicit val carrier: HeaderCarrier = HeaderCarrier()
   private lazy val jobConfig = appConfig.daysElapsed
   private lazy val weekendDays = Seq(SATURDAY, SUNDAY)
-  private lazy val secondsInADay = 24 * 60 * 60
+  private lazy val secondsInADay = 1.day.toSeconds
 
   override val name: String = "DaysElapsed"
 
