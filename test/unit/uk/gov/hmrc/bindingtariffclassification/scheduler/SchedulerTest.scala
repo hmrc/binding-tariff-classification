@@ -17,7 +17,6 @@
 package uk.gov.hmrc.bindingtariffclassification.scheduler
 
 import java.time._
-import java.util.concurrent.TimeUnit
 
 import akka.actor.{ActorSystem, Cancellable}
 import org.mockito.ArgumentCaptor
@@ -113,7 +112,7 @@ class SchedulerTest extends UnitSpec with MockitoSugar with BeforeAndAfterEach w
     "Run job with valid schedule" in {
       // Given
       givenTheLockSucceeds()
-      given(job.interval) willReturn FiniteDuration(3, TimeUnit.SECONDS)
+      given(job.interval) willReturn 3.seconds
       given(job.firstRunTime) willReturn "12:00"
       given(job.name) willReturn "name"
       given(util.nextRun(job.firstRunTime, job.interval)) willReturn "2018-12-25T12:00:00"
@@ -124,8 +123,8 @@ class SchedulerTest extends UnitSpec with MockitoSugar with BeforeAndAfterEach w
 
       // Then
       val schedule = theSchedule
-      schedule.interval shouldBe FiniteDuration(3, TimeUnit.SECONDS)
-      schedule.initialDelay shouldBe FiniteDuration(0, TimeUnit.SECONDS)
+      schedule.interval shouldBe 3.seconds
+      schedule.initialDelay shouldBe 0.seconds
 
       val lockEvent = theLockEvent
       lockEvent.name shouldBe "name"
@@ -135,7 +134,7 @@ class SchedulerTest extends UnitSpec with MockitoSugar with BeforeAndAfterEach w
     "Run job with valid schedule and future run-date" in {
       // Given
       givenTheLockSucceeds()
-      given(job.interval) willReturn FiniteDuration(3, TimeUnit.SECONDS)
+      given(job.interval) willReturn 3.seconds
       given(job.firstRunTime) willReturn "12:00"
       given(job.name) willReturn "name"
       given(util.nextRun(job.firstRunTime, job.interval)).willReturn("2018-12-25T12:00:20")
@@ -146,8 +145,8 @@ class SchedulerTest extends UnitSpec with MockitoSugar with BeforeAndAfterEach w
 
       // Then
       val schedule = theSchedule
-      schedule.interval shouldBe FiniteDuration(3, TimeUnit.SECONDS)
-      schedule.initialDelay shouldBe FiniteDuration(20, TimeUnit.SECONDS)
+      schedule.interval shouldBe 3.seconds
+      schedule.initialDelay shouldBe 20.seconds
 
       val lockEvent = theLockEvent
       lockEvent.name shouldBe "name"
@@ -157,7 +156,7 @@ class SchedulerTest extends UnitSpec with MockitoSugar with BeforeAndAfterEach w
     "Fail to schedule job given an invalid run date" in {
       // Given
       givenTheLockSucceeds()
-      given(job.interval) willReturn FiniteDuration(3, TimeUnit.SECONDS)
+      given(job.interval) willReturn 3.seconds
       given(job.firstRunTime) willReturn "12:00"
       given(job.name) willReturn "name"
       given(util.nextRun(job.firstRunTime, job.interval)).willReturn("2018-12-25T11:59:59")
@@ -172,7 +171,7 @@ class SchedulerTest extends UnitSpec with MockitoSugar with BeforeAndAfterEach w
     "Not execute the job if the lock fails" in {
       // Given
       givenTheLockFails()
-      given(job.interval) willReturn FiniteDuration(1, TimeUnit.SECONDS)
+      given(job.interval) willReturn 1.seconds
       given(job.firstRunTime) willReturn now
       given(util.nextRun(job.firstRunTime, job.interval)) willReturn "2018-12-25T12:00:00"
 

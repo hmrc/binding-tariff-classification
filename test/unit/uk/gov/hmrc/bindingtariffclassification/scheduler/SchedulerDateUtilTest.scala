@@ -17,7 +17,6 @@
 package uk.gov.hmrc.bindingtariffclassification.scheduler
 
 import java.time._
-import java.util.concurrent.TimeUnit.SECONDS
 
 import org.mockito.BDDMockito.given
 import org.scalatest.BeforeAndAfterEach
@@ -25,7 +24,7 @@ import org.scalatest.mockito.MockitoSugar
 import uk.gov.hmrc.bindingtariffclassification.config.AppConfig
 import uk.gov.hmrc.play.test.UnitSpec
 
-import scala.concurrent.duration.{FiniteDuration, TimeUnit}
+import scala.concurrent.duration._
 
 class SchedulerDateUtilTest extends UnitSpec with MockitoSugar with BeforeAndAfterEach {
 
@@ -43,45 +42,45 @@ class SchedulerDateUtilTest extends UnitSpec with MockitoSugar with BeforeAndAft
     "Calculate the next run date given a run time of now" in {
       util.nextRun(
         time("12:00"),
-        interval(3, SECONDS)
+        3.seconds
       ) shouldBe instant("2019-01-01T12:00:00")
     }
 
     "Calculate the next run date given a run time in the future" in {
       util.nextRun(
         time("12:00:09"),
-        interval(3, SECONDS)
+        3.seconds
       ) shouldBe instant("2019-01-01T12:00:00")
     }
 
     "Calculate the next run date given a run time in the future with Offset" in {
       util.nextRun(
         time("12:00:01"),
-        interval(3, SECONDS)
+        3.seconds
       ) shouldBe instant("2019-01-01T12:00:01")
 
       util.nextRun(
         time("12:00:10"),
-        interval(3, SECONDS)
+        3.seconds
       ) shouldBe instant("2019-01-01T12:00:01")
     }
 
     "Calculate the next run date given a run time in the past" in {
       util.nextRun(
         time("11:59:51"),
-        interval(3, SECONDS)
+        3.seconds
       ) shouldBe instant("2019-01-01T12:00:00")
     }
 
     "Calculate the next run date given a run time in the past with Offset" in {
       util.nextRun(
         time("11:59:58"),
-        interval(3, SECONDS)
+        3.seconds
       ) shouldBe instant("2019-01-01T12:00:01")
 
       util.nextRun(
         time("11:59:52"),
-        interval(3, SECONDS)
+        3.seconds
       ) shouldBe instant("2019-01-01T12:00:01")
     }
   }
@@ -90,65 +89,65 @@ class SchedulerDateUtilTest extends UnitSpec with MockitoSugar with BeforeAndAft
     "Calculate the closest run date given a run time of now" in {
       util.closestRun(
         time("12:00"),
-        interval(3, SECONDS)
+        3.seconds
       ) shouldBe instant("2019-01-01T12:00:00")
     }
 
     "Calculate the closest run date given a run time in the future" in {
       util.closestRun(
         time("12:00:09"),
-        interval(3, SECONDS)
+        3.seconds
       ) shouldBe instant("2019-01-01T12:00:00")
     }
 
     "Calculate the closest run date given a run time in the future with Offset" in {
       util.closestRun(
         time("12:00:01"),
-        interval(3, SECONDS)
+        3.seconds
       ) shouldBe instant("2019-01-01T12:00:01")
 
       util.closestRun(
         time("12:00:10"),
-        interval(3, SECONDS)
+        3.seconds
       ) shouldBe instant("2019-01-01T12:00:01")
 
       util.closestRun(
         time("12:00:02"),
-        interval(3, SECONDS)
+        3.seconds
       ) shouldBe instant("2019-01-01T11:59:59")
 
       util.closestRun(
         time("12:00:02"),
-        interval(4, SECONDS)
+        4.seconds
       ) shouldBe instant("2019-01-01T11:59:58")
     }
 
     "Calculate the closest run date given a run time in the past" in {
       util.closestRun(
         time("11:59:51"),
-        interval(3, SECONDS)
+        3.seconds
       ) shouldBe instant("2019-01-01T12:00:00")
     }
 
     "Calculate the closest run date given a run time in the past with Offset" in {
       util.closestRun(
         time("11:59:58"),
-        interval(3, SECONDS)
+        3.seconds
       ) shouldBe instant("2019-01-01T12:00:01")
 
       util.closestRun(
         time("11:59:52"),
-        interval(3, SECONDS)
+        3.seconds
       ) shouldBe instant("2019-01-01T12:00:01")
 
       util.closestRun(
         time("11:59:56"),
-        interval(3, SECONDS)
+        3.seconds
       ) shouldBe instant("2019-01-01T11:59:59")
 
       util.closestRun(
         time("11:59:58"),
-        interval(4, SECONDS)
+        4.seconds
       ) shouldBe instant("2019-01-01T11:59:58")
     }
   }
@@ -161,7 +160,4 @@ class SchedulerDateUtilTest extends UnitSpec with MockitoSugar with BeforeAndAft
     LocalTime.parse(datetime)
   }
 
-  private def interval(length: Int, unit: TimeUnit): FiniteDuration = {
-    FiniteDuration(length, unit)
-  }
 }
