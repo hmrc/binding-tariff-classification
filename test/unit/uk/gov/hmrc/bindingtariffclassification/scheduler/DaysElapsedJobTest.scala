@@ -53,13 +53,13 @@ class DaysElapsedJobTest extends UnitSpec with MockitoSugar with BeforeAndAfterE
 
     "Configure 'firstRunTime'" in {
       val runTime = LocalTime.of(14, 0)
-      given(appConfig.daysElapsed).willReturn(JobConfig(runTime, 1))
+      given(appConfig.daysElapsed).willReturn(JobConfig(runTime, FiniteDuration(1, DAYS)))
 
       new DaysElapsedJob(appConfig, caseService, bankHolidaysConnector).firstRunTime shouldBe runTime
     }
 
     "Configure 'interval'" in {
-      given(appConfig.daysElapsed).willReturn(JobConfig(LocalTime.MIDNIGHT, 1))
+      given(appConfig.daysElapsed).willReturn(JobConfig(LocalTime.MIDNIGHT, FiniteDuration(1, DAYS)))
 
       new DaysElapsedJob(appConfig, caseService, bankHolidaysConnector).interval shouldBe FiniteDuration(1, DAYS)
     }
@@ -67,7 +67,7 @@ class DaysElapsedJobTest extends UnitSpec with MockitoSugar with BeforeAndAfterE
     "Execute" in {
       givenItIsNotABankHoliday()
       givenTheDateIsFixedAt("2018-12-25T12:00:00")
-      given(appConfig.daysElapsed).willReturn(JobConfig(LocalTime.MIDNIGHT, 1))
+      given(appConfig.daysElapsed).willReturn(JobConfig(LocalTime.MIDNIGHT, FiniteDuration(1, DAYS)))
       given(caseService.incrementDaysElapsed(refEq(1))).willReturn(Future.successful(2))
 
       await(new DaysElapsedJob(appConfig, caseService, bankHolidaysConnector).execute())

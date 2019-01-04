@@ -17,10 +17,13 @@
 package uk.gov.hmrc.bindingtariffclassification.config
 
 import java.time.{LocalTime, ZoneId}
+import java.util.concurrent.TimeUnit
 
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.{Configuration, Environment}
 import uk.gov.hmrc.play.test.UnitSpec
+
+import scala.concurrent.duration.FiniteDuration
 
 class AppConfigTest extends UnitSpec with GuiceOneAppPerSuite {
 
@@ -41,10 +44,10 @@ class AppConfigTest extends UnitSpec with GuiceOneAppPerSuite {
     "build 'DaysElapsedConfig" in {
       val config = configWith(
         "scheduler.days-elapsed.run-time" -> "00:00",
-        "scheduler.days-elapsed.interval-days" -> "1"
+        "scheduler.days-elapsed.interval" -> "1d"
       ).daysElapsed
       config.elapseTime shouldBe LocalTime.of(0, 0, 0)
-      config.intervalDays shouldBe 1
+      config.interval shouldBe FiniteDuration(1, TimeUnit.DAYS)
     }
 
     "build 'bankHolidaysUrl without port" in {

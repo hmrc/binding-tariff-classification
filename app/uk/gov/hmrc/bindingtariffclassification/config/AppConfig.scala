@@ -23,6 +23,8 @@ import play.api.Mode.Mode
 import play.api.{Configuration, Environment}
 import uk.gov.hmrc.play.config.ServicesConfig
 
+import scala.concurrent.duration.FiniteDuration
+
 @Singleton
 class AppConfig @Inject()(val runModeConfiguration: Configuration, environment: Environment) extends ServicesConfig {
 
@@ -34,7 +36,7 @@ class AppConfig @Inject()(val runModeConfiguration: Configuration, environment: 
 
   lazy val daysElapsed: JobConfig = JobConfig(
     LocalTime.parse(getString("scheduler.days-elapsed.run-time")),
-    getInt("scheduler.days-elapsed.interval-days")
+    getDuration("scheduler.days-elapsed.interval").asInstanceOf[FiniteDuration]
   )
 
   private def getBooleanConfig(key: String, default: Boolean): Boolean = {
@@ -50,4 +52,4 @@ class AppConfig @Inject()(val runModeConfiguration: Configuration, environment: 
 
 }
 
-case class JobConfig(elapseTime: LocalTime, intervalDays: Int)
+case class JobConfig(elapseTime: LocalTime, interval: FiniteDuration)

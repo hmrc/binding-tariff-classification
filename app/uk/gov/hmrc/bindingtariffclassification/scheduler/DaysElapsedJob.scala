@@ -43,7 +43,7 @@ class DaysElapsedJob @Inject()(appConfig: AppConfig, caseService: CaseService, b
 
   override val name: String = "DaysElapsed"
 
-  override def interval: FiniteDuration = FiniteDuration(jobConfig.intervalDays, TimeUnit.DAYS)
+  override def interval: FiniteDuration = jobConfig.interval
 
   override def firstRunTime: LocalTime = {
     jobConfig.elapseTime
@@ -72,7 +72,7 @@ class DaysElapsedJob @Inject()(appConfig: AppConfig, caseService: CaseService, b
           Logger.info(s"$msgPrefix Skipped as it is a Bank Holiday")
           successful(())
         case false =>
-          caseService.incrementDaysElapsed(jobConfig.intervalDays).map { modified: Int =>
+          caseService.incrementDaysElapsed(jobConfig.interval.toDays).map { modified: Int =>
             Logger.info(s"$msgPrefix Incremented the Days Elapsed for [$modified] cases")
             ()
           }

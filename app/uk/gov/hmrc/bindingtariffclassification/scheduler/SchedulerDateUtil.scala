@@ -27,13 +27,13 @@ class SchedulerDateUtil @Inject()(appConfig: AppConfig) {
 
   private lazy val clock = appConfig.clock
 
-  def nextRun(offset: LocalTime, finiteDuration: FiniteDuration): Instant = {
+  def nextRun(offset: LocalTime, interval: FiniteDuration): Instant = {
     val time = LocalTime.now(clock)
 
     val offsetSeconds: Int = offset.toSecondOfDay
     val currentSeconds: Int = time.toSecondOfDay
 
-    val intervalSeconds: Long = finiteDuration.toSeconds
+    val intervalSeconds: Long = interval.toSeconds
     val deltaSeconds: Int = offsetSeconds - currentSeconds
     val intervalRemainder: Long = deltaSeconds % intervalSeconds
 
@@ -46,13 +46,13 @@ class SchedulerDateUtil @Inject()(appConfig: AppConfig) {
       .toInstant
   }
 
-  def closestRun(offset: LocalTime, finiteDuration: FiniteDuration): Instant = {
+  def closestRun(offset: LocalTime, interval: FiniteDuration): Instant = {
     val time = LocalTime.now(clock)
 
     val offsetSeconds: Int = offset.toSecondOfDay
     val currentSeconds: Int = time.toSecondOfDay
 
-    val intervalSeconds: Long = finiteDuration.toSeconds
+    val intervalSeconds: Long = interval.toSeconds
     val deltaSeconds: Int = offsetSeconds - currentSeconds
     val intervalRemainder: Long = deltaSeconds % intervalSeconds
 
