@@ -16,23 +16,23 @@
 
 package uk.gov.hmrc.bindingtariffclassification.model
 
-import java.time.Instant
+import java.time.{Instant, ZoneId, ZonedDateTime}
 
 import play.api.libs.json._
 import uk.gov.hmrc.play.json.Union
 
 object MongoFormatters {
 
-  implicit val instantFormat: OFormat[Instant] = new OFormat[Instant] {
-    override def writes(instant: Instant): JsObject = {
-      Json.obj("$date" -> instant.toEpochMilli)
+  implicit val instantFormat: OFormat[ZonedDateTime] = new OFormat[ZonedDateTime] {
+    override def writes(datetime: ZonedDateTime): JsObject = {
+      Json.obj("$date" -> datetime.toInstant.toEpochMilli)
     }
 
-    override def reads(json: JsValue): JsResult[Instant] = {
+    override def reads(json: JsValue): JsResult[ZonedDateTime] = {
       json match {
         case JsObject(map) if map.contains("$date") =>
           map("$date") match {
-            case JsNumber(v) => JsSuccess(Instant.ofEpochMilli(v.toLong))
+            case JsNumber(v) => JsSuccess(Instant.ofEpochMilli(v.toLong).atZone(ZoneId.systemDefault()))
             case _ => JsError("Unexpected Instant Format")
           }
         case _ => JsError("Unexpected Instant Format")
