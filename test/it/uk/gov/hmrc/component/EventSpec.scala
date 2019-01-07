@@ -23,7 +23,7 @@ import play.api.http.Status.{NO_CONTENT, OK}
 import play.api.http.{HttpVerbs, Status}
 import play.api.libs.json.Json
 import scalaj.http.Http
-import uk.gov.hmrc.bindingtariffclassification.model.JsonFormatters.{formatEvent, formatNewEventRequest}
+import uk.gov.hmrc.bindingtariffclassification.model.RESTFormatters.{formatEvent, formatNewEventRequest}
 import uk.gov.hmrc.bindingtariffclassification.model.{Event, NewEventRequest, Note}
 import util.CaseData.createCase
 import util.EventData._

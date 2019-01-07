@@ -21,8 +21,8 @@ import javax.inject.{Inject, Singleton}
 import play.api.Logger
 import reactivemongo.bson.BSONObjectID
 import reactivemongo.play.json.collection.JSONCollection
-import uk.gov.hmrc.bindingtariffclassification.model.JsonFormatters.formatSchedulerRunEvent
-import uk.gov.hmrc.bindingtariffclassification.model.{JsonFormatters, SchedulerRunEvent}
+import uk.gov.hmrc.bindingtariffclassification.model.MongoFormatters.formatSchedulerRunEvent
+import uk.gov.hmrc.bindingtariffclassification.model.{MongoFormatters, SchedulerRunEvent}
 import uk.gov.hmrc.mongo.ReactiveRepository
 import uk.gov.hmrc.mongo.json.ReactiveMongoFormats
 
@@ -41,7 +41,7 @@ class SchedulerLockMongoRepository @Inject()(mongoDbProvider: MongoDbProvider)
   extends ReactiveRepository[SchedulerRunEvent, BSONObjectID](
     collectionName = "scheduler",
     mongo = mongoDbProvider.mongo,
-    domainFormat = JsonFormatters.formatSchedulerRunEvent,
+    domainFormat = MongoFormatters.formatSchedulerRunEvent,
     idFormat = ReactiveMongoFormats.objectIdFormats) with SchedulerLockRepository with MongoCrudHelper[SchedulerRunEvent] {
 
   override val mongoCollection: JSONCollection = collection

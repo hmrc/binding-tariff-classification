@@ -23,10 +23,10 @@ import reactivemongo.api.indexes.Index
 import reactivemongo.bson.{BSONArray, BSONDocument, BSONDouble, BSONObjectID, BSONString}
 import reactivemongo.play.json.ImplicitBSONHandlers._
 import reactivemongo.play.json.collection.JSONCollection
-import uk.gov.hmrc.bindingtariffclassification.model.JsonFormatters.formatCase
+import uk.gov.hmrc.bindingtariffclassification.model.MongoFormatters.formatCase
 import uk.gov.hmrc.bindingtariffclassification.model.search.CaseParamsFilter
 import uk.gov.hmrc.bindingtariffclassification.model.sort.CaseSort
-import uk.gov.hmrc.bindingtariffclassification.model.{Case, CaseStatus, JsonFormatters}
+import uk.gov.hmrc.bindingtariffclassification.model.{Case, CaseStatus, MongoFormatters}
 import uk.gov.hmrc.mongo.ReactiveRepository
 import uk.gov.hmrc.mongo.json.ReactiveMongoFormats
 
@@ -54,7 +54,7 @@ class CaseMongoRepository @Inject()(mongoDbProvider: MongoDbProvider, jsonMapper
   extends ReactiveRepository[Case, BSONObjectID](
     collectionName = "cases",
     mongo = mongoDbProvider.mongo,
-    domainFormat = JsonFormatters.formatCase,
+    domainFormat = MongoFormatters.formatCase,
     idFormat = ReactiveMongoFormats.objectIdFormats) with CaseRepository with MongoCrudHelper[Case] {
 
   override val mongoCollection: JSONCollection = collection

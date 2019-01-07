@@ -33,7 +33,7 @@ class CaseController @Inject()(appConfig: AppConfig,
                                caseParamsMapper: CaseParamsMapper,
                                caseSortMapper: CaseSortMapper) extends CommonController {
 
-  import JsonFormatters.{formatCase, formatNewCase}
+  import RESTFormatters.{formatCase, formatNewCase}
 
   lazy private val testModeFilter = TestMode.actionFilter(appConfig)
 

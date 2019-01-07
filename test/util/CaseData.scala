@@ -133,10 +133,9 @@ object CaseData {
 
   def createAttachment: Attachment = {
     Attachment(
+      id = RandomGenerator.randomUUID(),
       application = false,
-      public = true,
-      url = "files://aws.bucket/12345",
-      mimeType = "media/jpg"
+      public = true
     )
   }
 

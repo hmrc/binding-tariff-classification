@@ -24,7 +24,7 @@ import play.api.http.HttpVerbs
 import play.api.http.Status._
 import play.api.libs.json.Json
 import scalaj.http.{Http, HttpResponse}
-import uk.gov.hmrc.bindingtariffclassification.model.JsonFormatters._
+import uk.gov.hmrc.bindingtariffclassification.model.RESTFormatters._
 import uk.gov.hmrc.bindingtariffclassification.model._
 import util.CaseData._
 import util.Matchers.roughlyBe

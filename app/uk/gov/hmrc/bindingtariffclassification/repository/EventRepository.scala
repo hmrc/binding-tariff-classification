@@ -21,8 +21,8 @@ import javax.inject.{Inject, Singleton}
 import play.api.libs.json._
 import reactivemongo.bson.BSONObjectID
 import reactivemongo.play.json.collection.JSONCollection
-import uk.gov.hmrc.bindingtariffclassification.model.JsonFormatters.formatEvent
-import uk.gov.hmrc.bindingtariffclassification.model.{Event, JsonFormatters}
+import uk.gov.hmrc.bindingtariffclassification.model.MongoFormatters.formatEvent
+import uk.gov.hmrc.bindingtariffclassification.model.{Event, MongoFormatters}
 import uk.gov.hmrc.mongo.ReactiveRepository
 import uk.gov.hmrc.mongo.json.ReactiveMongoFormats
 
@@ -46,7 +46,7 @@ class EventMongoRepository @Inject()(mongoDbProvider: MongoDbProvider)
   extends ReactiveRepository[Event, BSONObjectID](
     collectionName = "events",
     mongo = mongoDbProvider.mongo,
-    domainFormat = JsonFormatters.formatEvent,
+    domainFormat = MongoFormatters.formatEvent,
     idFormat = ReactiveMongoFormats.objectIdFormats) with EventRepository with MongoCrudHelper[Event] {
 
   override val mongoCollection: JSONCollection = collection

@@ -27,7 +27,7 @@ import play.api.test.FakeRequest
 import reactivemongo.bson.BSONDocument
 import reactivemongo.core.errors.DatabaseException
 import uk.gov.hmrc.bindingtariffclassification.config.AppConfig
-import uk.gov.hmrc.bindingtariffclassification.model.JsonFormatters._
+import uk.gov.hmrc.bindingtariffclassification.model.RESTFormatters._
 import uk.gov.hmrc.bindingtariffclassification.model.search.CaseParamsFilter
 import uk.gov.hmrc.bindingtariffclassification.model.sort.CaseSort
 import uk.gov.hmrc.bindingtariffclassification.model.{Case, NewCaseRequest}

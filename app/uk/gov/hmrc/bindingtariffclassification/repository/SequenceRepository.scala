@@ -21,8 +21,8 @@ import javax.inject.{Inject, Singleton}
 import play.api.libs.json.Json
 import reactivemongo.bson.BSONObjectID
 import reactivemongo.play.json.collection.JSONCollection
-import uk.gov.hmrc.bindingtariffclassification.model.JsonFormatters.formatSequence
-import uk.gov.hmrc.bindingtariffclassification.model.{JsonFormatters, Sequence}
+import uk.gov.hmrc.bindingtariffclassification.model.MongoFormatters.formatSequence
+import uk.gov.hmrc.bindingtariffclassification.model.{MongoFormatters, Sequence}
 import uk.gov.hmrc.mongo.ReactiveRepository
 import uk.gov.hmrc.mongo.json.ReactiveMongoFormats
 
@@ -44,7 +44,7 @@ class SequenceMongoRepository @Inject()(mongoDbProvider: MongoDbProvider)
   extends ReactiveRepository[Sequence, BSONObjectID](
     collectionName = "sequences",
     mongo = mongoDbProvider.mongo,
-    domainFormat = JsonFormatters.formatSequence,
+    domainFormat = MongoFormatters.formatSequence,
     idFormat = ReactiveMongoFormats.objectIdFormats) with SequenceRepository with MongoCrudHelper[Sequence] {
 
   override val mongoCollection: JSONCollection = collection

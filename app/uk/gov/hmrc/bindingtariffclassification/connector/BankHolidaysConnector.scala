@@ -20,7 +20,8 @@ import java.time.LocalDate
 
 import javax.inject.{Inject, Singleton}
 import uk.gov.hmrc.bindingtariffclassification.config.AppConfig
-import uk.gov.hmrc.bindingtariffclassification.model.{BankHolidaysResponse, JsonFormatters}
+import uk.gov.hmrc.bindingtariffclassification.model.BankHolidaysResponse
+import uk.gov.hmrc.bindingtariffclassification.model.RESTFormatters.formatBankHolidaysResponse
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
 
@@ -31,9 +32,6 @@ class BankHolidaysConnector @Inject()(appConfig: AppConfig, http: HttpClient)
                                      (implicit executionContext: ExecutionContext) {
 
   def get()(implicit headerCarrier: HeaderCarrier): Future[Seq[LocalDate]] = {
-
-    import JsonFormatters.formatBankHolidaysResponse
-
     http.GET[BankHolidaysResponse](s"${appConfig.bankHolidaysUrl}/bank-holidays.json")
       .map(_.`england-and-wales`.events.map(_.date))
   }

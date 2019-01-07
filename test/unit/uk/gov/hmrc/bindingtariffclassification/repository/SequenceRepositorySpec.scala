@@ -24,7 +24,7 @@ import reactivemongo.api.indexes.IndexType.Ascending
 import reactivemongo.bson._
 import reactivemongo.core.errors.DatabaseException
 import reactivemongo.play.json.ImplicitBSONHandlers._
-import uk.gov.hmrc.bindingtariffclassification.model.JsonFormatters.formatSequence
+import uk.gov.hmrc.bindingtariffclassification.model.MongoFormatters.formatSequence
 import uk.gov.hmrc.bindingtariffclassification.model._
 import uk.gov.hmrc.mongo.MongoSpecSupport
 

@@ -16,10 +16,29 @@
 
 package uk.gov.hmrc.bindingtariffclassification.model
 
+import java.time.Instant
+
 import play.api.libs.json._
 import uk.gov.hmrc.play.json.Union
 
-object JsonFormatters {
+object MongoFormatters {
+
+  implicit val instantFormat: OFormat[Instant] = new OFormat[Instant] {
+    override def writes(instant: Instant): JsObject = {
+      Json.obj("$date" -> instant.toEpochMilli)
+    }
+
+    override def reads(json: JsValue): JsResult[Instant] = {
+      json match {
+        case JsObject(map) if map.contains("$date") =>
+          map("$date") match {
+            case JsNumber(v) => JsSuccess(Instant.ofEpochMilli(v.toLong))
+            case _ => JsError("Unexpected Instant Format")
+          }
+        case _ => JsError("Unexpected Instant Format")
+      }
+    }
+  }
 
 
   implicit val formatSequence = Json.format[Sequence]
@@ -44,7 +63,6 @@ object JsonFormatters {
   implicit val formatDecision = Json.format[Decision]
 
   implicit val formatCase = Json.format[Case]
-  implicit val formatNewCase = Json.format[NewCaseRequest]
 
   implicit val formatStatus = Json.format[Status]
 
@@ -58,11 +76,5 @@ object JsonFormatters {
     .format
 
   implicit val formatEvent = Json.format[Event]
-  implicit val formatNewEventRequest = Json.format[NewEventRequest]
-
   implicit val formatSchedulerRunEvent = Json.format[SchedulerRunEvent]
-
-  implicit val formatBankHoliday = Json.format[BankHoliday]
-  implicit val formatBankHolidaysSet = Json.format[BankHolidaySet]
-  implicit val formatBankHolidaysResponse = Json.format[BankHolidaysResponse]
 }

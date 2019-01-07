@@ -20,7 +20,7 @@ import javax.inject.{Inject, Singleton}
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc._
 import uk.gov.hmrc.bindingtariffclassification.config.AppConfig
-import uk.gov.hmrc.bindingtariffclassification.model.JsonFormatters.formatNewEventRequest
+import uk.gov.hmrc.bindingtariffclassification.model.RESTFormatters.{formatEvent, formatNewEventRequest}
 import uk.gov.hmrc.bindingtariffclassification.model._
 import uk.gov.hmrc.bindingtariffclassification.service.{CaseService, EventService}
 
@@ -29,8 +29,6 @@ import scala.concurrent.Future
 
 @Singleton
 class EventController @Inject()(appConfig: AppConfig, eventService: EventService, caseService: CaseService) extends CommonController {
-
-  import JsonFormatters.formatEvent
 
   lazy private val testModeFilter = TestMode.actionFilter(appConfig)
 
