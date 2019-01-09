@@ -18,7 +18,9 @@ package uk.gov.hmrc.bindingtariffclassification.repository
 
 import java.time.ZonedDateTime
 
+import org.mockito.BDDMockito.given
 import org.scalatest.concurrent.Eventually
+import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
 import play.api.libs.json.{JsObject, Json}
 import reactivemongo.api.indexes.Index
@@ -27,6 +29,7 @@ import reactivemongo.api.{Cursor, DB}
 import reactivemongo.bson._
 import reactivemongo.core.errors.DatabaseException
 import reactivemongo.play.json.ImplicitBSONHandlers._
+import uk.gov.hmrc.bindingtariffclassification.config.AppConfig
 import uk.gov.hmrc.bindingtariffclassification.model.MongoFormatters.formatCase
 import uk.gov.hmrc.bindingtariffclassification.model._
 import uk.gov.hmrc.bindingtariffclassification.model.search.CaseParamsFilter
@@ -41,8 +44,11 @@ class CaseRepositorySpec extends BaseMongoIndexSpec
   with BeforeAndAfterAll
   with BeforeAndAfterEach
   with MongoSpecSupport
-  with Eventually {
+  with Eventually
+  with MockitoSugar {
   self =>
+
+  private val appConfig = mock[AppConfig]
 
   private val mongoDbProvider = new MongoDbProvider {
     override val mongo: () => DB = self.mongo
@@ -53,7 +59,7 @@ class CaseRepositorySpec extends BaseMongoIndexSpec
   private val repository = createMongoRepo
 
   private def createMongoRepo = {
-    new CaseMongoRepository(mongoDbProvider, jsonMapper)
+    new CaseMongoRepository(mongoDbProvider, jsonMapper, appConfig)
   }
 
   private val case1: Case = createCase()
@@ -115,6 +121,8 @@ class CaseRepositorySpec extends BaseMongoIndexSpec
   "update" should {
 
     "modify an existing document in the collection" in {
+      given(appConfig.upsertPermitted) willReturn false
+
       await(repository.insert(case1)) shouldBe case1
       val size = collectionSize
 
@@ -126,10 +134,19 @@ class CaseRepositorySpec extends BaseMongoIndexSpec
     }
 
     "do nothing when trying to update a non existing document in the collection" in {
+      given(appConfig.upsertPermitted) willReturn false
       val size = collectionSize
 
       await(repository.update(case1)) shouldBe None
       collectionSize shouldBe size
+    }
+
+    "create a new existing document in the collection if upsert permitted" in {
+      given(appConfig.upsertPermitted) willReturn true
+      val size = collectionSize
+
+      await(repository.update(case1)) shouldBe Some(case1)
+      collectionSize shouldBe size + 1
     }
   }
 

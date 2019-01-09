@@ -23,6 +23,7 @@ import reactivemongo.api.indexes.Index
 import reactivemongo.bson.{BSONArray, BSONDocument, BSONDouble, BSONObjectID, BSONString}
 import reactivemongo.play.json.ImplicitBSONHandlers._
 import reactivemongo.play.json.collection.JSONCollection
+import uk.gov.hmrc.bindingtariffclassification.config.AppConfig
 import uk.gov.hmrc.bindingtariffclassification.model.MongoFormatters.formatCase
 import uk.gov.hmrc.bindingtariffclassification.model.search.CaseParamsFilter
 import uk.gov.hmrc.bindingtariffclassification.model.sort.CaseSort
@@ -50,7 +51,7 @@ trait CaseRepository {
 }
 
 @Singleton
-class CaseMongoRepository @Inject()(mongoDbProvider: MongoDbProvider, jsonMapper: JsonObjectMapper)
+class CaseMongoRepository @Inject()(mongoDbProvider: MongoDbProvider, jsonMapper: JsonObjectMapper, appConfig: AppConfig)
   extends ReactiveRepository[Case, BSONObjectID](
     collectionName = "cases",
     mongo = mongoDbProvider.mongo,
@@ -79,7 +80,7 @@ class CaseMongoRepository @Inject()(mongoDbProvider: MongoDbProvider, jsonMapper
   }
 
   override def update(c: Case): Future[Option[Case]] = {
-    updateDocument(selector = jsonMapper.fromReference(c.reference), update = c)
+    updateDocument(selector = jsonMapper.fromReference(c.reference), update = c, upsert = appConfig.upsertPermitted)
   }
 
   override def getByReference(reference: String): Future[Option[Case]] = {

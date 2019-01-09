@@ -18,13 +18,12 @@ package uk.gov.hmrc.bindingtariffclassification.config
 
 import java.time.{LocalTime, ZoneId}
 
-import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.{Configuration, Environment}
 import uk.gov.hmrc.play.test.UnitSpec
 
 import scala.concurrent.duration._
 
-class AppConfigTest extends UnitSpec with GuiceOneAppPerSuite {
+class AppConfigTest extends UnitSpec {
 
   private def configWith(pairs: (String, String)*): AppConfig = {
     new AppConfig(Configuration.from(pairs.map(e => e._1 -> e._2).toMap), Environment.simple())
@@ -62,6 +61,11 @@ class AppConfigTest extends UnitSpec with GuiceOneAppPerSuite {
         "microservice.services.bank-holidays.host" -> "www.host.co.uk",
         "microservice.services.bank-holidays.port" -> "123"
       ).bankHolidaysUrl shouldBe "https://www.host.co.uk:123"
+    }
+
+    "build 'upsertPermitted' flag" in {
+      configWith("upsertPermitted" -> "true").upsertPermitted shouldBe true
+      configWith("upsertPermitted" -> "false").upsertPermitted shouldBe false
     }
   }
 

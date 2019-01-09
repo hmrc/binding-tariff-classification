@@ -50,6 +50,8 @@ class AppConfig @Inject()(val runModeConfiguration: Configuration, environment: 
     s"$protocol://$host${port.map(p => s":$p").getOrElse("")}"
   }
 
+  lazy val upsertPermitted: Boolean = getString("upsertPermitted").toBoolean
+
 }
 
 case class JobConfig(elapseTime: LocalTime, interval: FiniteDuration)
