@@ -27,23 +27,27 @@ import play.api.Environment
 import play.api.libs.ws.WSClient
 import uk.gov.hmrc.bindingtariffclassifcation.connector.{ResourceFiles, WiremockTestServer}
 import uk.gov.hmrc.bindingtariffclassification.config.AppConfig
+import uk.gov.hmrc.bindingtariffclassification.http.ProxyHttpClient
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.audit.DefaultAuditConnector
-import uk.gov.hmrc.play.bootstrap.http.DefaultHttpClient
 import uk.gov.hmrc.play.test.{UnitSpec, WithFakeApplication}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class BankHolidaysConnectorTest extends UnitSpec with WiremockTestServer with MockitoSugar with WithFakeApplication with BeforeAndAfterEach with ResourceFiles {
+class BankHolidaysConnectorTest extends UnitSpec with WiremockTestServer
+  with MockitoSugar with WithFakeApplication with BeforeAndAfterEach with ResourceFiles {
 
   private val config = mock[AppConfig]
+
   private implicit val headers: HeaderCarrier = HeaderCarrier()
+  private implicit val actorSystem = ActorSystem("test")
 
   private val wsClient: WSClient = fakeApplication.injector.instanceOf[WSClient]
-  private val auditConnector = new DefaultAuditConnector(fakeApplication.configuration, fakeApplication.injector.instanceOf[Environment])
-  private val hmrcWsClient = new DefaultHttpClient(fakeApplication.configuration, auditConnector, wsClient, ActorSystem("test"))
+  private val environment = fakeApplication.injector.instanceOf[Environment]
+  private val auditConnector = new DefaultAuditConnector(fakeApplication.configuration, environment)
+  private val hmrcProxyHttpClient = new ProxyHttpClient(fakeApplication.configuration, auditConnector, wsClient)
 
-  private val connector = new BankHolidaysConnector(config, hmrcWsClient)
+  private val connector = new BankHolidaysConnector(config, hmrcProxyHttpClient)
 
   override protected def beforeEach(): Unit = {
     super.beforeEach()
