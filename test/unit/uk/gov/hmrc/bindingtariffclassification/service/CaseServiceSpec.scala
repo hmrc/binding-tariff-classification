@@ -90,22 +90,22 @@ class CaseServiceSpec extends UnitSpec with MockitoSugar with BeforeAndAfterEach
   "update()" should {
 
     "return the case after it is updated in the database collection" in {
-      when(caseRepository.update(c1)).thenReturn(successful(Some(c1)))
-      val result = await(service.update(c1))
+      when(caseRepository.update(c1, upsert = false)).thenReturn(successful(Some(c1)))
+      val result = await(service.update(c1, upsert = false))
       result shouldBe Some(c1)
     }
 
     "return None if the case does not exist in the database collection" in {
-      when(caseRepository.update(c1)).thenReturn(successful(None))
-      val result = await(service.update(c1))
+      when(caseRepository.update(c1, upsert = false)).thenReturn(successful(None))
+      val result = await(service.update(c1, upsert = false))
       result shouldBe None
     }
 
     "propagate any error" in {
-      when(caseRepository.update(c1)).thenThrow(emulatedFailure)
+      when(caseRepository.update(c1, upsert = false)).thenThrow(emulatedFailure)
 
       val caught = intercept[RuntimeException] {
-        await(service.update(c1))
+        await(service.update(c1, upsert = false))
       }
       caught shouldBe emulatedFailure
     }

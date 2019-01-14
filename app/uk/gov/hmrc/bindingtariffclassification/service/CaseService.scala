@@ -38,8 +38,8 @@ class CaseService @Inject()(caseRepository: CaseRepository,
     sequenceRepository.incrementAndGetByName("case").map(_.value.toString)
   }
 
-  def update(c: Case): Future[Option[Case]] = {
-    caseRepository.update(c)
+  def update(c: Case, upsert: Boolean): Future[Option[Case]] = {
+    caseRepository.update(c, upsert)
   }
 
   def getByReference(reference: String): Future[Option[Case]] = {

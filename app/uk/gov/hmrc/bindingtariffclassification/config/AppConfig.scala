@@ -19,6 +19,7 @@ package uk.gov.hmrc.bindingtariffclassification.config
 import java.time.{Clock, LocalTime}
 
 import javax.inject._
+import org.apache.commons.lang3.StringUtils
 import play.api.Mode.Mode
 import play.api.{Configuration, Environment}
 import uk.gov.hmrc.play.config.ServicesConfig
@@ -50,7 +51,7 @@ class AppConfig @Inject()(val runModeConfiguration: Configuration, environment: 
     s"$protocol://$host${port.map(p => s":$p").getOrElse("")}"
   }
 
-  lazy val upsertPermitted: Boolean = getString("upsertPermitted").toBoolean
+  lazy val upsertAgents: Seq[String] = getString("upsert-permitted-agents").split(",").filter(s => StringUtils.isNotEmpty(s))
 
 }
 

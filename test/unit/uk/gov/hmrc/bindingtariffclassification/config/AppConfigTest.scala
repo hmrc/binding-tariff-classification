@@ -63,9 +63,9 @@ class AppConfigTest extends UnitSpec {
       ).bankHolidaysUrl shouldBe "https://www.host.co.uk:123"
     }
 
-    "build 'upsertPermitted' flag" in {
-      configWith("upsertPermitted" -> "true").upsertPermitted shouldBe true
-      configWith("upsertPermitted" -> "false").upsertPermitted shouldBe false
+    "build 'upsert-permitted-agents'" in {
+      configWith("upsert-permitted-agents" -> "x,y").upsertAgents shouldBe Seq("x", "y")
+      configWith("upsert-permitted-agents" -> "").upsertAgents shouldBe Seq.empty
     }
   }
 

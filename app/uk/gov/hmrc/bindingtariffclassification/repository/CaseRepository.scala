@@ -23,7 +23,6 @@ import reactivemongo.api.indexes.Index
 import reactivemongo.bson.{BSONArray, BSONDocument, BSONDouble, BSONObjectID, BSONString}
 import reactivemongo.play.json.ImplicitBSONHandlers._
 import reactivemongo.play.json.collection.JSONCollection
-import uk.gov.hmrc.bindingtariffclassification.config.AppConfig
 import uk.gov.hmrc.bindingtariffclassification.model.MongoFormatters.formatCase
 import uk.gov.hmrc.bindingtariffclassification.model.search.CaseParamsFilter
 import uk.gov.hmrc.bindingtariffclassification.model.sort.CaseSort
@@ -39,7 +38,7 @@ trait CaseRepository {
 
   def insert(c: Case): Future[Case]
 
-  def update(c: Case): Future[Option[Case]]
+  def update(c: Case, upsert: Boolean): Future[Option[Case]]
 
   def incrementDaysElapsed(increment: Double): Future[Int]
 
@@ -51,7 +50,7 @@ trait CaseRepository {
 }
 
 @Singleton
-class CaseMongoRepository @Inject()(mongoDbProvider: MongoDbProvider, jsonMapper: JsonObjectMapper, appConfig: AppConfig)
+class CaseMongoRepository @Inject()(mongoDbProvider: MongoDbProvider, jsonMapper: JsonObjectMapper)
   extends ReactiveRepository[Case, BSONObjectID](
     collectionName = "cases",
     mongo = mongoDbProvider.mongo,
@@ -79,8 +78,8 @@ class CaseMongoRepository @Inject()(mongoDbProvider: MongoDbProvider, jsonMapper
     createOne(c)
   }
 
-  override def update(c: Case): Future[Option[Case]] = {
-    updateDocument(selector = jsonMapper.fromReference(c.reference), update = c, upsert = appConfig.upsertPermitted)
+  override def update(c: Case, upsert: Boolean): Future[Option[Case]] = {
+    updateDocument(selector = jsonMapper.fromReference(c.reference), update = c, upsert = upsert)
   }
 
   override def getByReference(reference: String): Future[Option[Case]] = {

@@ -134,9 +134,19 @@ class CaseControllerSpec extends UnitSpec with WithFakeApplication with MockitoS
   "update()" should {
 
     "return 200 when the case has been updated successfully" in {
-      when(caseService.update(c1)).thenReturn(successful(Some(c1)))
+      when(caseService.update(c1, upsert = false)).thenReturn(successful(Some(c1)))
 
       val result = await(controller.update(c1.reference)(fakeRequest.withBody(toJson(c1))))
+
+      status(result) shouldEqual OK
+      jsonBodyOf(result) shouldEqual toJson(c1)
+    }
+
+    "return 200 when the case has been updated successfully - with upsert allowed" in {
+      when(appConfig.upsertAgents).thenReturn(Seq("agent"))
+      when(caseService.update(c1, upsert = true)).thenReturn(successful(Some(c1)))
+
+      val result = await(controller.update(c1.reference)(fakeRequest.withBody(toJson(c1)).withHeaders("User-Agent" -> "agent")))
 
       status(result) shouldEqual OK
       jsonBodyOf(result) shouldEqual toJson(c1)
@@ -157,7 +167,7 @@ class CaseControllerSpec extends UnitSpec with WithFakeApplication with MockitoS
     }
 
     "return 404 when there are no cases with the provided reference" in {
-      when(caseService.update(c1)).thenReturn(successful(None))
+      when(caseService.update(c1, upsert = false)).thenReturn(successful(None))
 
       val result = await(controller.update(c1.reference)(fakeRequest.withBody(toJson(c1))))
 
@@ -168,7 +178,7 @@ class CaseControllerSpec extends UnitSpec with WithFakeApplication with MockitoS
     "return 500 when an error occurred" in {
       val error = new RuntimeException
 
-      when(caseService.update(c1)).thenReturn(failed(error))
+      when(caseService.update(c1, upsert = false)).thenReturn(failed(error))
 
       val result = await(controller.update(c1.reference)(fakeRequest.withBody(toJson(c1))))
 

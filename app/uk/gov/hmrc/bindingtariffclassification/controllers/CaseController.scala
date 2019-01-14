@@ -53,7 +53,11 @@ class CaseController @Inject()(appConfig: AppConfig,
   def update(reference: String): Action[JsValue] = Action.async(parse.json) { implicit request =>
     withJsonBody[Case] { caseRequest: Case =>
       if (caseRequest.reference == reference) {
-        caseService.update(caseRequest) map handleNotFound recover recovery
+        val upsert = request.headers.get("User-Agent") match {
+          case Some(agent) => appConfig.upsertAgents.contains(agent)
+          case _ => false
+        }
+        caseService.update(caseRequest, upsert) map handleNotFound recover recovery
       } else successful(BadRequest(JsErrorResponse(ErrorCode.INVALID_REQUEST_PAYLOAD, "Invalid case reference")))
     } recover recovery
   }
