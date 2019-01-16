@@ -26,7 +26,7 @@ case class Event
 (
   id: String = UUID.randomUUID().toString,
   details: Details,
-  userId: String,
+  operator: Operator,
   caseReference: String,
   timestamp: ZonedDateTime
 )

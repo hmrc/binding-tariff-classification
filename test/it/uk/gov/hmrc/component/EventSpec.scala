@@ -24,7 +24,7 @@ import play.api.http.{HttpVerbs, Status}
 import play.api.libs.json.Json
 import scalaj.http.Http
 import uk.gov.hmrc.bindingtariffclassification.model.RESTFormatters.{formatEvent, formatNewEventRequest}
-import uk.gov.hmrc.bindingtariffclassification.model.{Event, NewEventRequest, Note}
+import uk.gov.hmrc.bindingtariffclassification.model.{Event, NewEventRequest, Note, Operator}
 import util.CaseData.createCase
 import util.EventData._
 
@@ -103,7 +103,7 @@ class EventSpec extends BaseFeatureSpec {
       storeCases(c1)
 
       When("I create an Event")
-      val payload = NewEventRequest(Note(Some("Note")), "user")
+      val payload = NewEventRequest(Note(Some("Note")), Operator("user-id", Some("user name")))
       val result = Http(s"$serviceUrl/cases/$caseRef/events")
         .headers(Seq(CONTENT_TYPE -> "application/json"))
         .postData(Json.toJson(payload).toString()).asString

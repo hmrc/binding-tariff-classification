@@ -98,7 +98,7 @@ class EventRepositorySpec extends BaseMongoIndexSpec
 
       await(repository.collection.find(selectorById(e)).one[Event]) shouldBe Some(e)
 
-      val updated: Event = e.copy(userId = "user_A")
+      val updated: Event = e.copy(operator = Operator("user_A", Some("user name")))
 
       val caught = intercept[DatabaseException] {
         await(repository.insert(updated))
@@ -159,7 +159,7 @@ class EventRepositorySpec extends BaseMongoIndexSpec
       collectionSize shouldBe 1
 
       val caught = intercept[DatabaseException] {
-        val e2 = e1.copy(caseReference = "DEF", userId = "user_123")
+        val e2 = e1.copy(caseReference = "DEF", operator = Operator("user_123", Some("user name")))
         await(repository.insert(e2))
       }
 

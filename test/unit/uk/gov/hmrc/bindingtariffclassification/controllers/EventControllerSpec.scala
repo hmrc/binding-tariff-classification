@@ -132,8 +132,8 @@ class EventControllerSpec extends UnitSpec with WithFakeApplication with Mockito
     val note = Note(Some("note"))
     val timestamp = ZonedDateTime.ofInstant(Instant.EPOCH, ZoneId.of("UTC"))
     val userId = "user-id"
-    val newEvent = NewEventRequest(note, userId, timestamp)
-    val event = Event(id = "id", details = note, userId = userId, caseReference = caseReference, timestamp = timestamp)
+    val newEvent = NewEventRequest(note, Operator(userId, Some("user name")), timestamp)
+    val event = Event(id = "id", details = note, Operator(userId, Some("user name")), caseReference = caseReference, timestamp = timestamp)
 
     "return 201 Created" in {
       val aCase = mock[Case]

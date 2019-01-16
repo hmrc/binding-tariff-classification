@@ -16,16 +16,4 @@
 
 package uk.gov.hmrc.bindingtariffclassification.model
 
-import java.time.ZonedDateTime
-import java.util.UUID
-
-case class NewEventRequest
-(
-  details: Details,
-  operator: Operator,
-  timestamp: ZonedDateTime = ZonedDateTime.now()
-) {
-  def toEvent(caseRef: String): Event = {
-    Event(UUID.randomUUID().toString, details, operator, caseRef, timestamp)
-  }
-}
+case class Operator(id: String, name: Option[String] = None)

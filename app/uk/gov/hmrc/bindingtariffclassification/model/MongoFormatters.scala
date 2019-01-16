@@ -75,6 +75,7 @@ object MongoFormatters {
     .and[Note](EventType.NOTE.toString)
     .format
 
+  implicit val formatOperator = Json.format[Operator]
   implicit val formatEvent = Json.format[Event]
   implicit val formatSchedulerRunEvent = Json.format[SchedulerRunEvent]
 }
