@@ -28,7 +28,7 @@ object EventData {
     Event(
       id = RandomGenerator.randomUUID(),
       details = Note(Some("This is a random note")),
-      userId = RandomGenerator.randomUUID(),
+      operator = Operator(RandomGenerator.randomUUID, Some("user name")),
       caseReference = caseReference,
       timestamp = date
     )

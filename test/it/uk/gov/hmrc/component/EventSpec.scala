@@ -79,7 +79,7 @@ class EventSpec extends BaseFeatureSpec {
       Json.parse(result.body).toString() shouldBe "[]"
     }
 
-    scenario("Events found") {
+    scenario("Events found in any order") {
 
       Given("There is a case with events")
       storeCases(c1)
@@ -92,7 +92,10 @@ class EventSpec extends BaseFeatureSpec {
       result.code shouldEqual OK
 
       And("All events are returned in the JSON response")
-      Json.parse(result.body) shouldBe Json.toJson(Seq(e1, e2))
+
+      val responseEvent: Seq[Event] = Json.parse(result.body).as[Seq[Event]]
+
+      responseEvent.map(_.id) should contain theSameElementsAs Seq(e1.id, e2.id)
     }
 
   }
