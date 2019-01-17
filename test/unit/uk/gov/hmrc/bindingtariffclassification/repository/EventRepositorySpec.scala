@@ -153,25 +153,6 @@ class EventRepositorySpec extends BaseMongoIndexSpec
     }
   }
 
-  "getById" should {
-
-    "retrieve the correct record" in {
-      await(repository.insert(e))
-      collectionSize shouldBe 1
-
-      await(repository.getById(e.id)) shouldBe Some(e)
-    }
-
-    "return 'None' when the 'id' doesn't match any record in the collection" in {
-      for (_ <- 1 to 3) {
-        await(repository.insert(createNoteEvent("")))
-      }
-      collectionSize shouldBe 3
-
-      await(repository.getById("WRONG_ID")) shouldBe None
-    }
-  }
-
   "The 'events' collection" should {
 
     "have a unique index based on the field 'id' " in {

@@ -29,10 +29,6 @@ class EventService @Inject()(repository: EventRepository) {
     repository.insert(e)
   }
 
-  def getById(id: String): Future[Option[Event]] = {
-    repository.getById(id)
-  }
-
   def getByCaseReference(caseReference: String): Future[Seq[Event]] = {
     repository.getByCaseReference(caseReference)
   }

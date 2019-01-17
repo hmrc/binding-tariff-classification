@@ -69,30 +69,6 @@ class EventServiceSpec extends UnitSpec with MockitoSugar {
     }
   }
 
-  "getById" should {
-
-    "return the expected event" in {
-      when(repository.getById(e1.id)).thenReturn(successful(Some(e1)))
-      val result = await(service.getById(e1.id))
-      result shouldBe Some(e1)
-    }
-
-    "return None when the event is not found" in {
-      when(repository.getById(e1.id)).thenReturn(successful(None))
-      val result = await(service.getById(e1.id))
-      result shouldBe None
-    }
-
-    "propagate any error" in {
-      when(repository.getById(e1.id)).thenThrow(emulatedFailure)
-
-      val caught = intercept[RuntimeException] {
-        await(service.getById(e1.id))
-      }
-      caught shouldBe emulatedFailure
-    }
-  }
-
   "getByCaseReference" should {
 
     "return the expected events" in {
