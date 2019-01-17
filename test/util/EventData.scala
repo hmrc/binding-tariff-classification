@@ -23,6 +23,17 @@ import uk.gov.hmrc.bindingtariffclassification.utils.RandomGenerator
 
 object EventData {
 
+
+  def createEvent(caseReference: String, date :  ZonedDateTime): Event = {
+    Event(
+      id = RandomGenerator.randomUUID(),
+      details = Note(Some("This is a random note")),
+      userId = RandomGenerator.randomUUID(),
+      caseReference = caseReference,
+      timestamp = date
+    )
+  }
+
   def createNoteEvent(caseReference: String): Event = {
     Event(
       id = RandomGenerator.randomUUID(),
