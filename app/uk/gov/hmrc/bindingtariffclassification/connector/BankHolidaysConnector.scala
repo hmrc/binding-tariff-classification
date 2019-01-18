@@ -19,6 +19,8 @@ package uk.gov.hmrc.bindingtariffclassification.connector
 import java.time.LocalDate
 
 import javax.inject.{Inject, Singleton}
+import play.api.Logger
+import play.api.libs.json.Json
 import uk.gov.hmrc.bindingtariffclassification.config.AppConfig
 import uk.gov.hmrc.bindingtariffclassification.http.ProxyHttpClient
 import uk.gov.hmrc.bindingtariffclassification.model.BankHolidaysResponse
@@ -26,6 +28,7 @@ import uk.gov.hmrc.bindingtariffclassification.model.RESTFormatters.formatBankHo
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.{ExecutionContext, Future}
+import scala.io.Source
 
 @Singleton
 class BankHolidaysConnector @Inject()(appConfig: AppConfig, http: ProxyHttpClient)
@@ -33,7 +36,17 @@ class BankHolidaysConnector @Inject()(appConfig: AppConfig, http: ProxyHttpClien
 
   def get()(implicit headerCarrier: HeaderCarrier): Future[Seq[LocalDate]] = {
     http.GET[BankHolidaysResponse](s"${appConfig.bankHolidaysUrl}/bank-holidays.json")
+      .recover(withResourcesFile)
       .map(_.`england-and-wales`.events.map(_.date))
+  }
+
+
+  private def withResourcesFile: PartialFunction[Throwable, BankHolidaysResponse] = {
+    case t =>
+      Logger.error("Bank Holidays Request Failed", t)
+      val url = getClass.getClassLoader.getResource("bank-holidays-fallback.json")
+      val content = Source.fromURL(url, "UTF-8").getLines().mkString
+      Json.fromJson(Json.parse(content)).get
   }
 
 }

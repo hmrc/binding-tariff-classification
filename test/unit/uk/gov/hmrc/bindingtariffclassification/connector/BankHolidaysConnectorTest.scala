@@ -24,6 +24,7 @@ import org.mockito.BDDMockito.given
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.mockito.MockitoSugar
 import play.api.Environment
+import play.api.http.Status
 import play.api.libs.ws.WSClient
 import uk.gov.hmrc.bindingtariffclassifcation.connector.{ResourceFiles, WiremockTestServer}
 import uk.gov.hmrc.bindingtariffclassification.config.AppConfig
@@ -68,6 +69,28 @@ class BankHolidaysConnectorTest extends UnitSpec with WiremockTestServer
         LocalDate.of(2012,1,2),
         LocalDate.of(2012,4,6)
       )
+    }
+
+    "Fallback to resources on 4xx" in {
+      stubFor(
+        get("/bank-holidays.json")
+          .willReturn(
+            aResponse().withStatus(Status.NOT_FOUND)
+          )
+      )
+
+      await(connector.get()).size shouldBe 73
+    }
+
+    "Fallback to resources on 5xx" in {
+      stubFor(
+        get("/bank-holidays.json")
+          .willReturn(
+            aResponse().withStatus(Status.BAD_GATEWAY)
+          )
+      )
+
+      await(connector.get()).size shouldBe 73
     }
   }
 
