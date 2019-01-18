@@ -17,6 +17,7 @@
 package uk.gov.hmrc.bindingtariffclassification.service
 
 import javax.inject._
+import uk.gov.hmrc.bindingtariffclassification.crypto.Crypto
 import uk.gov.hmrc.bindingtariffclassification.model.Case
 import uk.gov.hmrc.bindingtariffclassification.model.search.CaseParamsFilter
 import uk.gov.hmrc.bindingtariffclassification.model.sort.CaseSort
@@ -27,11 +28,13 @@ import scala.concurrent.Future
 
 @Singleton
 class CaseService @Inject()(caseRepository: CaseRepository,
+                            crypto: Crypto,
                             sequenceRepository: SequenceRepository,
                             eventService: EventService) {
 
   def insert(c: Case): Future[Case] = {
-    caseRepository.insert(c)
+    val encCase = crypto.encrypt(c)
+    caseRepository.insert(encCase)
   }
 
   def nextCaseReference: Future[String] = {
@@ -39,15 +42,21 @@ class CaseService @Inject()(caseRepository: CaseRepository,
   }
 
   def update(c: Case, upsert: Boolean): Future[Option[Case]] = {
-    caseRepository.update(c, upsert)
+    val encCase = crypto.encrypt(c)
+    caseRepository.update(encCase, upsert)
   }
 
   def getByReference(reference: String): Future[Option[Case]] = {
-    caseRepository.getByReference(reference)
+    caseRepository.getByReference(reference) map {
+      case Some(c) => Some(crypto.decrypt(c))
+      case _ => None
+    }
   }
 
   def get(searchBy: CaseParamsFilter, sortBy: Option[CaseSort]): Future[Seq[Case]] = {
-    caseRepository.get(searchBy, sortBy)
+    caseRepository.get(searchBy, sortBy).map {
+      _ map crypto.decrypt
+    }
   }
 
   def deleteAll(): Future[Unit] = {

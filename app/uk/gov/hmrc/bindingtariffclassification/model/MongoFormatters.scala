@@ -23,7 +23,7 @@ import uk.gov.hmrc.play.json.Union
 
 object MongoFormatters {
 
-  implicit val instantFormat: OFormat[ZonedDateTime] = new OFormat[ZonedDateTime] {
+  implicit val formatInstant: OFormat[ZonedDateTime] = new OFormat[ZonedDateTime] {
     override def writes(datetime: ZonedDateTime): JsObject = {
       Json.obj("$date" -> datetime.toInstant.toEpochMilli)
     }
@@ -40,18 +40,18 @@ object MongoFormatters {
     }
   }
 
-
+  // `Sequence` formatters
   implicit val formatSequence = Json.format[Sequence]
+
   // `Case` formatters
   implicit val formatCaseStatus = EnumJson.format(CaseStatus)
+  implicit val formatStatus = Json.format[Status]
   implicit val formatApplicationType = EnumJson.format(ApplicationType)
   implicit val formatLiabilityStatus = EnumJson.format(LiabilityStatus)
-
-  implicit val formatEORIDetails = Json.format[EORIDetails]
   implicit val formatAttachment = Json.format[Attachment]
+  implicit val formatEORIDetails = Json.format[EORIDetails]
   implicit val formatAgentDetails = Json.format[AgentDetails]
   implicit val formatContact = Json.format[Contact]
-
   implicit val formatLiabilityOrder = Json.format[LiabilityOrder]
   implicit val formatBTIApplication = Json.format[BTIApplication]
   implicit val formatApplication = Union.from[Application]("type")
@@ -61,10 +61,7 @@ object MongoFormatters {
 
   implicit val formatAppeal = Json.format[Appeal]
   implicit val formatDecision = Json.format[Decision]
-
   implicit val formatCase = Json.format[Case]
-
-  implicit val formatStatus = Json.format[Status]
 
   // `Event` formatters
   implicit val formatCaseStatusChange = Json.format[CaseStatusChange]
@@ -78,4 +75,5 @@ object MongoFormatters {
   implicit val formatOperator = Json.format[Operator]
   implicit val formatEvent = Json.format[Event]
   implicit val formatSchedulerRunEvent = Json.format[SchedulerRunEvent]
+
 }

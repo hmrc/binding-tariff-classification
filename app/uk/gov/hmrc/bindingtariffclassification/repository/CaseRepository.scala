@@ -24,9 +24,10 @@ import reactivemongo.bson.{BSONArray, BSONDocument, BSONDouble, BSONObjectID, BS
 import reactivemongo.play.json.ImplicitBSONHandlers._
 import reactivemongo.play.json.collection.JSONCollection
 import uk.gov.hmrc.bindingtariffclassification.model.MongoFormatters.formatCase
+import uk.gov.hmrc.bindingtariffclassification.model.CaseStatus.{NEW, OPEN}
 import uk.gov.hmrc.bindingtariffclassification.model.search.CaseParamsFilter
 import uk.gov.hmrc.bindingtariffclassification.model.sort.CaseSort
-import uk.gov.hmrc.bindingtariffclassification.model.{Case, CaseStatus, MongoFormatters}
+import uk.gov.hmrc.bindingtariffclassification.model.{Case, MongoFormatters}
 import uk.gov.hmrc.mongo.ReactiveRepository
 import uk.gov.hmrc.mongo.json.ReactiveMongoFormats
 
@@ -90,7 +91,7 @@ class CaseMongoRepository @Inject()(mongoDbProvider: MongoDbProvider, jsonMapper
 
     val sorting = sortedBy match {
       case Some(sort: CaseSort) => Json.obj(sort.field.toString -> sort.direction.id)
-      case None => Json.obj()
+      case _ => Json.obj()
     }
 
     getMany(jsonMapper.from(searchBy), sorting)
@@ -101,7 +102,7 @@ class CaseMongoRepository @Inject()(mongoDbProvider: MongoDbProvider, jsonMapper
   }
 
   override def incrementDaysElapsed(increment: Double = 1): Future[Int] = {
-    val statuses = List(CaseStatus.OPEN, CaseStatus.NEW)
+    val statuses = List(OPEN, NEW)
     collection.update(
       selector = BSONDocument(
         "status" -> BSONDocument(

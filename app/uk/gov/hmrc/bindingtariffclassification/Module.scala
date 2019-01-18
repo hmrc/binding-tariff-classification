@@ -16,14 +16,17 @@
 
 package uk.gov.hmrc.bindingtariffclassification
 
+import crypto.LocalCrypto
 import play.api.inject.Binding
 import play.api.{Configuration, Environment}
 import uk.gov.hmrc.bindingtariffclassification.scheduler.{DaysElapsedJob, ScheduledJob, Scheduler}
+import uk.gov.hmrc.crypto.CompositeSymmetricCrypto
 
 class Module extends play.api.inject.Module {
 
   override def bindings(environment: Environment, configuration: Configuration): Seq[Binding[_]] = {
     Seq(
+      bind(classOf[CompositeSymmetricCrypto]).to(classOf[LocalCrypto]),
       bind[ScheduledJob].to[DaysElapsedJob],
       bind[Scheduler].toSelf.eagerly()
     )
