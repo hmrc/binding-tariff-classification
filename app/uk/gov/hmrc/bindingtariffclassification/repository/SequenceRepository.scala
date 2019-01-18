@@ -75,7 +75,7 @@ class SequenceMongoRepository @Inject()(mongoDbProvider: MongoDbProvider)
   }
 
   private def byName(name: String): JsObject = {
-    implicit val encrypter: Format[String] =  MongoFormatters.stringFormat
+    implicit val encrypter: Format[String] =  MongoFormatters.cryptoStringFormat
     Json.obj("name" -> name)
   }
 

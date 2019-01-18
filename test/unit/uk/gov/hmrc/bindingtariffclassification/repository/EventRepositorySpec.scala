@@ -194,7 +194,7 @@ class EventRepositorySpec extends BaseMongoIndexSpec
   }
 
   private def selectorById(e: Event): JsObject = {
-    implicit val encrypter: Format[String] =  MongoFormatters.stringFormat
+    implicit val encrypter: Format[String] =  MongoFormatters.cryptoStringFormat
     Json.obj("id" -> e.id)
   }
 

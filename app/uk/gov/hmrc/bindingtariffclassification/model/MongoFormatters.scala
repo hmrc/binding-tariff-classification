@@ -34,7 +34,7 @@ object MongoFormatters {
     crypto.decrypt(Crypted.fromBase64(str)).value
   }
 
-  implicit val stringFormat: Format[String] = Format[String](
+  implicit val cryptoStringFormat: Format[String] = Format[String](
     Reads[String](_.validate[String](Reads.StringReads).map(decrypting)),
     Writes[String](s => JsString(encrypting(s)))
   )

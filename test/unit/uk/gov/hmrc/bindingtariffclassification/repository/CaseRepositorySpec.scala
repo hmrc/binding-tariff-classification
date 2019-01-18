@@ -45,7 +45,7 @@ class CaseRepositorySpec extends BaseMongoIndexSpec
   with MockitoSugar {
   self =>
 
-  implicit val encrypter: Format[String] =  MongoFormatters.stringFormat
+  implicit val encrypter: Format[String] =  MongoFormatters.cryptoStringFormat
 
   private val mongoDbProvider = new MongoDbProvider {
     override val mongo: () => DB = self.mongo

@@ -60,7 +60,7 @@ class EventMongoRepository @Inject()(mongoDbProvider: MongoDbProvider)
   }
 
   private def byCaseReference(caseReference: String): JsObject = {
-    implicit val encrypter: Format[String] =  MongoFormatters.stringFormat
+    implicit val encrypter: Format[String] =  MongoFormatters.cryptoStringFormat
     Json.obj("caseReference" -> caseReference)
   }
 

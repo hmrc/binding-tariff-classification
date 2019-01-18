@@ -26,7 +26,7 @@ class Module extends play.api.inject.Module {
 
   override def bindings(environment: Environment, configuration: Configuration): Seq[Binding[_]] = {
     Seq(
-      bind[Format[String]].toInstance(MongoFormatters.stringFormat),
+      bind[Format[String]].toInstance(MongoFormatters.cryptoStringFormat),
       bind[ScheduledJob].to[DaysElapsedJob],
       bind[Scheduler].toSelf.eagerly()
     )
