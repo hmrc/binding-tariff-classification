@@ -51,7 +51,7 @@ class CaseRepositorySpec extends BaseMongoIndexSpec
     override val mongo: () => DB = self.mongo
   }
 
-  private val jsonMapper = new JsonObjectMapper
+  private val jsonMapper = new JsonObjectMapper(encrypter)
 
   private val repository = createMongoRepo
 

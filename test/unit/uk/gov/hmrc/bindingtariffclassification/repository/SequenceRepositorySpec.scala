@@ -18,10 +18,10 @@ package uk.gov.hmrc.bindingtariffclassification.repository
 
 import org.scalatest.concurrent.Eventually
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
+import play.api.libs.json.{Format, JsObject, Json}
 import reactivemongo.api.DB
 import reactivemongo.api.indexes.Index
 import reactivemongo.api.indexes.IndexType.Ascending
-import reactivemongo.bson._
 import reactivemongo.core.errors.DatabaseException
 import reactivemongo.play.json.ImplicitBSONHandlers._
 import uk.gov.hmrc.bindingtariffclassification.model.MongoFormatters.formatSequence
@@ -62,8 +62,9 @@ class SequenceRepositorySpec extends BaseMongoIndexSpec
     await(repository.collection.count())
   }
 
-  private def selectorByName(name: String): BSONDocument = {
-    BSONDocument("name" -> name)
+  private def selectorByName(name: String): JsObject = {
+    implicit val encrypter: Format[String] =  MongoFormatters.stringFormat
+    Json.obj("name" -> name)
   }
 
   "insert" should {

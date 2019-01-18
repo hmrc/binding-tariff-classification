@@ -17,13 +17,16 @@
 package uk.gov.hmrc.bindingtariffclassification
 
 import play.api.inject.Binding
+import play.api.libs.json.Format
 import play.api.{Configuration, Environment}
+import uk.gov.hmrc.bindingtariffclassification.model.MongoFormatters
 import uk.gov.hmrc.bindingtariffclassification.scheduler.{DaysElapsedJob, ScheduledJob, Scheduler}
 
 class Module extends play.api.inject.Module {
 
   override def bindings(environment: Environment, configuration: Configuration): Seq[Binding[_]] = {
     Seq(
+      bind[Format[String]].toInstance(MongoFormatters.stringFormat),
       bind[ScheduledJob].to[DaysElapsedJob],
       bind[Scheduler].toSelf.eagerly()
     )

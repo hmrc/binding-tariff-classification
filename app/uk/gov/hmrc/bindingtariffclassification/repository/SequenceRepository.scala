@@ -18,7 +18,7 @@ package uk.gov.hmrc.bindingtariffclassification.repository
 
 import com.google.inject.ImplementedBy
 import javax.inject.{Inject, Singleton}
-import play.api.libs.json.Json
+import play.api.libs.json.{Format, JsObject, Json}
 import reactivemongo.bson.BSONObjectID
 import reactivemongo.play.json.collection.JSONCollection
 import uk.gov.hmrc.bindingtariffclassification.model.MongoFormatters.formatSequence
@@ -74,7 +74,8 @@ class SequenceMongoRepository @Inject()(mongoDbProvider: MongoDbProvider)
     case _ => insert(Sequence(name, 1))
   }
 
-  private def byName(name: String) = {
+  private def byName(name: String): JsObject = {
+    implicit val encrypter: Format[String] =  MongoFormatters.stringFormat
     Json.obj("name" -> name)
   }
 

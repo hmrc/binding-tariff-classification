@@ -16,13 +16,42 @@
 
 package uk.gov.hmrc.bindingtariffclassification.repository
 
+import org.mockito.ArgumentMatchers.anyString
+import org.mockito.BDDMockito.given
+import org.mockito.Mockito
+import org.mockito.invocation.InvocationOnMock
+import org.mockito.stubbing.Answer
+import org.scalatest.BeforeAndAfterEach
+import org.scalatest.mockito.MockitoSugar
+import play.api.libs.json.{Format, JsString, JsValue}
 import uk.gov.hmrc.bindingtariffclassification.model.CaseStatus
 import uk.gov.hmrc.bindingtariffclassification.model.search.CaseParamsFilter
 import uk.gov.hmrc.play.test.UnitSpec
 
-class JsonObjectMapperTest extends UnitSpec {
+class JsonObjectMapperTest extends UnitSpec with MockitoSugar with BeforeAndAfterEach {
 
-  private val jsonMapper = new JsonObjectMapper
+  private val encrypter = mock[Format[String]]
+
+  private val jsonMapper = new JsonObjectMapper(encrypter)
+
+
+  private def returnEncryptedValue: Answer[JsValue] = {
+    new Answer[JsValue] {
+      override def answer(invocation: InvocationOnMock): JsValue = {
+        JsString(s"enc[${invocation.getArgument(0)}]")
+      }
+    }
+  }
+
+  override protected def beforeEach(): Unit = {
+    super.beforeEach()
+    given(encrypter.writes(anyString())) will returnEncryptedValue
+  }
+
+  override protected def afterEach(): Unit = {
+    super.afterEach()
+    Mockito.reset(encrypter)
+  }
 
   "from()" should {
 
@@ -36,10 +65,10 @@ class JsonObjectMapperTest extends UnitSpec {
 
       mapFrom(filter) shouldBe
         """{
-          | "queueId": "valid_queue",
-          | "assigneeId": "valid_assignee",
+          | "queueId": "enc[valid_queue]",
+          | "assigneeId": "enc[valid_assignee]",
           | "status": {
-          |   "$in": [ "S1", "S2" ]
+          |   "$in": [ "enc[S1]", "enc[S2]" ]
           |  }
           |}
         """.stripMargin.replaceAll(" ", "").replaceAll("\n", "")
@@ -54,8 +83,8 @@ class JsonObjectMapperTest extends UnitSpec {
 
       mapFrom(filter) shouldBe
         """{
-          | "queueId": "valid_queue",
-          | "assigneeId": "valid_assignee"
+          | "queueId": "enc[valid_queue]",
+          | "assigneeId": "enc[valid_assignee]"
           |}
         """.stripMargin.replaceAll(" ", "").replaceAll("\n", "")
     }
@@ -87,7 +116,7 @@ class JsonObjectMapperTest extends UnitSpec {
 
       jsonMapper.fromReference(validRef).toString() shouldBe
         s"""{
-          | "reference": "$validRef"
+          | "reference": "enc[$validRef]"
           |}
         """.stripMargin.replaceAll(" ", "").replaceAll("\n", "")
     }
@@ -103,8 +132,8 @@ class JsonObjectMapperTest extends UnitSpec {
 
       jsonMapper.fromReferenceAndStatus(validRef, notAllowedStatus).toString() shouldBe
         s"""{
-           | "reference": "$validRef",
-           | "status": { "$$ne": "$notAllowedStatus" }
+           | "reference": "enc[$validRef]",
+           | "status": { "$$ne": "enc[$notAllowedStatus]" }
            |}
         """.stripMargin.replaceAll(" ", "").replaceAll("\n", "")
     }
@@ -120,7 +149,7 @@ class JsonObjectMapperTest extends UnitSpec {
 
       jsonMapper.updateField(fieldName, fieldValue).toString() shouldBe
         s"""{
-           | "$$set": { "$fieldName": "$fieldValue" }
+           | "$$set": { "$fieldName": "enc[$fieldValue]" }
            |}
         """.stripMargin.replaceAll(" ", "").replaceAll("\n", "")
 

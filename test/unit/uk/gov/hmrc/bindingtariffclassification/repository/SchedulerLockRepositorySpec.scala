@@ -20,10 +20,10 @@ import java.time.{Instant, LocalDate, ZoneId}
 
 import org.scalatest.concurrent.Eventually
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
+import play.api.libs.json.{Format, JsObject, Json}
 import reactivemongo.api.DB
 import reactivemongo.api.indexes.Index
 import reactivemongo.api.indexes.IndexType.Ascending
-import reactivemongo.bson._
 import reactivemongo.play.json.ImplicitBSONHandlers._
 import uk.gov.hmrc.bindingtariffclassification.model.MongoFormatters.formatSchedulerRunEvent
 import uk.gov.hmrc.bindingtariffclassification.model._
@@ -63,8 +63,9 @@ class SchedulerLockRepositorySpec extends BaseMongoIndexSpec
     await(repository.collection.count())
   }
 
-  private def selectorByName(name: String): BSONDocument = {
-    BSONDocument("name" -> name)
+  private def selectorByName(name: String): JsObject = {
+    implicit val encrypter: Format[String] =  MongoFormatters.stringFormat
+    Json.obj("name" -> name)
   }
 
   private def date(date: String): Instant = {
