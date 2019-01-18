@@ -16,10 +16,12 @@
 
 package uk.gov.hmrc.bindingtariffclassification.crypto
 
+import java.util.UUID
+
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito
 import org.scalatest.mockito.MockitoSugar
-import uk.gov.hmrc.bindingtariffclassification.model.{AgentDetails, BTIApplication, Contact, EORIDetails}
+import uk.gov.hmrc.bindingtariffclassification.model._
 import uk.gov.hmrc.crypto.{CompositeSymmetricCrypto, Crypted, PlainText}
 import uk.gov.hmrc.play.test.UnitSpec
 import util.CaseData._
@@ -29,76 +31,62 @@ class CryptoSpec extends UnitSpec with MockitoSugar {
   private val simmetricCrypto = mock[CompositeSymmetricCrypto]
   private val crypto = new Crypto(simmetricCrypto)
 
-  private val encEori = EORIDetails("XYZ", "XYZ", "XYZ", "XYZ", "XYZ", "XYZ", "XYZ")
-  private val encContacts = Contact("XYZ", "XYZ", Some("XYZ"))
+  private def encEori(k: String) = EORIDetails(k, k, k, k, k, k, k)
+  private def encContacts(k: String) = Contact(k, k, Some(k))
 
   private val bti = createBTIApplicationWithAllFields
   private val lo = createLiabilityOrder
 
+  private def expectedEncryptedBti(k: String, letter: Option[Attachment]): BTIApplication = {
+    bti.copy(
+      holder = encEori(k),
+      contact = encContacts(k),
+      agent = Some(AgentDetails(encEori(k), letter)),
+      confidentialInformation = Some(k)
+    )
+  }
+
+  private def expectedEncryptedLiabilityOrder(k: String): LiabilityOrder = {
+    lo.copy(
+      holder = encEori(k),
+      contact = encContacts(k)
+    )
+  }
+
   "encrypt()" should {
 
-    Mockito.when(simmetricCrypto.encrypt(any[PlainText]())).thenReturn(Crypted("XYZ"))
+    val k = UUID.randomUUID().toString
+    Mockito.when(simmetricCrypto.encrypt(any[PlainText]())).thenReturn(Crypted(k))
 
     "encrypt BTI applications" in {
-
       val c = createCase(app = bti)
       val enc = crypto.encrypt(c)
-
-      val encApp = bti.copy(
-        holder = encEori,
-        contact = encContacts,
-        agent = Some(AgentDetails(encEori, c.application.asInstanceOf[BTIApplication].agent.get.letterOfAuthorisation)),
-        confidentialInformation = Some("XYZ")
-      )
-
-      enc shouldBe c.copy(application = encApp)
+      enc shouldBe c.copy(application = expectedEncryptedBti(k, c.application.asInstanceOf[BTIApplication].agent.get.letterOfAuthorisation))
     }
 
     "encrypt Liability orders" in {
-
       val c = createCase(app = lo)
       val enc = crypto.encrypt(c)
-
-      val encApp = lo.copy(
-        holder = encEori,
-        contact = encContacts
-      )
-
-      enc shouldBe c.copy(application = encApp)
+      enc shouldBe c.copy(application = expectedEncryptedLiabilityOrder(k))
     }
 
   }
 
   "decrypt()" should {
 
-    Mockito.when(simmetricCrypto.decrypt(any[Crypted]())).thenReturn(PlainText("XYZ"))
+    val k = UUID.randomUUID().toString
+    Mockito.when(simmetricCrypto.decrypt(any[Crypted]())).thenReturn(PlainText(k))
 
     "decrypt BTI applications" in {
-
       val c = createCase(app = bti)
       val dec = crypto.decrypt(c)
-
-      val decApp = bti.copy(
-        holder = encEori,
-        contact = encContacts,
-        agent = Some(AgentDetails(encEori, c.application.asInstanceOf[BTIApplication].agent.get.letterOfAuthorisation)),
-        confidentialInformation = Some("XYZ")
-      )
-
-      dec shouldBe c.copy(application = decApp)
+      dec shouldBe c.copy(application = expectedEncryptedBti(k, c.application.asInstanceOf[BTIApplication].agent.get.letterOfAuthorisation))
     }
 
     "decrypt Liability orders" in {
-
       val c = createCase(app = lo)
       val dec = crypto.decrypt(c)
-
-      val decApp = lo.copy(
-        holder = encEori,
-        contact = encContacts
-      )
-
-      dec shouldBe c.copy(application = decApp)
+      dec shouldBe c.copy(application = expectedEncryptedLiabilityOrder(k))
     }
 
   }
