@@ -19,9 +19,25 @@ package uk.gov.hmrc.bindingtariffclassification.model
 import java.time.{Instant, ZoneId, ZonedDateTime}
 
 import play.api.libs.json._
+import uk.gov.hmrc.crypto.{CompositeSymmetricCrypto, Crypted, PlainText}
 import uk.gov.hmrc.play.json.Union
 
 object MongoFormatters {
+
+  private val crypto = CompositeSymmetricCrypto.aes("MZygpewJsCpRrfOrr77j53", Seq.empty) // TODO Pull the real key from config
+
+  private def encrypting(str: String): String = {
+    new String(crypto.encrypt(PlainText(str)).toBase64)
+  }
+
+  private def decrypting(str: String): String = {
+    crypto.decrypt(Crypted.fromBase64(str)).value
+  }
+
+  implicit val stringFormat: Format[String] = Format[String](
+    Reads[String](_.validate[String](Reads.StringReads).map(decrypting)),
+    Writes[String](s => JsString(encrypting(s)))
+  )
 
   implicit val instantFormat: OFormat[ZonedDateTime] = new OFormat[ZonedDateTime] {
     override def writes(datetime: ZonedDateTime): JsObject = {

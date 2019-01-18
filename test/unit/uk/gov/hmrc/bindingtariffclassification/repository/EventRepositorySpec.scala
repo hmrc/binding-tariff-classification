@@ -20,10 +20,10 @@ import java.time.ZonedDateTime
 
 import org.scalatest.concurrent.Eventually
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
+import play.api.libs.json.{Format, JsObject, Json}
 import reactivemongo.api.DB
 import reactivemongo.api.indexes.Index
 import reactivemongo.api.indexes.IndexType.Ascending
-import reactivemongo.bson._
 import reactivemongo.core.errors.DatabaseException
 import reactivemongo.play.json.ImplicitBSONHandlers._
 import uk.gov.hmrc.bindingtariffclassification.model.MongoFormatters.formatEvent
@@ -191,11 +191,11 @@ class EventRepositorySpec extends BaseMongoIndexSpec
       await(repo.drop)
     }
 
-
   }
 
-  private def selectorById(e: Event) = {
-    BSONDocument("id" -> e.id)
+  private def selectorById(e: Event): JsObject = {
+    implicit val encrypter: Format[String] =  MongoFormatters.stringFormat
+    Json.obj("id" -> e.id)
   }
 
 }

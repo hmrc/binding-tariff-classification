@@ -19,16 +19,17 @@ package uk.gov.hmrc.bindingtariffclassification.repository
 import javax.inject.Singleton
 import play.api.libs.json._
 import uk.gov.hmrc.bindingtariffclassification.model.CaseStatus.CaseStatus
+import uk.gov.hmrc.bindingtariffclassification.model.MongoFormatters
 import uk.gov.hmrc.bindingtariffclassification.model.search.CaseParamsFilter
 
 @Singleton
 class JsonObjectMapper {
 
-  private def nullifyNoneValues: String => JsValue = { v: String =>
-    v match {
-      case "none" => JsNull
-      case _ => JsString(v)
-    }
+  implicit val encrypter: Format[String] =  MongoFormatters.stringFormat
+
+  private def nullifyNoneValues: String => JsValue = {
+    case "none" => JsNull
+    case v => encrypter.writes(v)
   }
 
   private def notEqualFilter(forbiddenFieldValue: String): JsObject = {

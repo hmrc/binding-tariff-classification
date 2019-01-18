@@ -21,11 +21,10 @@ import java.time.ZonedDateTime
 import org.scalatest.concurrent.Eventually
 import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
-import play.api.libs.json.{JsObject, Json}
+import play.api.libs.json.{Format, JsObject, Json}
 import reactivemongo.api.indexes.Index
 import reactivemongo.api.indexes.IndexType.Ascending
 import reactivemongo.api.{Cursor, DB}
-import reactivemongo.bson._
 import reactivemongo.core.errors.DatabaseException
 import reactivemongo.play.json.ImplicitBSONHandlers._
 import uk.gov.hmrc.bindingtariffclassification.model.MongoFormatters.formatCase
@@ -45,6 +44,8 @@ class CaseRepositorySpec extends BaseMongoIndexSpec
   with Eventually
   with MockitoSugar {
   self =>
+
+  implicit val encrypter: Format[String] =  MongoFormatters.stringFormat
 
   private val mongoDbProvider = new MongoDbProvider {
     override val mongo: () => DB = self.mongo
@@ -451,8 +452,8 @@ class CaseRepositorySpec extends BaseMongoIndexSpec
       .collect[Seq](Int.MaxValue, Cursor.FailOnError[Seq[Case]]())
   }
 
-  private def selectorByReference(c: Case) = {
-    BSONDocument("reference" -> c.reference)
+  private def selectorByReference(c: Case): JsObject = {
+    Json.obj("reference" -> c.reference)
   }
 
 }
