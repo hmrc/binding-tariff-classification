@@ -34,7 +34,7 @@ class CaseService @Inject()(caseRepository: CaseRepository,
 
   def insert(c: Case): Future[Case] = {
     val encryptedCase = crypto.encrypt(c)
-    caseRepository.insert(encryptedCase).map(_ => c)
+    caseRepository.insert(encryptedCase).map(crypto.decrypt)
   }
 
   def nextCaseReference: Future[String] = {
@@ -43,14 +43,16 @@ class CaseService @Inject()(caseRepository: CaseRepository,
 
   def update(c: Case, upsert: Boolean): Future[Option[Case]] = {
     val encryptedCase = crypto.encrypt(c)
-    caseRepository.update(encryptedCase, upsert).map(_ => Some(c))
+    caseRepository.update(encryptedCase, upsert) map decryptOptionalCase
   }
 
   def getByReference(reference: String): Future[Option[Case]] = {
-    caseRepository.getByReference(reference) map {
-      case Some(c) => Some(crypto.decrypt(c))
-      case _ => None
-    }
+    caseRepository.getByReference(reference) map decryptOptionalCase
+  }
+
+  private def decryptOptionalCase: PartialFunction[Option[Case], Option[Case]] = {
+    case Some(c: Case) => Some(crypto.decrypt(c))
+    case _ => None
   }
 
   def get(searchBy: CaseParamsFilter, sortBy: Option[CaseSort]): Future[Seq[Case]] = {
