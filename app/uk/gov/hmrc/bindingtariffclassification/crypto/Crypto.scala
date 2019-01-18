@@ -23,12 +23,12 @@ import uk.gov.hmrc.crypto.{CompositeSymmetricCrypto, Crypted, PlainText}
 @Singleton
 class Crypto @Inject()(crypto: CompositeSymmetricCrypto) {
 
-  def encrypt: Case => Case = {
-    applyCrypto(_) { s: String => crypto.encrypt(PlainText(s)).value }
+  def encrypt(c: Case): Case = {
+    applyCrypto(c) { s: String => crypto.encrypt(PlainText(s)).value }
   }
 
-  def decrypt: Case => Case = {
-    applyCrypto(_) { s: String => crypto.decrypt(Crypted(s)).value }
+  def decrypt(c: Case): Case = {
+    applyCrypto(c) { s: String => crypto.decrypt(Crypted(s)).value }
   }
 
   private def applyCrypto(c: Contact)(f: String => String): Contact = {

@@ -18,6 +18,7 @@ package uk.gov.hmrc.component
 
 import org.scalatest._
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
+import uk.gov.hmrc.bindingtariffclassification.crypto.Crypto
 import uk.gov.hmrc.bindingtariffclassification.model.{Case, Event, Sequence}
 import uk.gov.hmrc.bindingtariffclassification.repository.{CaseMongoRepository, EventMongoRepository, SchedulerLockMongoRepository, SequenceMongoRepository}
 
@@ -30,6 +31,8 @@ abstract class BaseFeatureSpec extends FeatureSpec
   with BeforeAndAfterEach with BeforeAndAfterAll {
 
   protected val timeout: FiniteDuration = 2.seconds
+
+  protected lazy val crypto: Crypto = app.injector.instanceOf[Crypto]
 
   private lazy val caseStore: CaseMongoRepository = app.injector.instanceOf[CaseMongoRepository]
   private lazy val eventStore: EventMongoRepository = app.injector.instanceOf[EventMongoRepository]
@@ -62,7 +65,10 @@ abstract class BaseFeatureSpec extends FeatureSpec
   }
 
   protected def storeCases(cases: Case*): Seq[Case] = {
-    cases.map(c => result(caseStore.insert(c), timeout))
+    cases.map { c: Case =>
+      val encryptedCase = crypto.encrypt(c)
+      result(caseStore.insert(encryptedCase), timeout)
+    }
   }
 
   protected def storeEvents(events: Event*): Seq[Event] = {
@@ -86,7 +92,7 @@ abstract class BaseFeatureSpec extends FeatureSpec
   }
 
   protected def getCase(ref: String): Option[Case] = {
-    result(caseStore.getByReference(ref), timeout)
+    result(caseStore.getByReference(ref), timeout).map(crypto.decrypt(_))
   }
 
 }
