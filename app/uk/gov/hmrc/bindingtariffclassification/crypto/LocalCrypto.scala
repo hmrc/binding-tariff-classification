@@ -16,11 +16,11 @@
 
 package uk.gov.hmrc.bindingtariffclassification.crypto
 
-import javax.inject.Inject
+import javax.inject.{Inject, Singleton}
 import uk.gov.hmrc.bindingtariffclassification.config.AppConfig
 import uk.gov.hmrc.crypto.{AesCrypto, CompositeSymmetricCrypto, Decrypter}
 
-
+@Singleton
 class LocalCrypto @Inject()(appConfig: AppConfig) extends CompositeSymmetricCrypto {
 
   override protected val currentCrypto = new AesCrypto {
