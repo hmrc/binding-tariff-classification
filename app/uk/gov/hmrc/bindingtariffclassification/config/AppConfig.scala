@@ -52,8 +52,17 @@ class AppConfig @Inject()(val runModeConfiguration: Configuration, environment: 
 
   lazy val upsertAgents: Seq[String] = getString("upsert-permitted-agents").split(",").filter(_.nonEmpty)
 
-  lazy val mongoEncryptionKey: String = getString("mongo-encryption.key")
+  lazy val mongoEncryption: MongoEncryption = {
+    val encryptionEnabled = getBooleanConfig("mongodb.encryption.enabled", default = false)
+    val encryptionKey = {
+      if (encryptionEnabled) Some(getString("mongodb.encryption.key"))
+      else None
+    }
+
+    MongoEncryption(encryptionEnabled, encryptionKey)
+  }
 
 }
 
+case class MongoEncryption(enabled: Boolean = false, key: Option[String] = None)
 case class JobConfig(elapseTime: LocalTime, interval: FiniteDuration)

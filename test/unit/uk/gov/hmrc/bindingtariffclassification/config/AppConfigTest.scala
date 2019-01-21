@@ -30,6 +30,7 @@ class AppConfigTest extends UnitSpec {
   }
 
   "Config" should {
+
     "build 'clock'" in {
       configWith().clock.getZone shouldBe ZoneId.systemDefault()
     }
@@ -67,6 +68,39 @@ class AppConfigTest extends UnitSpec {
       configWith("upsert-permitted-agents" -> "x,y").upsertAgents shouldBe Seq("x", "y")
       configWith("upsert-permitted-agents" -> "").upsertAgents shouldBe Seq.empty
     }
+
+    "build 'mongoEncryption' " in {
+
+      configWith().mongoEncryption shouldBe MongoEncryption()
+
+      configWith(
+        "mongodb.encryption.enabled" -> "false"
+      ).mongoEncryption shouldBe MongoEncryption()
+
+      configWith(
+        "mongodb.encryption.key" -> "ABC"
+      ).mongoEncryption shouldBe MongoEncryption()
+
+      configWith(
+        "mongodb.encryption.enabled" -> "false",
+        "mongodb.encryption.key" -> "ABC"
+      ).mongoEncryption shouldBe MongoEncryption()
+
+
+      configWith(
+        "mongodb.encryption.enabled" -> "true",
+        "mongodb.encryption.key" -> "ABC"
+      ).mongoEncryption shouldBe MongoEncryption(enabled = true, key = Some("ABC"))
+
+      val caught = intercept[RuntimeException] {
+        configWith(
+          "mongodb.encryption.enabled" -> "true"
+        ).mongoEncryption
+      }
+      caught.getMessage shouldBe s"Could not find config key 'mongodb.encryption.key'"
+
+    }
+
   }
 
 }

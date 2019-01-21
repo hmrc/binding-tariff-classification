@@ -80,7 +80,7 @@ object CaseData {
   private def createAgentDetails: AgentDetails = {
     AgentDetails(
       eoriDetails = createEORIDetails.copy(businessName = "Frank Agent-Smith"),
-      letterOfAuthorisation = Some(createAttachment.copy(public = false))
+      letterOfAuthorisation = Some(createAttachment.copy(application = true, public = false))
     )
   }
 
@@ -134,6 +134,7 @@ object CaseData {
   def createAttachment: Attachment = {
     Attachment(
       id = RandomGenerator.randomUUID(),
+      application = false,
       public = true
     )
   }
@@ -141,8 +142,10 @@ object CaseData {
   def createAttachmentWithOperator: Attachment = {
     Attachment(
       id = RandomGenerator.randomUUID(),
+      application = false,
       public = true,
       operator = Some(Operator(id = "0", Some("OperatorName")))
+
     )
   }
 

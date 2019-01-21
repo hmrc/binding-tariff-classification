@@ -17,6 +17,7 @@
 package uk.gov.hmrc.bindingtariffclassification.service
 
 import javax.inject._
+import uk.gov.hmrc.bindingtariffclassification.config.AppConfig
 import uk.gov.hmrc.bindingtariffclassification.crypto.Crypto
 import uk.gov.hmrc.bindingtariffclassification.model.Case
 import uk.gov.hmrc.bindingtariffclassification.model.search.CaseParamsFilter
@@ -27,14 +28,23 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 @Singleton
-class CaseService @Inject()(caseRepository: CaseRepository,
+class CaseService @Inject()(appConfig: AppConfig,
+                            caseRepository: CaseRepository,
                             crypto: Crypto,
                             sequenceRepository: SequenceRepository,
                             eventService: EventService) {
 
+  private def encryptCase: Case => Case = { c: Case =>
+    if (appConfig.mongoEncryption.enabled) crypto.encrypt(c) else c
+  }
+
+  private def decryptCase: Case => Case = { c: Case =>
+    if (appConfig.mongoEncryption.enabled) crypto.decrypt(c) else c
+  }
+
   def insert(c: Case): Future[Case] = {
-    val encryptedCase = crypto.encrypt(c)
-    caseRepository.insert(encryptedCase).map(crypto.decrypt)
+    val encryptedCase = encryptCase(c)
+    caseRepository.insert(encryptedCase).map(decryptCase)
   }
 
   def nextCaseReference: Future[String] = {
@@ -42,7 +52,7 @@ class CaseService @Inject()(caseRepository: CaseRepository,
   }
 
   def update(c: Case, upsert: Boolean): Future[Option[Case]] = {
-    val encryptedCase = crypto.encrypt(c)
+    val encryptedCase = encryptCase(c)
     caseRepository.update(encryptedCase, upsert) map decryptOptionalCase
   }
 
@@ -51,13 +61,13 @@ class CaseService @Inject()(caseRepository: CaseRepository,
   }
 
   private def decryptOptionalCase: PartialFunction[Option[Case], Option[Case]] = {
-    case Some(c: Case) => Some(crypto.decrypt(c))
+    case Some(c: Case) => Some(decryptCase(c))
     case _ => None
   }
 
   def get(searchBy: CaseParamsFilter, sortBy: Option[CaseSort]): Future[Seq[Case]] = {
     caseRepository.get(searchBy, sortBy).map {
-      _ map crypto.decrypt
+      _ map decryptCase
     }
   }
 

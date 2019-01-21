@@ -18,7 +18,7 @@ package uk.gov.hmrc.component
 
 import org.scalatest._
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
-import uk.gov.hmrc.bindingtariffclassification.crypto.Crypto
+import uk.gov.hmrc.bindingtariffclassification.config.AppConfig
 import uk.gov.hmrc.bindingtariffclassification.model.{Case, Event, Sequence}
 import uk.gov.hmrc.bindingtariffclassification.repository.{CaseMongoRepository, EventMongoRepository, SchedulerLockMongoRepository, SequenceMongoRepository}
 
@@ -32,7 +32,7 @@ abstract class BaseFeatureSpec extends FeatureSpec
 
   protected val timeout: FiniteDuration = 2.seconds
 
-  protected lazy val crypto: Crypto = app.injector.instanceOf[Crypto]
+  protected lazy val appConfig: AppConfig = app.injector.instanceOf[AppConfig]
 
   private lazy val caseStore: CaseMongoRepository = app.injector.instanceOf[CaseMongoRepository]
   private lazy val eventStore: EventMongoRepository = app.injector.instanceOf[EventMongoRepository]
@@ -66,8 +66,8 @@ abstract class BaseFeatureSpec extends FeatureSpec
 
   protected def storeCases(cases: Case*): Seq[Case] = {
     cases.map { c: Case =>
-      val encryptedCase = crypto.encrypt(c)
-      result(caseStore.insert(encryptedCase), timeout)
+      // for simplicity encryption is not tested here (because disabled in application.conf)
+      result(caseStore.insert(c), timeout)
     }
   }
 
@@ -92,7 +92,8 @@ abstract class BaseFeatureSpec extends FeatureSpec
   }
 
   protected def getCase(ref: String): Option[Case] = {
-    result(caseStore.getByReference(ref), timeout).map(crypto.decrypt(_))
+    // for simplicity decryption is not tested here (because disabled in application.conf)
+    result(caseStore.getByReference(ref), timeout)
   }
 
 }

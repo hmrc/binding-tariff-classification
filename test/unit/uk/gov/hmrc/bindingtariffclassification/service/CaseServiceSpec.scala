@@ -19,6 +19,7 @@ package uk.gov.hmrc.bindingtariffclassification.service
 import org.mockito.Mockito._
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.mockito.MockitoSugar
+import uk.gov.hmrc.bindingtariffclassification.config.{AppConfig, MongoEncryption}
 import uk.gov.hmrc.bindingtariffclassification.crypto.Crypto
 import uk.gov.hmrc.bindingtariffclassification.model._
 import uk.gov.hmrc.bindingtariffclassification.model.search.CaseParamsFilter
@@ -44,14 +45,21 @@ class CaseServiceSpec extends UnitSpec with MockitoSugar with BeforeAndAfterEach
   private val sequenceRepository = mock[SequenceRepository]
   private val eventService = mock[EventService]
   private val crypto = mock[Crypto]
+  private val appConfig = mock[AppConfig]
 
-  private val service = new CaseService(caseRepository, crypto, sequenceRepository, eventService)
+  private val mongoEncryption = MongoEncryption(enabled = true, key = Some("1AW32543H!="))
+  private val service = new CaseService(appConfig, caseRepository, crypto, sequenceRepository, eventService)
 
   private final val emulatedFailure = new RuntimeException("Emulated failure.")
 
   override protected def afterEach(): Unit = {
     super.afterEach()
     reset(caseRepository, crypto)
+  }
+
+  override protected def beforeEach(): Unit = {
+    super.beforeEach()
+    when(appConfig.mongoEncryption).thenReturn(mongoEncryption)
   }
 
   "deleteAll()" should {
