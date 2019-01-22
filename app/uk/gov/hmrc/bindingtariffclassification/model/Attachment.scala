@@ -21,7 +21,6 @@ import java.time.ZonedDateTime
 case class Attachment
 (
   id: String,
-  application: Boolean, // if the attachment was sent by the trader in the original BTI application
   public: Boolean, // if the attachment is publicly viewable in the public rulings UI
   operator: Option[Operator] = None,
   timestamp: ZonedDateTime = ZonedDateTime.now()
