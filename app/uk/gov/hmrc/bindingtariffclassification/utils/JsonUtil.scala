@@ -14,25 +14,19 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.bindingtariffclassification.model
+package uk.gov.hmrc.bindingtariffclassification.utils
 
-import java.time.ZonedDateTime
+import play.api.libs.json.{Format, OFormat, JsObject, JsValue, JsResult}
 
-case class Decision
-(
-  bindingCommodityCode: String,
-  effectiveStartDate: ZonedDateTime,
-  effectiveEndDate: ZonedDateTime,
-  justification: String,
-  goodsDescription: String,
-  methodSearch: Option[String] = None,
-  methodCommercialDenomination: Option[String] = None,
-  methodExclusion: Option[String] = None,
-  appeal: Option[Appeal] = None
-)
+object JsonUtil {
 
-case class Appeal
-(
-  reviewStatus: String,
-  reviewResult: String
-)
+  def convertToOFormat[T](format: Format[T]): OFormat[T] = {
+    val oFormat: OFormat[T] = new OFormat[T]() {
+      override def writes(o: T): JsObject = format.writes(o).as[JsObject]
+
+      override def reads(json: JsValue): JsResult[T] = format.reads(json)
+    }
+    oFormat
+  }
+
+}

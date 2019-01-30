@@ -61,8 +61,7 @@ object CaseData {
       effectiveEndDate = ZonedDateTime.now().plusYears(3),
       methodSearch = Some("bike spanner"),
       justification = "Found precedent case",
-      goodsDescription = "Bike tool",
-      keywords = Seq("bike", "tool")
+      goodsDescription = "Bike tool"
     )
   }
 
@@ -110,7 +109,8 @@ object CaseData {
       application = createBasicBTIApplication,
       decision = Some(createDecision),
       closedDate = Some(ZonedDateTime.now().minusYears(1)),
-      attachments = Seq.empty
+      attachments = Seq.empty,
+      keywords = Seq("bike", "tool")
     )
   }
 
@@ -119,7 +119,8 @@ object CaseData {
                  decision: Option[Decision] = None,
                  queue: Option[String] = None,
                  assignee: Option[Operator] = None,
-                 attachments: Seq[Attachment] = Seq.empty): Case = {
+                 attachments: Seq[Attachment] = Seq.empty,
+                 keywords: Seq[String] = Seq.empty): Case = {
     Case(
       reference = r,
       status = CaseStatus.NEW,
@@ -127,7 +128,8 @@ object CaseData {
       assignee = assignee,
       application = app,
       decision = decision,
-      attachments = attachments
+      attachments = attachments,
+      keywords = keywords
     )
   }
 

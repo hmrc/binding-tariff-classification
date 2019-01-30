@@ -8,6 +8,7 @@ object AppDependencies {
     "uk.gov.hmrc" %% "crypto"                     % "5.2.0",
     "uk.gov.hmrc" %% "play-json-union-formatter"  % "1.5.0",
     "uk.gov.hmrc" %% "simple-reactivemongo"       % "7.9.0-play-25",
+    "io.megl"     %% "play-json-extra"            % "2.4.3",
     ws
   )
 
