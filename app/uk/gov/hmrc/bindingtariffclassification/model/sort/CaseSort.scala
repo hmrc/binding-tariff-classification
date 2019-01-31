@@ -29,9 +29,3 @@ object CaseSortField extends Enumeration {
   type CaseSortField = Value
   val DAYS_ELAPSED = Value("daysElapsed")
 }
-
-object SortDirection extends Enumeration {
-  type SortDirection = Value
-  val DESCENDING = Value(-1)
-  val ASCENDING = Value(1)
-}

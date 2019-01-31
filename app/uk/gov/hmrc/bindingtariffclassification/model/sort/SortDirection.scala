@@ -14,11 +14,10 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.bindingtariffclassification.model.search
+package uk.gov.hmrc.bindingtariffclassification.model.sort
 
-case class CaseParamsFilter
-(
-  queueId: Option[String] = None,
-  assigneeId: Option[String] = None,
-  status: Option[Seq[String]] = None
-)
+object SortDirection extends Enumeration {
+  type SortDirection = Value
+  val DESCENDING = Value(-1)
+  val ASCENDING = Value(1)
+}

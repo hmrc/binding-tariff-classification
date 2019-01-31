@@ -22,7 +22,7 @@ import org.scalatest.mockito.MockitoSugar
 import uk.gov.hmrc.bindingtariffclassification.config.{AppConfig, MongoEncryption}
 import uk.gov.hmrc.bindingtariffclassification.crypto.Crypto
 import uk.gov.hmrc.bindingtariffclassification.model._
-import uk.gov.hmrc.bindingtariffclassification.model.search.CaseParamsFilter
+import uk.gov.hmrc.bindingtariffclassification.model.search.{Filter, Search, Sort}
 import uk.gov.hmrc.bindingtariffclassification.repository.{CaseRepository, SequenceRepository}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.test.UnitSpec
@@ -165,29 +165,30 @@ class CaseServiceSpec extends UnitSpec with MockitoSugar with BeforeAndAfterEach
   "get()" should {
 
     // TODO: test all possible combinations
-    val nofilters = CaseParamsFilter()
-    val nosorter = None
+    val nofilters = Filter()
+    val nosorter = Sort()
+    val searchBy = Search(nofilters,nosorter)
 
     "return the expected cases" in {
-      when(caseRepository.get(nofilters, nosorter)).thenReturn(successful(Seq(c1Enc, c2Enc)))
+      when(caseRepository.get(searchBy)).thenReturn(successful(Seq(c1Enc, c2Enc)))
       when(crypto.decrypt(c1Enc)).thenReturn(c1Dec)
       when(crypto.decrypt(c2Enc)).thenReturn(c2Dec)
 
-      val result = await(service.get(nofilters, nosorter))
+      val result = await(service.get(searchBy))
       result shouldBe Seq(c1Dec, c2Dec)
     }
 
     "return an empty sequence when there are no cases" in {
-      when(caseRepository.get(nofilters, nosorter)).thenReturn(successful(Nil))
-      val result = await(service.get(nofilters, nosorter))
+      when(caseRepository.get(searchBy)).thenReturn(successful(Nil))
+      val result = await(service.get(searchBy))
       result shouldBe Nil
     }
 
     "propagate any error" in {
-      when(caseRepository.get(nofilters, nosorter)).thenThrow(emulatedFailure)
+      when(caseRepository.get(searchBy)).thenThrow(emulatedFailure)
 
       val caught = intercept[RuntimeException] {
-        await(service.get(nofilters, nosorter))
+        await(service.get(searchBy))
       }
       caught shouldBe emulatedFailure
     }

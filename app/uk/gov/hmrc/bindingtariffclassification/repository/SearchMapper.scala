@@ -19,10 +19,10 @@ package uk.gov.hmrc.bindingtariffclassification.repository
 import javax.inject.Singleton
 import play.api.libs.json._
 import uk.gov.hmrc.bindingtariffclassification.model.CaseStatus.CaseStatus
-import uk.gov.hmrc.bindingtariffclassification.model.search.CaseParamsFilter
+import uk.gov.hmrc.bindingtariffclassification.model.search.{Filter, Search, Sort}
 
 @Singleton
-class JsonObjectMapper {
+class SearchMapper {
 
   private def nullifyNoneValues: String => JsValue = { v: String =>
     v match {
@@ -31,24 +31,37 @@ class JsonObjectMapper {
     }
   }
 
-  private def notEqualFilter(forbiddenFieldValue: String): JsObject = {
-    // TODO: extend this to a list of forbidden values
-    Json.obj("$ne" -> forbiddenFieldValue)
+  private def notEqualFilter(field: String): JsObject = {
+    Json.obj("$ne" -> field)
   }
 
-  private def toInFilter: Seq[String] => JsObject = {
+  def filterBy(filter: Filter): JsObject = {
+    JsObject(
+      Map() ++
+        filter.queueId.map("queueId" -> nullifyNoneValues(_)) ++
+        filter.assigneeId.map("assignee.id" -> nullifyNoneValues(_)) ++
+        filter.status.map(splitByComma).map(toSearchArray).map("status" -> _) ++
+        filter.reference.map("reference" -> nullifyNoneValues(_)) ++
+        filter.traderName.map("application.holder.businessName" -> nullifyNoneValues(_))
+    )
+  }
+
+  def sortBy(sort: Sort): JsObject = {
+    sort.field match {
+      case Some(s) => Json.obj(s -> sort.direction.get.id)
+      case _ => Json.obj()
+    }
+  }
+
+  private def toSearchArray: Seq[String] => JsObject = {
     values => JsObject(Map("$in" -> JsArray(values.map(JsString))))
   }
 
-  def from: CaseParamsFilter => JsObject = { searchCase =>
-    val queueFilter = searchCase.queueId.map("queueId" -> nullifyNoneValues(_))
-    val assigneeFilter = searchCase.assigneeId.map("assignee.id" -> nullifyNoneValues(_))
-    val statusFilter = searchCase.status.map(toInFilter).map("status" -> _)
-
-    JsObject(Map() ++ queueFilter ++ assigneeFilter ++ statusFilter)
+  private def splitByComma(string: String): Seq[String] = {
+    string.split(",").toSeq
   }
 
-  def fromReference(reference: String): JsObject = {
+  def reference(reference: String): JsObject = {
     Json.obj("reference" -> reference)
   }
 

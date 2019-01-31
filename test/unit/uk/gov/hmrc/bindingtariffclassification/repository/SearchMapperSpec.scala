@@ -17,25 +17,30 @@
 package uk.gov.hmrc.bindingtariffclassification.repository
 
 import uk.gov.hmrc.bindingtariffclassification.model.CaseStatus
-import uk.gov.hmrc.bindingtariffclassification.model.search.CaseParamsFilter
+import uk.gov.hmrc.bindingtariffclassification.model.search.{Filter, Sort}
+import uk.gov.hmrc.bindingtariffclassification.model.sort.SortDirection
 import uk.gov.hmrc.play.test.UnitSpec
 
-class JsonObjectMapperTest extends UnitSpec {
+class SearchMapperSpec extends UnitSpec {
 
-  private val jsonMapper = new JsonObjectMapper
+  private val jsonMapper = new SearchMapper
 
-  "from()" should {
+  "filterBy " should {
 
-    "convert to Json with fields status, queueId and assigneeId" in {
+    "convert to Json all possible fields in Field object" in {
 
-      val filter = CaseParamsFilter(
+      val filter = Filter(
         queueId = Some("valid_queue"),
         assigneeId = Some("valid_assignee"),
-        status = Some(Seq("S1", "S2"))
+        status = Some("S1,S2"),
+        reference = Some("valid_reference"),
+        traderName = Some("traderName")
       )
 
-      mapFrom(filter) shouldBe
+      filterBy(filter) shouldBe
         """{
+          | "reference": "valid_reference",
+          | "application.holder.businessName" : "traderName",
           | "queueId": "valid_queue",
           | "assignee.id": "valid_assignee",
           | "status": {
@@ -45,26 +50,31 @@ class JsonObjectMapperTest extends UnitSpec {
         """.stripMargin.replaceAll(" ", "").replaceAll("\n", "")
     }
 
-    "convert to Json with fields queueId and assigneeId" in {
+    "convert to Json just queueId " in {
+      filterBy(Filter(queueId = Some("valid_queue"))) shouldBe  """{"queueId":"valid_queue"}"""
+    }
 
-      val filter = CaseParamsFilter(
-        queueId = Some("valid_queue"),
-        assigneeId = Some("valid_assignee")
-      )
+    "convert to Json just assigneeId " in {
+      filterBy(Filter(assigneeId = Some("valid_assignee"))) shouldBe  """{"assignee.id":"valid_assignee"}"""
+    }
 
-      mapFrom(filter) shouldBe
-        """{
-          | "queueId": "valid_queue",
-          | "assignee.id": "valid_assignee"
-          |}
-        """.stripMargin.replaceAll(" ", "").replaceAll("\n", "")
+    "convert to Json just status " in {
+      filterBy(Filter(status = Some("S1,S2,S3"))) shouldBe """{"status":{"$in":["S1","S2","S3"]}}"""
+    }
+
+    "convert to Json just reference " in {
+      filterBy(Filter(reference = Some("valid_reference"))) shouldBe  """{"reference":"valid_reference"}"""
+    }
+
+    "convert to Json just trader name " in {
+      filterBy(Filter(traderName = Some("traderName"))) shouldBe  """{"application.holder.businessName":"traderName"}"""
     }
 
     "convert to Json with fields queueId and assigneeId using `none` value " in {
 
-      val filter = CaseParamsFilter(queueId = Some("none"), assigneeId = Some("none"))
+      val filter = Filter(queueId = Some("none"), assigneeId = Some("none"))
 
-      mapFrom(filter) shouldBe
+      filterBy(filter) shouldBe
         """{
           | "queueId": null,
           | "assignee.id": null
@@ -74,21 +84,47 @@ class JsonObjectMapperTest extends UnitSpec {
     }
 
     "convert to Json with no filters" in {
-      mapFrom(CaseParamsFilter()) shouldBe "{}"
+      filterBy(Filter()) shouldBe "{}"
     }
 
   }
 
-  "fromReference()" should {
+  "SortBy " should {
+
+    " sort by passed field and default direction to descending(-1)" in {
+
+      val sort = Sort(
+        field = Some("sorted_field")
+      )
+
+      sortBy(sort) shouldBe  """{"sorted_field":-1}"""
+    }
+
+    " sort by passed field and set direction ascending(1)" in {
+
+      val sort = Sort(
+        field = Some("sorted_field"),
+        direction = Some(SortDirection.ASCENDING)
+      )
+
+      sortBy(sort) shouldBe  """{"sorted_field":1}"""
+    }
+
+    "empty sort should return empty Json" in {
+      sortBy(Sort()) shouldBe  """{}"""
+    }
+  }
+
+    "fromReference()" should {
 
     "convert to Json from a valid reference" in {
 
       val validRef = "valid_reference"
 
-      jsonMapper.fromReference(validRef).toString() shouldBe
+      jsonMapper.reference(validRef).toString() shouldBe
         s"""{
-          | "reference": "$validRef"
-          |}
+           | "reference": "$validRef"
+           |}
         """.stripMargin.replaceAll(" ", "").replaceAll("\n", "")
     }
 
@@ -128,8 +164,11 @@ class JsonObjectMapperTest extends UnitSpec {
 
   }
 
-  private def mapFrom(filter: CaseParamsFilter): String = {
-    jsonMapper.from(filter).toString()
+  private def filterBy(filter: Filter): String = {
+    jsonMapper.filterBy(filter).toString()
   }
 
+  private def sortBy(sort: Sort): String = {
+    jsonMapper.sortBy(sort).toString()
+  }
 }

@@ -1,16 +1,16 @@
 # microservice specific routes
 
 # cases endpoints
-GET        /cases                     @uk.gov.hmrc.bindingtariffclassification.controllers.CaseController.get(queue_id: Option[String], assignee_id: Option[String], status: Option[String], sort_by: Option[String], sort_direction: Option[String])
-POST       /cases                     @uk.gov.hmrc.bindingtariffclassification.controllers.CaseController.create
-GET        /cases/:reference          @uk.gov.hmrc.bindingtariffclassification.controllers.CaseController.getByReference(reference: String)
-PUT        /cases/:reference          @uk.gov.hmrc.bindingtariffclassification.controllers.CaseController.update(reference: String)
+GET           /cases                          @uk.gov.hmrc.bindingtariffclassification.controllers.CaseController.get(query: uk.gov.hmrc.bindingtariffclassification.model.search.Search)
+POST          /cases                          @uk.gov.hmrc.bindingtariffclassification.controllers.CaseController.create
+GET           /cases/:reference               @uk.gov.hmrc.bindingtariffclassification.controllers.CaseController.getByReference(reference: String)
+PUT           /cases/:reference               @uk.gov.hmrc.bindingtariffclassification.controllers.CaseController.update(reference: String)
 
 # events endpoints
-GET        /cases/:reference/events   @uk.gov.hmrc.bindingtariffclassification.controllers.EventController.getByCaseReference(reference: String)
-POST       /cases/:reference/events   @uk.gov.hmrc.bindingtariffclassification.controllers.EventController.create(reference: String)
+GET           /cases/:reference/events        @uk.gov.hmrc.bindingtariffclassification.controllers.EventController.getByCaseReference(reference: String)
+POST          /cases/:reference/events        @uk.gov.hmrc.bindingtariffclassification.controllers.EventController.create(reference: String)
 
 # admin/test endpoints
-DELETE     /cases                     @uk.gov.hmrc.bindingtariffclassification.controllers.CaseController.deleteAll()
-DELETE     /events                    @uk.gov.hmrc.bindingtariffclassification.controllers.EventController.deleteAll()
-PUT        /scheduler/days-elapsed    @uk.gov.hmrc.bindingtariffclassification.controllers.SchedulerController.incrementDaysElapsed()
+DELETE        /cases                          @uk.gov.hmrc.bindingtariffclassification.controllers.CaseController.deleteAll()
+DELETE        /events                         @uk.gov.hmrc.bindingtariffclassification.controllers.EventController.deleteAll()
+PUT           /scheduler/days-elapsed         @uk.gov.hmrc.bindingtariffclassification.controllers.SchedulerController.incrementDaysElapsed()

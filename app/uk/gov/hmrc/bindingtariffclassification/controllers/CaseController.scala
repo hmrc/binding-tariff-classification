@@ -22,6 +22,7 @@ import play.api.mvc.{Action, AnyContent, Result}
 import uk.gov.hmrc.bindingtariffclassification.config.AppConfig
 import uk.gov.hmrc.bindingtariffclassification.model.ErrorCode.NOTFOUND
 import uk.gov.hmrc.bindingtariffclassification.model._
+import uk.gov.hmrc.bindingtariffclassification.model.search.Search
 import uk.gov.hmrc.bindingtariffclassification.service.CaseService
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -29,9 +30,7 @@ import scala.concurrent.Future.successful
 
 @Singleton
 class CaseController @Inject()(appConfig: AppConfig,
-                               caseService: CaseService,
-                               caseParamsMapper: CaseParamsMapper,
-                               caseSortMapper: CaseSortMapper) extends CommonController {
+                               caseService: CaseService) extends CommonController {
 
   import RESTFormatters.{formatCase, formatNewCase}
 
@@ -62,15 +61,8 @@ class CaseController @Inject()(appConfig: AppConfig,
     } recover recovery
   }
 
-  def get(queue_id: Option[String],
-          assignee_id: Option[String],
-          status: Option[String],
-          sort_by: Option[String],
-          sort_direction: Option[String]): Action[AnyContent] = Action.async { implicit request =>
-    caseService.get(
-      searchBy = caseParamsMapper.from(queue_id, assignee_id, status),
-      sortBy = caseSortMapper.from(sort_by, sort_direction)
-    ) map { cases => Ok(Json.toJson(cases)) } recover recovery
+  def get(search: Search): Action[AnyContent] = Action.async { implicit request =>
+    caseService.get(search) map { cases => Ok(Json.toJson(cases)) } recover recovery
   }
 
   def getByReference(reference: String): Action[AnyContent] = Action.async { implicit request =>

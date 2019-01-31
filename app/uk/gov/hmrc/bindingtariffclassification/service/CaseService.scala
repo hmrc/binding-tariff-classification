@@ -20,8 +20,7 @@ import javax.inject._
 import uk.gov.hmrc.bindingtariffclassification.config.AppConfig
 import uk.gov.hmrc.bindingtariffclassification.crypto.Crypto
 import uk.gov.hmrc.bindingtariffclassification.model.Case
-import uk.gov.hmrc.bindingtariffclassification.model.search.CaseParamsFilter
-import uk.gov.hmrc.bindingtariffclassification.model.sort.CaseSort
+import uk.gov.hmrc.bindingtariffclassification.model.search.Search
 import uk.gov.hmrc.bindingtariffclassification.repository.{CaseRepository, SequenceRepository}
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -65,8 +64,8 @@ class CaseService @Inject()(appConfig: AppConfig,
     case _ => None
   }
 
-  def get(searchBy: CaseParamsFilter, sortBy: Option[CaseSort]): Future[Seq[Case]] = {
-    caseRepository.get(searchBy, sortBy).map {
+  def get(search: Search): Future[Seq[Case]] = {
+    caseRepository.get(search).map {
       _ map decryptCase
     }
   }
