@@ -19,7 +19,9 @@ package uk.gov.hmrc.bindingtariffclassification.repository
 import javax.inject.Singleton
 import play.api.libs.json._
 import uk.gov.hmrc.bindingtariffclassification.model.CaseStatus.CaseStatus
-import uk.gov.hmrc.bindingtariffclassification.model.search.{Filter, Search, Sort}
+import uk.gov.hmrc.bindingtariffclassification.model.search.{Filter, Sort}
+import uk.gov.hmrc.bindingtariffclassification.model.sort.SortField
+import uk.gov.hmrc.bindingtariffclassification.model.sort.SortField.SortField
 
 @Singleton
 class SearchMapper {
@@ -46,8 +48,15 @@ class SearchMapper {
     )
   }
 
+  private def toMongoField(sort: SortField): String = {
+    sort match {
+      case s if s == SortField.DAYS_ELAPSED => "daysElapsed"
+      case unknown => throw new IllegalArgumentException(s"cannot sort by field:$unknown")
+    }
+  }
+
   def sortBy(sort: Sort): JsObject = {
-    sort.field match {
+    sort.field.map(toMongoField) match {
       case Some(s) => Json.obj(s -> sort.direction.get.id)
       case _ => Json.obj()
     }

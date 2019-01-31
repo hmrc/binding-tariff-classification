@@ -31,7 +31,7 @@ import reactivemongo.play.json.ImplicitBSONHandlers._
 import uk.gov.hmrc.bindingtariffclassification.model.MongoFormatters.formatCase
 import uk.gov.hmrc.bindingtariffclassification.model._
 import uk.gov.hmrc.bindingtariffclassification.model.search.{Filter, Search, Sort}
-import uk.gov.hmrc.bindingtariffclassification.model.sort.SortDirection
+import uk.gov.hmrc.bindingtariffclassification.model.sort.{SortDirection, SortField}
 import uk.gov.hmrc.mongo.MongoSpecSupport
 import util.CaseData._
 
@@ -150,6 +150,8 @@ class CaseRepositorySpec extends BaseMongoIndexSpec
 
   "get without params" should {
 
+    val daysElapsed = Some(SortField.DAYS_ELAPSED)
+
     "retrieve all cases from the collection unsorted" in {
 
       val search = Search(Filter(), Sort())
@@ -162,7 +164,7 @@ class CaseRepositorySpec extends BaseMongoIndexSpec
     }
 
     "return all cases from the collection sorted ascending" in {
-      val search = Search(Filter(), Sort(Some("daysElapsed"), Some(SortDirection.ASCENDING)))
+      val search = Search(Filter(), Sort(daysElapsed, Some(SortDirection.ASCENDING)))
 
       val oldCase = case1.copy(daysElapsed = 1)
       val newCase = case2.copy(daysElapsed = 0)
@@ -176,7 +178,7 @@ class CaseRepositorySpec extends BaseMongoIndexSpec
 
     "return all cases from the collection sorted descending" in {
 
-      val search = Search(Filter(), Sort(Some("daysElapsed"), Some(SortDirection.DESCENDING)))
+      val search = Search(Filter(), Sort(daysElapsed, Some(SortDirection.DESCENDING)))
 
       val oldCase = case1.copy(daysElapsed = 1)
       val newCase = case2.copy(daysElapsed = 0)

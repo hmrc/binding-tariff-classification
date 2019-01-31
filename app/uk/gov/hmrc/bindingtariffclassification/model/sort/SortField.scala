@@ -16,16 +16,8 @@
 
 package uk.gov.hmrc.bindingtariffclassification.model.sort
 
-import uk.gov.hmrc.bindingtariffclassification.model.sort.CaseSortField.CaseSortField
-import uk.gov.hmrc.bindingtariffclassification.model.sort.SortDirection.SortDirection
 
-case class CaseSort
-(
-  field: CaseSortField,
-  direction: SortDirection = SortDirection.DESCENDING
-)
-
-object CaseSortField extends Enumeration {
-  type CaseSortField = Value
-  val DAYS_ELAPSED = Value("daysElapsed")
+object SortField extends Enumeration {
+  type SortField = Value
+  val DAYS_ELAPSED = Value("days-elapsed")
 }

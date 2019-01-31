@@ -18,7 +18,7 @@ package uk.gov.hmrc.bindingtariffclassification.repository
 
 import uk.gov.hmrc.bindingtariffclassification.model.CaseStatus
 import uk.gov.hmrc.bindingtariffclassification.model.search.{Filter, Sort}
-import uk.gov.hmrc.bindingtariffclassification.model.sort.SortDirection
+import uk.gov.hmrc.bindingtariffclassification.model.sort.{SortDirection, SortField}
 import uk.gov.hmrc.play.test.UnitSpec
 
 class SearchMapperSpec extends UnitSpec {
@@ -90,11 +90,12 @@ class SearchMapperSpec extends UnitSpec {
   }
 
   "SortBy " should {
+     val sortedField = Some(SortField.DAYS_ELAPSED)
 
     " sort by passed field and default direction to descending(-1)" in {
 
       val sort = Sort(
-        field = Some("sorted_field")
+        field = sortedField
       )
 
       sortBy(sort) shouldBe  """{"sorted_field":-1}"""
@@ -103,7 +104,7 @@ class SearchMapperSpec extends UnitSpec {
     " sort by passed field and set direction ascending(1)" in {
 
       val sort = Sort(
-        field = Some("sorted_field"),
+        field = sortedField,
         direction = Some(SortDirection.ASCENDING)
       )
 

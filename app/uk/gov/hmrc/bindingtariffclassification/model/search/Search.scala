@@ -17,8 +17,9 @@
 package uk.gov.hmrc.bindingtariffclassification.model.search
 
 import play.api.mvc.QueryStringBindable
-import uk.gov.hmrc.bindingtariffclassification.model.sort.SortDirection
+import uk.gov.hmrc.bindingtariffclassification.model.sort.SortField.SortField
 import uk.gov.hmrc.bindingtariffclassification.model.sort.SortDirection.SortDirection
+import uk.gov.hmrc.bindingtariffclassification.model.sort.{SortField, SortDirection}
 
 
 case class Search
@@ -38,15 +39,18 @@ case class Filter
 
 case class Sort
 (
-  field: Option[String] = None,
+  field: Option[SortField] = None,
   direction: Option[SortDirection] = Some(SortDirection.DESCENDING)
 )
-
 
 object Sort {
 
   private val sortByKey = "sort_by"
   private val sortDirectionKey = "sort_direction"
+
+  private def bindSortField(key: Option[String]): Option[SortField] = {
+    key.map(s => SortField.values.find(_.toString == s).getOrElse(throw new IllegalArgumentException))
+  }
 
   implicit def bindable(implicit stringBinder: QueryStringBindable[String]): QueryStringBindable[Sort] = new QueryStringBindable[Sort] {
 
@@ -56,7 +60,7 @@ object Sort {
       Some(
         Right(
           Sort(
-            field = param(sortByKey),
+            field = bindSortField(param(sortByKey)),
             direction = param(sortDirectionKey) map {
               case s: String if (s == "ascending") => SortDirection.ASCENDING
               case s: String if (s == "descending") => SortDirection.DESCENDING
@@ -68,7 +72,14 @@ object Sort {
 
     override def unbind(key: String, query: Sort): String = {
       val bindings: Seq[Option[String]] = Seq(
-        query.field.map(v => stringBinder.unbind(sortByKey, v)),
+        query.field.map(v =>
+          stringBinder.unbind(
+            sortByKey,
+            v match {
+              case s if (s == SortField.DAYS_ELAPSED) => SortField.DAYS_ELAPSED.toString
+            }
+          )
+        ),
         query.direction.map(v =>
           stringBinder.unbind(
             sortDirectionKey,
