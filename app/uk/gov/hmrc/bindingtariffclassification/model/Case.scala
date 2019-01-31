@@ -33,7 +33,7 @@ case class Case
   application: Application,
   decision: Option[Decision] = None,
   attachments: Seq[Attachment] = Seq.empty,
-  keywords: Seq[String] = Seq.empty
+  keywords: Set[String] = Set.empty
 )
 
 object CaseStatus extends Enumeration {

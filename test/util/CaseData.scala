@@ -110,7 +110,7 @@ object CaseData {
       decision = Some(createDecision),
       closedDate = Some(ZonedDateTime.now().minusYears(1)),
       attachments = Seq.empty,
-      keywords = Seq("bike", "tool")
+      keywords = Set("bike", "tool")
     )
   }
 
@@ -120,7 +120,7 @@ object CaseData {
                  queue: Option[String] = None,
                  assignee: Option[Operator] = None,
                  attachments: Seq[Attachment] = Seq.empty,
-                 keywords: Seq[String] = Seq.empty): Case = {
+                 keywords: Set[String] = Set.empty): Case = {
     Case(
       reference = r,
       status = CaseStatus.NEW,
