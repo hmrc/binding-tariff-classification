@@ -62,8 +62,9 @@ object Sort {
           Sort(
             field = bindSortField(param(sortByKey)),
             direction = param(sortDirectionKey) map {
-              case s: String if (s == "ascending") => SortDirection.ASCENDING
-              case s: String if (s == "descending") => SortDirection.DESCENDING
+              case s: String if (s == "asc") => SortDirection.ASCENDING
+              case s: String if (s == "desc") => SortDirection.DESCENDING
+              case _ => SortDirection.DESCENDING
             }
           )
         )
@@ -84,8 +85,8 @@ object Sort {
           stringBinder.unbind(
             sortDirectionKey,
             v match {
-              case s if (s == SortDirection.ASCENDING) => "ascending"
-              case s if (s == SortDirection.DESCENDING) => "descending"
+              case s if (s == SortDirection.ASCENDING) => "asc"
+              case s if (s == SortDirection.DESCENDING) => "desc"
             }
           )
         )

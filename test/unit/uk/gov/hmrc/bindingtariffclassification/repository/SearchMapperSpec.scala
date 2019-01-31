@@ -51,11 +51,11 @@ class SearchMapperSpec extends UnitSpec {
     }
 
     "convert to Json just queueId " in {
-      filterBy(Filter(queueId = Some("valid_queue"))) shouldBe  """{"queueId":"valid_queue"}"""
+      filterBy(Filter(queueId = Some("valid_queue"))) shouldBe """{"queueId":"valid_queue"}"""
     }
 
     "convert to Json just assigneeId " in {
-      filterBy(Filter(assigneeId = Some("valid_assignee"))) shouldBe  """{"assignee.id":"valid_assignee"}"""
+      filterBy(Filter(assigneeId = Some("valid_assignee"))) shouldBe """{"assignee.id":"valid_assignee"}"""
     }
 
     "convert to Json just status " in {
@@ -63,11 +63,11 @@ class SearchMapperSpec extends UnitSpec {
     }
 
     "convert to Json just reference " in {
-      filterBy(Filter(reference = Some("valid_reference"))) shouldBe  """{"reference":"valid_reference"}"""
+      filterBy(Filter(reference = Some("valid_reference"))) shouldBe """{"reference":"valid_reference"}"""
     }
 
     "convert to Json just trader name " in {
-      filterBy(Filter(traderName = Some("traderName"))) shouldBe  """{"application.holder.businessName":"traderName"}"""
+      filterBy(Filter(traderName = Some("traderName"))) shouldBe """{"application.holder.businessName":"traderName"}"""
     }
 
     "convert to Json with fields queueId and assigneeId using `none` value " in {
@@ -90,7 +90,7 @@ class SearchMapperSpec extends UnitSpec {
   }
 
   "SortBy " should {
-     val sortedField = Some(SortField.DAYS_ELAPSED)
+    val sortedField = Some(SortField.DAYS_ELAPSED)
 
     " sort by passed field and default direction to descending(-1)" in {
 
@@ -98,7 +98,7 @@ class SearchMapperSpec extends UnitSpec {
         field = sortedField
       )
 
-      sortBy(sort) shouldBe  """{"sorted_field":-1}"""
+      sortBy(sort) shouldBe """{"daysElapsed":-1}"""
     }
 
     " sort by passed field and set direction ascending(1)" in {
@@ -108,15 +108,15 @@ class SearchMapperSpec extends UnitSpec {
         direction = Some(SortDirection.ASCENDING)
       )
 
-      sortBy(sort) shouldBe  """{"sorted_field":1}"""
+      sortBy(sort) shouldBe """{"daysElapsed":1}"""
     }
 
     "empty sort should return empty Json" in {
-      sortBy(Sort()) shouldBe  """{}"""
+      sortBy(Sort()) shouldBe """{}"""
     }
   }
 
-    "fromReference()" should {
+  "fromReference()" should {
 
     "convert to Json from a valid reference" in {
 

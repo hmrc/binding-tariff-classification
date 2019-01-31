@@ -20,7 +20,7 @@ import javax.inject.Singleton
 import play.api.libs.json._
 import uk.gov.hmrc.bindingtariffclassification.model.CaseStatus.CaseStatus
 import uk.gov.hmrc.bindingtariffclassification.model.search.{Filter, Sort}
-import uk.gov.hmrc.bindingtariffclassification.model.sort.SortField
+import uk.gov.hmrc.bindingtariffclassification.model.sort.{SortDirection, SortField}
 import uk.gov.hmrc.bindingtariffclassification.model.sort.SortField.SortField
 
 @Singleton
@@ -54,10 +54,14 @@ class SearchMapper {
       case unknown => throw new IllegalArgumentException(s"cannot sort by field:$unknown")
     }
   }
+  private val defaultDirection = SortDirection.DESCENDING.id
 
   def sortBy(sort: Sort): JsObject = {
     sort.field.map(toMongoField) match {
-      case Some(s) => Json.obj(s -> sort.direction.get.id)
+      case Some(sortedField) => {
+        val direction =  sort.direction.map(_.id).getOrElse(defaultDirection)
+        Json.obj(sortedField -> direction)
+    }
       case _ => Json.obj()
     }
   }
