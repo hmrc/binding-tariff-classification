@@ -61,32 +61,16 @@ object Sort {
     override def bind(key: String, params: Map[String, Seq[String]]): Option[Either[String, Sort]] = {
       def param(name: String): Option[String] = stringBinder.bind(name, params).filter(_.isRight).map(_.right.get)
 
-      Some(
-        Right(
-          Sort(
-            field = bindSortField(param(sortByKey)),
-            direction = bindSortDirection(param(sortDirectionKey))
-          )
-        )
-      )
+      Some(Right(
+        Sort(field = bindSortField(param(sortByKey)), direction = bindSortDirection(param(sortDirectionKey)))
+      ))
     }
 
     override def unbind(key: String, query: Sort): String = {
-      val bindings: Seq[Option[String]] = Seq(
-        query.field.map(v =>
-          stringBinder.unbind(
-            sortByKey,
-            v.toString
-          )
-        ),
-        query.direction.map(v =>
-          stringBinder.unbind(
-            sortDirectionKey,
-            v.toString
-          )
-        )
-      )
-      bindings.filter(_.isDefined).map(_.get).mkString("&")
+      Seq(
+        query.field.map(v => stringBinder.unbind(sortByKey, v.toString)),
+        query.direction.map(v => stringBinder.unbind(sortDirectionKey, v.toString))
+      ).filter(_.isDefined).map(_.get).mkString("&")
     }
   }
 }
@@ -104,27 +88,24 @@ object Filter {
     override def bind(key: String, params: Map[String, Seq[String]]): Option[Either[String, Filter]] = {
       def param(name: String): Option[String] = stringBinder.bind(name, params).filter(_.isRight).map(_.right.get)
 
-      Some(
-        Right(
-          Filter(queueId = param(queueIdKey),
-            assigneeId = param(assigneeIdKey),
-            status = param(statusKey),
-            reference = param(referenceKey),
-            traderName = param(traderNameKey)
-          )
+      Some(Right(
+        Filter(queueId = param(queueIdKey),
+          assigneeId = param(assigneeIdKey),
+          status = param(statusKey),
+          reference = param(referenceKey),
+          traderName = param(traderNameKey)
         )
-      )
+      ))
     }
 
     override def unbind(key: String, filter: Filter): String = {
-      val bindings: Seq[Option[String]] = Seq(
+      Seq(
         filter.queueId.map(v => stringBinder.unbind(queueIdKey, v)),
         filter.assigneeId.map(v => stringBinder.unbind(assigneeIdKey, v)),
         filter.status.map(v => stringBinder.unbind(statusKey, v)),
         filter.reference.map(v => stringBinder.unbind(referenceKey, v)),
         filter.traderName.map(v => stringBinder.unbind(traderNameKey, v))
-      )
-      bindings.filter(_.isDefined).map(_.get).mkString("&")
+      ).filter(_.isDefined).map(_.get).mkString("&")
     }
   }
 }
@@ -137,14 +118,12 @@ object Search {
       val filter: Option[Either[String, Filter]] = filterBinder.bind(key, params)
       val sort: Option[Either[String, Sort]] = sortBinder.bind(key, params)
 
-      Some(
-        Right(
-          Search(
-            filter.map(_.right.get).getOrElse(Filter()),
-            sort.map(_.right.get).getOrElse(Sort())
-          )
+      Some(Right(
+        Search(
+          filter.map(_.right.get).getOrElse(Filter()),
+          sort.map(_.right.get).getOrElse(Sort())
         )
-      )
+      ))
     }
 
     override def unbind(key: String, search: Search): String = {
