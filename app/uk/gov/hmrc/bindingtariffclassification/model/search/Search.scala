@@ -64,7 +64,6 @@ object Sort {
             direction = param(sortDirectionKey) map {
               case "asc" => SortDirection.ASCENDING
               case "desc" => SortDirection.DESCENDING
-              case _ => SortDirection.DESCENDING
             }
           )
         )

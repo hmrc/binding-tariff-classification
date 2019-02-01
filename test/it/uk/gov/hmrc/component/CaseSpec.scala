@@ -305,7 +305,7 @@ class CaseSpec extends BaseFeatureSpec {
       storeCases(oldCase, newCase)
 
       When("I get all cases sorted by elapsed days")
-      val result = Http(s"$serviceUrl/cases?sort_by=days-elapsed&sort_direction=ascending").asString
+      val result = Http(s"$serviceUrl/cases?sort_by=days-elapsed&sort_direction=asc").asString
 
       Then("The response code should be 200")
       result.code shouldEqual OK
@@ -319,7 +319,7 @@ class CaseSpec extends BaseFeatureSpec {
       storeCases(oldCase, newCase)
 
       When("I get all cases sorted by elapsed days")
-      val result = Http(s"$serviceUrl/cases?sort_by=days-elapsed&sort_direction=descending").asString
+      val result = Http(s"$serviceUrl/cases?sort_by=days-elapsed&sort_direction=desc").asString
 
       Then("The response code should be 200")
       result.code shouldEqual OK
