@@ -33,7 +33,6 @@ class SearchMapperSpec extends UnitSpec {
         queueId = Some("valid_queue"),
         assigneeId = Some("valid_assignee"),
         status = Some("S1,S2"),
-        reference = Some("valid_reference"),
         traderName = Some("traderName")
       )
 
@@ -60,10 +59,6 @@ class SearchMapperSpec extends UnitSpec {
 
     "convert to Json just status " in {
       filterBy(Filter(status = Some("S1,S2,S3"))) shouldBe """{"status":{"$in":["S1","S2","S3"]}}"""
-    }
-
-    "convert to Json just reference " in {
-      filterBy(Filter(reference = Some("valid_reference"))) shouldBe """{"reference":"valid_reference"}"""
     }
 
     "convert to Json just trader name " in {

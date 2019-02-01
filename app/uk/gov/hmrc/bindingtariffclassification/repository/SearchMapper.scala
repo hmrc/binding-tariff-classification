@@ -43,7 +43,6 @@ class SearchMapper {
         filter.queueId.map("queueId" -> nullifyNoneValues(_)) ++
         filter.assigneeId.map("assignee.id" -> nullifyNoneValues(_)) ++
         filter.status.map(splitByComma).map(toSearchArray).map("status" -> _) ++
-        filter.reference.map("reference" -> nullifyNoneValues(_)) ++
         filter.traderName.map("application.holder.businessName" -> nullifyNoneValues(_))
     )
   }
