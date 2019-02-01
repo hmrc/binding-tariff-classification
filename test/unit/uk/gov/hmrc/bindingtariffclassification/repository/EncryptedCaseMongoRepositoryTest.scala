@@ -21,7 +21,6 @@ import org.mockito.Mockito
 import org.mockito.Mockito.verify
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.mockito.MockitoSugar
-import uk.gov.hmrc.bindingtariffclassification.config.{AppConfig, MongoEncryption}
 import uk.gov.hmrc.bindingtariffclassification.crypto.Crypto
 import uk.gov.hmrc.bindingtariffclassification.model.Case
 import uk.gov.hmrc.bindingtariffclassification.model.search.Search
@@ -29,10 +28,7 @@ import uk.gov.hmrc.play.test.UnitSpec
 
 import scala.concurrent.Future.successful
 
-class EncryptedMongoRepositoryTest extends UnitSpec with MockitoSugar with BeforeAndAfterEach {
-
-  private val encryptionEnabled = MongoEncryption(enabled = true, key = None)
-  private val encryptionDisabled = MongoEncryption(key = None)
+class EncryptedCaseMongoRepositoryTest extends UnitSpec with MockitoSugar with BeforeAndAfterEach {
 
   private val rawCase = mock[Case]
   private val rawCaseSaved = mock[Case]
@@ -40,11 +36,9 @@ class EncryptedMongoRepositoryTest extends UnitSpec with MockitoSugar with Befor
   private val encryptedCaseSaved = mock[Case]
   private val rawSearch = mock[Search]
   private val encryptedSearch = mock[Search]
-
-  private val appConfig = mock[AppConfig]
   private val crypto = mock[Crypto]
   private val underlyingRepo = mock[CaseMongoRepository]
-  private val repo = new EncryptedMongoRepository(underlyingRepo, crypto, appConfig)
+  private val repo = new EncryptedCaseMongoRepository(underlyingRepo, crypto)
 
   override protected def beforeEach(): Unit = {
     super.beforeEach()
@@ -59,28 +53,14 @@ class EncryptedMongoRepositoryTest extends UnitSpec with MockitoSugar with Befor
   }
 
   "Insert" should {
-    "Delegate to Repository" in {
-      givenEncryptionIsDisabled()
-      given(underlyingRepo.insert(rawCase)) willReturn successful(rawCaseSaved)
-      await(repo.insert(rawCase)) shouldBe rawCaseSaved
-    }
-
     "Encrypt and delegate to Repository" in {
-      givenEncryptionIsEnabled()
       given(underlyingRepo.insert(encryptedCase)) willReturn successful(encryptedCaseSaved)
       await(repo.insert(rawCase)) shouldBe rawCaseSaved
     }
   }
 
   "Update" should {
-    "Delegate to Repository" in {
-      givenEncryptionIsDisabled()
-      given(underlyingRepo.update(rawCase, upsert = true)) willReturn successful(Some(rawCaseSaved))
-      await(repo.update(rawCase, upsert = true)) shouldBe Some(rawCaseSaved)
-    }
-
     "Encrypt and delegate to Repository" in {
-      givenEncryptionIsEnabled()
       given(underlyingRepo.update(encryptedCase, upsert = true)) willReturn successful(Some(encryptedCaseSaved))
       await(repo.update(rawCase, upsert = true)) shouldBe Some(rawCaseSaved)
     }
@@ -94,28 +74,14 @@ class EncryptedMongoRepositoryTest extends UnitSpec with MockitoSugar with Befor
   }
 
   "Get By Reference" should {
-    "Delegate to Repository" in {
-      givenEncryptionIsDisabled()
-      given(underlyingRepo.getByReference("ref")) willReturn successful(Some(rawCaseSaved))
-      await(repo.getByReference("ref")) shouldBe Some(rawCaseSaved)
-    }
-
     "Encrypt and delegate to Repository" in {
-      givenEncryptionIsEnabled()
       given(underlyingRepo.getByReference("ref")) willReturn successful(Some(encryptedCaseSaved))
       await(repo.getByReference("ref")) shouldBe Some(rawCaseSaved)
     }
   }
 
   "Get" should {
-    "Delegate to Repository" in {
-      givenEncryptionIsDisabled()
-      given(underlyingRepo.get(rawSearch)) willReturn successful(Seq(rawCaseSaved))
-      await(repo.get(rawSearch)) shouldBe Seq(rawCaseSaved)
-    }
-
     "Encrypt and delegate to Repository" in {
-      givenEncryptionIsEnabled()
       given(underlyingRepo.get(encryptedSearch)) willReturn successful(Seq(encryptedCaseSaved))
       await(repo.get(rawSearch)) shouldBe Seq(rawCaseSaved)
     }
@@ -127,13 +93,5 @@ class EncryptedMongoRepositoryTest extends UnitSpec with MockitoSugar with Befor
       await(repo.deleteAll())
       verify(underlyingRepo).deleteAll()
     }
-  }
-
-  private def givenEncryptionIsEnabled(): Unit = {
-    given(appConfig.mongoEncryption) willReturn encryptionEnabled
-  }
-
-  private def givenEncryptionIsDisabled(): Unit = {
-    given(appConfig.mongoEncryption) willReturn encryptionDisabled
   }
 }

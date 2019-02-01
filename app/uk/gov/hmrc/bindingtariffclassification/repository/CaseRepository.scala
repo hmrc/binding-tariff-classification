@@ -16,14 +16,12 @@
 
 package uk.gov.hmrc.bindingtariffclassification.repository
 
-import com.google.inject.ImplementedBy
 import javax.inject.{Inject, Singleton}
 import play.api.libs.json.Json
 import reactivemongo.api.indexes.Index
 import reactivemongo.bson.{BSONArray, BSONDocument, BSONDouble, BSONObjectID, BSONString}
 import reactivemongo.play.json.ImplicitBSONHandlers._
 import reactivemongo.play.json.collection.JSONCollection
-import uk.gov.hmrc.bindingtariffclassification.config.AppConfig
 import uk.gov.hmrc.bindingtariffclassification.crypto.Crypto
 import uk.gov.hmrc.bindingtariffclassification.model.CaseStatus.{NEW, OPEN}
 import uk.gov.hmrc.bindingtariffclassification.model.MongoFormatters.formatCase
@@ -35,7 +33,6 @@ import uk.gov.hmrc.mongo.json.ReactiveMongoFormats
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-@ImplementedBy(classOf[EncryptedMongoRepository])
 trait CaseRepository {
 
   def insert(c: Case): Future[Case]
@@ -52,18 +49,10 @@ trait CaseRepository {
 }
 
 @Singleton
-class EncryptedMongoRepository @Inject()(repository: CaseMongoRepository, crypto: Crypto, appConfig: AppConfig) extends CaseRepository {
-  private def encrypt: Case => Case = { c: Case =>
-    if (appConfig.mongoEncryption.enabled) crypto.encrypt(c) else c
-  }
-
-  private def encrypt(search: Search): Search = {
-    if (appConfig.mongoEncryption.enabled) crypto.encrypt(search) else search
-  }
-
-  private def decrypt: Case => Case = { c: Case =>
-    if (appConfig.mongoEncryption.enabled) crypto.decrypt(c) else c
-  }
+class EncryptedCaseMongoRepository @Inject()(repository: CaseMongoRepository, crypto: Crypto) extends CaseRepository {
+  private def encrypt: Case => Case = crypto.encrypt
+  private def encrypt(search: Search): Search = crypto.encrypt(search)
+  private def decrypt: Case => Case = crypto.decrypt
 
   override def insert(c: Case): Future[Case] = repository.insert(encrypt(c)).map(decrypt)
 
