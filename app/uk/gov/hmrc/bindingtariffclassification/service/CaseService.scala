@@ -18,7 +18,6 @@ package uk.gov.hmrc.bindingtariffclassification.service
 
 import javax.inject._
 import uk.gov.hmrc.bindingtariffclassification.config.AppConfig
-import uk.gov.hmrc.bindingtariffclassification.crypto.Crypto
 import uk.gov.hmrc.bindingtariffclassification.model.Case
 import uk.gov.hmrc.bindingtariffclassification.model.search.Search
 import uk.gov.hmrc.bindingtariffclassification.repository.{CaseRepository, SequenceRepository}
@@ -29,21 +28,11 @@ import scala.concurrent.Future
 @Singleton
 class CaseService @Inject()(appConfig: AppConfig,
                             caseRepository: CaseRepository,
-                            crypto: Crypto,
                             sequenceRepository: SequenceRepository,
                             eventService: EventService) {
 
-  private def encryptCase: Case => Case = { c: Case =>
-    if (appConfig.mongoEncryption.enabled) crypto.encrypt(c) else c
-  }
-
-  private def decryptCase: Case => Case = { c: Case =>
-    if (appConfig.mongoEncryption.enabled) crypto.decrypt(c) else c
-  }
-
   def insert(c: Case): Future[Case] = {
-    val encryptedCase = encryptCase(c)
-    caseRepository.insert(encryptedCase).map(decryptCase)
+    caseRepository.insert(c)
   }
 
   def nextCaseReference: Future[String] = {
@@ -51,23 +40,15 @@ class CaseService @Inject()(appConfig: AppConfig,
   }
 
   def update(c: Case, upsert: Boolean): Future[Option[Case]] = {
-    val encryptedCase = encryptCase(c)
-    caseRepository.update(encryptedCase, upsert) map decryptOptionalCase
+    caseRepository.update(c, upsert)
   }
 
   def getByReference(reference: String): Future[Option[Case]] = {
-    caseRepository.getByReference(reference) map decryptOptionalCase
-  }
-
-  private def decryptOptionalCase: PartialFunction[Option[Case], Option[Case]] = {
-    case Some(c: Case) => Some(decryptCase(c))
-    case _ => None
+    caseRepository.getByReference(reference)
   }
 
   def get(search: Search): Future[Seq[Case]] = {
-    caseRepository.get(search).map {
-      _ map decryptCase
-    }
+    caseRepository.get(search)
   }
 
   def deleteAll(): Future[Unit] = {

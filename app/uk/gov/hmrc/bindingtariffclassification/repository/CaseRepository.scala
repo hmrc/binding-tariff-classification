@@ -22,6 +22,8 @@ import reactivemongo.api.indexes.Index
 import reactivemongo.bson.{BSONArray, BSONDocument, BSONDouble, BSONObjectID, BSONString}
 import reactivemongo.play.json.ImplicitBSONHandlers._
 import reactivemongo.play.json.collection.JSONCollection
+import uk.gov.hmrc.bindingtariffclassification.config.AppConfig
+import uk.gov.hmrc.bindingtariffclassification.crypto.Crypto
 import uk.gov.hmrc.bindingtariffclassification.model.CaseStatus.{NEW, OPEN}
 import uk.gov.hmrc.bindingtariffclassification.model.MongoFormatters.formatCase
 import uk.gov.hmrc.bindingtariffclassification.model.search.Search
@@ -32,7 +34,7 @@ import uk.gov.hmrc.mongo.json.ReactiveMongoFormats
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-@ImplementedBy(classOf[CaseMongoRepository])
+@ImplementedBy(classOf[EncryptingMongoRepository])
 trait CaseRepository {
 
   def insert(c: Case): Future[Case]
@@ -46,6 +48,29 @@ trait CaseRepository {
   def get(search: Search): Future[Seq[Case]]
 
   def deleteAll(): Future[Unit]
+}
+
+@Singleton
+class EncryptingMongoRepository @Inject()(repository: CaseMongoRepository, crypto: Crypto, appConfig: AppConfig) extends CaseRepository {
+  private def encrypt: Case => Case = { c: Case =>
+    if (appConfig.mongoEncryption.enabled) crypto.encrypt(c) else c
+  }
+
+  private def decrypt: Case => Case = { c: Case =>
+    if (appConfig.mongoEncryption.enabled) crypto.decrypt(c) else c
+  }
+
+  override def insert(c: Case): Future[Case] = repository.insert(encrypt(c)).map(decrypt)
+
+  override def update(c: Case, upsert: Boolean): Future[Option[Case]] = repository.update(encrypt(c), upsert).map(_.map(decrypt))
+
+  override def incrementDaysElapsed(increment: Double): Future[Int] = repository.incrementDaysElapsed(increment)
+
+  override def getByReference(reference: String): Future[Option[Case]] = repository.getByReference(reference).map(_.map(decrypt))
+
+  override def get(search: Search): Future[Seq[Case]] = repository.get(search).map(_.map(decrypt))
+
+  override def deleteAll(): Future[Unit] = repository.deleteAll()
 }
 
 @Singleton

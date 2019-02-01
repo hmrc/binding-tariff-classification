@@ -19,8 +19,7 @@ package uk.gov.hmrc.bindingtariffclassification.service
 import org.mockito.Mockito._
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.mockito.MockitoSugar
-import uk.gov.hmrc.bindingtariffclassification.config.{AppConfig, MongoEncryption}
-import uk.gov.hmrc.bindingtariffclassification.crypto.Crypto
+import uk.gov.hmrc.bindingtariffclassification.config.AppConfig
 import uk.gov.hmrc.bindingtariffclassification.model._
 import uk.gov.hmrc.bindingtariffclassification.model.search.{Filter, Search, Sort}
 import uk.gov.hmrc.bindingtariffclassification.repository.{CaseRepository, SequenceRepository}
@@ -34,32 +33,23 @@ class CaseServiceSpec extends UnitSpec with MockitoSugar with BeforeAndAfterEach
   private implicit val hc: HeaderCarrier = HeaderCarrier()
 
   private val c1 = mock[Case]
-  private val c1EncSaved = mock[Case]
-  private val c1Enc = mock[Case]
-  private val c1Dec = mock[Case]
-
-  private val c2Enc = mock[Case]
-  private val c2Dec = mock[Case]
+  private val c1Saved = mock[Case]
 
   private val caseRepository = mock[CaseRepository]
   private val sequenceRepository = mock[SequenceRepository]
   private val eventService = mock[EventService]
-  private val crypto = mock[Crypto]
   private val appConfig = mock[AppConfig]
-
-  private val mongoEncryption = MongoEncryption(enabled = true, key = Some("1AW32543H!="))
-  private val service = new CaseService(appConfig, caseRepository, crypto, sequenceRepository, eventService)
+  private val service = new CaseService(appConfig, caseRepository, sequenceRepository, eventService)
 
   private final val emulatedFailure = new RuntimeException("Emulated failure.")
 
   override protected def afterEach(): Unit = {
     super.afterEach()
-    reset(caseRepository, crypto)
+    reset(caseRepository)
   }
 
   override protected def beforeEach(): Unit = {
     super.beforeEach()
-    when(appConfig.mongoEncryption).thenReturn(mongoEncryption)
   }
 
   "deleteAll()" should {
@@ -83,18 +73,14 @@ class CaseServiceSpec extends UnitSpec with MockitoSugar with BeforeAndAfterEach
 
     "return the case after it is inserted in the database collection" in {
       when(sequenceRepository.incrementAndGetByName("case")).thenReturn(successful(Sequence("case", 0)))
-      when(crypto.encrypt(c1)).thenReturn(c1Enc)
-      when(caseRepository.insert(c1Enc)).thenReturn(successful(c1EncSaved))
-      when(crypto.decrypt(c1EncSaved)).thenReturn(c1Dec)
+      when(caseRepository.insert(c1)).thenReturn(successful(c1Saved))
 
-      val result = await(service.insert(c1))
-      result shouldBe c1Dec
+      await(service.insert(c1)) shouldBe c1Saved
     }
 
     "propagate any error" in {
       when(sequenceRepository.incrementAndGetByName("case")).thenReturn(successful(Sequence("case", 0)))
-      when(crypto.encrypt(c1)).thenReturn(c1Enc)
-      when(caseRepository.insert(c1Enc)).thenThrow(emulatedFailure)
+      when(caseRepository.insert(c1)).thenThrow(emulatedFailure)
 
       val caught = intercept[RuntimeException] {
         await(service.insert(c1))
@@ -106,25 +92,20 @@ class CaseServiceSpec extends UnitSpec with MockitoSugar with BeforeAndAfterEach
   "update()" should {
 
     "return the case after it is updated in the database collection" in {
-      when(crypto.encrypt(c1)).thenReturn(c1Enc)
-      when(caseRepository.update(c1Enc, upsert = false)).thenReturn(successful(Some(c1EncSaved)))
-      when(crypto.decrypt(c1EncSaved)).thenReturn(c1Dec)
+      when(caseRepository.update(c1, upsert = false)).thenReturn(successful(Some(c1Saved)))
 
-      val result = await(service.update(c1, upsert = false))
-      result shouldBe Some(c1Dec)
+      await(service.update(c1, upsert = false)) shouldBe Some(c1Saved)
     }
 
     "return None if the case does not exist in the database collection" in {
-      when(crypto.encrypt(c1)).thenReturn(c1Enc)
-      when(caseRepository.update(c1Enc, upsert = false)).thenReturn(successful(None))
+      when(caseRepository.update(c1, upsert = false)).thenReturn(successful(None))
 
       val result = await(service.update(c1, upsert = false))
       result shouldBe None
     }
 
     "propagate any error" in {
-      when(crypto.encrypt(c1)).thenReturn(c1Enc)
-      when(caseRepository.update(c1Enc, upsert = false)).thenThrow(emulatedFailure)
+      when(caseRepository.update(c1, upsert = false)).thenThrow(emulatedFailure)
 
       val caught = intercept[RuntimeException] {
         await(service.update(c1, upsert = false))
@@ -137,11 +118,10 @@ class CaseServiceSpec extends UnitSpec with MockitoSugar with BeforeAndAfterEach
   "getByReference()" should {
 
     "return the expected case" in {
-      when(caseRepository.getByReference(c1.reference)).thenReturn(successful(Some(c1Enc)))
-      when(crypto.decrypt(c1Enc)).thenReturn(c1Dec)
+      when(caseRepository.getByReference(c1.reference)).thenReturn(successful(Some(c1)))
 
       val result = await(service.getByReference(c1.reference))
-      result shouldBe Some(c1Dec)
+      result shouldBe Some(c1)
     }
 
     "return None when the case is not found" in {
@@ -170,12 +150,9 @@ class CaseServiceSpec extends UnitSpec with MockitoSugar with BeforeAndAfterEach
     val searchBy = Search(nofilters,nosorter)
 
     "return the expected cases" in {
-      when(caseRepository.get(searchBy)).thenReturn(successful(Seq(c1Enc, c2Enc)))
-      when(crypto.decrypt(c1Enc)).thenReturn(c1Dec)
-      when(crypto.decrypt(c2Enc)).thenReturn(c2Dec)
+      when(caseRepository.get(searchBy)).thenReturn(successful(Seq(c1)))
 
-      val result = await(service.get(searchBy))
-      result shouldBe Seq(c1Dec, c2Dec)
+      await(service.get(searchBy)) shouldBe Seq(c1)
     }
 
     "return an empty sequence when there are no cases" in {
