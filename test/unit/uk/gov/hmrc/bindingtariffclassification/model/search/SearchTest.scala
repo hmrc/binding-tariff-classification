@@ -104,6 +104,10 @@ class SearchTest extends UnitSpec {
     "Bind populated query string" in {
       Sort.bindable.bind("", params) shouldBe Some(Right(sort))
     }
+
+    "Bind populated query string with missing sort_by" in {
+      Sort.bindable.bind("", params.filterKeys(_ != "sort_by")) shouldBe None
+    }
   }
 
 }
