@@ -33,7 +33,6 @@ case class Filter
   queueId: Option[String] = None,
   assigneeId: Option[String] = None,
   status: Option[String] = None,
-  reference: Option[String] = None,
   traderName: Option[String] = None
 )
 
@@ -77,7 +76,6 @@ object Sort {
 
 object Filter {
 
-  private val referenceKey = "reference"
   private val traderNameKey = "trader_name"
   private val queueIdKey = "queue_id"
   private val assigneeIdKey = "assignee_id"
@@ -92,7 +90,6 @@ object Filter {
         Filter(queueId = param(queueIdKey),
           assigneeId = param(assigneeIdKey),
           status = param(statusKey),
-          reference = param(referenceKey),
           traderName = param(traderNameKey)
         )
       ))
@@ -103,7 +100,6 @@ object Filter {
         filter.queueId.map(v => stringBinder.unbind(queueIdKey, v)),
         filter.assigneeId.map(v => stringBinder.unbind(assigneeIdKey, v)),
         filter.status.map(v => stringBinder.unbind(statusKey, v)),
-        filter.reference.map(v => stringBinder.unbind(referenceKey, v)),
         filter.traderName.map(v => stringBinder.unbind(traderNameKey, v))
       ).filter(_.isDefined).map(_.get).mkString("&")
     }
