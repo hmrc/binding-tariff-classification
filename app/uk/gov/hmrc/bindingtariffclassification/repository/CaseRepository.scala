@@ -56,6 +56,10 @@ class EncryptingMongoRepository @Inject()(repository: CaseMongoRepository, crypt
     if (appConfig.mongoEncryption.enabled) crypto.encrypt(c) else c
   }
 
+  private def encrypt(search: Search): Search = {
+    if (appConfig.mongoEncryption.enabled) crypto.encrypt(search) else search
+  }
+
   private def decrypt: Case => Case = { c: Case =>
     if (appConfig.mongoEncryption.enabled) crypto.decrypt(c) else c
   }
@@ -68,7 +72,9 @@ class EncryptingMongoRepository @Inject()(repository: CaseMongoRepository, crypt
 
   override def getByReference(reference: String): Future[Option[Case]] = repository.getByReference(reference).map(_.map(decrypt))
 
-  override def get(search: Search): Future[Seq[Case]] = repository.get(search).map(_.map(decrypt))
+  override def get(search: Search): Future[Seq[Case]] = {
+    repository.get(encrypt(search)).map(_.map(decrypt))
+  }
 
   override def deleteAll(): Future[Unit] = repository.deleteAll()
 }
