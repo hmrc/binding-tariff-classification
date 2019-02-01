@@ -131,7 +131,7 @@ object Search {
       Seq[String](
         filterBinder.unbind(key, search.filter),
         search.sort.map(sortBinder.unbind(key, _)).getOrElse("")
-      ).filter(_.trim.length > 0).mkString("&")
+      ).filter(_.trim.nonEmpty).mkString("&")
     }
   }
 

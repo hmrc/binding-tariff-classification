@@ -35,7 +35,7 @@ import uk.gov.hmrc.mongo.json.ReactiveMongoFormats
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-@ImplementedBy(classOf[EncryptingMongoRepository])
+@ImplementedBy(classOf[EncryptedMongoRepository])
 trait CaseRepository {
 
   def insert(c: Case): Future[Case]
@@ -52,7 +52,7 @@ trait CaseRepository {
 }
 
 @Singleton
-class EncryptingMongoRepository @Inject()(repository: CaseMongoRepository, crypto: Crypto, appConfig: AppConfig) extends CaseRepository {
+class EncryptedMongoRepository @Inject()(repository: CaseMongoRepository, crypto: Crypto, appConfig: AppConfig) extends CaseRepository {
   private def encrypt: Case => Case = { c: Case =>
     if (appConfig.mongoEncryption.enabled) crypto.encrypt(c) else c
   }

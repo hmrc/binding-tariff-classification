@@ -29,7 +29,7 @@ import uk.gov.hmrc.play.test.UnitSpec
 
 import scala.concurrent.Future.successful
 
-class EncryptingMongoRepositoryTest extends UnitSpec with MockitoSugar with BeforeAndAfterEach {
+class EncryptedMongoRepositoryTest extends UnitSpec with MockitoSugar with BeforeAndAfterEach {
 
   private val encryptionEnabled = MongoEncryption(enabled = true, key = Some("1AW32543H!="))
   private val encryptionDisabled = MongoEncryption(key = None)
@@ -44,7 +44,7 @@ class EncryptingMongoRepositoryTest extends UnitSpec with MockitoSugar with Befo
   private val appConfig = mock[AppConfig]
   private val crypto = mock[Crypto]
   private val underlyingRepo = mock[CaseMongoRepository]
-  private val repo = new EncryptingMongoRepository(underlyingRepo, crypto, appConfig)
+  private val repo = new EncryptedMongoRepository(underlyingRepo, crypto, appConfig)
 
   override protected def beforeEach(): Unit = {
     super.beforeEach()
