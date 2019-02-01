@@ -16,32 +16,42 @@
 
 package uk.gov.hmrc.bindingtariffclassification
 
-import play.api.inject.Injector
+import org.scalatest.BeforeAndAfterEach
+import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
+import play.api.test.PlayRunners
 import uk.gov.hmrc.bindingtariffclassification.repository.{CaseMongoRepository, CaseRepository, EncryptedCaseMongoRepository}
 import uk.gov.hmrc.play.test.UnitSpec
 
-class ModuleTest extends UnitSpec {
+class ModuleTest extends UnitSpec with BeforeAndAfterEach with PlayRunners {
 
-  private def injector(conf: (String, Any)*): Injector = new GuiceApplicationBuilder()
+  private def app(conf: (String, Any)*): Application = new GuiceApplicationBuilder()
     .bindings(new Module)
     .configure(conf: _*)
-    .injector()
+    .build()
 
   "Module 'bind" should {
     "Bind encryption repository" in {
-      injector("mongodb.encryption.enabled" -> true)
-        .instanceOf[CaseRepository].isInstanceOf[EncryptedCaseMongoRepository] shouldBe true
+      val application: Application = app("mongodb.encryption.enabled" -> true)
+      running(application) {
+        application.injector.instanceOf[CaseRepository].isInstanceOf[EncryptedCaseMongoRepository] shouldBe true
+      }
+
     }
 
     "Bind standard repository" in {
-      injector("mongodb.encryption.enabled" -> false)
-        .instanceOf[CaseRepository].isInstanceOf[CaseMongoRepository] shouldBe true
+      val application: Application = app("mongodb.encryption.enabled" -> false)
+      running(application) {
+        application.injector.instanceOf[CaseRepository].isInstanceOf[CaseMongoRepository] shouldBe true
+      }
     }
 
     "Bind standard repository by default" in {
-      injector()
-        .instanceOf[CaseRepository].isInstanceOf[CaseMongoRepository] shouldBe true
+      val application: Application = app()
+      running(application) {
+        application.injector
+          .instanceOf[CaseRepository].isInstanceOf[CaseMongoRepository] shouldBe true
+      }
     }
   }
 }
