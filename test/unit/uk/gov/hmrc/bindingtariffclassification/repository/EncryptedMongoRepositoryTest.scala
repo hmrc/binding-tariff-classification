@@ -31,7 +31,7 @@ import scala.concurrent.Future.successful
 
 class EncryptedMongoRepositoryTest extends UnitSpec with MockitoSugar with BeforeAndAfterEach {
 
-  private val encryptionEnabled = MongoEncryption(enabled = true, key = Some("1AW32543H!="))
+  private val encryptionEnabled = MongoEncryption(enabled = true, key = None)
   private val encryptionDisabled = MongoEncryption(key = None)
 
   private val rawCase = mock[Case]
