@@ -64,6 +64,10 @@ class SearchTest extends UnitSpec {
     "Bind populated query string" in {
       Search.bindable.bind("", params) shouldBe Some(Right(search))
     }
+
+    "Bind query string with missing sort_by" in {
+      Search.bindable.bind("", params.filterKeys(_ != "sort_by")) shouldBe Some(Right(Search(filter, None)))
+    }
   }
 
   "Filter Binder" should {
