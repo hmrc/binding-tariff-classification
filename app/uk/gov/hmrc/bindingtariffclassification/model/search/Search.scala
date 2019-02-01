@@ -25,7 +25,7 @@ import uk.gov.hmrc.bindingtariffclassification.model.sort.{SortDirection, SortFi
 case class Search
 (
   filter: Filter = Filter(),
-  sort: Sort = Sort()
+  sort: Option[Sort] = None
 )
 
 case class Filter
@@ -38,8 +38,8 @@ case class Filter
 
 case class Sort
 (
-  field: Option[SortField] = None,
-  direction: Option[SortDirection] = None
+  field: SortField,
+  direction: SortDirection = SortDirection.DESCENDING
 )
 
 object Sort {
@@ -47,12 +47,12 @@ object Sort {
   private val sortByKey = "sort_by"
   private val sortDirectionKey = "sort_direction"
 
-  private def bindSortField(key: Option[String]): Option[SortField] = {
-    key.flatMap(s => SortField.values.find(_.toString == s))
+  private def bindSortField(key: String): Option[SortField] = {
+    SortField.values.find(_.toString == key)
   }
 
-  private def bindSortDirection(key: Option[String]): Option[SortDirection] = {
-    key.flatMap(s => SortDirection.values.find(_.toString == s))
+  private def bindSortDirection(key: String): Option[SortDirection] = {
+    SortDirection.values.find(_.toString == key)
   }
 
   implicit def bindable(implicit stringBinder: QueryStringBindable[String]): QueryStringBindable[Sort] = new QueryStringBindable[Sort] {
@@ -60,16 +60,27 @@ object Sort {
     override def bind(key: String, params: Map[String, Seq[String]]): Option[Either[String, Sort]] = {
       def param(name: String): Option[String] = stringBinder.bind(name, params).filter(_.isRight).map(_.right.get)
 
-      Some(Right(
-        Sort(field = bindSortField(param(sortByKey)), direction = bindSortDirection(param(sortDirectionKey)))
-      ))
+      val field: Option[SortField] = param(sortByKey).flatMap(bindSortField)
+      val direction: Option[SortDirection] = param(sortDirectionKey).flatMap(bindSortDirection)
+      (field, direction) match {
+        case (Some(f), Some(d)) =>
+          Some(Right(
+            Sort(field = f, direction = d)
+          ))
+        case (Some(f), _) =>
+          Some(Right(
+            Sort(field = f)
+          ))
+        case _ => None
+      }
+
     }
 
     override def unbind(key: String, query: Sort): String = {
-      Seq(
-        query.field.map(v => stringBinder.unbind(sortByKey, v.toString)),
-        query.direction.map(v => stringBinder.unbind(sortDirectionKey, v.toString))
-      ).filter(_.isDefined).map(_.get).mkString("&")
+      Seq[String](
+        stringBinder.unbind(sortByKey, query.field.toString),
+        stringBinder.unbind(sortDirectionKey, query.direction.toString)
+      ).mkString("&")
     }
   }
 }
@@ -117,15 +128,15 @@ object Search {
       Some(Right(
         Search(
           filter.map(_.right.get).getOrElse(Filter()),
-          sort.map(_.right.get).getOrElse(Sort())
+          sort.map(_.right.get)
         )
       ))
     }
 
     override def unbind(key: String, search: Search): String = {
-      Seq(
+      Seq[String](
         filterBinder.unbind(key, search.filter),
-        sortBinder.unbind(key, search.sort)
+        search.sort.map(sortBinder.unbind(key, _)).getOrElse("")
       ).filter(_.trim.length > 0).mkString("&")
     }
   }

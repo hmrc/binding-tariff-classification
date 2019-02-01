@@ -188,10 +188,10 @@ class CaseControllerSpec extends UnitSpec with WithFakeApplication with MockitoS
 
     val queueId = Some("valid_queueId")
     val assigneeId = Some("valid_assigneeId")
-    val sortField = Some(SortField.DAYS_ELAPSED)
+    val sortField = SortField.DAYS_ELAPSED
 
     "return 200 with the all cases" in {
-      val search = Search(Filter(queueId = queueId, assigneeId = assigneeId, status = Some("NEW,OPEN")), Sort(field = sortField))
+      val search = Search(Filter(queueId = queueId, assigneeId = assigneeId, status = Some("NEW,OPEN")), Some(Sort(field = sortField)))
 
       when(caseService.get(refEq(search))).thenReturn(successful(Seq(c1, c2)))
 
@@ -202,7 +202,7 @@ class CaseControllerSpec extends UnitSpec with WithFakeApplication with MockitoS
     }
 
     "return 200 with an empty sequence if there are no cases" in {
-      val search = Search(Filter(queueId = queueId, assigneeId = assigneeId, status = Some("NEW,OPEN")), Sort(field = sortField))
+      val search = Search(Filter(queueId = queueId, assigneeId = assigneeId, status = Some("NEW,OPEN")), Some(Sort(field = sortField)))
 
       when(caseService.get(search)).thenReturn(successful(Seq.empty))
 
@@ -213,7 +213,7 @@ class CaseControllerSpec extends UnitSpec with WithFakeApplication with MockitoS
     }
 
     "return 500 when an error occurred" in {
-      val search = Search(Filter(), Sort())
+      val search = Search(Filter(), None)
       val error = new RuntimeException
 
       when(caseService.get(refEq(search))).thenReturn(failed(error))

@@ -18,6 +18,7 @@ package uk.gov.hmrc.bindingtariffclassification.repository
 
 import com.google.inject.ImplementedBy
 import javax.inject.{Inject, Singleton}
+import play.api.libs.json.Json
 import reactivemongo.api.indexes.Index
 import reactivemongo.bson.{BSONArray, BSONDocument, BSONDouble, BSONObjectID, BSONString}
 import reactivemongo.play.json.ImplicitBSONHandlers._
@@ -117,7 +118,7 @@ class CaseMongoRepository @Inject()(mongoDbProvider: MongoDbProvider, mapper: Se
   }
 
   override def get(search: Search): Future[Seq[Case]] = {
-    getMany(mapper.filterBy(search.filter), mapper.sortBy(search.sort))
+    getMany(mapper.filterBy(search.filter), search.sort.map(mapper.sortBy).getOrElse(Json.obj()))
   }
 
   override def deleteAll(): Future[Unit] = {

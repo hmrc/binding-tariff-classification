@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.bindingtariffclassification.repository
 
+import play.api.libs.json.{JsNull, Json}
 import uk.gov.hmrc.bindingtariffclassification.model.CaseStatus
 import uk.gov.hmrc.bindingtariffclassification.model.search.{Filter, Sort}
 import uk.gov.hmrc.bindingtariffclassification.model.sort.{SortDirection, SortField}
@@ -33,95 +34,85 @@ class SearchMapperSpec extends UnitSpec {
         queueId = Some("valid_queue"),
         assigneeId = Some("valid_assignee"),
         status = Some("S1,S2"),
-        traderName = Some("traderName")
+        traderName = Some("trader_name")
       )
 
-      filterBy(filter) shouldBe
-        """{
-          | "reference": "valid_reference",
-          | "application.holder.businessName" : "traderName",
-          | "queueId": "valid_queue",
-          | "assignee.id": "valid_assignee",
-          | "status": {
-          |   "$in": [ "S1", "S2" ]
-          |  }
-          |}
-        """.stripMargin.replaceAll(" ", "").replaceAll("\n", "")
+      jsonMapper.filterBy(filter) shouldBe Json.obj(
+        "queueId" -> "valid_queue",
+        "assignee.id" -> "valid_assignee",
+        "status" -> Json.obj("$in" -> Json.arr("S1", "S2")),
+        "application.holder.businessName" -> "trader_name"
+      )
     }
 
     "convert to Json just queueId " in {
-      filterBy(Filter(queueId = Some("valid_queue"))) shouldBe """{"queueId":"valid_queue"}"""
+      jsonMapper.filterBy(Filter(queueId = Some("valid_queue"))) shouldBe Json.obj("queueId" -> "valid_queue")
     }
 
     "convert to Json just assigneeId " in {
-      filterBy(Filter(assigneeId = Some("valid_assignee"))) shouldBe """{"assignee.id":"valid_assignee"}"""
+      jsonMapper.filterBy(Filter(assigneeId = Some("valid_assignee"))) shouldBe Json.obj("assignee.id" -> "valid_assignee")
     }
 
     "convert to Json just status " in {
-      filterBy(Filter(status = Some("S1,S2,S3"))) shouldBe """{"status":{"$in":["S1","S2","S3"]}}"""
+      jsonMapper.filterBy(Filter(status = Some("S1,S2,S3"))) shouldBe Json.obj(
+        "status" -> Json.obj(
+          "$in" -> Json.arr("S1", "S2", "S3")
+        )
+      )
     }
 
     "convert to Json just trader name " in {
-      filterBy(Filter(traderName = Some("traderName"))) shouldBe """{"application.holder.businessName":"traderName"}"""
+      jsonMapper.filterBy(Filter(traderName = Some("traderName"))) shouldBe Json.obj("application.holder.businessName" -> "traderName")
     }
 
     "convert to Json with fields queueId and assigneeId using `none` value " in {
 
       val filter = Filter(queueId = Some("none"), assigneeId = Some("none"))
 
-      filterBy(filter) shouldBe
-        """{
-          | "queueId": null,
-          | "assignee.id": null
-          |}
-        """.stripMargin.replaceAll(" ", "").replaceAll("\n", "")
-
+      jsonMapper.filterBy(filter) shouldBe Json.obj(
+        "queueId" -> JsNull,
+        "assignee.id" -> JsNull
+      )
     }
 
     "convert to Json with no filters" in {
-      filterBy(Filter()) shouldBe "{}"
+      jsonMapper.filterBy(Filter()) shouldBe Json.obj()
     }
 
   }
 
   "SortBy " should {
-    val sortedField = Some(SortField.DAYS_ELAPSED)
 
-    " sort by passed field and default direction to descending(-1)" in {
-
-      val sort = Sort(
-        field = sortedField
-      )
-
-      sortBy(sort) shouldBe """{"daysElapsed":-1}"""
-    }
-
-    " sort by passed field and set direction ascending(1)" in {
+    "sort by passed field and default direction to descending(-1)" in {
 
       val sort = Sort(
-        field = sortedField,
-        direction = Some(SortDirection.ASCENDING)
+        field = SortField.DAYS_ELAPSED,
+        direction = SortDirection.DESCENDING
       )
 
-      sortBy(sort) shouldBe """{"daysElapsed":1}"""
+      jsonMapper.sortBy(sort) shouldBe Json.obj("daysElapsed" -> -1)
     }
 
-    "empty sort should return empty Json" in {
-      sortBy(Sort()) shouldBe """{}"""
+    "sort by passed field and set direction ascending(1)" in {
+
+      val sort = Sort(
+        field = SortField.DAYS_ELAPSED,
+        direction = SortDirection.ASCENDING
+      )
+
+      jsonMapper.sortBy(sort) shouldBe Json.obj("daysElapsed" -> 1)
     }
   }
 
   "fromReference()" should {
 
     "convert to Json from a valid reference" in {
-
       val validRef = "valid_reference"
 
-      jsonMapper.reference(validRef).toString() shouldBe
-        s"""{
-           | "reference": "$validRef"
-           |}
-        """.stripMargin.replaceAll(" ", "").replaceAll("\n", "")
+      jsonMapper.reference(validRef) shouldBe
+        Json.obj(
+          "reference" -> "valid_reference"
+        )
     }
 
   }
@@ -133,12 +124,10 @@ class SearchMapperSpec extends UnitSpec {
       val validRef = "valid_reference"
       val notAllowedStatus = CaseStatus.REFERRED
 
-      jsonMapper.fromReferenceAndStatus(validRef, notAllowedStatus).toString() shouldBe
-        s"""{
-           | "reference": "$validRef",
-           | "status": { "$$ne": "$notAllowedStatus" }
-           |}
-        """.stripMargin.replaceAll(" ", "").replaceAll("\n", "")
+      jsonMapper.fromReferenceAndStatus(validRef, notAllowedStatus) shouldBe Json.obj(
+        "reference" -> "valid_reference",
+        "status" -> Json.obj("$ne" -> "REFERRED")
+      )
     }
 
   }
@@ -150,21 +139,11 @@ class SearchMapperSpec extends UnitSpec {
       val fieldName = "employee"
       val fieldValue = "Alex"
 
-      jsonMapper.updateField(fieldName, fieldValue).toString() shouldBe
-        s"""{
-           | "$$set": { "$fieldName": "$fieldValue" }
-           |}
-        """.stripMargin.replaceAll(" ", "").replaceAll("\n", "")
+      jsonMapper.updateField(fieldName, fieldValue) shouldBe Json.obj(
+        "$set" -> Json.obj("employee" -> "Alex")
+      )
 
     }
 
-  }
-
-  private def filterBy(filter: Filter): String = {
-    jsonMapper.filterBy(filter).toString()
-  }
-
-  private def sortBy(sort: Sort): String = {
-    jsonMapper.sortBy(sort).toString()
   }
 }

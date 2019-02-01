@@ -21,7 +21,7 @@ import org.scalatest.BeforeAndAfterEach
 import org.scalatest.mockito.MockitoSugar
 import uk.gov.hmrc.bindingtariffclassification.config.AppConfig
 import uk.gov.hmrc.bindingtariffclassification.model._
-import uk.gov.hmrc.bindingtariffclassification.model.search.{Filter, Search, Sort}
+import uk.gov.hmrc.bindingtariffclassification.model.search.Search
 import uk.gov.hmrc.bindingtariffclassification.repository.{CaseRepository, SequenceRepository}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.test.UnitSpec
@@ -143,11 +143,7 @@ class CaseServiceSpec extends UnitSpec with MockitoSugar with BeforeAndAfterEach
   }
 
   "get()" should {
-
-    // TODO: test all possible combinations
-    val nofilters = Filter()
-    val nosorter = Sort()
-    val searchBy = Search(nofilters,nosorter)
+    val searchBy = mock[Search]
 
     "return the expected cases" in {
       when(caseRepository.get(searchBy)).thenReturn(successful(Seq(c1)))

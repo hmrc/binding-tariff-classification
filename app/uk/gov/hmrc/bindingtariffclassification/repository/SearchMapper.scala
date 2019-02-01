@@ -20,22 +20,11 @@ import javax.inject.Singleton
 import play.api.libs.json._
 import uk.gov.hmrc.bindingtariffclassification.model.CaseStatus.CaseStatus
 import uk.gov.hmrc.bindingtariffclassification.model.search.{Filter, Sort}
+import uk.gov.hmrc.bindingtariffclassification.model.sort.SortField
 import uk.gov.hmrc.bindingtariffclassification.model.sort.SortField.SortField
-import uk.gov.hmrc.bindingtariffclassification.model.sort.{SortDirection, SortField}
 
 @Singleton
 class SearchMapper {
-
-  private def nullifyNoneValues: String => JsValue = { v: String =>
-    v match {
-      case "none" => JsNull
-      case _ => JsString(v)
-    }
-  }
-
-  private def notEqualFilter(field: String): JsObject = {
-    Json.obj("$ne" -> field)
-  }
 
   def filterBy(filter: Filter): JsObject = {
     JsObject(
@@ -47,31 +36,9 @@ class SearchMapper {
     )
   }
 
-  private def toMongoField(sort: SortField): String = {
-    sort match {
-      case SortField.DAYS_ELAPSED => "daysElapsed"
-      case unknown => throw new IllegalArgumentException(s"cannot sort by field:$unknown")
-    }
-  }
-
-  private val defaultDirection = SortDirection.DESCENDING.id
 
   def sortBy(sort: Sort): JsObject = {
-    sort.field.map(toMongoField) match {
-      case Some(sortedField) => {
-        val direction = sort.direction.map(_.id).getOrElse(defaultDirection)
-        Json.obj(sortedField -> direction)
-      }
-      case _ => Json.obj()
-    }
-  }
-
-  private def toSearchArray: Seq[String] => JsObject = {
-    values => JsObject(Map("$in" -> JsArray(values.map(JsString))))
-  }
-
-  private def splitByComma(string: String): Seq[String] = {
-    string.split(",").toSeq
+    Json.obj(toMongoField(sort.field) -> sort.direction.id)
   }
 
   def reference(reference: String): JsObject = {
@@ -84,6 +51,32 @@ class SearchMapper {
 
   def updateField(fieldName: String, fieldValue: String): JsObject = {
     Json.obj("$set" -> Json.obj(fieldName -> fieldValue))
+  }
+
+  private def toSearchArray: Seq[String] => JsObject = {
+    values => JsObject(Map("$in" -> JsArray(values.map(JsString))))
+  }
+
+  private def splitByComma(string: String): Seq[String] = {
+    string.split(",").toSeq
+  }
+
+  private def nullifyNoneValues: String => JsValue = { v: String =>
+    v match {
+      case "none" => JsNull
+      case _ => JsString(v)
+    }
+  }
+
+  private def notEqualFilter(field: String): JsObject = {
+    Json.obj("$ne" -> field)
+  }
+
+  private def toMongoField(sort: SortField): String = {
+    sort match {
+      case SortField.DAYS_ELAPSED => "daysElapsed"
+      case unknown => throw new IllegalArgumentException(s"cannot sort by field:$unknown")
+    }
   }
 
 }

@@ -22,8 +22,8 @@ import uk.gov.hmrc.play.test.UnitSpec
 class SearchTest extends UnitSpec {
 
   private val sort = Sort(
-    field = Some(SortField.DAYS_ELAPSED),
-    direction = Some(SortDirection.DESCENDING)
+    field = SortField.DAYS_ELAPSED,
+    direction = SortDirection.DESCENDING
   )
   private val filter = Filter(
     traderName = Some("trader-name"),
@@ -32,7 +32,7 @@ class SearchTest extends UnitSpec {
     status = Some("status")
   )
 
-  private val search = Search(filter = filter, sort = sort)
+  private val search = Search(filter = filter, sort = Some(sort))
 
   private val params: Map[String, Seq[String]] = Map(
     "trader_name" -> Seq("trader-name"),
@@ -88,17 +88,13 @@ class SearchTest extends UnitSpec {
 
   "Sort Binder" should {
 
-    "Unbind Unpopulated Sort to Query String" in {
-      Sort.bindable.unbind("", Sort()) shouldBe ""
-    }
-
     "Unbind Populated Sort to Query String" in {
       val populatedQueryParam: String = "sort_by=days-elapsed&sort_direction=desc"
       Sort.bindable.unbind("", sort) shouldBe populatedQueryParam
     }
 
     "Bind empty query string" in {
-      Sort.bindable.bind("", Map()) shouldBe Some(Right(Sort()))
+      Sort.bindable.bind("", Map()) shouldBe None
     }
 
     "Bind populated query string" in {
