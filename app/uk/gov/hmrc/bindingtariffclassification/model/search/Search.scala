@@ -17,15 +17,15 @@
 package uk.gov.hmrc.bindingtariffclassification.model.search
 
 import play.api.mvc.QueryStringBindable
-import uk.gov.hmrc.bindingtariffclassification.model.sort.SortField.SortField
 import uk.gov.hmrc.bindingtariffclassification.model.sort.SortDirection.SortDirection
-import uk.gov.hmrc.bindingtariffclassification.model.sort.{SortField, SortDirection}
+import uk.gov.hmrc.bindingtariffclassification.model.sort.SortField.SortField
+import uk.gov.hmrc.bindingtariffclassification.model.sort.{SortDirection, SortField}
 
 
 case class Search
 (
-  filter: Filter,
-  sort: Sort
+  filter: Filter = Filter(),
+  sort: Sort = Sort()
 )
 
 case class Filter
@@ -62,8 +62,8 @@ object Sort {
           Sort(
             field = bindSortField(param(sortByKey)),
             direction = param(sortDirectionKey) map {
-              case s: String if (s == "asc") => SortDirection.ASCENDING
-              case s: String if (s == "desc") => SortDirection.DESCENDING
+              case "asc" => SortDirection.ASCENDING
+              case "desc" => SortDirection.DESCENDING
               case _ => SortDirection.DESCENDING
             }
           )
@@ -77,7 +77,7 @@ object Sort {
           stringBinder.unbind(
             sortByKey,
             v match {
-              case s if (s == SortField.DAYS_ELAPSED) => SortField.DAYS_ELAPSED.toString
+              case SortField.DAYS_ELAPSED => SortField.DAYS_ELAPSED.toString
             }
           )
         ),
@@ -85,8 +85,8 @@ object Sort {
           stringBinder.unbind(
             sortDirectionKey,
             v match {
-              case s if (s == SortDirection.ASCENDING) => "asc"
-              case s if (s == SortDirection.DESCENDING) => "desc"
+              case SortDirection.ASCENDING => "asc"
+              case SortDirection.DESCENDING => "desc"
             }
           )
         )
@@ -99,7 +99,7 @@ object Sort {
 object Filter {
 
   private val referenceKey = "reference"
-  private val traderNameKey = "traderName"
+  private val traderNameKey = "trader_name"
   private val queueIdKey = "queue_id"
   private val assigneeIdKey = "assignee_id"
   private val statusKey = "status"
