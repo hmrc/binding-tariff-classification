@@ -52,6 +52,10 @@ object Sort {
     key.flatMap(s => SortField.values.find(_.toString == s))
   }
 
+  private def bindSortDirection(key: Option[String]): Option[SortDirection] = {
+    key.flatMap(s => SortDirection.values.find(_.toString == s))
+  }
+
   implicit def bindable(implicit stringBinder: QueryStringBindable[String]): QueryStringBindable[Sort] = new QueryStringBindable[Sort] {
 
     override def bind(key: String, params: Map[String, Seq[String]]): Option[Either[String, Sort]] = {
@@ -61,11 +65,7 @@ object Sort {
         Right(
           Sort(
             field = bindSortField(param(sortByKey)),
-            direction = param(sortDirectionKey) map {
-              case "asc" => SortDirection.ASCENDING
-              case "desc" => SortDirection.DESCENDING
-              case _ => SortDirection.DESCENDING
-            }
+            direction = bindSortDirection(param(sortDirectionKey))
           )
         )
       )
@@ -76,18 +76,13 @@ object Sort {
         query.field.map(v =>
           stringBinder.unbind(
             sortByKey,
-            v match {
-              case SortField.DAYS_ELAPSED => SortField.DAYS_ELAPSED.toString
-            }
+            v.toString
           )
         ),
         query.direction.map(v =>
           stringBinder.unbind(
             sortDirectionKey,
-            v match {
-              case SortDirection.ASCENDING => "asc"
-              case SortDirection.DESCENDING => "desc"
-            }
+            v.toString
           )
         )
       )
