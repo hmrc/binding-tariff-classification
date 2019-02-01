@@ -92,6 +92,14 @@ object CaseData {
       "GB")
   }
 
+  def eORIDetailForNintedo: EORIDetails = {
+    EORIDetails(RandomGenerator.randomUUID(),
+      "Nintendo",
+      "111, Brodway St", "Leeds", "West Yorkshire",
+      "LS11 22BB",
+      "GB")
+  }
+
   def createNewCase(app: Application = createBasicBTIApplication,
                     attachments: Seq[Attachment] = Seq.empty): NewCaseRequest = {
     NewCaseRequest(
