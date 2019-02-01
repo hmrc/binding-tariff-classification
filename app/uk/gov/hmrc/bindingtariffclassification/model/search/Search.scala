@@ -63,14 +63,8 @@ object Sort {
       val field: Option[SortField] = param(sortByKey).flatMap(bindSortField)
       val direction: Option[SortDirection] = param(sortDirectionKey).flatMap(bindSortDirection)
       (field, direction) match {
-        case (Some(f), Some(d)) =>
-          Some(Right(
-            Sort(field = f, direction = d)
-          ))
-        case (Some(f), _) =>
-          Some(Right(
-            Sort(field = f)
-          ))
+        case (Some(f), Some(d)) => Some(Right(Sort(field = f, direction = d)))
+        case (Some(f), _) => Some(Right(Sort(field = f)))
         case _ => None
       }
 
