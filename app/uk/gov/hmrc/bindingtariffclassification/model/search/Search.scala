@@ -49,7 +49,7 @@ object Sort {
   private val sortDirectionKey = "sort_direction"
 
   private def bindSortField(key: Option[String]): Option[SortField] = {
-    key.map(s => SortField.values.find(_.toString == s).getOrElse(throw new IllegalArgumentException))
+    key.flatMap(s => SortField.values.find(_.toString == s))
   }
 
   implicit def bindable(implicit stringBinder: QueryStringBindable[String]): QueryStringBindable[Sort] = new QueryStringBindable[Sort] {
