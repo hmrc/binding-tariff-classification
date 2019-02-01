@@ -18,6 +18,6 @@ package uk.gov.hmrc.bindingtariffclassification.model.sort
 
 object SortDirection extends Enumeration {
   type SortDirection = Value
-  val DESCENDING = Value(-1)
-  val ASCENDING = Value(1)
+  val DESCENDING = Value(-1, "desc")
+  val ASCENDING = Value(1, "asc")
 }

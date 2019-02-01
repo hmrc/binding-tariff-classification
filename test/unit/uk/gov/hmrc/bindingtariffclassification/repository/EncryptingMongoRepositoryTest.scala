@@ -38,6 +38,8 @@ class EncryptingMongoRepositoryTest extends UnitSpec with MockitoSugar with Befo
   private val rawCaseSaved = mock[Case]
   private val encryptedCase = mock[Case]
   private val encryptedCaseSaved = mock[Case]
+  private val rawSearch = mock[Search]
+  private val encryptedSearch = mock[Search]
 
   private val appConfig = mock[AppConfig]
   private val crypto = mock[Crypto]
@@ -46,6 +48,7 @@ class EncryptingMongoRepositoryTest extends UnitSpec with MockitoSugar with Befo
 
   override protected def beforeEach(): Unit = {
     super.beforeEach()
+    given(crypto.encrypt(rawSearch)) willReturn encryptedSearch
     given(crypto.encrypt(rawCase)) willReturn encryptedCase
     given(crypto.decrypt(encryptedCaseSaved)) willReturn rawCaseSaved
   }
@@ -107,14 +110,14 @@ class EncryptingMongoRepositoryTest extends UnitSpec with MockitoSugar with Befo
   "Get" should {
     "Delegate to Repository" in {
       givenEncryptionIsDisabled()
-      given(underlyingRepo.get(Search())) willReturn successful(Seq(rawCaseSaved))
-      await(repo.get(Search())) shouldBe Seq(rawCaseSaved)
+      given(underlyingRepo.get(rawSearch)) willReturn successful(Seq(rawCaseSaved))
+      await(repo.get(rawSearch)) shouldBe Seq(rawCaseSaved)
     }
 
     "Encrypt and delegate to Repository" in {
       givenEncryptionIsEnabled()
-      given(underlyingRepo.get(Search())) willReturn successful(Seq(encryptedCaseSaved))
-      await(repo.get(Search())) shouldBe Seq(rawCaseSaved)
+      given(underlyingRepo.get(encryptedSearch)) willReturn successful(Seq(encryptedCaseSaved))
+      await(repo.get(rawSearch)) shouldBe Seq(rawCaseSaved)
     }
   }
 

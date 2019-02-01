@@ -22,6 +22,7 @@ import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito
 import org.scalatest.mockito.MockitoSugar
 import uk.gov.hmrc.bindingtariffclassification.model._
+import uk.gov.hmrc.bindingtariffclassification.model.search.{Filter, Search}
 import uk.gov.hmrc.crypto.{CompositeSymmetricCrypto, Crypted, PlainText}
 import uk.gov.hmrc.play.test.UnitSpec
 import util.CaseData._
@@ -36,6 +37,7 @@ class CryptoSpec extends UnitSpec with MockitoSugar {
 
   private val bti = createBTIApplicationWithAllFields
   private val lo = createLiabilityOrder
+  private val filter = Filter(traderName = Some("name"))
 
   private def expectedEncryptedBti(k: String, letter: Option[Attachment]): BTIApplication = {
     bti.copy(
@@ -53,6 +55,10 @@ class CryptoSpec extends UnitSpec with MockitoSugar {
     )
   }
 
+  private def expectedEncryptedSearchFilter(k: String): Filter = {
+    filter.copy(traderName = Some(k))
+  }
+
   "encrypt()" should {
 
     val k = UUID.randomUUID().toString
@@ -68,6 +74,13 @@ class CryptoSpec extends UnitSpec with MockitoSugar {
       val c = createCase(app = lo)
       val enc = crypto.encrypt(c)
       enc shouldBe c.copy(application = expectedEncryptedLiabilityOrder(k))
+    }
+
+    "encrypt Search" in {
+      val search: Search = Search(filter = filter)
+      val enc: Search = crypto.encrypt(search)
+      enc shouldBe search.copy(filter = expectedEncryptedSearchFilter(k))
+
     }
 
   }
