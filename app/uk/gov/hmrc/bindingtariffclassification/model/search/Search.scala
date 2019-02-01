@@ -40,7 +40,7 @@ case class Filter
 case class Sort
 (
   field: Option[SortField] = None,
-  direction: Option[SortDirection] = Some(SortDirection.DESCENDING)
+  direction: Option[SortDirection] = None
 )
 
 object Sort {
