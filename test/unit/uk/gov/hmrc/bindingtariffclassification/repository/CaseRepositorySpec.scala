@@ -143,9 +143,9 @@ class CaseRepositorySpec extends BaseMongoIndexSpec
   // TODO: test all possible combinations
   // TODO: the test scenarios titles need to be written and grouped properly
 
-  "get without filters/params" should {
+  "get without search parameters" should {
 
-    "retrieve all cases from the collection unsorted" in {
+    "retrieve all cases from the collection, sorted by insertion order" in {
 
       val search = Search(Filter(), None)
 
@@ -156,7 +156,7 @@ class CaseRepositorySpec extends BaseMongoIndexSpec
       await(repository.get(search)) shouldBe Seq(case1, case2)
     }
 
-    "return all cases from the collection sorted ascending" in {
+    "return all cases from the collection sorted in ascending order" in {
       val search = Search(Filter(), Some(Sort(SortField.DAYS_ELAPSED, SortDirection.ASCENDING)))
 
       val oldCase = case1.copy(daysElapsed = 1)
@@ -169,7 +169,7 @@ class CaseRepositorySpec extends BaseMongoIndexSpec
       await(repository.get(search)) shouldBe Seq(newCase, oldCase)
     }
 
-    "return all cases from the collection sorted descending" in {
+    "return all cases from the collection sorted in descending order" in {
 
       val search = Search(Filter(), Some(Sort(SortField.DAYS_ELAPSED, SortDirection.DESCENDING)))
 
@@ -253,14 +253,13 @@ class CaseRepositorySpec extends BaseMongoIndexSpec
 
   }
 
-  "get by status" should {
+  "get by single status" should {
 
     import CaseStatus._
 
     val caseWithStatusX1 = createCase().copy(status = NEW)
     val caseWithStatusX2 = createCase().copy(status = NEW)
     val caseWithStatusY1 = createCase().copy(status = OPEN)
-    val caseWithStatusZ1 = createCase().copy(status = CANCELLED)
 
     "return an empty sequence when there are no matches" in {
       val search = Search(Filter(status = Some("DRAFT")), None)
@@ -280,7 +279,30 @@ class CaseRepositorySpec extends BaseMongoIndexSpec
       await(repository.get(search)) shouldBe Seq(caseWithStatusX1, caseWithStatusX2)
     }
 
-    "return the expected documents when there are multiple matches by filtering with many statuses" in {
+  }
+
+  "get by multiple statuses" should {
+
+    import CaseStatus._
+
+    val caseWithStatusX1 = createCase().copy(status = NEW)
+    val caseWithStatusX2 = createCase().copy(status = NEW)
+    val caseWithStatusY1 = createCase().copy(status = OPEN)
+    val caseWithStatusZ1 = createCase().copy(status = CANCELLED)
+
+    "return an empty sequence when there are no matches" in {
+      val search = Search(Filter(status = Some("DRAFT,REFERRED")), None)
+      store(caseWithStatusX1, caseWithStatusX2, caseWithStatusY1, caseWithStatusZ1)
+      await(repository.get(search)) shouldBe Seq.empty
+    }
+
+    "return the expected document when there is one match" in {
+      val search = Search(Filter(status = Some("NEW,REFERRED")), None)
+      store(caseWithStatusX1, caseWithStatusY1, caseWithStatusZ1)
+      await(repository.get(search)) shouldBe Seq(caseWithStatusX1)
+    }
+
+    "return the expected documents when there are multiple matches" in {
       val search = Search(Filter(status = Some("NEW,DRAFT")), None)
       store(caseWithStatusX1, caseWithStatusX2, caseWithStatusY1, caseWithStatusZ1)
       await(repository.get(search)) shouldBe Seq(caseWithStatusX1, caseWithStatusX2)
