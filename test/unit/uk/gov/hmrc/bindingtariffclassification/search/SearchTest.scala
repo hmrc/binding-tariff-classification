@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.bindingtariffclassification.model.search
+package uk.gov.hmrc.bindingtariffclassification.search
 
-import uk.gov.hmrc.bindingtariffclassification.model.sort.{SortDirection, SortField}
+import uk.gov.hmrc.bindingtariffclassification.sort.{SortDirection, SortField}
 import uk.gov.hmrc.play.test.UnitSpec
 
 class SearchTest extends UnitSpec {

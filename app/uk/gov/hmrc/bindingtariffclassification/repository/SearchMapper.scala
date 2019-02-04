@@ -17,11 +17,12 @@
 package uk.gov.hmrc.bindingtariffclassification.repository
 
 import javax.inject.Singleton
+import play.api.libs.json.Json.JsValueWrapper
 import play.api.libs.json._
 import uk.gov.hmrc.bindingtariffclassification.model.CaseStatus.CaseStatus
-import uk.gov.hmrc.bindingtariffclassification.model.search.{Filter, Sort}
-import uk.gov.hmrc.bindingtariffclassification.model.sort.SortField
-import uk.gov.hmrc.bindingtariffclassification.model.sort.SortField.SortField
+import uk.gov.hmrc.bindingtariffclassification.search.{Filter, Sort}
+import uk.gov.hmrc.bindingtariffclassification.sort.SortField
+import uk.gov.hmrc.bindingtariffclassification.sort.SortField.SortField
 
 @Singleton
 class SearchMapper {
@@ -31,8 +32,10 @@ class SearchMapper {
       Map() ++
         filter.queueId.map("queueId" -> nullifyNoneValues(_)) ++
         filter.assigneeId.map("assignee.id" -> nullifyNoneValues(_)) ++
-        filter.status.map(splitByComma).map(toSearchArray).map("status" -> _) ++
-        filter.traderName.map("application.holder.businessName" -> nullifyNoneValues(_))
+        filter.status.map(splitByComma).map(toSearchInArray).map("status" -> _) ++
+        filter.traderName.map("application.holder.businessName" -> nullifyNoneValues(_)) ++
+        filter.commodityCode.map("decision.bindingCommodityCode" -> numberStartingWith(_)) ++
+        filter.goodDescription.map("application.goodDescription" -> contains(_))
     )
   }
 
@@ -53,12 +56,12 @@ class SearchMapper {
     Json.obj("$set" -> Json.obj(fieldName -> fieldValue))
   }
 
-  private def toSearchArray: Seq[String] => JsObject = {
+  private def toSearchInArray: Seq[String] => JsObject = {
     values => JsObject(Map("$in" -> JsArray(values.map(JsString))))
   }
 
-  private def splitByComma(string: String): Seq[String] = {
-    string.split(",").toSeq
+  private def splitByComma(str: String): Seq[String] = {
+    str.split(",").toSeq
   }
 
   private def nullifyNoneValues: String => JsValue = { v: String =>
@@ -68,8 +71,20 @@ class SearchMapper {
     }
   }
 
-  private def notEqualFilter(field: String): JsObject = {
-    Json.obj("$ne" -> field)
+  private def numberStartingWith(value: String): JsObject = {
+    Json.obj("$regex" -> s"^$value\\d*")
+  }
+
+  private def contains(value: String): JsObject = {
+    Json.obj("$regex" -> s".*$value", caseInsensitiveFilter)
+  }
+
+  private def caseInsensitiveFilter: (String, JsValueWrapper) = {
+    "$options" -> "i"
+  }
+
+  private def notEqualFilter(value: String): JsObject = {
+    Json.obj("$ne" -> value)
   }
 
   private def toMongoField(sort: SortField): String = {

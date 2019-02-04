@@ -23,7 +23,7 @@ import org.scalatest.BeforeAndAfterEach
 import org.scalatest.mockito.MockitoSugar
 import uk.gov.hmrc.bindingtariffclassification.crypto.Crypto
 import uk.gov.hmrc.bindingtariffclassification.model.Case
-import uk.gov.hmrc.bindingtariffclassification.model.search.Search
+import uk.gov.hmrc.bindingtariffclassification.search.Search
 import uk.gov.hmrc.play.test.UnitSpec
 
 import scala.concurrent.Future.successful

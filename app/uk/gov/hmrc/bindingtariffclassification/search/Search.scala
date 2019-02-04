@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.bindingtariffclassification.model.search
+package uk.gov.hmrc.bindingtariffclassification.search
 
 import play.api.mvc.QueryStringBindable
-import uk.gov.hmrc.bindingtariffclassification.model.sort.SortDirection.SortDirection
-import uk.gov.hmrc.bindingtariffclassification.model.sort.SortField.SortField
-import uk.gov.hmrc.bindingtariffclassification.model.sort.{SortDirection, SortField}
+import uk.gov.hmrc.bindingtariffclassification.sort.SortDirection.SortDirection
+import uk.gov.hmrc.bindingtariffclassification.sort.SortField.SortField
+import uk.gov.hmrc.bindingtariffclassification.sort.{SortDirection, SortField}
 
 
 case class Search
@@ -33,7 +33,9 @@ case class Filter
   queueId: Option[String] = None,
   assigneeId: Option[String] = None,
   status: Option[String] = None,
-  traderName: Option[String] = None
+  traderName: Option[String] = None,
+  commodityCode: Option[String] = None,
+  goodDescription: Option[String] = None
 )
 
 case class Sort
@@ -58,10 +60,12 @@ object Sort {
   implicit def bindable(implicit stringBinder: QueryStringBindable[String]): QueryStringBindable[Sort] = new QueryStringBindable[Sort] {
 
     override def bind(key: String, params: Map[String, Seq[String]]): Option[Either[String, Sort]] = {
+
       def param(name: String): Option[String] = stringBinder.bind(name, params).filter(_.isRight).map(_.right.get)
 
       val field: Option[SortField] = param(sortByKey).flatMap(bindSortField)
       val direction: Option[SortDirection] = param(sortDirectionKey).flatMap(bindSortDirection)
+
       (field, direction) match {
         case (Some(f), Some(d)) => Some(Right(Sort(field = f, direction = d)))
         case (Some(f), _) => Some(Right(Sort(field = f)))
@@ -75,43 +79,53 @@ object Sort {
         stringBinder.unbind(sortByKey, query.field.toString),
         stringBinder.unbind(sortDirectionKey, query.direction.toString)
       ).mkString("&")
+
     }
+
   }
+
 }
 
 object Filter {
 
-  private val traderNameKey = "trader_name"
   private val queueIdKey = "queue_id"
   private val assigneeIdKey = "assignee_id"
   private val statusKey = "status"
+  private val traderNameKey = "trader_name"
+  private val commodityCodeKey = "commodity_code"
+  private val goodDescriptionKey = "good_description"
 
   implicit def bindable(implicit stringBinder: QueryStringBindable[String]): QueryStringBindable[Filter] = new QueryStringBindable[Filter] {
 
     override def bind(key: String, params: Map[String, Seq[String]]): Option[Either[String, Filter]] = {
+
       def param(name: String): Option[String] = stringBinder.bind(name, params).filter(_.isRight).map(_.right.get)
 
-      Some(Right(
-        Filter(queueId = param(queueIdKey),
-          assigneeId = param(assigneeIdKey),
-          status = param(statusKey),
-          traderName = param(traderNameKey)
-        )
-      ))
+      Some(Right(Filter(
+        queueId = param(queueIdKey),
+        assigneeId = param(assigneeIdKey),
+        status = param(statusKey),
+        traderName = param(traderNameKey),
+        commodityCode = param(commodityCodeKey),
+        goodDescription = param(goodDescriptionKey)
+      )))
     }
 
     override def unbind(key: String, filter: Filter): String = {
       Seq(
-        filter.queueId.map(v => stringBinder.unbind(queueIdKey, v)),
-        filter.assigneeId.map(v => stringBinder.unbind(assigneeIdKey, v)),
-        filter.status.map(v => stringBinder.unbind(statusKey, v)),
-        filter.traderName.map(v => stringBinder.unbind(traderNameKey, v))
+        filter.queueId.map(stringBinder.unbind(queueIdKey, _)),
+        filter.assigneeId.map(stringBinder.unbind(assigneeIdKey, _)),
+        filter.status.map(stringBinder.unbind(statusKey, _)),
+        filter.traderName.map(stringBinder.unbind(traderNameKey, _)),
+        filter.commodityCode.map(stringBinder.unbind(commodityCodeKey, _)),
+        filter.goodDescription.map(stringBinder.unbind(goodDescriptionKey, _))
       ).filter(_.isDefined).map(_.get).mkString("&")
     }
   }
 }
 
 object Search {
+
   implicit def bindable(implicit filterBinder: QueryStringBindable[Filter],
                         sortBinder: QueryStringBindable[Sort]): QueryStringBindable[Search] = new QueryStringBindable[Search] {
 
@@ -119,12 +133,10 @@ object Search {
       val filter: Option[Either[String, Filter]] = filterBinder.bind(key, params)
       val sort: Option[Either[String, Sort]] = sortBinder.bind(key, params)
 
-      Some(Right(
-        Search(
-          filter.map(_.right.get).getOrElse(Filter()),
-          sort.map(_.right.get)
-        )
-      ))
+      Some(Right(Search(
+        filter.map(_.right.get).getOrElse(Filter()),
+        sort.map(_.right.get)
+      )))
     }
 
     override def unbind(key: String, search: Search): String = {

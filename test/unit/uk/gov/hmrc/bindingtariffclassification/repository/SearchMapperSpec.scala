@@ -18,8 +18,8 @@ package uk.gov.hmrc.bindingtariffclassification.repository
 
 import play.api.libs.json.{JsNull, Json}
 import uk.gov.hmrc.bindingtariffclassification.model.CaseStatus
-import uk.gov.hmrc.bindingtariffclassification.model.search.{Filter, Sort}
-import uk.gov.hmrc.bindingtariffclassification.model.sort.{SortDirection, SortField}
+import uk.gov.hmrc.bindingtariffclassification.search.{Filter, Sort}
+import uk.gov.hmrc.bindingtariffclassification.sort.{SortDirection, SortField}
 import uk.gov.hmrc.play.test.UnitSpec
 
 class SearchMapperSpec extends UnitSpec {
@@ -28,32 +28,38 @@ class SearchMapperSpec extends UnitSpec {
 
   "filterBy " should {
 
-    "convert to Json all possible fields in Field object" in {
+    "convert to Json when all possible fields are taken into account " in {
 
       val filter = Filter(
         queueId = Some("valid_queue"),
         assigneeId = Some("valid_assignee"),
         status = Some("S1,S2"),
-        traderName = Some("trader_name")
+        traderName = Some("trader_name"),
+        commodityCode = Some("12345"),
+        goodDescription = Some("strawberry")
       )
 
-      jsonMapper.filterBy(filter) shouldBe Json.obj(
+      val expectedResult = Json.obj(
         "queueId" -> "valid_queue",
         "assignee.id" -> "valid_assignee",
         "status" -> Json.obj("$in" -> Json.arr("S1", "S2")),
-        "application.holder.businessName" -> "trader_name"
+        "application.holder.businessName" -> "trader_name",
+        "decision.bindingCommodityCode" -> Json.obj("$regex" -> "^12345\\d*"),
+        "application.goodDescription" -> Json.obj("$regex" -> ".*strawberry", "$options" -> "i")
       )
+
+      jsonMapper.filterBy(filter) shouldBe expectedResult
     }
 
-    "convert to Json just queueId " in {
+    "convert to Json when just the `queueId` param is taken into account " in {
       jsonMapper.filterBy(Filter(queueId = Some("valid_queue"))) shouldBe Json.obj("queueId" -> "valid_queue")
     }
 
-    "convert to Json just assigneeId " in {
+    "convert to Json when just the `assigneeId` param is taken into account " in {
       jsonMapper.filterBy(Filter(assigneeId = Some("valid_assignee"))) shouldBe Json.obj("assignee.id" -> "valid_assignee")
     }
 
-    "convert to Json just status " in {
+    "convert to Json when just the `status` param is taken into account " in {
       jsonMapper.filterBy(Filter(status = Some("S1,S2,S3"))) shouldBe Json.obj(
         "status" -> Json.obj(
           "$in" -> Json.arr("S1", "S2", "S3")
@@ -61,11 +67,21 @@ class SearchMapperSpec extends UnitSpec {
       )
     }
 
-    "convert to Json just trader name " in {
+    "convert to Json when just the `traderName` param is taken into account " in {
       jsonMapper.filterBy(Filter(traderName = Some("traderName"))) shouldBe Json.obj("application.holder.businessName" -> "traderName")
     }
 
-    "convert to Json with fields queueId and assigneeId using `none` value " in {
+    "convert to Json when just the `commodityCode` param is taken into account " in {
+      val expectedResult = Json.obj("decision.bindingCommodityCode" -> Json.obj("$regex" -> "^1234\\d*"))
+      jsonMapper.filterBy(Filter(commodityCode = Some("1234"))) shouldBe expectedResult
+    }
+
+    "convert to Json when just the `goodDescription` param is taken into account " in {
+      val expectedResult = Json.obj("application.goodDescription" -> Json.obj("$regex" -> ".*strawberry", "$options" -> "i"))
+      jsonMapper.filterBy(Filter(goodDescription = Some("strawberry"))) shouldBe expectedResult
+    }
+
+    "convert to Json with fields `queueId` and `assigneeId` using `none` value " in {
 
       val filter = Filter(queueId = Some("none"), assigneeId = Some("none"))
 
@@ -75,7 +91,7 @@ class SearchMapperSpec extends UnitSpec {
       )
     }
 
-    "convert to Json with no filters" in {
+    "convert to Json when there are no filters" in {
       jsonMapper.filterBy(Filter()) shouldBe Json.obj()
     }
 
@@ -109,10 +125,7 @@ class SearchMapperSpec extends UnitSpec {
     "convert to Json from a valid reference" in {
       val validRef = "valid_reference"
 
-      jsonMapper.reference(validRef) shouldBe
-        Json.obj(
-          "reference" -> "valid_reference"
-        )
+      jsonMapper.reference(validRef) shouldBe Json.obj("reference" -> validRef)
     }
 
   }
@@ -125,7 +138,7 @@ class SearchMapperSpec extends UnitSpec {
       val notAllowedStatus = CaseStatus.REFERRED
 
       jsonMapper.fromReferenceAndStatus(validRef, notAllowedStatus) shouldBe Json.obj(
-        "reference" -> "valid_reference",
+        "reference" -> validRef,
         "status" -> Json.obj("$ne" -> "REFERRED")
       )
     }
