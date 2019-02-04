@@ -21,8 +21,7 @@ import play.api.libs.json.Json.JsValueWrapper
 import play.api.libs.json._
 import uk.gov.hmrc.bindingtariffclassification.model.CaseStatus.CaseStatus
 import uk.gov.hmrc.bindingtariffclassification.search.{Filter, Sort}
-import uk.gov.hmrc.bindingtariffclassification.sort.SortField
-import uk.gov.hmrc.bindingtariffclassification.sort.SortField.SortField
+import uk.gov.hmrc.bindingtariffclassification.sort.SortField._
 
 @Singleton
 class SearchMapper {
@@ -72,11 +71,15 @@ class SearchMapper {
   }
 
   private def numberStartingWith(value: String): JsObject = {
-    Json.obj("$regex" -> s"^$value\\d*")
+    Json.obj( regexFilter(s"^$value\\d*") )
   }
 
   private def contains(value: String): JsObject = {
-    Json.obj("$regex" -> s".*$value", caseInsensitiveFilter)
+    Json.obj( regexFilter(s".*$value"), caseInsensitiveFilter )
+  }
+
+  private def regexFilter(reg: String): (String, JsValueWrapper) = {
+    "$regex" -> reg
   }
 
   private def caseInsensitiveFilter: (String, JsValueWrapper) = {
@@ -89,7 +92,7 @@ class SearchMapper {
 
   private def toMongoField(sort: SortField): String = {
     sort match {
-      case SortField.DAYS_ELAPSED => "daysElapsed"
+      case DAYS_ELAPSED => "daysElapsed"
       case unknown => throw new IllegalArgumentException(s"cannot sort by field: $unknown")
     }
   }
