@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.bindingtariffclassification.repository
 
-import reactivemongo.api.indexes.{Index, IndexType}
+import reactivemongo.api.indexes.Index
 import reactivemongo.api.indexes.IndexType.Ascending
 
 trait MongoIndexCreator {
@@ -31,11 +31,10 @@ trait MongoIndexCreator {
 
   protected def createCompoundIndex(fieldNames: Seq[String],
                                     isUnique: Boolean,
-                                    indexType: IndexType = Ascending,
                                     isBackground: Boolean = false): Index = {
 
     Index(
-      key = fieldNames.map(_ -> indexType),
+      key = fieldNames.map(_ -> Ascending),
       name = Some(s"${fieldNames.mkString("-")}_Index"),
       unique = isUnique,
       background = isBackground
