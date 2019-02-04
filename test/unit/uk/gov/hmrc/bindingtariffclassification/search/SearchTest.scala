@@ -25,11 +25,14 @@ class SearchTest extends UnitSpec {
     field = SortField.DAYS_ELAPSED,
     direction = SortDirection.DESCENDING
   )
+
   private val filter = Filter(
     traderName = Some("trader-name"),
     queueId = Some("queue-id"),
     assigneeId = Some("assignee-id"),
-    status = Some("status")
+    status = Some("status"),
+    commodityCode = Some("commodity-code"),
+    goodDescription = Some("good-description")
   )
 
   private val search = Search(filter = filter, sort = Some(sort))
@@ -39,6 +42,8 @@ class SearchTest extends UnitSpec {
     "queue_id" -> Seq("queue-id"),
     "assignee_id" -> Seq("assignee-id"),
     "status" -> Seq("status"),
+    "commodity_code" -> Seq("commodity-code"),
+    "good_description" -> Seq("good-description"),
     "sort_by" -> Seq("days-elapsed"),
     "sort_direction" -> Seq("desc")
   )
@@ -53,7 +58,16 @@ class SearchTest extends UnitSpec {
     }
 
     "Unbind Populated Search to Query String" in {
-      val populatedQueryParam: String = "queue_id=queue-id&assignee_id=assignee-id&status=status&trader_name=trader-name&sort_by=days-elapsed&sort_direction=desc"
+      val populatedQueryParam: String =
+        "queue_id=queue-id&" +
+        "assignee_id=assignee-id&" +
+        "status=status&" +
+        "trader_name=trader-name&" +
+        "commodity_code=commodity-code&" +
+        "good_description=good-description&" +
+        "sort_by=days-elapsed&" +
+        "sort_direction=desc"
+
       Search.bindable.unbind("", search) shouldBe populatedQueryParam
     }
 
@@ -77,7 +91,14 @@ class SearchTest extends UnitSpec {
     }
 
     "Unbind Populated Filter to Query String" in {
-      val populatedQueryParam: String = "queue_id=queue-id&assignee_id=assignee-id&status=status&trader_name=trader-name"
+      val populatedQueryParam: String =
+        "queue_id=queue-id&" +
+        "assignee_id=assignee-id&" +
+        "status=status&" +
+        "trader_name=trader-name&" +
+        "commodity_code=commodity-code&" +
+        "good_description=good-description"
+
       Filter.bindable.unbind("", filter) shouldBe populatedQueryParam
     }
 

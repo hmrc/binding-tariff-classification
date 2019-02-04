@@ -56,7 +56,7 @@ object CaseData {
 
   def createDecision: Decision = {
     Decision(
-      bindingCommodityCode = "GB1234567",
+      bindingCommodityCode = "1234567",
       effectiveStartDate = ZonedDateTime.now(),
       effectiveEndDate = ZonedDateTime.now().plusYears(3),
       methodSearch = Some("bike spanner"),
