@@ -29,7 +29,7 @@ import reactivemongo.core.errors.DatabaseException
 import uk.gov.hmrc.bindingtariffclassification.config.AppConfig
 import uk.gov.hmrc.bindingtariffclassification.model.RESTFormatters._
 import uk.gov.hmrc.bindingtariffclassification.search.{Filter, Search, Sort}
-import uk.gov.hmrc.bindingtariffclassification.sort.SortField
+import uk.gov.hmrc.bindingtariffclassification.sort.{SortDirection, SortField}
 import uk.gov.hmrc.bindingtariffclassification.model.{Case, CaseStatus, NewCaseRequest}
 import uk.gov.hmrc.bindingtariffclassification.service.CaseService
 import uk.gov.hmrc.http.HttpVerbs
@@ -188,11 +188,13 @@ class CaseControllerSpec extends UnitSpec with WithFakeApplication with MockitoS
 
     val queueId = Some("valid_queueId")
     val assigneeId = Some("valid_assigneeId")
-    val sortField = SortField.DAYS_ELAPSED
+    // TODO: use all search parameters
+
+    val search = Search(
+      filter = Filter(queueId = queueId, assigneeId = assigneeId, statuses = Some(Set(CaseStatus.NEW, CaseStatus.OPEN))),
+      sort = Some(Sort(field = SortField.DAYS_ELAPSED, direction = SortDirection.DESCENDING)))
 
     "return 200 with the expected cases" in {
-      val search = Search(Filter(queueId = queueId, assigneeId = assigneeId, statuses = Some(Set(CaseStatus.NEW, CaseStatus.OPEN))), Some(Sort(field = sortField)))
-
       when(caseService.get(refEq(search))).thenReturn(successful(Seq(c1, c2)))
 
       val result = await(controller.get(search)(fakeRequest))
@@ -202,8 +204,6 @@ class CaseControllerSpec extends UnitSpec with WithFakeApplication with MockitoS
     }
 
     "return 200 with an empty sequence if there are no cases" in {
-      val search = Search(Filter(queueId = queueId, assigneeId = assigneeId, statuses = Some(Set(CaseStatus.NEW, CaseStatus.OPEN))), Some(Sort(field = sortField)))
-
       when(caseService.get(search)).thenReturn(successful(Seq.empty))
 
       val result = await(controller.get(search)(fakeRequest))

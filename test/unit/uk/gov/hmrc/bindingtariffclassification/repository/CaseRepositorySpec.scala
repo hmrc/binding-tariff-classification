@@ -54,7 +54,7 @@ class CaseRepositorySpec extends BaseMongoIndexSpec
   private val repository = createMongoRepo
 
   private def createMongoRepo = {
-    new CaseMongoRepository(mongoDbProvider, new SearchMapper)
+    new CaseMongoRepository(mongoDbProvider, new SearchMapper) // TODO: we should mock `searchMapper`
   }
 
   private val case1: Case = createCase()
@@ -75,7 +75,7 @@ class CaseRepositorySpec extends BaseMongoIndexSpec
     await(repository.collection.count())
   }
 
-  "deleteAll()" should {
+  "deleteAll" should {
 
     "clear the collection" in {
       val size = collectionSize
@@ -141,8 +141,7 @@ class CaseRepositorySpec extends BaseMongoIndexSpec
     }
   }
 
-  // TODO: test all possible combinations
-  // TODO: the test scenarios titles need to be written and grouped properly
+  // TODO: we should mock the search mapper and avoid testing all possible scenarios - this is already covered in the integration tests
 
   "get without search parameters" should {
 
@@ -202,20 +201,20 @@ class CaseRepositorySpec extends BaseMongoIndexSpec
     val caseWithQueueY = createCase().copy(queueId = queueIdY)
 
     "return an empty sequence when there are no matches" in {
-      val search = Search(Filter(queueId = unknownQueueId), None)
+      val search = Search(Filter(queueId = unknownQueueId))
 
       store(caseWithEmptyQueue, caseWithQueueX1)
       await(repository.get(search)) shouldBe Seq.empty
     }
 
     "return the expected document when there is one match" in {
-      val search = Search(Filter(queueId = queueIdX), None)
+      val search = Search(Filter(queueId = queueIdX))
       store(caseWithEmptyQueue, caseWithQueueX1, caseWithQueueY)
       await(repository.get(search)) shouldBe Seq(caseWithQueueX1)
     }
 
     "return the expected documents when there are multiple matches" in {
-      val search = Search(Filter(queueId = queueIdX), None)
+      val search = Search(Filter(queueId = queueIdX))
 
       store(caseWithEmptyQueue, caseWithQueueX1, caseWithQueueX2, caseWithQueueY)
       await(repository.get(search)) shouldBe Seq(caseWithQueueX1, caseWithQueueX2)
@@ -223,7 +222,7 @@ class CaseRepositorySpec extends BaseMongoIndexSpec
 
   }
 
-  "get filtering by minDecisionDate" should {
+  "get by minDecisionDate" should {
 
     val futureDate = LocalDate.of(3000,1,1).atStartOfDay().toInstant(ZoneOffset.UTC)
     val pastDate = LocalDate.of(1970,1,1).atStartOfDay().toInstant(ZoneOffset.UTC)
@@ -233,14 +232,14 @@ class CaseRepositorySpec extends BaseMongoIndexSpec
     val caseWithExpiredDecision = createCase(decision = Some(decisionExpired))
     val caseWithFutureDecision = createCase(decision = Some(decisionFuture))
 
-    "no match should return an empty sequence" in {
-      val search = Search(Filter(minDecisionEnd = Some(Instant.now())), None)
+    "return an empty sequence when there are no matches" in {
+      val search = Search(Filter(minDecisionEnd = Some(Instant.now())))
       store(caseWithExpiredDecision)
       await(repository.get(search)) shouldBe Seq.empty
     }
 
-    "match should return the expected document" in {
-      val search = Search(Filter(minDecisionEnd = Some(Instant.now())), None)
+    "return the expected document when there is a match" in {
+      val search = Search(Filter(minDecisionEnd = Some(Instant.now())))
       store(caseWithExpiredDecision, caseWithFutureDecision)
       await(repository.get(search)) shouldBe Seq(caseWithFutureDecision)
     }
@@ -332,8 +331,79 @@ class CaseRepositorySpec extends BaseMongoIndexSpec
 
   }
 
+  "get by trader name" should {
 
-  "get filtering by queueId, assigneeId and status" should {
+    val novakApp = createBasicBTIApplication.copy(holder = createEORIDetails.copy(businessName = "Novak Djokovic"))
+    val caseX = createCase(app = novakApp)
+
+    "return an empty sequence when there are no matches" in {
+      store(case1, caseX)
+
+      await(repository.get(Search(Filter(traderName = Some("Alfred"))))) shouldBe Seq.empty
+
+      // substring search is not allowed
+      await(repository.get(Search(Filter(traderName = Some("Novak"))))) shouldBe Seq.empty
+
+      // case-sensitive is not allowed
+      await(repository.get(Search(Filter(traderName = Some("novak djokovic"))))) shouldBe Seq.empty
+    }
+
+    "return the expected document when there is one match" in {
+      store(case1, caseX)
+      val search = Search(Filter(traderName = Some("Lewis")))
+      await(repository.get(search)) shouldBe Seq.empty
+    }
+
+    "return the expected documents when there are multiple matches" in {
+      store(case1, caseX)
+      val search = Search(Filter(traderName = Some("Novak Djokovic")))
+      await(repository.get(search)) shouldBe Seq(caseX)
+    }
+  }
+
+  "get by good description" should {
+
+    "return an empty sequence when there are no matches" in {
+      store(case1)
+      await(repository.get(Search(Filter(goodDescription = Some("iPhone"))))) shouldBe Seq.empty
+    }
+
+    "return the expected document when there is one match" in {
+      store(case1)
+      await(repository.get(Search(Filter(goodDescription = Some("HTC"))))) shouldBe Seq(case1)
+    }
+
+    "return the expected documents when there are multiple matches" in {
+      store(case1, case2)
+      await(repository.get(Search(Filter(goodDescription = Some("htc wildfire"))))) shouldBe Seq(case1, case2)
+    }
+  }
+
+  "get by commodity code name" should {
+
+    val caseX = createNewCaseWithExtraFields()
+    val caseY = createNewCaseWithExtraFields().copy(reference = "88888888")
+
+    "return an empty sequence when there are no matches" in {
+      store(case1)
+      val search = Search(Filter(commodityCode = Some("234")))
+      await(repository.get(search)) shouldBe Seq.empty
+    }
+
+    "return the expected document when there is one match" in {
+      store(caseX, case1)
+      val search = Search(Filter(commodityCode = Some("12345")))
+      await(repository.get(search)) shouldBe Seq(caseX)
+    }
+
+    "return the expected documents when there are multiple matches" in {
+      store(case1, caseX, caseY)
+      val search = Search(Filter(commodityCode = Some("12345")))
+      await(repository.get(search)) shouldBe Seq(caseX, caseY)
+    }
+  }
+
+  "get by queueId, assigneeId and status" should {
 
     val assigneeX = Operator("assignee_x")
     val assigneeY = Operator("assignee_y")

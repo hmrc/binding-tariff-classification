@@ -46,9 +46,10 @@ class CaseSpec extends BaseFeatureSpec {
     keywords = Set("bike", "tool"))
   private val c3 = createNewCaseWithExtraFields()
   private val c4 = createNewCase(app = createBTIApplicationWithAllFields)
-  private val c5 = createCase(app = createBasicBTIApplication.copy(holder=eORIDetailForNintedo))
+  private val c5 = createCase(app = createBasicBTIApplication.copy(holder = eORIDetailForNintedo))
   private val c6 = createCase(decision = Some(createDecision(effectiveEndDate = Some(Instant.now().plusSeconds(60)))))
-
+  private val c7 = createCase(app = createBasicBTIApplication.copy(goodDescription = "LAPTOP"))
+  private val c8 = createCase(app = createBasicBTIApplication.copy(goodDescription = "this is a great laptop from Mexico"))
 
   private val c0Json = Json.toJson(c0)
   private val c1Json = Json.toJson(c1)
@@ -234,6 +235,7 @@ class CaseSpec extends BaseFeatureSpec {
 
   }
 
+
   feature("Get Cases by Queue Id") {
 
     scenario("Filtering cases that have undefined queueId") {
@@ -384,9 +386,19 @@ class CaseSpec extends BaseFeatureSpec {
   }
 
 
-  feature("Get Cases by status") {
+  feature("Get Cases by statuses") {
 
-    scenario("Filtering cases by status") {
+    scenario("No matches") {
+
+      storeCases(c1_updated, c2, c5)
+
+      val result = Http(s"$serviceUrl/cases?status=SUSPENDED").asString
+
+      result.code shouldEqual OK
+      result.body.toString shouldBe "[]"
+    }
+
+    scenario("Filtering cases by single status") {
 
       storeCases(c1_updated, c2, c5)
 
@@ -431,6 +443,38 @@ class CaseSpec extends BaseFeatureSpec {
       Json.parse(result.body) shouldBe Json.toJson(Seq(c1,c2))
     }
 
+    // currently not returning anything - as the trader name is encrypted
+    scenario("Case-insensitive search") {
+
+      storeCases(c1)
+
+      val result = Http(s"$serviceUrl/cases?trader_name=john%20Lewis").asString
+
+      result.code shouldEqual OK
+      result.body.toString shouldBe "[]"
+    }
+
+    // currently not returning anything - as the trader name is encrypted
+    scenario("Search by substring") {
+
+      storeCases(c1)
+
+      val result = Http(s"$serviceUrl/cases?trader_name=Lewis").asString
+
+      result.code shouldEqual OK
+      result.body.toString shouldBe "[]"
+    }
+
+    scenario("No matches") {
+
+      storeCases(c1)
+
+      val result = Http(s"$serviceUrl/cases?trader_name=Albert").asString
+
+      result.code shouldEqual OK
+      result.body.toString shouldBe "[]"
+    }
+
     scenario("Filtering cases that have undefined trader name") {
 
       storeCases(c1, c2, c5)
@@ -469,11 +513,158 @@ class CaseSpec extends BaseFeatureSpec {
   }
 
 
-  feature("Get Cases sorted by days elapsed") {
-    val oldCase = c1.copy(daysElapsed = 1)
-    val newCase = c2.copy(daysElapsed = 0)
+  feature("Get Cases by commodity code") {
 
-    scenario("Sorting default") {
+    scenario("filtering by non-existing commodity code") {
+
+      storeCases(c1, c2, c5)
+
+      val result = Http(s"$serviceUrl/cases?commodity_code=66").asString
+
+      result.code shouldEqual OK
+      result.body.toString shouldBe "[]"
+    }
+
+    scenario("filtering by existing commodity code") {
+
+      storeCases(c1, c2, c5, c6)
+
+      val result = Http(s"$serviceUrl/cases?commodity_code=12345678").asString
+
+      result.code shouldEqual OK
+      Json.parse(result.body) shouldBe Json.toJson(Seq(c2,c6))
+    }
+
+    scenario("Starts-with match") {
+
+      storeCases(c1, c2, c5, c6)
+
+      val result = Http(s"$serviceUrl/cases?commodity_code=123").asString
+
+      result.code shouldEqual OK
+      Json.parse(result.body) shouldBe Json.toJson(Seq(c2,c6))
+    }
+
+    scenario("Contains-match does not return any result") {
+
+      storeCases(c2, c6)
+
+      val result = Http(s"$serviceUrl/cases?commodity_code=456").asString
+
+      result.code shouldEqual OK
+      result.body.toString shouldBe "[]"
+    }
+
+  }
+
+
+  feature("Get Cases by good description") {
+
+    scenario("No matches") {
+
+      storeCases(c1, c2, c5)
+
+      val result = Http(s"$serviceUrl/cases?good_description=laptop").asString
+
+      result.code shouldEqual OK
+      result.body.toString shouldBe "[]"
+    }
+
+    scenario("Filtering by existing good description") {
+
+      storeCases(c1, c2, c7)
+
+      val result = Http(s"$serviceUrl/cases?good_description=LAPTOP").asString
+
+      result.code shouldEqual OK
+      Json.parse(result.body) shouldBe Json.toJson(Seq(c7))
+    }
+
+    scenario("Case-insensitive search") {
+
+      storeCases(c1, c2, c7)
+
+      val result = Http(s"$serviceUrl/cases?good_description=laptop").asString
+
+      result.code shouldEqual OK
+      Json.parse(result.body) shouldBe Json.toJson(Seq(c7))
+    }
+
+    scenario("Filtering by substring") {
+
+      storeCases(c1, c2, c7, c8)
+
+      val result = Http(s"$serviceUrl/cases?good_description=laptop").asString
+
+      result.code shouldEqual OK
+      Json.parse(result.body) shouldBe Json.toJson(Seq(c7, c8))
+    }
+  }
+
+
+  feature("Get Cases by multiple parameters") {
+    // TODO
+  }
+
+
+  feature("Get Cases sorted by commodity code") {
+
+    val caseWithEmptyCommCode = createCase().copy(decision = None)
+    val caseY1 = createCase().copy(decision = Some(createDecision(bindingCommodityCode = "777")))
+    val caseY2 = createCase().copy(decision = Some(createDecision(bindingCommodityCode = "777")))
+    val caseZ = createCase().copy(decision = Some(createDecision(bindingCommodityCode = "1111111111")))
+
+    scenario("Sorting default - ascending order") {
+      Given("There are few cases in the database")
+      storeCases(caseY2, caseWithEmptyCommCode, caseY1, caseZ)
+
+      When("I get all cases sorted by commodity code")
+      val result = Http(s"$serviceUrl/cases?sort_by=commodity-code").asString
+
+      Then("The response code should be 200")
+      result.code shouldEqual OK
+
+      And("The expected cases are returned in the JSON response")
+      Json.parse(result.body) shouldBe Json.toJson(Seq(caseWithEmptyCommCode, caseZ, caseY2, caseY1))
+    }
+
+    scenario("Sorting in ascending order") {
+      Given("There are few cases in the database")
+      storeCases(caseY1, caseWithEmptyCommCode, caseY2, caseZ)
+
+      When("I get all cases sorted by commodity code")
+      val result = Http(s"$serviceUrl/cases?sort_by=commodity-code&sort_direction=asc").asString
+
+      Then("The response code should be 200")
+      result.code shouldEqual OK
+
+      And("The expected cases are returned in the JSON response")
+      Json.parse(result.body) shouldBe Json.toJson(Seq(caseWithEmptyCommCode, caseZ, caseY1, caseY2))
+    }
+
+    scenario("Sorting in descending order") {
+      Given("There are few cases in the database")
+      storeCases(caseZ, caseWithEmptyCommCode, caseY1, caseY2)
+
+      When("I get all cases sorted by commodity code")
+      val result = Http(s"$serviceUrl/cases?sort_by=commodity-code&sort_direction=desc").asString
+
+      Then("The response code should be 200")
+      result.code shouldEqual OK
+
+      And("The expected cases are returned in the JSON response")
+      Json.parse(result.body) shouldBe Json.toJson(Seq(caseY1, caseY2, caseZ, caseWithEmptyCommCode))
+    }
+
+  }
+
+
+  feature("Get Cases sorted by days elapsed") {
+
+    val oldCase = c1.copy(daysElapsed = 0)
+    val newCase = c2.copy(daysElapsed = 1)
+
+    scenario("Sorting default - descending order") {
       Given("There are few cases in the database")
       storeCases(oldCase, newCase)
 
@@ -484,7 +675,7 @@ class CaseSpec extends BaseFeatureSpec {
       result.code shouldEqual OK
 
       And("The expected cases are returned in the JSON response")
-      Json.parse(result.body) shouldBe Json.toJson(Seq(oldCase, newCase))
+      Json.parse(result.body) shouldBe Json.toJson(Seq(newCase, oldCase))
     }
 
     scenario("Sorting in ascending order") {
@@ -498,7 +689,7 @@ class CaseSpec extends BaseFeatureSpec {
       result.code shouldEqual OK
 
       And("The expected cases are returned in the JSON response")
-      Json.parse(result.body) shouldBe Json.toJson(Seq(newCase, oldCase))
+      Json.parse(result.body) shouldBe Json.toJson(Seq(oldCase, newCase))
     }
 
     scenario("Sorting in descending order") {
@@ -512,7 +703,7 @@ class CaseSpec extends BaseFeatureSpec {
       result.code shouldEqual OK
 
       And("The expected cases are returned in the JSON response")
-      Json.parse(result.body) shouldBe Json.toJson(Seq(oldCase, newCase))
+      Json.parse(result.body) shouldBe Json.toJson(Seq(newCase, oldCase))
     }
 
   }

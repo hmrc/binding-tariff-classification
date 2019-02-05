@@ -17,6 +17,7 @@
 package uk.gov.hmrc.bindingtariffclassification.repository
 
 import javax.inject.Singleton
+import play.api.libs.json.Json.JsValueWrapper
 import play.api.libs.json._
 import uk.gov.hmrc.bindingtariffclassification.model.CaseStatus.CaseStatus
 import uk.gov.hmrc.bindingtariffclassification.model.MongoFormatters.formatInstant
@@ -33,7 +34,9 @@ class SearchMapper {
         filter.assigneeId.map("assignee.id" -> nullifyNoneValues(_)) ++
         filter.statuses.map("status" -> inArray[CaseStatus](_)) ++
         filter.traderName.map("application.holder.businessName" -> nullifyNoneValues(_)) ++
-        filter.minDecisionEnd.map("decision.effectiveEndDate" -> greaterThan(_)(formatInstant))
+        filter.minDecisionEnd.map("decision.effectiveEndDate" -> greaterThan(_)(formatInstant)) ++
+        filter.commodityCode.map("decision.bindingCommodityCode" -> numberStartingWith(_)) ++
+        filter.goodDescription.map("application.goodDescription" -> contains(_))
     )
   }
 
@@ -69,13 +72,30 @@ class SearchMapper {
     }
   }
 
-  private def notEqualFilter(field: String): JsObject = {
-    Json.obj("$ne" -> field)
+  private def numberStartingWith(value: String): JsObject = {
+    Json.obj( regexFilter(s"^$value\\d*") )
+  }
+
+  private def contains(value: String): JsObject = {
+    Json.obj( regexFilter(s".*$value"), caseInsensitiveFilter )
+  }
+
+  private def regexFilter(reg: String): (String, JsValueWrapper) = {
+    "$regex" -> reg
+  }
+
+  private def caseInsensitiveFilter: (String, JsValueWrapper) = {
+    "$options" -> "i"
+  }
+
+  private def notEqualFilter(value: String): JsObject = {
+    Json.obj("$ne" -> value)
   }
 
   private def toMongoField(sort: SortField): String = {
     sort match {
       case DAYS_ELAPSED => "daysElapsed"
+      case COMMODITY_CODE => "decision.bindingCommodityCode"
       case unknown => throw new IllegalArgumentException(s"cannot sort by field: $unknown")
     }
   }

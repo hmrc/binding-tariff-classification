@@ -169,10 +169,12 @@ class CaseServiceSpec extends UnitSpec with MockitoSugar with BeforeAndAfterEach
   }
 
   "incrementDaysElapsed()" should {
+
     "delegate to Repository" in {
       when(caseRepository.incrementDaysElapsed(1)).thenReturn(successful(1))
       await(service.incrementDaysElapsed(1)) shouldBe 1
     }
+
   }
 
 }

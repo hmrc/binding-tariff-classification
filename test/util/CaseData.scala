@@ -50,13 +50,13 @@ object CaseData {
       reissuedBTIReference = Some("BTI123"),
       relatedBTIReference = Some("BTI987"),
       knownLegalProceedings = Some("Someone is suing me!"),
-      envisagedCommodityCode = Some("AS12345LG"),
+      envisagedCommodityCode = Some("12345"),
       sampleToBeProvided = true,
       sampleToBeReturned = true
     )
   }
 
-  def createDecision(bindingCommodityCode: String = "GB1234567",
+  def createDecision(bindingCommodityCode: String = "12345678",
                      effectiveStartDate: Option[Instant] = Some(Instant.now()),
                      effectiveEndDate: Option[Instant] = Some(Instant.now().plusSeconds(3 * secondsInAYear)),
                      methodSearch: Option[String] = Some("bike spanner"),

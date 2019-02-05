@@ -20,10 +20,10 @@ import java.time.Instant
 
 import play.api.mvc.QueryStringBindable
 import uk.gov.hmrc.bindingtariffclassification.model.CaseStatus
-import uk.gov.hmrc.bindingtariffclassification.model.CaseStatus.CaseStatus
-import uk.gov.hmrc.bindingtariffclassification.sort.SortDirection.SortDirection
-import uk.gov.hmrc.bindingtariffclassification.sort.SortField.SortField
+import uk.gov.hmrc.bindingtariffclassification.model.CaseStatus._
+import uk.gov.hmrc.bindingtariffclassification.sort.SortDirection._
 import uk.gov.hmrc.bindingtariffclassification.sort.{SortDirection, SortField}
+import uk.gov.hmrc.bindingtariffclassification.sort.SortField._
 
 import scala.util.Try
 
@@ -31,7 +31,7 @@ import scala.util.Try
 case class Search
 (
   filter: Filter = Filter(),
-  sort: Option[Sort] = None
+  sort: Option[Sort] = Some(Sort(field = SortField.COMMODITY_CODE, direction = SortDirection.ASCENDING))
 )
 
 case class Filter
@@ -40,13 +40,15 @@ case class Filter
   assigneeId: Option[String] = None,
   statuses: Option[Set[CaseStatus]] = None,
   traderName: Option[String] = None,
-  minDecisionEnd: Option[Instant] = None
+  minDecisionEnd: Option[Instant] = None,
+  commodityCode: Option[String] = None,
+  goodDescription: Option[String] = None
 )
 
 case class Sort
 (
   field: SortField,
-  direction: SortDirection = SortDirection.DESCENDING
+  direction: SortDirection
 )
 
 object Sort {
@@ -62,6 +64,11 @@ object Sort {
     SortDirection.values.find(_.toString == key)
   }
 
+  private def defaultSortDirection: SortField => SortDirection = {
+    case DAYS_ELAPSED => DESCENDING
+    case COMMODITY_CODE => ASCENDING
+  }
+
   implicit def bindable(implicit stringBinder: QueryStringBindable[String]): QueryStringBindable[Sort] = new QueryStringBindable[Sort] {
 
     override def bind(key: String, params: Map[String, Seq[String]]): Option[Either[String, Sort]] = {
@@ -70,12 +77,11 @@ object Sort {
 
       val field: Option[SortField] = param(sortByKey).flatMap(bindSortField)
       val direction: Option[SortDirection] = param(sortDirectionKey).flatMap(bindSortDirection)
-      (field, direction) match {
-        case (Some(f), Some(d)) => Some(Right(Sort(field = f, direction = d)))
-        case (Some(f), _) => Some(Right(Sort(field = f)))
+
+      field match {
+        case Some(f) => Some( Right( Sort ( f, direction.getOrElse(defaultSortDirection(f)) ) ) )
         case _ => None
       }
-
     }
 
     override def unbind(key: String, query: Sort): String = {
@@ -83,8 +89,11 @@ object Sort {
         stringBinder.unbind(sortByKey, query.field.toString),
         stringBinder.unbind(sortDirectionKey, query.direction.toString)
       ).mkString("&")
+
     }
+
   }
+
 }
 
 object Filter {
@@ -94,6 +103,8 @@ object Filter {
   private val statusKey = "status"
   private val traderNameKey = "trader_name"
   private val minDecisionEndKey = "min_decision_end"
+  private val commodityCodeKey = "commodity_code"
+  private val goodDescriptionKey = "good_description"
 
   implicit def bindable(implicit stringBinder: QueryStringBindable[String]): QueryStringBindable[Filter] = new QueryStringBindable[Filter] {
 
@@ -104,8 +115,14 @@ object Filter {
     private def bindInstant(key: String): Option[Instant] = Try(Instant.parse(key)).toOption
 
     override def bind(key: String, requestParams: Map[String, Seq[String]]): Option[Either[String, Filter]] = {
-      def params(name: String): Option[Set[String]] = requestParams.get(name).map(_.flatMap(_.split(",")).toSet).filter(_.nonEmpty)
-      def param(name: String): Option[String] = params(name).map(_.head)
+
+      def params(name: String): Option[Set[String]] = {
+        requestParams.get(name).map(_.flatMap(_.split(",")).toSet).filter(_.nonEmpty)
+      }
+
+      def param(name: String): Option[String] = {
+        params(name).map(_.head)
+      }
 
       Some(
         Right(
@@ -114,7 +131,9 @@ object Filter {
             assigneeId = param(assigneeIdKey),
             statuses = params(statusKey).map(_.map(bindCaseStatus).filter(_.isDefined).map(_.get)),
             traderName = param(traderNameKey),
-            minDecisionEnd = param(minDecisionEndKey).flatMap(bindInstant)
+            minDecisionEnd = param(minDecisionEndKey).flatMap(bindInstant),
+            commodityCode = param(commodityCodeKey),
+            goodDescription = param(goodDescriptionKey)
           )
         )
       )
@@ -126,7 +145,9 @@ object Filter {
         filter.assigneeId.map(stringBinder.unbind(assigneeIdKey, _)),
         filter.statuses.map(_.map(s => stringBinder.unbind(statusKey, s.toString)).mkString("&")),
         filter.traderName.map(stringBinder.unbind(traderNameKey, _)),
-        filter.minDecisionEnd.map(i => stringBinder.unbind(minDecisionEndKey, i.toString))
+        filter.minDecisionEnd.map(i => stringBinder.unbind(minDecisionEndKey, i.toString)),
+        filter.commodityCode.map(stringBinder.unbind(commodityCodeKey, _)),
+        filter.goodDescription.map(stringBinder.unbind(goodDescriptionKey, _))
       ).filter(_.isDefined).map(_.get).mkString("&")
     }
   }
@@ -138,7 +159,9 @@ object Search {
                         sortBinder: QueryStringBindable[Sort]): QueryStringBindable[Search] = new QueryStringBindable[Search] {
 
     override def bind(key: String, params: Map[String, Seq[String]]): Option[Either[String, Search]] = {
+
       val filter: Option[Either[String, Filter]] = filterBinder.bind(key, params)
+
       val sort: Option[Either[String, Sort]] = sortBinder.bind(key, params)
 
       Some(
@@ -157,6 +180,7 @@ object Search {
         search.sort.map(sortBinder.unbind(key, _)).getOrElse("")
       ).filter(_.trim.nonEmpty).mkString("&")
     }
+
   }
 
 }

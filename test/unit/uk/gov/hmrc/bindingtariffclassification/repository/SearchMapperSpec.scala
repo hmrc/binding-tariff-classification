@@ -30,14 +30,16 @@ class SearchMapperSpec extends UnitSpec {
 
   "filterBy " should {
 
-    "convert to Json when all possible fields are taken into account " in {
+    "convert to Json when all possible parameters are taken into account " in {
 
       val filter = Filter(
         queueId = Some("valid_queue"),
         assigneeId = Some("valid_assignee"),
         statuses = Some(Set(CaseStatus.NEW, CaseStatus.OPEN)),
         traderName = Some("trader_name"),
-        minDecisionEnd = Some(Instant.EPOCH)
+        minDecisionEnd = Some(Instant.EPOCH),
+        commodityCode = Some(12345.toString),
+        goodDescription = Some("strawberry")
       )
 
       jsonMapper.filterBy(filter) shouldBe Json.obj(
@@ -45,7 +47,9 @@ class SearchMapperSpec extends UnitSpec {
         "assignee.id" -> "valid_assignee",
         "status" -> Json.obj("$in" -> Json.arr("NEW", "OPEN")),
         "application.holder.businessName" -> "trader_name",
-        "decision.effectiveEndDate" -> Json.obj("$gte" -> Json.obj("$date" -> 0))
+        "decision.effectiveEndDate" -> Json.obj("$gte" -> Json.obj("$date" -> 0)),
+        "decision.bindingCommodityCode" -> Json.obj("$regex" -> "^12345\\d*"),
+        "application.goodDescription" -> Json.obj("$regex" -> ".*strawberry", "$options" -> "i")
       )
     }
 
@@ -73,6 +77,15 @@ class SearchMapperSpec extends UnitSpec {
       jsonMapper.filterBy(Filter(minDecisionEnd = Some(Instant.EPOCH))) shouldBe Json.obj("decision.effectiveEndDate" -> Json.obj("$gte" -> Json.obj("$date" -> 0)))
     }
 
+    "convert to Json when just the `commodityCode` param is taken into account " in {
+      val expectedResult = Json.obj("decision.bindingCommodityCode" -> Json.obj("$regex" -> "^1234\\d*"))
+      jsonMapper.filterBy(Filter(commodityCode = Some("1234"))) shouldBe expectedResult
+    }
+
+    "convert to Json when just the `goodDescription` param is taken into account " in {
+      val expectedResult = Json.obj("application.goodDescription" -> Json.obj("$regex" -> ".*strawberry", "$options" -> "i"))
+      jsonMapper.filterBy(Filter(goodDescription = Some("strawberry"))) shouldBe expectedResult
+    }
 
     "convert to Json when fields `queueId` and `assigneeId` are set to `none` " in {
 
@@ -95,11 +108,11 @@ class SearchMapperSpec extends UnitSpec {
     "sort by passed field and default direction to descending(-1)" in {
 
       val sort = Sort(
-        field = SortField.DAYS_ELAPSED,
+        field = SortField.COMMODITY_CODE,
         direction = SortDirection.DESCENDING
       )
 
-      jsonMapper.sortBy(sort) shouldBe Json.obj("daysElapsed" -> -1)
+      jsonMapper.sortBy(sort) shouldBe Json.obj("decision.bindingCommodityCode" -> -1)
     }
 
     "sort by passed field and set direction ascending(1)" in {
