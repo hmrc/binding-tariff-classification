@@ -148,7 +148,7 @@ class CaseRepositorySpec extends BaseMongoIndexSpec
 
     "retrieve all cases from the collection, sorted by insertion order" in {
 
-      val search = Search(Filter(), None)
+      val search = Search()
 
       await(repository.insert(case1))
       await(repository.insert(case2))
@@ -158,7 +158,7 @@ class CaseRepositorySpec extends BaseMongoIndexSpec
     }
 
     "return all cases from the collection sorted in ascending order" in {
-      val search = Search(Filter(), Some(Sort(SortField.DAYS_ELAPSED, SortDirection.ASCENDING)))
+      val search = Search(sort = Some(Sort(SortField.DAYS_ELAPSED, SortDirection.ASCENDING)))
 
       val oldCase = case1.copy(daysElapsed = 1)
       val newCase = case2.copy(daysElapsed = 0)
@@ -172,7 +172,7 @@ class CaseRepositorySpec extends BaseMongoIndexSpec
 
     "return all cases from the collection sorted in descending order" in {
 
-      val search = Search(Filter(), Some(Sort(SortField.DAYS_ELAPSED, SortDirection.DESCENDING)))
+      val search = Search(sort = Some(Sort(SortField.DAYS_ELAPSED, SortDirection.DESCENDING)))
 
       val oldCase = case1.copy(daysElapsed = 1)
       val newCase = case2.copy(daysElapsed = 0)
@@ -185,7 +185,7 @@ class CaseRepositorySpec extends BaseMongoIndexSpec
     }
 
     "return an empty sequence when there are no cases in the collection" in {
-      val search = Search(Filter(), None)
+      val search = Search()
       await(repository.get(search)) shouldBe Seq.empty[Case]
     }
   }
@@ -259,19 +259,19 @@ class CaseRepositorySpec extends BaseMongoIndexSpec
     val caseWithAssigneeY1 = createCase().copy(assignee = Some(assigneeY))
 
     "return an empty sequence when there are no matches" in {
-      val search = Search(Filter(assigneeId = Some(unknownAssignee.id)), None)
+      val search = Search(Filter(assigneeId = Some(unknownAssignee.id)))
       store(caseWithEmptyAssignee, caseWithAssigneeX1)
       await(repository.get(search)) shouldBe Seq.empty
     }
 
     "return the expected document when there is one match" in {
-      val search = Search(Filter(assigneeId = Some(assigneeX.id)), None)
+      val search = Search(Filter(assigneeId = Some(assigneeX.id)))
       store(caseWithEmptyAssignee, caseWithAssigneeX1, caseWithAssigneeY1)
       await(repository.get(search)) shouldBe Seq(caseWithAssigneeX1)
     }
 
     "return the expected documents when there are multiple matches" in {
-      val search = Search(Filter(assigneeId = Some(assigneeX.id)), None)
+      val search = Search(Filter(assigneeId = Some(assigneeX.id)))
       store(caseWithEmptyAssignee, caseWithAssigneeX1, caseWithAssigneeX2, caseWithAssigneeY1)
       await(repository.get(search)) shouldBe Seq(caseWithAssigneeX1, caseWithAssigneeX2)
     }
@@ -291,13 +291,13 @@ class CaseRepositorySpec extends BaseMongoIndexSpec
     }
 
     "return the expected document when there is one match" in {
-      val search = Search(Filter(statuses = Some(Set(NEW))), None)
+      val search = Search(Filter(statuses = Some(Set(NEW))))
       store(caseWithStatusX1, caseWithStatusY1)
       await(repository.get(search)) shouldBe Seq(caseWithStatusX1)
     }
 
     "return the expected documents when there are multiple matches" in {
-      val search = Search(Filter(statuses = Some(Set(NEW))), None)
+      val search = Search(Filter(statuses = Some(Set(NEW))))
       store(caseWithStatusX1, caseWithStatusX2, caseWithStatusY1)
       await(repository.get(search)) shouldBe Seq(caseWithStatusX1, caseWithStatusX2)
     }
