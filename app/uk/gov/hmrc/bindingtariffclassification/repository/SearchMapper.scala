@@ -31,7 +31,7 @@ class SearchMapper {
       Map() ++
         filter.queueId.map("queueId" -> nullifyNoneValues(_)) ++
         filter.assigneeId.map("assignee.id" -> nullifyNoneValues(_)) ++
-        filter.status.map(splitByComma).map(toSearchArray).map("status" -> _) ++
+        filter.status.map(statuses => "status" -> array[CaseStatus](statuses)) ++
         filter.traderName.map("application.holder.businessName" -> nullifyNoneValues(_))
     )
   }
@@ -53,12 +53,8 @@ class SearchMapper {
     Json.obj("$set" -> Json.obj(fieldName -> fieldValue))
   }
 
-  private def toSearchArray: Seq[String] => JsObject = {
-    values => JsObject(Map("$in" -> JsArray(values.map(JsString))))
-  }
-
-  private def splitByComma(string: String): Seq[String] = {
-    string.split(",").toSeq
+  private def array[T](values: TraversableOnce[T])(implicit writes: Writes[T]): JsObject = {
+    JsObject(Map("$in" -> JsArray(values.toSeq.map(writes.writes))))
   }
 
   private def nullifyNoneValues: String => JsValue = { v: String =>

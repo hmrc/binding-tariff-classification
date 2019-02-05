@@ -33,14 +33,14 @@ class SearchMapperSpec extends UnitSpec {
       val filter = Filter(
         queueId = Some("valid_queue"),
         assigneeId = Some("valid_assignee"),
-        status = Some("S1,S2"),
+        status = Some(Set(CaseStatus.NEW, CaseStatus.OPEN)),
         traderName = Some("trader_name")
       )
 
       jsonMapper.filterBy(filter) shouldBe Json.obj(
         "queueId" -> "valid_queue",
         "assignee.id" -> "valid_assignee",
-        "status" -> Json.obj("$in" -> Json.arr("S1", "S2")),
+        "status" -> Json.obj("$in" -> Json.arr("NEW", "OPEN")),
         "application.holder.businessName" -> "trader_name"
       )
     }
@@ -54,9 +54,9 @@ class SearchMapperSpec extends UnitSpec {
     }
 
     "convert to Json just status " in {
-      jsonMapper.filterBy(Filter(status = Some("S1,S2,S3"))) shouldBe Json.obj(
+      jsonMapper.filterBy(Filter(status = Some(Set(CaseStatus.NEW, CaseStatus.OPEN)))) shouldBe Json.obj(
         "status" -> Json.obj(
-          "$in" -> Json.arr("S1", "S2", "S3")
+          "$in" -> Json.arr("NEW", "OPEN")
         )
       )
     }

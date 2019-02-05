@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.bindingtariffclassification.model.search
 
+import uk.gov.hmrc.bindingtariffclassification.model.CaseStatus
 import uk.gov.hmrc.bindingtariffclassification.model.sort.{SortDirection, SortField}
 import uk.gov.hmrc.play.test.UnitSpec
 
@@ -29,7 +30,7 @@ class SearchTest extends UnitSpec {
     traderName = Some("trader-name"),
     queueId = Some("queue-id"),
     assigneeId = Some("assignee-id"),
-    status = Some("status")
+    status = Some(Set(CaseStatus.NEW, CaseStatus.OPEN))
   )
 
   private val search = Search(filter = filter, sort = Some(sort))
@@ -38,7 +39,7 @@ class SearchTest extends UnitSpec {
     "trader_name" -> Seq("trader-name"),
     "queue_id" -> Seq("queue-id"),
     "assignee_id" -> Seq("assignee-id"),
-    "status" -> Seq("status"),
+    "status" -> Seq("NEW", "OPEN"),
     "sort_by" -> Seq("days-elapsed"),
     "sort_direction" -> Seq("desc")
   )
@@ -53,7 +54,14 @@ class SearchTest extends UnitSpec {
     }
 
     "Unbind Populated Search to Query String" in {
-      val populatedQueryParam: String = "queue_id=queue-id&assignee_id=assignee-id&status=status&trader_name=trader-name&sort_by=days-elapsed&sort_direction=desc"
+      val populatedQueryParam: String =
+        "queue_id=queue-id" +
+          "&assignee_id=assignee-id" +
+          "&status=NEW" +
+          "&status=OPEN" +
+          "&trader_name=trader-name" +
+          "&sort_by=days-elapsed" +
+          "&sort_direction=desc"
       Search.bindable.unbind("", search) shouldBe populatedQueryParam
     }
 
@@ -77,7 +85,12 @@ class SearchTest extends UnitSpec {
     }
 
     "Unbind Populated Filter to Query String" in {
-      val populatedQueryParam: String = "queue_id=queue-id&assignee_id=assignee-id&status=status&trader_name=trader-name"
+      val populatedQueryParam: String =
+        "queue_id=queue-id" +
+          "&assignee_id=assignee-id" +
+          "&status=NEW" +
+          "&status=OPEN" +
+          "&trader_name=trader-name"
       Filter.bindable.unbind("", filter) shouldBe populatedQueryParam
     }
 

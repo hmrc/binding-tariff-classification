@@ -17,6 +17,8 @@
 package uk.gov.hmrc.bindingtariffclassification.model.search
 
 import play.api.mvc.QueryStringBindable
+import uk.gov.hmrc.bindingtariffclassification.model.CaseStatus
+import uk.gov.hmrc.bindingtariffclassification.model.CaseStatus.CaseStatus
 import uk.gov.hmrc.bindingtariffclassification.model.sort.SortDirection.SortDirection
 import uk.gov.hmrc.bindingtariffclassification.model.sort.SortField.SortField
 import uk.gov.hmrc.bindingtariffclassification.model.sort.{SortDirection, SortField}
@@ -32,7 +34,7 @@ case class Filter
 (
   queueId: Option[String] = None,
   assigneeId: Option[String] = None,
-  status: Option[String] = None,
+  status: Option[Set[CaseStatus]] = None,
   traderName: Option[String] = None
 )
 
@@ -88,13 +90,18 @@ object Filter {
 
   implicit def bindable(implicit stringBinder: QueryStringBindable[String]): QueryStringBindable[Filter] = new QueryStringBindable[Filter] {
 
-    override def bind(key: String, params: Map[String, Seq[String]]): Option[Either[String, Filter]] = {
-      def param(name: String): Option[String] = stringBinder.bind(name, params).filter(_.isRight).map(_.right.get)
+    private def bindCaseStatus(key: String): Option[CaseStatus] = {
+      CaseStatus.values.find(_.toString == key)
+    }
+
+    override def bind(key: String, requestParams: Map[String, Seq[String]]): Option[Either[String, Filter]] = {
+      def params(name: String): Option[Set[String]] = requestParams.get(name).map(_.flatMap(_.split(",")).toSet).filter(_.nonEmpty)
+      def param(name: String): Option[String] = params(name).map(_.head)
 
       Some(Right(
         Filter(queueId = param(queueIdKey),
           assigneeId = param(assigneeIdKey),
-          status = param(statusKey),
+          status = params(statusKey).map(_.map(bindCaseStatus).filter(_.isDefined).map(_.get)),
           traderName = param(traderNameKey)
         )
       ))
@@ -104,7 +111,7 @@ object Filter {
       Seq(
         filter.queueId.map(v => stringBinder.unbind(queueIdKey, v)),
         filter.assigneeId.map(v => stringBinder.unbind(assigneeIdKey, v)),
-        filter.status.map(v => stringBinder.unbind(statusKey, v)),
+        filter.status.map(_.map(v => stringBinder.unbind(statusKey, v.toString)).mkString("&")),
         filter.traderName.map(v => stringBinder.unbind(traderNameKey, v))
       ).filter(_.isDefined).map(_.get).mkString("&")
     }

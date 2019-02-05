@@ -449,6 +449,16 @@ class CaseSpec extends BaseFeatureSpec {
 
       storeCases(c1_updated, c2, c5)
 
+      val result = Http(s"$serviceUrl/cases?status=NEW&status=CANCELLED").asString
+
+      result.code shouldEqual OK
+      Json.parse(result.body) shouldBe Json.toJson(Seq(c1_updated,c2,c5))
+    }
+
+    scenario("Filtering cases by multiple status - comma separated") {
+
+      storeCases(c1_updated, c2, c5)
+
       val result = Http(s"$serviceUrl/cases?status=NEW,CANCELLED").asString
 
       result.code shouldEqual OK
