@@ -456,6 +456,7 @@ class CaseRepositorySpec extends BaseMongoIndexSpec
         Index(key = Seq("daysElapsed" -> Ascending), name = Some("daysElapsed_Index"), unique = false),
         Index(key = Seq("application.holder.businessName" -> Ascending), name = Some("application.holder.businessName_Index"), unique = false),
         Index(key = Seq("assignee.id" -> Ascending), name = Some("assignee.id_Index"), unique = false),
+        Index(key = Seq("decision.effectiveEndDate" -> Ascending), name = Some("decision.effectiveEndDate_Index"), unique = false),
         Index(key = Seq("status" -> Ascending), name = Some("status_Index"), unique = false)
       )
 

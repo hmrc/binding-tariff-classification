@@ -99,6 +99,7 @@ class CaseMongoRepository @Inject()(mongoDbProvider: MongoDbProvider, mapper: Se
     "application.holder.businessName", // TODO: to be removed if later we decide to use non-exact match search
     "queueId",
     "status",
+    "decision.effectiveEndDate",
     "daysElapsed"
   )
 
