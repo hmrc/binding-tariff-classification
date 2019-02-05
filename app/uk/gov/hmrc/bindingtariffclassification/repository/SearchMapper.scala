@@ -31,7 +31,7 @@ class SearchMapper {
       Map() ++
         filter.queueId.map("queueId" -> nullifyNoneValues(_)) ++
         filter.assigneeId.map("assignee.id" -> nullifyNoneValues(_)) ++
-        filter.status.map(statuses => "status" -> array[CaseStatus](statuses)) ++
+        filter.statuses.map(statuses => "status" -> array[CaseStatus](statuses)) ++
         filter.traderName.map("application.holder.businessName" -> nullifyNoneValues(_))
     )
   }

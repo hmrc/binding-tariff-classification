@@ -34,7 +34,7 @@ case class Filter
 (
   queueId: Option[String] = None,
   assigneeId: Option[String] = None,
-  status: Option[Set[CaseStatus]] = None,
+  statuses: Option[Set[CaseStatus]] = None,
   traderName: Option[String] = None
 )
 
@@ -101,7 +101,7 @@ object Filter {
       Some(Right(
         Filter(queueId = param(queueIdKey),
           assigneeId = param(assigneeIdKey),
-          status = params(statusKey).map(_.map(bindCaseStatus).filter(_.isDefined).map(_.get)),
+          statuses = params(statusKey).map(_.map(bindCaseStatus).filter(_.isDefined).map(_.get)),
           traderName = param(traderNameKey)
         )
       ))
@@ -111,7 +111,7 @@ object Filter {
       Seq(
         filter.queueId.map(v => stringBinder.unbind(queueIdKey, v)),
         filter.assigneeId.map(v => stringBinder.unbind(assigneeIdKey, v)),
-        filter.status.map(_.map(v => stringBinder.unbind(statusKey, v.toString)).mkString("&")),
+        filter.statuses.map(_.map(v => stringBinder.unbind(statusKey, v.toString)).mkString("&")),
         filter.traderName.map(v => stringBinder.unbind(traderNameKey, v))
       ).filter(_.isDefined).map(_.get).mkString("&")
     }

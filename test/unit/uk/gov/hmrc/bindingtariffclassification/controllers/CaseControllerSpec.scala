@@ -191,7 +191,7 @@ class CaseControllerSpec extends UnitSpec with WithFakeApplication with MockitoS
     val sortField = SortField.DAYS_ELAPSED
 
     "return 200 with the all cases" in {
-      val search = Search(Filter(queueId = queueId, assigneeId = assigneeId, status = Some(Set(CaseStatus.NEW, CaseStatus.OPEN))), Some(Sort(field = sortField)))
+      val search = Search(Filter(queueId = queueId, assigneeId = assigneeId, statuses = Some(Set(CaseStatus.NEW, CaseStatus.OPEN))), Some(Sort(field = sortField)))
 
       when(caseService.get(refEq(search))).thenReturn(successful(Seq(c1, c2)))
 
@@ -202,7 +202,7 @@ class CaseControllerSpec extends UnitSpec with WithFakeApplication with MockitoS
     }
 
     "return 200 with an empty sequence if there are no cases" in {
-      val search = Search(Filter(queueId = queueId, assigneeId = assigneeId, status = Some(Set(CaseStatus.NEW, CaseStatus.OPEN))), Some(Sort(field = sortField)))
+      val search = Search(Filter(queueId = queueId, assigneeId = assigneeId, statuses = Some(Set(CaseStatus.NEW, CaseStatus.OPEN))), Some(Sort(field = sortField)))
 
       when(caseService.get(search)).thenReturn(successful(Seq.empty))
 

@@ -30,7 +30,7 @@ class SearchTest extends UnitSpec {
     traderName = Some("trader-name"),
     queueId = Some("queue-id"),
     assigneeId = Some("assignee-id"),
-    status = Some(Set(CaseStatus.NEW, CaseStatus.OPEN))
+    statuses = Some(Set(CaseStatus.NEW, CaseStatus.OPEN))
   )
 
   private val search = Search(filter = filter, sort = Some(sort))

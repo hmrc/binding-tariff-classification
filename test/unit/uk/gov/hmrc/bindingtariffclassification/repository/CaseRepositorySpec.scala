@@ -263,31 +263,31 @@ class CaseRepositorySpec extends BaseMongoIndexSpec
     val caseWithStatusY1 = createCase().copy(status = statusY)
 
     "get by filtering on status with no matches should return an empty sequence" in {
-      val search = Search(Filter(status = Some(Set(CaseStatus.DRAFT))), None)
+      val search = Search(Filter(statuses = Some(Set(CaseStatus.DRAFT))), None)
       store(caseWithStatusX1)
       await(repository.get(search)) shouldBe Seq.empty
     }
 
     "get by filtering on status with one match should return the expected document" in {
-      val search = Search(Filter(status = Some(Set(CaseStatus.NEW))), None)
+      val search = Search(Filter(statuses = Some(Set(CaseStatus.NEW))), None)
       store(caseWithStatusX1, caseWithStatusY1)
       await(repository.get(search)) shouldBe Seq(caseWithStatusX1)
     }
 
     "get by filtering on status with two matches should return the expected documents" in {
-      val search = Search(Filter(status = Some(Set(CaseStatus.NEW))), None)
+      val search = Search(Filter(statuses = Some(Set(CaseStatus.NEW))), None)
       store(caseWithStatusX1, caseWithStatusX2, caseWithStatusY1)
       await(repository.get(search)) shouldBe Seq(caseWithStatusX1, caseWithStatusX2)
     }
 
     "get by filtering on statuses with multiple matches should return the expected documents" in {
-      val search = Search(Filter(status = Some(Set(CaseStatus.NEW, CaseStatus.OPEN))), None)
+      val search = Search(Filter(statuses = Some(Set(CaseStatus.NEW, CaseStatus.OPEN))), None)
       store(caseWithStatusX1, caseWithStatusX2, caseWithStatusY1)
       await(repository.get(search)) shouldBe Seq(caseWithStatusX1, caseWithStatusX2, caseWithStatusY1)
     }
 
     "get by filtering on statuses with some matches should return the expected documents" in {
-      val search = Search(Filter(status = Some(Set(CaseStatus.NEW, CaseStatus.DRAFT))), None)
+      val search = Search(Filter(statuses = Some(Set(CaseStatus.NEW, CaseStatus.DRAFT))), None)
       store(caseWithStatusX1, caseWithStatusX2, caseWithStatusY1)
       await(repository.get(search)) shouldBe Seq(caseWithStatusX1, caseWithStatusX2)
     }
@@ -313,7 +313,7 @@ class CaseRepositorySpec extends BaseMongoIndexSpec
     val caseWithQyAndAxAndSy = createCase().copy(queueId = queueIdY, assignee = Some(assigneeX), status = statusY)
 
     "get by filtering on assignee queue and status with one match should return the expected case" in {
-      val search = Search(Filter(queueId = queueIdX, assigneeId = Some(assigneeX.id), status = Some(Set(CaseStatus.NEW))), None)
+      val search = Search(Filter(queueId = queueIdX, assigneeId = Some(assigneeX.id), statuses = Some(Set(CaseStatus.NEW))), None)
 
       store(
         caseWithNoQueueAndNoAssignee,
