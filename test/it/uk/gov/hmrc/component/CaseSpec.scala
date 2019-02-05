@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.component
 
-import java.time.ZonedDateTime
+import java.time.Instant
 
 import play.api.http.ContentTypes.JSON
 import play.api.http.HeaderNames.CONTENT_TYPE
@@ -41,12 +41,13 @@ class CaseSpec extends BaseFeatureSpec {
   private val status = CaseStatus.CANCELLED
   private val c1_updated = c1.copy(status = status)
   private val c2 = createCase(app = createLiabilityOrder,
-    decision = Some(createDecision),
+    decision = Some(createDecision()),
     attachments = Seq(createAttachment,createAttachmentWithOperator),
     keywords = Set("bike", "tool"))
   private val c3 = createNewCaseWithExtraFields()
   private val c4 = createNewCase(app = createBTIApplicationWithAllFields)
   private val c5 = createCase(app = createBasicBTIApplication.copy(holder=eORIDetailForNintedo))
+  private val c6 = createCase(decision = Some(createDecision(effectiveEndDate = Some(Instant.now().plusSeconds(60)))))
 
 
   private val c0Json = Json.toJson(c0)
@@ -112,7 +113,7 @@ class CaseSpec extends BaseFeatureSpec {
       val responseCase = Json.parse(result.body).as[Case]
       responseCase.reference shouldBe "1"
       responseCase.status shouldBe CaseStatus.NEW
-      responseCase.createdDate should roughlyBe(ZonedDateTime.now())
+      responseCase.createdDate should roughlyBe(Instant.now())
       responseCase.assignee shouldBe None
       responseCase.queueId shouldBe None
       responseCase.decision shouldBe None
@@ -232,8 +233,6 @@ class CaseSpec extends BaseFeatureSpec {
     }
 
   }
-
-  // TODO: test all possible combinations of get()
 
   feature("Get Cases by Queue Id") {
 
@@ -488,6 +487,30 @@ class CaseSpec extends BaseFeatureSpec {
 
       result.code shouldEqual OK
       result.body.toString shouldBe "[]"
+    }
+
+  }
+
+  feature("Get Cases by Min Decision End Date") {
+
+    scenario("Filtering cases by Min Decision End Date") {
+
+      storeCases(c1, c6)
+
+      val result = Http(s"$serviceUrl/cases?min_decision_end=1970-01-01T00:00:00Z").asString
+
+      result.code shouldEqual OK
+      Json.parse(result.body) shouldBe Json.toJson(Seq(c6))
+    }
+
+    scenario("Filtering cases by Min Decision End Date - filters decisions in the past") {
+
+      storeCases(c1, c6)
+
+      val result = Http(s"$serviceUrl/cases?min_decision_end=3000-01-01T00:00:00Z").asString
+
+      result.code shouldEqual OK
+      Json.parse(result.body) shouldBe Json.toJson(Seq.empty[Case])
     }
 
   }

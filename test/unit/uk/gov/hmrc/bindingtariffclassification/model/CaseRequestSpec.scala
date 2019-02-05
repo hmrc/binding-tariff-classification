@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.bindingtariffclassification.model
 
-import java.time.ZonedDateTime
+import java.time.Instant
 
 import org.scalatest.mockito.MockitoSugar
 import uk.gov.hmrc.play.test.UnitSpec
@@ -32,7 +32,7 @@ class CaseRequestSpec extends UnitSpec with MockitoSugar {
     "Convert NewCaseRequest To A Case" in {
       val c = NewCaseRequest(application, attachments).toCase("reference")
       c.status shouldBe CaseStatus.NEW
-      c.createdDate should roughlyBe(ZonedDateTime.now())
+      c.createdDate should roughlyBe(Instant.now())
       c.daysElapsed shouldBe 0
       c.assignee shouldBe None
       c.queueId shouldBe None

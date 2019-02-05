@@ -16,6 +16,9 @@
 
 package uk.gov.hmrc.bindingtariffclassification.model.search
 
+import java.net.URLDecoder
+import java.time.Instant
+
 import uk.gov.hmrc.bindingtariffclassification.model.CaseStatus
 import uk.gov.hmrc.bindingtariffclassification.model.sort.{SortDirection, SortField}
 import uk.gov.hmrc.play.test.UnitSpec
@@ -30,7 +33,8 @@ class SearchTest extends UnitSpec {
     traderName = Some("trader-name"),
     queueId = Some("queue-id"),
     assigneeId = Some("assignee-id"),
-    statuses = Some(Set(CaseStatus.NEW, CaseStatus.OPEN))
+    statuses = Some(Set(CaseStatus.NEW, CaseStatus.OPEN)),
+    minDecisionEnd = Some(Instant.EPOCH)
   )
 
   private val search = Search(filter = filter, sort = Some(sort))
@@ -41,7 +45,8 @@ class SearchTest extends UnitSpec {
     "assignee_id" -> Seq("assignee-id"),
     "status" -> Seq("NEW", "OPEN"),
     "sort_by" -> Seq("days-elapsed"),
-    "sort_direction" -> Seq("desc")
+    "sort_direction" -> Seq("desc"),
+    "min_decision_end" -> Seq("1970-01-01T00:00:00Z")
   )
 
   /**
@@ -60,9 +65,10 @@ class SearchTest extends UnitSpec {
           "&status=NEW" +
           "&status=OPEN" +
           "&trader_name=trader-name" +
+          "&min_decision_end=1970-01-01T00:00:00Z" +
           "&sort_by=days-elapsed" +
           "&sort_direction=desc"
-      Search.bindable.unbind("", search) shouldBe populatedQueryParam
+      URLDecoder.decode(Search.bindable.unbind("", search), "UTF-8") shouldBe populatedQueryParam
     }
 
     "Bind empty query string" in {
@@ -90,8 +96,9 @@ class SearchTest extends UnitSpec {
           "&assignee_id=assignee-id" +
           "&status=NEW" +
           "&status=OPEN" +
-          "&trader_name=trader-name"
-      Filter.bindable.unbind("", filter) shouldBe populatedQueryParam
+          "&trader_name=trader-name" +
+          "&min_decision_end=1970-01-01T00:00:00Z"
+      URLDecoder.decode(Filter.bindable.unbind("", filter), "UTF-8") shouldBe populatedQueryParam
     }
 
     "Bind empty query string" in {

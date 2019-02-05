@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.component
 
-import java.time.{LocalDate, ZoneOffset, ZonedDateTime}
+import java.time.{Instant, LocalDate, ZoneOffset}
 
 import play.api.http.HttpVerbs
 import play.api.http.Status._
@@ -91,7 +91,7 @@ class DaysElapsedSpec extends BaseFeatureSpec {
   }
 
   private def assertDaysElapsed(): Unit = {
-    val currentDate = ZonedDateTime.now(ZoneOffset.UTC).toLocalDate
+    val currentDate = Instant.now().atOffset(ZoneOffset.UTC).toLocalDate
 
     if (isNonWorkingDay(currentDate)) assertWorkInProgressCases(0)
     else assertWorkInProgressCases(1)

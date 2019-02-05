@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.bindingtariffclassification.controllers
 
-import java.time.{Instant, ZoneId, ZonedDateTime}
+import java.time.Instant
 import java.util.UUID
 
 import akka.stream.Materializer
@@ -130,7 +130,7 @@ class EventControllerSpec extends UnitSpec with WithFakeApplication with Mockito
 
   "create" should {
     val note = Note(Some("note"))
-    val timestamp = ZonedDateTime.ofInstant(Instant.EPOCH, ZoneId.of("UTC"))
+    val timestamp = Instant.EPOCH
     val userId = "user-id"
     val newEvent = NewEventRequest(note, Operator(userId, Some("user name")), timestamp)
     val event = Event(id = "id", details = note, Operator(userId, Some("user name")), caseReference = caseReference, timestamp = timestamp)

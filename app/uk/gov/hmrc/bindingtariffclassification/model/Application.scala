@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.bindingtariffclassification.model
 
-import java.time.ZonedDateTime
+import java.time.Instant
 
 import uk.gov.hmrc.bindingtariffclassification.model.ApplicationType.ApplicationType
 import uk.gov.hmrc.bindingtariffclassification.model.LiabilityStatus.LiabilityStatus
@@ -56,7 +56,7 @@ case class LiabilityOrder
   status: LiabilityStatus,
   port: String,
   entryNumber: String,
-  endDate: ZonedDateTime
+  endDate: Instant
 ) extends Application {
   override val `type` = ApplicationType.LIABILITY_ORDER
 }

@@ -16,12 +16,14 @@
 
 package util
 
-import java.time.ZonedDateTime
+import java.time.Instant
 
 import uk.gov.hmrc.bindingtariffclassification.model._
 import uk.gov.hmrc.bindingtariffclassification.utils.RandomGenerator
 
 object CaseData {
+
+  private val secondsInAYear = 3600 * 24 * 365
 
   private def createContact: Contact = {
     Contact("Maurizio", "maurizio@me.com", Some("0123456789"))
@@ -54,14 +56,19 @@ object CaseData {
     )
   }
 
-  def createDecision: Decision = {
+  def createDecision(bindingCommodityCode: String = "GB1234567",
+                     effectiveStartDate: Option[Instant] = Some(Instant.now()),
+                     effectiveEndDate: Option[Instant] = Some(Instant.now().plusSeconds(3 * secondsInAYear)),
+                     methodSearch: Option[String] = Some("bike spanner"),
+                     justification: String = "Found precedent case",
+                     goodsDescription: String = "Bike tool"): Decision = {
     Decision(
-      bindingCommodityCode = "GB1234567",
-      effectiveStartDate = ZonedDateTime.now(),
-      effectiveEndDate = ZonedDateTime.now().plusYears(3),
-      methodSearch = Some("bike spanner"),
-      justification = "Found precedent case",
-      goodsDescription = "Bike tool"
+      bindingCommodityCode = bindingCommodityCode,
+      effectiveStartDate = effectiveStartDate,
+      effectiveEndDate = effectiveEndDate,
+      methodSearch = methodSearch,
+      justification = justification,
+      goodsDescription = goodsDescription
     )
   }
 
@@ -72,7 +79,7 @@ object CaseData {
       LiabilityStatus.LIVE,
       "port-A",
       "23-SGD",
-      ZonedDateTime.now()
+      Instant.now()
     )
   }
 
@@ -111,12 +118,12 @@ object CaseData {
     Case(
       reference = "9999999999",
       status = CaseStatus.OPEN,
-      createdDate = ZonedDateTime.now.minusYears(1),
+      createdDate = Instant.now.minusSeconds(1 * secondsInAYear),
       queueId = Some("3"),
       assignee = Some(Operator("0")),
       application = createBasicBTIApplication,
-      decision = Some(createDecision),
-      closedDate = Some(ZonedDateTime.now().minusYears(1)),
+      decision = Some(createDecision()),
+      closedDate = Some(Instant.now().minusSeconds(1 * secondsInAYear)),
       attachments = Seq.empty,
       keywords = Set("bike", "tool")
     )

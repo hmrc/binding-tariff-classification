@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.bindingtariffclassification.repository
 
-import java.time.ZonedDateTime
+import java.time.{Instant, LocalDate, ZoneOffset}
 
 import org.scalatest.concurrent.Eventually
 import org.scalatest.mockito.MockitoSugar
@@ -222,6 +222,30 @@ class CaseRepositorySpec extends BaseMongoIndexSpec
 
   }
 
+  "get filtering by minDecisionDate" should {
+
+    val futureDate = LocalDate.of(3000,1,1).atStartOfDay().toInstant(ZoneOffset.UTC)
+    val pastDate = LocalDate.of(1970,1,1).atStartOfDay().toInstant(ZoneOffset.UTC)
+
+    val decisionExpired = createDecision(effectiveEndDate = Some(pastDate))
+    val decisionFuture = createDecision(effectiveEndDate = Some(futureDate))
+    val caseWithExpiredDecision = createCase(decision = Some(decisionExpired))
+    val caseWithFutureDecision = createCase(decision = Some(decisionFuture))
+
+    "no match should return an empty sequence" in {
+      val search = Search(Filter(minDecisionEnd = Some(Instant.now())), None)
+      store(caseWithExpiredDecision)
+      await(repository.get(search)) shouldBe Seq.empty
+    }
+
+    "match should return the expected document" in {
+      val search = Search(Filter(minDecisionEnd = Some(Instant.now())), None)
+      store(caseWithExpiredDecision, caseWithFutureDecision)
+      await(repository.get(search)) shouldBe Seq(caseWithFutureDecision)
+    }
+
+  }
+
   "get filtering by assigneeId" should {
 
     val assigneeX = Operator("assignee_x")
@@ -408,7 +432,7 @@ class CaseRepositorySpec extends BaseMongoIndexSpec
     }
 
     "store dates as Mongo Dates" in {
-      val date = ZonedDateTime.now()
+      val date = Instant.now()
       val oldCase = case1.copy(createdDate = date)
       val newCase = case2.copy(createdDate = date.plusSeconds(1))
       await(repository.insert(oldCase))

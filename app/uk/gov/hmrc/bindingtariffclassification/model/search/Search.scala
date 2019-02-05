@@ -16,12 +16,16 @@
 
 package uk.gov.hmrc.bindingtariffclassification.model.search
 
+import java.time.Instant
+
 import play.api.mvc.QueryStringBindable
 import uk.gov.hmrc.bindingtariffclassification.model.CaseStatus
 import uk.gov.hmrc.bindingtariffclassification.model.CaseStatus.CaseStatus
 import uk.gov.hmrc.bindingtariffclassification.model.sort.SortDirection.SortDirection
 import uk.gov.hmrc.bindingtariffclassification.model.sort.SortField.SortField
 import uk.gov.hmrc.bindingtariffclassification.model.sort.{SortDirection, SortField}
+
+import scala.util.Try
 
 
 case class Search
@@ -35,7 +39,8 @@ case class Filter
   queueId: Option[String] = None,
   assigneeId: Option[String] = None,
   statuses: Option[Set[CaseStatus]] = None,
-  traderName: Option[String] = None
+  traderName: Option[String] = None,
+  minDecisionEnd: Option[Instant] = None
 )
 
 case class Sort
@@ -87,12 +92,15 @@ object Filter {
   private val queueIdKey = "queue_id"
   private val assigneeIdKey = "assignee_id"
   private val statusKey = "status"
+  private val minDecisionEndKey = "min_decision_end"
 
   implicit def bindable(implicit stringBinder: QueryStringBindable[String]): QueryStringBindable[Filter] = new QueryStringBindable[Filter] {
 
     private def bindCaseStatus(key: String): Option[CaseStatus] = {
       CaseStatus.values.find(_.toString == key)
     }
+
+    private def bindInstant(key: String): Option[Instant] = Try(Instant.parse(key)).toOption
 
     override def bind(key: String, requestParams: Map[String, Seq[String]]): Option[Either[String, Filter]] = {
       def params(name: String): Option[Set[String]] = requestParams.get(name).map(_.flatMap(_.split(",")).toSet).filter(_.nonEmpty)
@@ -102,7 +110,8 @@ object Filter {
         Filter(queueId = param(queueIdKey),
           assigneeId = param(assigneeIdKey),
           statuses = params(statusKey).map(_.map(bindCaseStatus).filter(_.isDefined).map(_.get)),
-          traderName = param(traderNameKey)
+          traderName = param(traderNameKey),
+          minDecisionEnd = param(minDecisionEndKey).flatMap(bindInstant)
         )
       ))
     }
@@ -112,7 +121,8 @@ object Filter {
         filter.queueId.map(v => stringBinder.unbind(queueIdKey, v)),
         filter.assigneeId.map(v => stringBinder.unbind(assigneeIdKey, v)),
         filter.statuses.map(_.map(v => stringBinder.unbind(statusKey, v.toString)).mkString("&")),
-        filter.traderName.map(v => stringBinder.unbind(traderNameKey, v))
+        filter.traderName.map(v => stringBinder.unbind(traderNameKey, v)),
+        filter.minDecisionEnd.map(v => stringBinder.unbind(minDecisionEndKey, v.toString))
       ).filter(_.isDefined).map(_.get).mkString("&")
     }
   }

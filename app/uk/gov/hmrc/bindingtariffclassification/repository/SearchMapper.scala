@@ -19,6 +19,7 @@ package uk.gov.hmrc.bindingtariffclassification.repository
 import javax.inject.Singleton
 import play.api.libs.json._
 import uk.gov.hmrc.bindingtariffclassification.model.CaseStatus.CaseStatus
+import uk.gov.hmrc.bindingtariffclassification.model.MongoFormatters.formatInstant
 import uk.gov.hmrc.bindingtariffclassification.model.search.{Filter, Sort}
 import uk.gov.hmrc.bindingtariffclassification.model.sort.SortField
 import uk.gov.hmrc.bindingtariffclassification.model.sort.SortField.SortField
@@ -32,13 +33,18 @@ class SearchMapper {
         filter.queueId.map("queueId" -> nullifyNoneValues(_)) ++
         filter.assigneeId.map("assignee.id" -> nullifyNoneValues(_)) ++
         filter.statuses.map(statuses => "status" -> array[CaseStatus](statuses)) ++
-        filter.traderName.map("application.holder.businessName" -> nullifyNoneValues(_))
+        filter.traderName.map("application.holder.businessName" -> nullifyNoneValues(_)) ++
+        filter.minDecisionEnd.map("decision.effectiveEndDate" -> greaterThan(_)(formatInstant))
     )
   }
 
 
   def sortBy(sort: Sort): JsObject = {
     Json.obj(toMongoField(sort.field) -> sort.direction.id)
+  }
+
+  def greaterThan[T](value: T)(implicit writes: Writes[T]): JsObject = {
+    Json.obj("$gte" -> value)
   }
 
   def reference(reference: String): JsObject = {

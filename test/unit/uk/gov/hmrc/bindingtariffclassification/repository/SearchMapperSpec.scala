@@ -16,6 +16,8 @@
 
 package uk.gov.hmrc.bindingtariffclassification.repository
 
+import java.time.Instant
+
 import play.api.libs.json.{JsNull, Json}
 import uk.gov.hmrc.bindingtariffclassification.model.CaseStatus
 import uk.gov.hmrc.bindingtariffclassification.model.search.{Filter, Sort}
@@ -34,26 +36,28 @@ class SearchMapperSpec extends UnitSpec {
         queueId = Some("valid_queue"),
         assigneeId = Some("valid_assignee"),
         statuses = Some(Set(CaseStatus.NEW, CaseStatus.OPEN)),
-        traderName = Some("trader_name")
+        traderName = Some("trader_name"),
+        minDecisionEnd = Some(Instant.EPOCH)
       )
 
       jsonMapper.filterBy(filter) shouldBe Json.obj(
         "queueId" -> "valid_queue",
         "assignee.id" -> "valid_assignee",
         "status" -> Json.obj("$in" -> Json.arr("NEW", "OPEN")),
-        "application.holder.businessName" -> "trader_name"
+        "application.holder.businessName" -> "trader_name",
+        "decision.effectiveEndDate" -> Json.obj("$gte" -> Json.obj("$date" -> 0))
       )
     }
 
-    "convert to Json just queueId " in {
+    "convert queueId" in {
       jsonMapper.filterBy(Filter(queueId = Some("valid_queue"))) shouldBe Json.obj("queueId" -> "valid_queue")
     }
 
-    "convert to Json just assigneeId " in {
+    "convert assigneeId" in {
       jsonMapper.filterBy(Filter(assigneeId = Some("valid_assignee"))) shouldBe Json.obj("assignee.id" -> "valid_assignee")
     }
 
-    "convert to Json just status " in {
+    "convert statuses" in {
       jsonMapper.filterBy(Filter(statuses = Some(Set(CaseStatus.NEW, CaseStatus.OPEN)))) shouldBe Json.obj(
         "status" -> Json.obj(
           "$in" -> Json.arr("NEW", "OPEN")
@@ -61,11 +65,15 @@ class SearchMapperSpec extends UnitSpec {
       )
     }
 
-    "convert to Json just trader name " in {
+    "convert trader name" in {
       jsonMapper.filterBy(Filter(traderName = Some("traderName"))) shouldBe Json.obj("application.holder.businessName" -> "traderName")
     }
 
-    "convert to Json with fields queueId and assigneeId using `none` value " in {
+    "convert min decision end" in {
+      jsonMapper.filterBy(Filter(minDecisionEnd = Some(Instant.EPOCH))) shouldBe Json.obj("decision.effectiveEndDate" -> Json.obj("$gte" -> Json.obj("$date" -> 0)))
+    }
+
+    "convert with fields queueId and assigneeId set to `none`" in {
 
       val filter = Filter(queueId = Some("none"), assigneeId = Some("none"))
 
@@ -75,7 +83,7 @@ class SearchMapperSpec extends UnitSpec {
       )
     }
 
-    "convert to Json with no filters" in {
+    "convert with no filters" in {
       jsonMapper.filterBy(Filter()) shouldBe Json.obj()
     }
 

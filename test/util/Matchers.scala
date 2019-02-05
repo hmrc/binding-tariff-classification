@@ -16,17 +16,18 @@
 
 package util
 
-import java.time.ZonedDateTime
+import java.time.Instant
+
 import org.scalatest.matchers.{MatchResult, Matcher}
 
 object Matchers {
 
-  def roughlyBe(time: ZonedDateTime) = new RoughlyMatches(time)
+  def roughlyBe(time: Instant) = new RoughlyMatches(time)
 
-  protected class RoughlyMatches(time: ZonedDateTime) extends Matcher[ZonedDateTime] {
+  protected class RoughlyMatches(time: Instant) extends Matcher[Instant] {
 
-    override def apply(d: ZonedDateTime): MatchResult = MatchResult(
-      d.isBefore(time.plusMinutes(1)) && d.isAfter(time.minusMinutes(1)),
+    override def apply(d: Instant): MatchResult = MatchResult(
+      d.isBefore(time.plusSeconds(60)) && d.isAfter(time.minusSeconds(60)),
       s"date [$d] was not within a minute of [$time]",
       s"date [$d] was within a minute of [$time]"
     )

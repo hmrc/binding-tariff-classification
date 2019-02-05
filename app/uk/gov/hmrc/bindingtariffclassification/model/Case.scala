@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.bindingtariffclassification.model
 
-import java.time.ZonedDateTime
+import java.time.Instant
 
 import uk.gov.hmrc.bindingtariffclassification.model.CaseStatus.CaseStatus
 
@@ -24,9 +24,9 @@ case class Case
 (
   reference: String,
   status: CaseStatus,
-  createdDate: ZonedDateTime = ZonedDateTime.now(),
+  createdDate: Instant = Instant.now(),
   daysElapsed: Long = 0,
-  closedDate: Option[ZonedDateTime] = None,
+  closedDate: Option[Instant] = None,
   caseBoardsFileNumber: Option[String] = None,
   assignee: Option[Operator] = None,
   queueId: Option[String] = None,

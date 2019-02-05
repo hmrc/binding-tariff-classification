@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.bindingtariffclassification.repository
 
-import java.time.ZonedDateTime
+import java.time.Instant
 
 import org.scalatest.concurrent.Eventually
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
@@ -129,9 +129,9 @@ class EventRepositorySpec extends BaseMongoIndexSpec
 
     "retrieve all expected events from the collection sorted by default date descending" in {
 
-      val e20170917 = createEvent("REF_1", ZonedDateTime.parse("2017-09-17T20:53:31Z"))
-      val e20170911 = createEvent("REF_1", ZonedDateTime.parse("2017-09-11T20:53:31Z"))
-      val e20180811 = createEvent("REF_1", ZonedDateTime.parse("2018-08-11T20:53:31Z"))
+      val e20170917 = createEvent("REF_1", Instant.parse("2017-09-17T20:53:31Z"))
+      val e20170911 = createEvent("REF_1", Instant.parse("2017-09-11T20:53:31Z"))
+      val e20180811 = createEvent("REF_1", Instant.parse("2018-08-11T20:53:31Z"))
 
 
       await(repository.insert(e20170911))

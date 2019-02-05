@@ -16,12 +16,12 @@
 
 package uk.gov.hmrc.bindingtariffclassification.model
 
-import java.time.ZonedDateTime
+import java.time.Instant
 
 case class Attachment
 (
   id: String,
   public: Boolean, // if the attachment is publicly viewable in the public rulings UI
   operator: Option[Operator] = None,
-  timestamp: ZonedDateTime = ZonedDateTime.now()
+  timestamp: Instant = Instant.now()
 )
