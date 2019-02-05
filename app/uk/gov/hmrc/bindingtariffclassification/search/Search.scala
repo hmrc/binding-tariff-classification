@@ -78,10 +78,7 @@ object Sort {
       val field: Option[SortField] = param(sortByKey).flatMap(bindSortField)
       val direction: Option[SortDirection] = param(sortDirectionKey).flatMap(bindSortDirection)
 
-      field match {
-        case Some(f) => Some( Right( Sort ( f, direction.getOrElse(defaultSortDirection(f)) ) ) )
-        case _ => None
-      }
+      field.map ( f => Right( Sort( f, direction.getOrElse(defaultSortDirection(f)) ) ) )
     }
 
     override def unbind(key: String, query: Sort): String = {
