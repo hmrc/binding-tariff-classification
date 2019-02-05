@@ -18,7 +18,7 @@ package uk.gov.hmrc.bindingtariffclassification.crypto
 
 import javax.inject._
 import uk.gov.hmrc.bindingtariffclassification.model._
-import uk.gov.hmrc.bindingtariffclassification.model.search.{Filter, Search}
+import uk.gov.hmrc.bindingtariffclassification.search.{Filter, Search}
 import uk.gov.hmrc.crypto.{CompositeSymmetricCrypto, Crypted, PlainText}
 
 @Singleton

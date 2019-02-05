@@ -20,9 +20,8 @@ import javax.inject.Singleton
 import play.api.libs.json._
 import uk.gov.hmrc.bindingtariffclassification.model.CaseStatus.CaseStatus
 import uk.gov.hmrc.bindingtariffclassification.model.MongoFormatters.formatInstant
-import uk.gov.hmrc.bindingtariffclassification.model.search.{Filter, Sort}
-import uk.gov.hmrc.bindingtariffclassification.model.sort.SortField
-import uk.gov.hmrc.bindingtariffclassification.model.sort.SortField.SortField
+import uk.gov.hmrc.bindingtariffclassification.search.{Filter, Sort}
+import uk.gov.hmrc.bindingtariffclassification.sort.SortField._
 
 @Singleton
 class SearchMapper {
@@ -32,7 +31,7 @@ class SearchMapper {
       Map() ++
         filter.queueId.map("queueId" -> nullifyNoneValues(_)) ++
         filter.assigneeId.map("assignee.id" -> nullifyNoneValues(_)) ++
-        filter.statuses.map(statuses => "status" -> array[CaseStatus](statuses)) ++
+        filter.statuses.map("status" -> inArray[CaseStatus](_)) ++
         filter.traderName.map("application.holder.businessName" -> nullifyNoneValues(_)) ++
         filter.minDecisionEnd.map("decision.effectiveEndDate" -> greaterThan(_)(formatInstant))
     )
@@ -59,7 +58,7 @@ class SearchMapper {
     Json.obj("$set" -> Json.obj(fieldName -> fieldValue))
   }
 
-  private def array[T](values: TraversableOnce[T])(implicit writes: Writes[T]): JsObject = {
+  private def inArray[T](values: TraversableOnce[T])(implicit writes: Writes[T]): JsObject = {
     JsObject(Map("$in" -> JsArray(values.toSeq.map(writes.writes))))
   }
 
@@ -76,7 +75,7 @@ class SearchMapper {
 
   private def toMongoField(sort: SortField): String = {
     sort match {
-      case SortField.DAYS_ELAPSED => "daysElapsed"
+      case DAYS_ELAPSED => "daysElapsed"
       case unknown => throw new IllegalArgumentException(s"cannot sort by field: $unknown")
     }
   }

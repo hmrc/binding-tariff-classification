@@ -172,7 +172,7 @@ class CaseSpec extends BaseFeatureSpec {
   }
 
 
-  feature("Get Case") {
+  feature("Get Case by Reference") {
 
     scenario("Get existing case") {
 
@@ -201,7 +201,7 @@ class CaseSpec extends BaseFeatureSpec {
   }
 
 
-  feature("Get Cases") {
+  feature("Get All Cases") {
 
     scenario("Get all cases") {
 
@@ -279,55 +279,6 @@ class CaseSpec extends BaseFeatureSpec {
 
       And("No cases are returned in the JSON response")
       Json.parse(result.body) shouldBe Json.toJson(Seq.empty[Case])
-    }
-
-  }
-
-
-  feature("Get Cases sorted by days elapsed") {
-    val oldCase = c1.copy(daysElapsed = 1)
-    val newCase = c2.copy(daysElapsed = 0)
-
-    scenario("Sorting default") {
-      Given("There are few cases in the database")
-      storeCases(oldCase, newCase)
-
-      When("I get all cases sorted by elapsed days")
-      val result = Http(s"$serviceUrl/cases?sort_by=days-elapsed").asString
-
-      Then("The response code should be 200")
-      result.code shouldEqual OK
-
-      And("The expected cases are returned in the JSON response")
-      Json.parse(result.body) shouldBe Json.toJson(Seq(oldCase, newCase))
-    }
-
-    scenario("Sorting ascending") {
-      Given("There are few cases in the database")
-      storeCases(oldCase, newCase)
-
-      When("I get all cases sorted by elapsed days")
-      val result = Http(s"$serviceUrl/cases?sort_by=days-elapsed&sort_direction=asc").asString
-
-      Then("The response code should be 200")
-      result.code shouldEqual OK
-
-      And("The expected cases are returned in the JSON response")
-      Json.parse(result.body) shouldBe Json.toJson(Seq(newCase, oldCase))
-    }
-
-    scenario("Sorting descending") {
-      Given("There are few cases in the database")
-      storeCases(oldCase, newCase)
-
-      When("I get all cases sorted by elapsed days")
-      val result = Http(s"$serviceUrl/cases?sort_by=days-elapsed&sort_direction=desc").asString
-
-      Then("The response code should be 200")
-      result.code shouldEqual OK
-
-      And("The expected cases are returned in the JSON response")
-      Json.parse(result.body) shouldBe Json.toJson(Seq(oldCase, newCase))
     }
 
   }
@@ -432,6 +383,7 @@ class CaseSpec extends BaseFeatureSpec {
 
   }
 
+
   feature("Get Cases by status") {
 
     scenario("Filtering cases by status") {
@@ -444,7 +396,7 @@ class CaseSpec extends BaseFeatureSpec {
       Json.parse(result.body) shouldBe Json.toJson(Seq(c2,c5))
     }
 
-    scenario("Filtering cases by multiple status") {
+    scenario("Filtering cases by multiple statuses") {
 
       storeCases(c1_updated, c2, c5)
 
@@ -454,7 +406,7 @@ class CaseSpec extends BaseFeatureSpec {
       Json.parse(result.body) shouldBe Json.toJson(Seq(c1_updated,c2,c5))
     }
 
-    scenario("Filtering cases by multiple status - comma separated") {
+    scenario("Filtering cases by multiple statuses - comma separated") {
 
       storeCases(c1_updated, c2, c5)
 
@@ -491,6 +443,7 @@ class CaseSpec extends BaseFeatureSpec {
 
   }
 
+
   feature("Get Cases by Min Decision End Date") {
 
     scenario("Filtering cases by Min Decision End Date") {
@@ -514,5 +467,55 @@ class CaseSpec extends BaseFeatureSpec {
     }
 
   }
+
+
+  feature("Get Cases sorted by days elapsed") {
+    val oldCase = c1.copy(daysElapsed = 1)
+    val newCase = c2.copy(daysElapsed = 0)
+
+    scenario("Sorting default") {
+      Given("There are few cases in the database")
+      storeCases(oldCase, newCase)
+
+      When("I get all cases sorted by elapsed days")
+      val result = Http(s"$serviceUrl/cases?sort_by=days-elapsed").asString
+
+      Then("The response code should be 200")
+      result.code shouldEqual OK
+
+      And("The expected cases are returned in the JSON response")
+      Json.parse(result.body) shouldBe Json.toJson(Seq(oldCase, newCase))
+    }
+
+    scenario("Sorting in ascending order") {
+      Given("There are few cases in the database")
+      storeCases(oldCase, newCase)
+
+      When("I get all cases sorted by elapsed days")
+      val result = Http(s"$serviceUrl/cases?sort_by=days-elapsed&sort_direction=asc").asString
+
+      Then("The response code should be 200")
+      result.code shouldEqual OK
+
+      And("The expected cases are returned in the JSON response")
+      Json.parse(result.body) shouldBe Json.toJson(Seq(newCase, oldCase))
+    }
+
+    scenario("Sorting in descending order") {
+      Given("There are few cases in the database")
+      storeCases(oldCase, newCase)
+
+      When("I get all cases sorted by elapsed days")
+      val result = Http(s"$serviceUrl/cases?sort_by=days-elapsed&sort_direction=desc").asString
+
+      Then("The response code should be 200")
+      result.code shouldEqual OK
+
+      And("The expected cases are returned in the JSON response")
+      Json.parse(result.body) shouldBe Json.toJson(Seq(oldCase, newCase))
+    }
+
+  }
+
 
 }

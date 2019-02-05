@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.bindingtariffclassification.model.search
+package uk.gov.hmrc.bindingtariffclassification.search
 
 import java.net.URLDecoder
 import java.time.Instant
 
 import uk.gov.hmrc.bindingtariffclassification.model.CaseStatus
-import uk.gov.hmrc.bindingtariffclassification.model.sort.{SortDirection, SortField}
+import uk.gov.hmrc.bindingtariffclassification.sort.{SortDirection, SortField}
 import uk.gov.hmrc.play.test.UnitSpec
 
 class SearchTest extends UnitSpec {
@@ -29,6 +29,7 @@ class SearchTest extends UnitSpec {
     field = SortField.DAYS_ELAPSED,
     direction = SortDirection.DESCENDING
   )
+
   private val filter = Filter(
     traderName = Some("trader-name"),
     queueId = Some("queue-id"),

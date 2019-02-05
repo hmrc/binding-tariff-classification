@@ -22,7 +22,7 @@ import play.api.mvc.{Action, AnyContent, Result}
 import uk.gov.hmrc.bindingtariffclassification.config.AppConfig
 import uk.gov.hmrc.bindingtariffclassification.model.ErrorCode.NOTFOUND
 import uk.gov.hmrc.bindingtariffclassification.model._
-import uk.gov.hmrc.bindingtariffclassification.model.search.Search
+import uk.gov.hmrc.bindingtariffclassification.search.Search
 import uk.gov.hmrc.bindingtariffclassification.service.CaseService
 
 import scala.concurrent.ExecutionContext.Implicits.global

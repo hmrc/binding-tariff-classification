@@ -14,16 +14,16 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.bindingtariffclassification.model.search
+package uk.gov.hmrc.bindingtariffclassification.search
 
 import java.time.Instant
 
 import play.api.mvc.QueryStringBindable
 import uk.gov.hmrc.bindingtariffclassification.model.CaseStatus
 import uk.gov.hmrc.bindingtariffclassification.model.CaseStatus.CaseStatus
-import uk.gov.hmrc.bindingtariffclassification.model.sort.SortDirection.SortDirection
-import uk.gov.hmrc.bindingtariffclassification.model.sort.SortField.SortField
-import uk.gov.hmrc.bindingtariffclassification.model.sort.{SortDirection, SortField}
+import uk.gov.hmrc.bindingtariffclassification.sort.SortDirection.SortDirection
+import uk.gov.hmrc.bindingtariffclassification.sort.SortField.SortField
+import uk.gov.hmrc.bindingtariffclassification.sort.{SortDirection, SortField}
 
 import scala.util.Try
 
@@ -65,6 +65,7 @@ object Sort {
   implicit def bindable(implicit stringBinder: QueryStringBindable[String]): QueryStringBindable[Sort] = new QueryStringBindable[Sort] {
 
     override def bind(key: String, params: Map[String, Seq[String]]): Option[Either[String, Sort]] = {
+
       def param(name: String): Option[String] = stringBinder.bind(name, params).filter(_.isRight).map(_.right.get)
 
       val field: Option[SortField] = param(sortByKey).flatMap(bindSortField)
@@ -88,10 +89,10 @@ object Sort {
 
 object Filter {
 
-  private val traderNameKey = "trader_name"
   private val queueIdKey = "queue_id"
   private val assigneeIdKey = "assignee_id"
   private val statusKey = "status"
+  private val traderNameKey = "trader_name"
   private val minDecisionEndKey = "min_decision_end"
 
   implicit def bindable(implicit stringBinder: QueryStringBindable[String]): QueryStringBindable[Filter] = new QueryStringBindable[Filter] {
@@ -106,29 +107,33 @@ object Filter {
       def params(name: String): Option[Set[String]] = requestParams.get(name).map(_.flatMap(_.split(",")).toSet).filter(_.nonEmpty)
       def param(name: String): Option[String] = params(name).map(_.head)
 
-      Some(Right(
-        Filter(queueId = param(queueIdKey),
-          assigneeId = param(assigneeIdKey),
-          statuses = params(statusKey).map(_.map(bindCaseStatus).filter(_.isDefined).map(_.get)),
-          traderName = param(traderNameKey),
-          minDecisionEnd = param(minDecisionEndKey).flatMap(bindInstant)
+      Some(
+        Right(
+          Filter(
+            queueId = param(queueIdKey),
+            assigneeId = param(assigneeIdKey),
+            statuses = params(statusKey).map(_.map(bindCaseStatus).filter(_.isDefined).map(_.get)),
+            traderName = param(traderNameKey),
+            minDecisionEnd = param(minDecisionEndKey).flatMap(bindInstant)
+          )
         )
-      ))
+      )
     }
 
     override def unbind(key: String, filter: Filter): String = {
       Seq(
-        filter.queueId.map(v => stringBinder.unbind(queueIdKey, v)),
-        filter.assigneeId.map(v => stringBinder.unbind(assigneeIdKey, v)),
-        filter.statuses.map(_.map(v => stringBinder.unbind(statusKey, v.toString)).mkString("&")),
-        filter.traderName.map(v => stringBinder.unbind(traderNameKey, v)),
-        filter.minDecisionEnd.map(v => stringBinder.unbind(minDecisionEndKey, v.toString))
+        filter.queueId.map(stringBinder.unbind(queueIdKey, _)),
+        filter.assigneeId.map(stringBinder.unbind(assigneeIdKey, _)),
+        filter.statuses.map(_.map(s => stringBinder.unbind(statusKey, s.toString)).mkString("&")),
+        filter.traderName.map(stringBinder.unbind(traderNameKey, _)),
+        filter.minDecisionEnd.map(i => stringBinder.unbind(minDecisionEndKey, i.toString))
       ).filter(_.isDefined).map(_.get).mkString("&")
     }
   }
 }
 
 object Search {
+
   implicit def bindable(implicit filterBinder: QueryStringBindable[Filter],
                         sortBinder: QueryStringBindable[Sort]): QueryStringBindable[Search] = new QueryStringBindable[Search] {
 
@@ -136,12 +141,14 @@ object Search {
       val filter: Option[Either[String, Filter]] = filterBinder.bind(key, params)
       val sort: Option[Either[String, Sort]] = sortBinder.bind(key, params)
 
-      Some(Right(
-        Search(
-          filter.map(_.right.get).getOrElse(Filter()),
-          sort.map(_.right.get)
+      Some(
+        Right(
+          Search(
+            filter.map(_.right.get).getOrElse(Filter()),
+            sort.map(_.right.get)
+          )
         )
-      ))
+      )
     }
 
     override def unbind(key: String, search: Search): String = {

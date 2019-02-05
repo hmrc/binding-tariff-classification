@@ -53,5 +53,7 @@ class ModuleTest extends UnitSpec with BeforeAndAfterEach with PlayRunners {
           .instanceOf[CaseRepository].isInstanceOf[CaseMongoRepository] shouldBe true
       }
     }
+
   }
+
 }

@@ -28,7 +28,7 @@ object EventData {
     Event(
       id = RandomGenerator.randomUUID(),
       details = Note(Some("This is a random note")),
-      operator = Operator(RandomGenerator.randomUUID, Some("user name")),
+      operator = Operator(RandomGenerator.randomUUID(), Some("user name")),
       caseReference = caseReference,
       timestamp = date
     )
@@ -38,7 +38,7 @@ object EventData {
     Event(
       id = RandomGenerator.randomUUID(),
       details = Note(Some("This is a note")),
-      operator = Operator(RandomGenerator.randomUUID, Some("user name")),
+      operator = Operator(RandomGenerator.randomUUID(), Some("user name")),
       caseReference = caseReference,
       timestamp = Instant.now()
     )
@@ -48,7 +48,7 @@ object EventData {
     Event(
       id = RandomGenerator.randomUUID(),
       details = CaseStatusChange(from = CaseStatus.DRAFT, to = CaseStatus.NEW),
-      operator = Operator(RandomGenerator.randomUUID, Some("user name")),
+      operator = Operator(RandomGenerator.randomUUID(), Some("user name")),
       caseReference = caseReference,
       timestamp = Instant.now()
     )

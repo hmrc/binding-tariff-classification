@@ -26,7 +26,7 @@ import reactivemongo.play.json.collection.JSONCollection
 import uk.gov.hmrc.bindingtariffclassification.crypto.Crypto
 import uk.gov.hmrc.bindingtariffclassification.model.CaseStatus.{NEW, OPEN}
 import uk.gov.hmrc.bindingtariffclassification.model.MongoFormatters.formatCase
-import uk.gov.hmrc.bindingtariffclassification.model.search.Search
+import uk.gov.hmrc.bindingtariffclassification.search.Search
 import uk.gov.hmrc.bindingtariffclassification.model.{Case, MongoFormatters}
 import uk.gov.hmrc.mongo.ReactiveRepository
 import uk.gov.hmrc.mongo.json.ReactiveMongoFormats
@@ -103,8 +103,6 @@ class CaseMongoRepository @Inject()(mongoDbProvider: MongoDbProvider, mapper: Se
     "daysElapsed"
   )
 
-  // TODO: text indexes could be used for searching keywords, comm code,  or non-exact match search (keywords + good description)
-
   override def indexes: Seq[Index] = {
     // TODO: We need to add relevant indexes for each possible search
     // TODO: We should add compound indexes for searches involving multiple fields
@@ -153,4 +151,5 @@ class CaseMongoRepository @Inject()(mongoDbProvider: MongoDbProvider, mapper: Se
       multi = true
     ).map(_.nModified)
   }
+
 }

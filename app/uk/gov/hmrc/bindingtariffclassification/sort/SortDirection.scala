@@ -14,10 +14,11 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.bindingtariffclassification.model.sort
+package uk.gov.hmrc.bindingtariffclassification.sort
 
+object SortDirection extends Enumeration {
+  type SortDirection = Value
 
-object SortField extends Enumeration {
-  type SortField = Value
-  val DAYS_ELAPSED = Value("days-elapsed")
+  val DESCENDING = Value(-1, "desc")
+  val ASCENDING = Value(1, "asc")
 }
