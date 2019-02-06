@@ -43,13 +43,14 @@ class CaseSpec extends BaseFeatureSpec {
   private val c2 = createCase(app = createLiabilityOrder,
     decision = Some(createDecision()),
     attachments = Seq(createAttachment,createAttachmentWithOperator),
-    keywords = Set("bike", "tool"))
+    keywords = Set("BIKE", "MTB", "HARDTAIL"))
   private val c3 = createNewCaseWithExtraFields()
   private val c4 = createNewCase(app = createBTIApplicationWithAllFields)
   private val c5 = createCase(app = createBasicBTIApplication.copy(holder = eORIDetailForNintedo))
   private val c6 = createCase(decision = Some(createDecision(effectiveEndDate = Some(Instant.now().plusSeconds(60)))))
   private val c7 = createCase(app = createBasicBTIApplication.copy(goodDescription = "LAPTOP"))
   private val c8 = createCase(app = createBasicBTIApplication.copy(goodDescription = "this is a great laptop from Mexico"))
+  private val c9 = createCase(keywords = Set("MTB", "BICYCLE"))
 
   private val c0Json = Json.toJson(c0)
   private val c1Json = Json.toJson(c1)
@@ -426,6 +427,51 @@ class CaseSpec extends BaseFeatureSpec {
 
       result.code shouldEqual OK
       Json.parse(result.body) shouldBe Json.toJson(Seq(c1_updated,c2,c5))
+    }
+
+  }
+
+
+  feature("Get Cases by keywords") {
+
+    scenario("No matches") {
+
+      storeCases(c2, c9)
+
+      val result = Http(s"$serviceUrl/cases?keywords=PHONE").asString
+
+      result.code shouldEqual OK
+      result.body.toString shouldBe "[]"
+    }
+
+    scenario("Filtering cases by single keyword") {
+
+      storeCases(c2, c5, c9)
+
+      val result = Http(s"$serviceUrl/cases?keywords=MTB").asString
+
+      result.code shouldEqual OK
+      Json.parse(result.body) shouldBe Json.toJson(Seq(c2, c9))
+    }
+
+    scenario("Filtering cases by multiple keywords") {
+
+      storeCases(c2, c5, c9)
+
+      val result = Http(s"$serviceUrl/cases?keywords=MTB&keywords=HARDTAIL").asString
+
+      result.code shouldEqual OK
+      Json.parse(result.body) shouldBe Json.toJson(Seq(c2))
+    }
+
+    scenario("Filtering cases by multiple keywords - comma separated") {
+
+      storeCases(c2, c5, c9)
+
+      val result = Http(s"$serviceUrl/cases?keywords=MTB,HARDTAIL").asString
+
+      result.code shouldEqual OK
+      Json.parse(result.body) shouldBe Json.toJson(Seq(c2))
     }
 
   }

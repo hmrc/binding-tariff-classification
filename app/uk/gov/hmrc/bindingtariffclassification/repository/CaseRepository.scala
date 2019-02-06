@@ -102,6 +102,7 @@ class CaseMongoRepository @Inject()(mongoDbProvider: MongoDbProvider, mapper: Se
     "decision.effectiveEndDate",
     "daysElapsed"
   )
+  // TODO: do we need an index for searching by keywords?!
 
   override def indexes: Seq[Index] = {
     // TODO: We need to add relevant indexes for each possible search

@@ -42,7 +42,8 @@ case class Filter
   traderName: Option[String] = None,
   minDecisionEnd: Option[Instant] = None,
   commodityCode: Option[String] = None,
-  goodDescription: Option[String] = None
+  goodDescription: Option[String] = None,
+  keywords: Option[Set[String]] = None
 )
 
 case class Sort
@@ -101,6 +102,7 @@ object Filter {
   private val minDecisionEndKey = "min_decision_end"
   private val commodityCodeKey = "commodity_code"
   private val goodDescriptionKey = "good_description"
+  private val keywordsKey = "keywords"
 
   implicit def bindable(implicit stringBinder: QueryStringBindable[String]): QueryStringBindable[Filter] = new QueryStringBindable[Filter] {
 
@@ -129,7 +131,8 @@ object Filter {
             traderName = param(traderNameKey),
             minDecisionEnd = param(minDecisionEndKey).flatMap(bindInstant),
             commodityCode = param(commodityCodeKey),
-            goodDescription = param(goodDescriptionKey)
+            goodDescription = param(goodDescriptionKey),
+            keywords = params(keywordsKey)
           )
         )
       )
@@ -143,7 +146,8 @@ object Filter {
         filter.traderName.map(stringBinder.unbind(traderNameKey, _)),
         filter.minDecisionEnd.map(i => stringBinder.unbind(minDecisionEndKey, i.toString)),
         filter.commodityCode.map(stringBinder.unbind(commodityCodeKey, _)),
-        filter.goodDescription.map(stringBinder.unbind(goodDescriptionKey, _))
+        filter.goodDescription.map(stringBinder.unbind(goodDescriptionKey, _)),
+        filter.keywords.map(_.map(s => stringBinder.unbind(keywordsKey, s.toString)).mkString("&"))
       ).filter(_.isDefined).map(_.get).mkString("&")
     }
   }

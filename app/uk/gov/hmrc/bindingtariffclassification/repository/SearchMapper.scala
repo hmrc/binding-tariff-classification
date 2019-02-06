@@ -36,16 +36,20 @@ class SearchMapper {
         filter.traderName.map("application.holder.businessName" -> nullifyNoneValues(_)) ++
         filter.minDecisionEnd.map("decision.effectiveEndDate" -> greaterThan(_)(formatInstant)) ++
         filter.commodityCode.map("decision.bindingCommodityCode" -> numberStartingWith(_)) ++
-        filter.goodDescription.map("application.goodDescription" -> contains(_))
+        filter.goodDescription.map("application.goodDescription" -> contains(_)) ++
+        filter.keywords.map("keywords" -> containsKeywords(_))
     )
   }
-
 
   def sortBy(sort: Sort): JsObject = {
     Json.obj(toMongoField(sort.field) -> sort.direction.id)
   }
 
-  def greaterThan[T](value: T)(implicit writes: Writes[T]): JsObject = {
+  private def containsKeywords(keys: Set[String]): JsObject = {
+    Json.obj("$all" -> keys)
+  }
+
+  private def greaterThan[T](value: T)(implicit writes: Writes[T]): JsObject = {
     Json.obj("$gte" -> value)
   }
 
