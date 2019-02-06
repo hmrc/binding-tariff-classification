@@ -587,7 +587,8 @@ class CaseRepositorySpec extends BaseMongoIndexSpec
         Index(key = Seq("application.holder.businessName" -> Ascending), name = Some("application.holder.businessName_Index"), unique = false),
         Index(key = Seq("assignee.id" -> Ascending), name = Some("assignee.id_Index"), unique = false),
         Index(key = Seq("decision.effectiveEndDate" -> Ascending), name = Some("decision.effectiveEndDate_Index"), unique = false),
-        Index(key = Seq("status" -> Ascending), name = Some("status_Index"), unique = false)
+        Index(key = Seq("status" -> Ascending), name = Some("status_Index"), unique = false),
+        Index(key = Seq("keywords" -> Ascending), name = Some("keywords_Index"), unique = false)
       )
 
       val repo = createMongoRepo

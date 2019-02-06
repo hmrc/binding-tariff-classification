@@ -100,7 +100,8 @@ class CaseMongoRepository @Inject()(mongoDbProvider: MongoDbProvider, mapper: Se
     "queueId",
     "status",
     "decision.effectiveEndDate",
-    "daysElapsed"
+    "daysElapsed",
+    "keywords"
   )
   // TODO: do we need an index for searching by keywords?!
 
