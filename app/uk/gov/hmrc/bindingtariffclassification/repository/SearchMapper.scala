@@ -37,7 +37,7 @@ class SearchMapper {
         filter.minDecisionEnd.map("decision.effectiveEndDate" -> greaterThan(_)(formatInstant)) ++
         filter.commodityCode.map("decision.bindingCommodityCode" -> numberStartingWith(_)) ++
         filter.goodDescription.map("application.goodDescription" -> contains(_)) ++
-        filter.keywords.map("keywords" -> containsKeywords(_))
+        filter.keywords.map("keywords" -> containsAll(_))
     )
   }
 
@@ -45,8 +45,8 @@ class SearchMapper {
     Json.obj(toMongoField(sort.field) -> sort.direction.id)
   }
 
-  private def containsKeywords(keys: Set[String]): JsObject = {
-    Json.obj("$all" -> keys)
+  private def containsAll(strs: Set[String]): JsObject = {
+    Json.obj("$all" -> strs)
   }
 
   private def greaterThan[T](value: T)(implicit writes: Writes[T]): JsObject = {
