@@ -49,7 +49,7 @@ class SearchMapperSpec extends UnitSpec {
         "application.holder.businessName" -> "trader_name",
         "decision.effectiveEndDate" -> Json.obj("$gte" -> Json.obj("$date" -> 0)),
         "decision.bindingCommodityCode" -> Json.obj("$regex" -> "^12345\\d*"),
-        "application.goodDescription" -> Json.obj("$regex" -> ".*strawberry", "$options" -> "i")
+        "application.goodDescription" -> Json.obj("$regex" -> ".*strawberry.*", "$options" -> "i")
       )
     }
 
@@ -83,7 +83,7 @@ class SearchMapperSpec extends UnitSpec {
     }
 
     "convert to Json when just the `goodDescription` param is taken into account " in {
-      val expectedResult = Json.obj("application.goodDescription" -> Json.obj("$regex" -> ".*strawberry", "$options" -> "i"))
+      val expectedResult = Json.obj("application.goodDescription" -> Json.obj("$regex" -> ".*strawberry.*", "$options" -> "i"))
       jsonMapper.filterBy(Filter(goodDescription = Some("strawberry"))) shouldBe expectedResult
     }
 

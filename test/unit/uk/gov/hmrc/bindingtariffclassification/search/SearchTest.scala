@@ -56,7 +56,7 @@ class SearchTest extends UnitSpec {
   "Search Binder" should {
 
     "Unbind Unpopulated Search to Query String" in {
-      Search.bindable.unbind("", Search()) shouldBe "sort_by=commodity-code&sort_direction=asc"
+      Search.bindable.unbind("", Search()) shouldBe ""
     }
 
     "Unbind Populated Search to Query String" in {
@@ -73,7 +73,7 @@ class SearchTest extends UnitSpec {
     }
 
     "Bind empty query string" in {
-      Search.bindable.bind("", Map()) shouldBe Some(Right(Search(sort = None)))
+      Search.bindable.bind("", Map()) shouldBe Some(Right(Search()))
     }
 
     "Bind populated query string" in {

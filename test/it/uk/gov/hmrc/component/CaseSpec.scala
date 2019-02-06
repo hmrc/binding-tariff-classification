@@ -443,7 +443,7 @@ class CaseSpec extends BaseFeatureSpec {
       Json.parse(result.body) shouldBe Json.toJson(Seq(c1,c2))
     }
 
-    // currently not returning anything - as the trader name is encrypted
+    // currently not implemented
     scenario("Case-insensitive search") {
 
       storeCases(c1)
@@ -454,7 +454,7 @@ class CaseSpec extends BaseFeatureSpec {
       result.body.toString shouldBe "[]"
     }
 
-    // currently not returning anything - as the trader name is encrypted
+    // currently not implemented
     scenario("Search by substring") {
 
       storeCases(c1)
@@ -661,10 +661,10 @@ class CaseSpec extends BaseFeatureSpec {
 
   feature("Get Cases sorted by days elapsed") {
 
-    val oldCase = c1.copy(daysElapsed = 0)
-    val newCase = c2.copy(daysElapsed = 1)
+    val oldCase = c1.copy(daysElapsed = 1)
+    val newCase = c2.copy(daysElapsed = 0)
 
-    scenario("Sorting default - descending order") {
+    scenario("Sorting default - ascending order") {
       Given("There are few cases in the database")
       storeCases(oldCase, newCase)
 
@@ -689,7 +689,7 @@ class CaseSpec extends BaseFeatureSpec {
       result.code shouldEqual OK
 
       And("The expected cases are returned in the JSON response")
-      Json.parse(result.body) shouldBe Json.toJson(Seq(oldCase, newCase))
+      Json.parse(result.body) shouldBe Json.toJson(Seq(newCase, oldCase))
     }
 
     scenario("Sorting in descending order") {
@@ -703,7 +703,7 @@ class CaseSpec extends BaseFeatureSpec {
       result.code shouldEqual OK
 
       And("The expected cases are returned in the JSON response")
-      Json.parse(result.body) shouldBe Json.toJson(Seq(newCase, oldCase))
+      Json.parse(result.body) shouldBe Json.toJson(Seq(oldCase, newCase))
     }
 
   }

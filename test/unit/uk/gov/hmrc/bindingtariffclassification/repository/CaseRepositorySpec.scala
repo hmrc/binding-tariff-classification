@@ -54,7 +54,7 @@ class CaseRepositorySpec extends BaseMongoIndexSpec
   private val repository = createMongoRepo
 
   private def createMongoRepo = {
-    new CaseMongoRepository(mongoDbProvider, new SearchMapper) // TODO: we should mock `searchMapper`
+    new CaseMongoRepository(mongoDbProvider, new SearchMapper)
   }
 
   private val case1: Case = createCase()
@@ -140,8 +140,6 @@ class CaseRepositorySpec extends BaseMongoIndexSpec
       collectionSize shouldBe size + 1
     }
   }
-
-  // TODO: we should mock the search mapper and avoid testing all possible scenarios - this is already covered in the integration tests
 
   "get without search parameters" should {
 

@@ -31,7 +31,7 @@ import scala.util.Try
 case class Search
 (
   filter: Filter = Filter(),
-  sort: Option[Sort] = Some(Sort(field = SortField.COMMODITY_CODE, direction = SortDirection.ASCENDING))
+  sort: Option[Sort] = None
 )
 
 case class Filter
@@ -48,7 +48,7 @@ case class Filter
 case class Sort
 (
   field: SortField,
-  direction: SortDirection
+  direction: SortDirection = SortDirection.ASCENDING
 )
 
 object Sort {
@@ -64,11 +64,6 @@ object Sort {
     SortDirection.values.find(_.toString == key)
   }
 
-  private def defaultSortDirection: SortField => SortDirection = {
-    case DAYS_ELAPSED => DESCENDING
-    case COMMODITY_CODE => ASCENDING
-  }
-
   implicit def bindable(implicit stringBinder: QueryStringBindable[String]): QueryStringBindable[Sort] = new QueryStringBindable[Sort] {
 
     override def bind(key: String, params: Map[String, Seq[String]]): Option[Either[String, Sort]] = {
@@ -78,7 +73,11 @@ object Sort {
       val field: Option[SortField] = param(sortByKey).flatMap(bindSortField)
       val direction: Option[SortDirection] = param(sortDirectionKey).flatMap(bindSortDirection)
 
-      field.map ( f => Right( Sort( f, direction.getOrElse(defaultSortDirection(f)) ) ) )
+      (field, direction) match {
+        case (Some(f), Some(d)) => Some(Right(Sort(field = f, direction = d)))
+        case (Some(f), _) => Some(Right(Sort(field = f)))
+        case _ => None
+      }
     }
 
     override def unbind(key: String, query: Sort): String = {

@@ -188,7 +188,6 @@ class CaseControllerSpec extends UnitSpec with WithFakeApplication with MockitoS
 
     val queueId = Some("valid_queueId")
     val assigneeId = Some("valid_assigneeId")
-    // TODO: use all search parameters
 
     val search = Search(
       filter = Filter(queueId = queueId, assigneeId = assigneeId, statuses = Some(Set(CaseStatus.NEW, CaseStatus.OPEN))),

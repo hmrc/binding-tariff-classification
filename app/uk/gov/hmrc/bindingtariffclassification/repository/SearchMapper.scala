@@ -77,7 +77,7 @@ class SearchMapper {
   }
 
   private def contains(value: String): JsObject = {
-    Json.obj( regexFilter(s".*$value"), caseInsensitiveFilter )
+    Json.obj( regexFilter(s".*$value.*"), caseInsensitiveFilter )
   }
 
   private def regexFilter(reg: String): (String, JsValueWrapper) = {
