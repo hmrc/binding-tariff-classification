@@ -100,7 +100,7 @@ class SearchMapper {
     sort match {
       case DAYS_ELAPSED => "daysElapsed"
       case COMMODITY_CODE => "decision.bindingCommodityCode"
-      case unknown => throw new IllegalArgumentException(s"cannot sort by field: $unknown")
+      case s => throw new IllegalArgumentException(s"cannot sort by field: $s")
     }
   }
 
