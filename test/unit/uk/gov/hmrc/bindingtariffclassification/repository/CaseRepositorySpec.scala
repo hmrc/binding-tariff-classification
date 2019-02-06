@@ -329,6 +329,58 @@ class CaseRepositorySpec extends BaseMongoIndexSpec
 
   }
 
+  "get by single keyword" should {
+
+    val c1 = createCase(keywords = Set("BIKE", "MTB"))
+    val c2 = createCase(keywords = Set("KNIFE", "KITCHEN"))
+    val c3 = createCase(keywords = Set("BIKE", "HARDTAIL"))
+
+    "return an empty sequence when there are no matches" in {
+      store(case1, c1)
+      val search = Search(Filter(keywords = Some(Set("KNIFE"))))
+      await(repository.get(search)) shouldBe Seq.empty
+    }
+
+    "return the expected document when there is one match" in {
+      store(case1, c1, c2)
+      val search = Search(Filter(keywords = Some(Set("KNIFE"))))
+      await(repository.get(search)) shouldBe Seq(c2)
+    }
+
+    "return the expected documents when there are multiple matches" in {
+      store(case1, c1, c2, c3)
+      val search = Search(Filter(keywords = Some(Set("BIKE"))))
+      await(repository.get(search)) shouldBe Seq(c1, c3)
+    }
+
+  }
+
+  "get by multiple keywords" should {
+
+    val c1 = createCase(keywords = Set("BIKE", "MTB"))
+    val c2 = createCase(keywords = Set("BIKE", "MTB", "29ER"))
+    val c3 = createCase(keywords = Set("BIKE", "HARDTAIL"))
+
+    "return an empty sequence when there are no matches" in {
+      store(case1, c1, c2, c3)
+      val search = Search(Filter(keywords = Some(Set("BIKE", "MTB", "HARDTAIL"))))
+      await(repository.get(search)) shouldBe Seq.empty
+    }
+
+    "return the expected document when there is one match" in {
+      store(case1, c1, c2, c3)
+      val search = Search(Filter(keywords = Some(Set("BIKE", "MTB", "29ER"))))
+      await(repository.get(search)) shouldBe Seq(c2)
+    }
+
+    "return the expected documents when there are multiple matches" in {
+      store(case1, c1, c2, c3)
+      val search = Search(Filter(keywords = Some(Set("BIKE", "MTB"))))
+      await(repository.get(search)) shouldBe Seq(c1, c2)
+    }
+
+  }
+
   "get by trader name" should {
 
     val novakApp = createBasicBTIApplication.copy(holder = createEORIDetails.copy(businessName = "Novak Djokovic"))
