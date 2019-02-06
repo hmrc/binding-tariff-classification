@@ -35,7 +35,8 @@ class SearchTest extends UnitSpec {
     queueId = Some("queue-id"),
     assigneeId = Some("assignee-id"),
     statuses = Some(Set(NEW, OPEN)),
-    minDecisionEnd = Some(Instant.EPOCH)
+    minDecisionEnd = Some(Instant.EPOCH),
+    keywords = Some(Set("BIKE", "MTB"))
   )
 
   private val search = Search(filter = filter, sort = Some(sort))
@@ -45,9 +46,10 @@ class SearchTest extends UnitSpec {
     "queue_id" -> Seq("queue-id"),
     "assignee_id" -> Seq("assignee-id"),
     "status" -> Seq("NEW", "OPEN"),
+    "min_decision_end" -> Seq("1970-01-01T00:00:00Z"),
+    "keywords" -> Seq("BIKE", "MTB"),
     "sort_by" -> Seq("days-elapsed"),
-    "sort_direction" -> Seq("desc"),
-    "min_decision_end" -> Seq("1970-01-01T00:00:00Z")
+    "sort_direction" -> Seq("desc")
   )
 
   /**
@@ -67,6 +69,8 @@ class SearchTest extends UnitSpec {
           "&status=OPEN" +
           "&trader_name=trader-name" +
           "&min_decision_end=1970-01-01T00:00:00Z" +
+          "&keywords=BIKE" +
+          "&keywords=MTB" +
           "&sort_by=days-elapsed" +
           "&sort_direction=desc"
       URLDecoder.decode(Search.bindable.unbind("", search), "UTF-8") shouldBe populatedQueryParam
@@ -98,7 +102,9 @@ class SearchTest extends UnitSpec {
           "&status=NEW" +
           "&status=OPEN" +
           "&trader_name=trader-name" +
-          "&min_decision_end=1970-01-01T00:00:00Z"
+          "&min_decision_end=1970-01-01T00:00:00Z" +
+          "&keywords=BIKE" +
+          "&keywords=MTB"
       URLDecoder.decode(Filter.bindable.unbind("", filter), "UTF-8") shouldBe populatedQueryParam
     }
 

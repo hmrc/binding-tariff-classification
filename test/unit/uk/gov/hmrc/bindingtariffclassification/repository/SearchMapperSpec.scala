@@ -39,7 +39,8 @@ class SearchMapperSpec extends UnitSpec {
         traderName = Some("trader_name"),
         minDecisionEnd = Some(Instant.EPOCH),
         commodityCode = Some(12345.toString),
-        goodDescription = Some("strawberry")
+        goodDescription = Some("strawberry"),
+        keywords = Some(Set("MTB", "BIKE"))
       )
 
       jsonMapper.filterBy(filter) shouldBe Json.obj(
@@ -49,7 +50,8 @@ class SearchMapperSpec extends UnitSpec {
         "application.holder.businessName" -> "trader_name",
         "decision.effectiveEndDate" -> Json.obj("$gte" -> Json.obj("$date" -> 0)),
         "decision.bindingCommodityCode" -> Json.obj("$regex" -> "^12345\\d*"),
-        "application.goodDescription" -> Json.obj("$regex" -> ".*strawberry.*", "$options" -> "i")
+        "application.goodDescription" -> Json.obj("$regex" -> ".*strawberry.*", "$options" -> "i"),
+        "keywords" -> Json.obj("$all" -> Json.arr("MTB", "BIKE"))
       )
     }
 
@@ -65,6 +67,14 @@ class SearchMapperSpec extends UnitSpec {
       jsonMapper.filterBy(Filter(statuses = Some(Set(CaseStatus.NEW, CaseStatus.OPEN)))) shouldBe Json.obj(
         "status" -> Json.obj(
           "$in" -> Json.arr("NEW", "OPEN")
+        )
+      )
+    }
+
+    "convert to Json when just the `keywords` param is taken into account " in {
+      jsonMapper.filterBy(Filter(keywords = Some(Set("BIKE", "MTB")))) shouldBe Json.obj(
+        "keywords" -> Json.obj(
+          "$all" -> Json.arr("BIKE", "MTB")
         )
       )
     }
