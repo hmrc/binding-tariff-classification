@@ -413,19 +413,22 @@ class CaseRepositorySpec extends BaseMongoIndexSpec
 
   "get by good description" should {
 
+    val c1 = createCase(decision = Some(createDecision(goodsDescription = "Amazing HTC smartphone")))
+    val c2 = createCase(decision = Some(createDecision(methodCommercialDenomination = Some("amazing football shoes"))))
+
     "return an empty sequence when there are no matches" in {
-      store(case1)
-      await(repository.get(Search(Filter(goodDescription = Some("iPhone"))))) shouldBe Seq.empty
+      store(case1, c1, c2)
+      await(repository.get(Search(Filter(goodDescription = Some("table"))))) shouldBe Seq.empty
     }
 
     "return the expected document when there is one match" in {
-      store(case1)
-      await(repository.get(Search(Filter(goodDescription = Some("HTC"))))) shouldBe Seq(case1)
+      store(case1, c1, c2)
+      await(repository.get(Search(Filter(goodDescription = Some("Football"))))) shouldBe Seq(c2)
     }
 
     "return the expected documents when there are multiple matches" in {
-      store(case1, case2)
-      await(repository.get(Search(Filter(goodDescription = Some("htc wildfire"))))) shouldBe Seq(case1, case2)
+      store(case1, c1, c2)
+      await(repository.get(Search(Filter(goodDescription = Some("amazing"))))) shouldBe Seq(c1, c2)
     }
   }
 

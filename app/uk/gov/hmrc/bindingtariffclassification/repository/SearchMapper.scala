@@ -36,8 +36,15 @@ class SearchMapper {
         filter.traderName.map("application.holder.businessName" -> nullifyNoneValues(_)) ++
         filter.minDecisionEnd.map("decision.effectiveEndDate" -> greaterThan(_)(formatInstant)) ++
         filter.commodityCode.map("decision.bindingCommodityCode" -> numberStartingWith(_)) ++
-        filter.goodDescription.map("application.goodDescription" -> contains(_)) ++
+        filter.goodDescription.map(matchGoodDescription) ++
         filter.keywords.map("keywords" -> containsAll(_))
+    )
+  }
+
+  private def matchGoodDescription = { v: String =>
+    "$or" -> Json.arr(
+      Json.obj("decision.goodsDescription" -> contains(v)),
+      Json.obj("decision.methodCommercialDenomination" -> contains(v))
     )
   }
 
@@ -80,7 +87,7 @@ class SearchMapper {
     Json.obj( regexFilter(s"^$value\\d*") )
   }
 
-  private def contains(value: String): JsObject = {
+  private def contains(value: String): JsValueWrapper = {
     Json.obj( regexFilter(s".*$value.*"), caseInsensitiveFilter )
   }
 

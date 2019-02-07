@@ -61,14 +61,16 @@ object CaseData {
                      effectiveEndDate: Option[Instant] = Some(Instant.now().plusSeconds(3 * secondsInAYear)),
                      methodSearch: Option[String] = Some("bike spanner"),
                      justification: String = "Found precedent case",
-                     goodsDescription: String = "Bike tool"): Decision = {
+                     goodsDescription: String = "Bike tool",
+                     methodCommercialDenomination: Option[String] = None): Decision = {
     Decision(
       bindingCommodityCode = bindingCommodityCode,
       effectiveStartDate = effectiveStartDate,
       effectiveEndDate = effectiveEndDate,
       methodSearch = methodSearch,
       justification = justification,
-      goodsDescription = goodsDescription
+      goodsDescription = goodsDescription,
+      methodCommercialDenomination = methodCommercialDenomination
     )
   }
 

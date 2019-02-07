@@ -48,8 +48,8 @@ class CaseSpec extends BaseFeatureSpec {
   private val c4 = createNewCase(app = createBTIApplicationWithAllFields)
   private val c5 = createCase(app = createBasicBTIApplication.copy(holder = eORIDetailForNintedo))
   private val c6 = createCase(decision = Some(createDecision(effectiveEndDate = Some(Instant.now().plusSeconds(60)))))
-  private val c7 = createCase(app = createBasicBTIApplication.copy(goodDescription = "LAPTOP"))
-  private val c8 = createCase(app = createBasicBTIApplication.copy(goodDescription = "this is a great laptop from Mexico"))
+  private val c7 = createCase(decision = Some(createDecision(goodsDescription = "LAPTOP")))
+  private val c8 = createCase(decision = Some(createDecision(methodCommercialDenomination = Some("this is a great laptop from Mexico"))))
   private val c9 = createCase(keywords = Set("MTB", "BICYCLE"))
 
   private val c0Json = Json.toJson(c0)
