@@ -52,7 +52,7 @@ class SearchMapperSpec extends UnitSpec {
         "decision.bindingCommodityCode" -> Json.obj("$regex" -> "^12345\\d*"),
         "$or" -> Json.arr(
           Json.obj("decision.goodsDescription" -> Json.obj("$regex" -> ".*strawberry.*", "$options" -> "i")),
-          Json.obj( "decision.methodCommercialDenomination" -> Json.obj("$regex" -> ".*strawberry.*", "$options" -> "i"))
+          Json.obj("decision.methodCommercialDenomination" -> Json.obj("$regex" -> ".*strawberry.*", "$options" -> "i"))
         ),
         "keywords" -> Json.obj("$all" -> Json.arr("MTB", "BIKE"))
       )
