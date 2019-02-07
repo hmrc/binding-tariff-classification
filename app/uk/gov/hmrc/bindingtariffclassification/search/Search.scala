@@ -102,7 +102,7 @@ object Filter {
   private val minDecisionEndKey = "min_decision_end"
   private val commodityCodeKey = "commodity_code"
   private val goodDescriptionKey = "good_description"
-  private val keywordsKey = "keywords"
+  private val keywordKey = "keyword"
 
   implicit def bindable(implicit stringBinder: QueryStringBindable[String]): QueryStringBindable[Filter] = new QueryStringBindable[Filter] {
 
@@ -132,7 +132,7 @@ object Filter {
             minDecisionEnd = param(minDecisionEndKey).flatMap(bindInstant),
             commodityCode = param(commodityCodeKey),
             goodDescription = param(goodDescriptionKey),
-            keywords = params(keywordsKey)
+            keywords = params(keywordKey)
           )
         )
       )
@@ -147,7 +147,7 @@ object Filter {
         filter.minDecisionEnd.map(i => stringBinder.unbind(minDecisionEndKey, i.toString)),
         filter.commodityCode.map(stringBinder.unbind(commodityCodeKey, _)),
         filter.goodDescription.map(stringBinder.unbind(goodDescriptionKey, _)),
-        filter.keywords.map(_.map(s => stringBinder.unbind(keywordsKey, s.toString)).mkString("&"))
+        filter.keywords.map(_.map(s => stringBinder.unbind(keywordKey, s.toString)).mkString("&"))
       ).filter(_.isDefined).map(_.get).mkString("&")
     }
   }

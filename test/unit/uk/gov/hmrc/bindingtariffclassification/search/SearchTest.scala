@@ -47,7 +47,7 @@ class SearchTest extends UnitSpec {
     "assignee_id" -> Seq("assignee-id"),
     "status" -> Seq("NEW", "OPEN"),
     "min_decision_end" -> Seq("1970-01-01T00:00:00Z"),
-    "keywords" -> Seq("BIKE", "MTB"),
+    "keyword" -> Seq("BIKE", "MTB"),
     "sort_by" -> Seq("days-elapsed"),
     "sort_direction" -> Seq("desc")
   )
@@ -69,8 +69,8 @@ class SearchTest extends UnitSpec {
           "&status=OPEN" +
           "&trader_name=trader-name" +
           "&min_decision_end=1970-01-01T00:00:00Z" +
-          "&keywords=BIKE" +
-          "&keywords=MTB" +
+          "&keyword=BIKE" +
+          "&keyword=MTB" +
           "&sort_by=days-elapsed" +
           "&sort_direction=desc"
       URLDecoder.decode(Search.bindable.unbind("", search), "UTF-8") shouldBe populatedQueryParam
@@ -103,8 +103,8 @@ class SearchTest extends UnitSpec {
           "&status=OPEN" +
           "&trader_name=trader-name" +
           "&min_decision_end=1970-01-01T00:00:00Z" +
-          "&keywords=BIKE" +
-          "&keywords=MTB"
+          "&keyword=BIKE" +
+          "&keyword=MTB"
       URLDecoder.decode(Filter.bindable.unbind("", filter), "UTF-8") shouldBe populatedQueryParam
     }
 
