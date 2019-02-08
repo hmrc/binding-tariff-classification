@@ -32,7 +32,8 @@ class CryptoSpec extends UnitSpec with MockitoSugar {
   private val simmetricCrypto = mock[CompositeSymmetricCrypto]
   private val crypto = new Crypto(simmetricCrypto)
 
-  private def encEori(k: String) = EORIDetails(k, k, k, k, k, k, k)
+  private def encEori(k: String) = EORIDetails(k, "John Lewis", k, k, k, k, k)
+  private def encAgentEori(k: String) = EORIDetails(k, "Frank Agent-Smith", k, k, k, k, k)
   private def encContacts(k: String) = Contact(k, k, Some(k))
 
   private val bti = createBTIApplicationWithAllFields
@@ -43,7 +44,7 @@ class CryptoSpec extends UnitSpec with MockitoSugar {
     bti.copy(
       holder = encEori(k),
       contact = encContacts(k),
-      agent = Some(AgentDetails(encEori(k), letter)),
+      agent = Some(AgentDetails(encAgentEori(k), letter)),
       confidentialInformation = Some(k)
     )
   }

@@ -55,7 +55,7 @@ class Crypto @Inject()(crypto: CompositeSymmetricCrypto) {
   private def applyCrypto(e: EORIDetails)(f: String => String): EORIDetails = {
     e.copy(
       eori = f(e.eori),
-      businessName = f(e.businessName),
+      businessName = e.businessName,
       addressLine1 = f(e.addressLine1),
       addressLine2 = f(e.addressLine2),
       addressLine3 = f(e.addressLine3),
