@@ -33,24 +33,20 @@ class SearchMapper {
         filter.queueId.map("queueId" -> nullifyNoneValues(_)) ++
         filter.assigneeId.map("assignee.id" -> nullifyNoneValues(_)) ++
         filter.statuses.map("status" -> inArray[CaseStatus](_)) ++
-        filter.traderName.map("application.holder.businessName" -> nullifyNoneValues(_)) ++
+        filter.traderName.map("application.holder.businessName" -> contains(_)) ++
         filter.minDecisionEnd.map("decision.effectiveEndDate" -> greaterThan(_)(formatInstant)) ++
         filter.commodityCode.map("decision.bindingCommodityCode" -> numberStartingWith(_)) ++
-        filter.goodDescription.map( gd => any(matchingGoodsDescription(gd) ) ) ++
+        filter.goodDescription.map(description => either(
+          "decision.goodsDescription" -> contains(description),
+          "decision.methodCommercialDenomination" -> contains(description)
+        )) ++
         filter.keywords.map("keywords" -> containsAll(_))
     )
   }
 
-  private lazy val goodsDescriptionFields = {
-    Seq("decision.goodsDescription", "decision.methodCommercialDenomination")
-  }
-
-  private def matchingGoodsDescription: String => Seq[(String, JsValueWrapper)] = { gd: String =>
-    goodsDescriptionFields map ( _ -> contains(gd) )
-  }
-
-  private def any(conditions: Seq[(String, JsValueWrapper)]): (String, JsValue) = {
-    "$or" -> Json.toJson( conditions map (Json.obj(_)) )
+  private def either(conditions: (String, JsObject)*): (String, JsArray) = {
+    val objects: Seq[JsObject] = conditions.map(element => Json.obj(element._1 -> element._2))
+    "$or" -> JsArray(objects)
   }
 
   def sortBy(sort: Sort): JsObject = {
@@ -88,7 +84,7 @@ class SearchMapper {
     Json.obj( regexFilter(s"^$value\\d*") )
   }
 
-  private def contains(value: String): JsValueWrapper = {
+  private def contains(value: String): JsObject = {
     Json.obj( regexFilter(s".*$value.*"), caseInsensitiveFilter )
   }
 
