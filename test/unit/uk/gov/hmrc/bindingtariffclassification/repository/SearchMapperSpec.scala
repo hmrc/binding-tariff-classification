@@ -154,21 +154,6 @@ class SearchMapperSpec extends UnitSpec {
 
   }
 
-  "fromReferenceAndStatus()" should {
-
-    "convert to Json from a valid reference and status" in {
-
-      val validRef = "valid_reference"
-      val notAllowedStatus = CaseStatus.REFERRED
-
-      jsonMapper.fromReferenceAndStatus(validRef, notAllowedStatus) shouldBe Json.obj(
-        "reference" -> validRef,
-        "status" -> Json.obj("$ne" -> "REFERRED")
-      )
-    }
-
-  }
-
   "updateField()" should {
 
     "convert to Json" in {
