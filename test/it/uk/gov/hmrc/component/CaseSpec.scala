@@ -519,17 +519,6 @@ class CaseSpec extends BaseFeatureSpec {
       result.body.toString shouldBe "[]"
     }
 
-    scenario("Filtering cases that have undefined trader name") {
-
-      storeCases(c1, c2, c5)
-
-      val result = Http(s"$serviceUrl/cases?trader_name=").asString
-
-      result.code shouldEqual OK
-      //TODO - this now returns ALL cases.  Should it continue to return nothing?
-//      result.body.toString shouldBe "[]"
-    }
-
   }
 
 

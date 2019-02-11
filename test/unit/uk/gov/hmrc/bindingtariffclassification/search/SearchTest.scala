@@ -52,6 +52,17 @@ class SearchTest extends UnitSpec {
     "sort_direction" -> Seq("desc")
   )
 
+  private val emptyParams: Map[String, Seq[String]] = Map(
+    "trader_name" -> Seq(""),
+    "queue_id" -> Seq(""),
+    "assignee_id" -> Seq(""),
+    "status" -> Seq(""),
+    "min_decision_end" -> Seq(""),
+    "keyword" -> Seq(""),
+    "sort_by" -> Seq(""),
+    "sort_direction" -> Seq("")
+  )
+
   /**
     * When we add fields to Search these tests shouldn't need changing, only the fields above.
     **/
@@ -78,6 +89,10 @@ class SearchTest extends UnitSpec {
 
     "Bind empty query string" in {
       Search.bindable.bind("", Map()) shouldBe Some(Right(Search()))
+    }
+
+    "Bind query string with empty values" in {
+      Search.bindable.bind("", emptyParams) shouldBe Some(Right(Search()))
     }
 
     "Bind populated query string" in {
@@ -112,6 +127,10 @@ class SearchTest extends UnitSpec {
       Filter.bindable.bind("", Map()) shouldBe Some(Right(Filter()))
     }
 
+    "Bind query string with empty values" in {
+      Filter.bindable.bind("", emptyParams) shouldBe Some(Right(Filter()))
+    }
+
     "Bind populated query string" in {
       Filter.bindable.bind("", params) shouldBe Some(Right(filter))
     }
@@ -126,6 +145,10 @@ class SearchTest extends UnitSpec {
 
     "Bind empty query string" in {
       Sort.bindable.bind("", Map()) shouldBe None
+    }
+
+    "Bind query string with empty values" in {
+      Sort.bindable.bind("", emptyParams) shouldBe None
     }
 
     "Bind populated query string" in {

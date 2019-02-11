@@ -22,8 +22,8 @@ import play.api.mvc.QueryStringBindable
 import uk.gov.hmrc.bindingtariffclassification.model.CaseStatus
 import uk.gov.hmrc.bindingtariffclassification.model.CaseStatus._
 import uk.gov.hmrc.bindingtariffclassification.sort.SortDirection._
-import uk.gov.hmrc.bindingtariffclassification.sort.{SortDirection, SortField}
 import uk.gov.hmrc.bindingtariffclassification.sort.SortField._
+import uk.gov.hmrc.bindingtariffclassification.sort.{SortDirection, SortField}
 
 import scala.util.Try
 
@@ -115,7 +115,7 @@ object Filter {
     override def bind(key: String, requestParams: Map[String, Seq[String]]): Option[Either[String, Filter]] = {
 
       def params(name: String): Option[Set[String]] = {
-        requestParams.get(name).map(_.flatMap(_.split(",")).toSet).filter(_.nonEmpty)
+        requestParams.get(name).map(_.flatMap(_.split(",")).toSet).filter(_.exists(_.nonEmpty))
       }
 
       def param(name: String): Option[String] = {
