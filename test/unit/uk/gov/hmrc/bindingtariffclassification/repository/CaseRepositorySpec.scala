@@ -390,24 +390,28 @@ class CaseRepositorySpec extends BaseMongoIndexSpec
       store(case1, caseX)
 
       await(repository.get(Search(Filter(traderName = Some("Alfred"))))) shouldBe Seq.empty
-
-      // substring search is not allowed
-      await(repository.get(Search(Filter(traderName = Some("Novak"))))) shouldBe Seq.empty
-
-      // case-sensitive is not allowed
-      await(repository.get(Search(Filter(traderName = Some("novak djokovic"))))) shouldBe Seq.empty
     }
 
     "return the expected document when there is one match" in {
       store(case1, caseX)
-      val search = Search(Filter(traderName = Some("Lewis")))
-      await(repository.get(search)) shouldBe Seq.empty
+
+      // full name search
+      await(repository.get(Search(Filter(traderName = Some("Novak Djokovic"))))) shouldBe Seq(caseX)
+
+      // substring search
+      await(repository.get(Search(Filter(traderName = Some("Novak"))))) shouldBe Seq(caseX)
+      await(repository.get(Search(Filter(traderName = Some("Djokovic"))))) shouldBe Seq(caseX)
+
+      // case-sensitive
+      await(repository.get(Search(Filter(traderName = Some("novak djokovic"))))) shouldBe Seq(caseX)
     }
 
     "return the expected documents when there are multiple matches" in {
-      store(case1, caseX)
+      val novakApp2 = createBasicBTIApplication.copy(holder = createEORIDetails.copy(businessName = "Novak Djokovic 2"))
+      val caseX2 = createCase(app = novakApp)
+      store(caseX, caseX2)
       val search = Search(Filter(traderName = Some("Novak Djokovic")))
-      await(repository.get(search)) shouldBe Seq(caseX)
+      await(repository.get(search)) shouldBe Seq(caseX, caseX2)
     }
   }
 
