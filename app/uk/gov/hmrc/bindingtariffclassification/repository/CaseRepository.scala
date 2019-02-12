@@ -17,7 +17,6 @@
 package uk.gov.hmrc.bindingtariffclassification.repository
 
 import javax.inject.{Inject, Singleton}
-import play.api.Logger
 import play.api.libs.json.Json
 import reactivemongo.api.indexes.Index
 import reactivemongo.bson.{BSONArray, BSONDocument, BSONDouble, BSONObjectID, BSONString}
@@ -31,7 +30,6 @@ import uk.gov.hmrc.mongo.ReactiveRepository
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
-import scala.util.{Failure, Success}
 
 trait CaseRepository {
 
@@ -50,8 +48,9 @@ trait CaseRepository {
 
 @Singleton
 class EncryptedCaseMongoRepository @Inject()(repository: CaseMongoRepository, crypto: Crypto) extends CaseRepository {
-  private def encrypt: Case => Case = crypto.encrypt
+
   private def encrypt(search: Search): Search = crypto.encrypt(search)
+  private def encrypt: Case => Case = crypto.encrypt
   private def decrypt: Case => Case = crypto.decrypt
 
   override def insert(c: Case): Future[Case] = repository.insert(encrypt(c)).map(decrypt)
@@ -77,18 +76,6 @@ class CaseMongoRepository @Inject()(mongoDbProvider: MongoDbProvider, mapper: Se
     domainFormat = MongoFormatters.formatCase) with CaseRepository with MongoCrudHelper[Case] {
 
   override val mongoCollection: JSONCollection = collection
-
-  //////////////////////////////////////////////////////////////////////////////////////////
-  // TODO: remove this block of code when the old index has been deleted in all environments
-  private def deleteWrongIndex(): Unit = {
-    val oldIndex = "assigneeId_Index"
-    collection.indexesManager.drop(oldIndex) onComplete {
-      case Success(n) => Logger.warn(s"Index $oldIndex has been deleted: $n")
-      case Failure(e) => Logger.error(s"Error found while deleting index $oldIndex.", e)
-    }
-  }
-  deleteWrongIndex()
-  //////////////////////////////////////////////////////////////////////////////////////////
 
   lazy private val uniqueSingleFieldIndexes = Seq("reference")
   lazy private val nonUniqueSingleFieldIndexes = Seq(
