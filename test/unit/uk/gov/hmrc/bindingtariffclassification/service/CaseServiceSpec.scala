@@ -143,24 +143,25 @@ class CaseServiceSpec extends UnitSpec with MockitoSugar with BeforeAndAfterEach
 
   "get()" should {
     val searchBy = mock[Search]
+    val pagination = mock[Pagination]
 
     "return the expected cases" in {
-      when(caseRepository.get(searchBy)).thenReturn(successful(Seq(c1)))
+      when(caseRepository.get(searchBy, pagination)).thenReturn(successful(Seq(c1)))
 
-      await(service.get(searchBy)) shouldBe Seq(c1)
+      await(service.get(searchBy, pagination)) shouldBe Seq(c1)
     }
 
     "return an empty sequence when there are no cases" in {
-      when(caseRepository.get(searchBy)).thenReturn(successful(Nil))
-      val result = await(service.get(searchBy))
+      when(caseRepository.get(searchBy, pagination)).thenReturn(successful(Nil))
+      val result = await(service.get(searchBy, pagination))
       result shouldBe Nil
     }
 
     "propagate any error" in {
-      when(caseRepository.get(searchBy)).thenThrow(emulatedFailure)
+      when(caseRepository.get(searchBy, pagination)).thenThrow(emulatedFailure)
 
       val caught = intercept[RuntimeException] {
-        await(service.get(searchBy))
+        await(service.get(searchBy, pagination))
       }
       caught shouldBe emulatedFailure
     }

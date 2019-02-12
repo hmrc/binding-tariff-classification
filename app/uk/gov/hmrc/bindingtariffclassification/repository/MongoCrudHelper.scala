@@ -17,9 +17,10 @@
 package uk.gov.hmrc.bindingtariffclassification.repository
 
 import play.api.libs.json._
-import reactivemongo.api.Cursor
+import reactivemongo.api.{Cursor, QueryOpts}
 import reactivemongo.play.json.ImplicitBSONHandlers._
 import reactivemongo.play.json.collection.JSONCollection
+import uk.gov.hmrc.bindingtariffclassification.model.Pagination
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -32,8 +33,12 @@ trait MongoCrudHelper[T] extends MongoIndexCreator {
     mongoCollection.find[JsObject, T](selector).one[T]
   }
 
-  protected def getMany(filterBy: JsObject, sortBy: JsObject)(implicit r: OFormat[T]): Future[List[T]] = {
-    mongoCollection.find[JsObject, T](filterBy).sort(sortBy).cursor[T]().collect[List](Int.MaxValue, Cursor.FailOnError[List[T]]())
+  protected def getMany(filterBy: JsObject, sortBy: JsObject, pagination: Pagination = Pagination())(implicit r: OFormat[T]): Future[List[T]] = {
+    mongoCollection.find[JsObject, T](filterBy)
+      .sort(sortBy)
+      .options(QueryOpts(skipN = (pagination.page -1) * pagination.pageSize, batchSizeN = pagination.pageSize))
+      .cursor[T]()
+      .collect[List](pagination.pageSize, Cursor.FailOnError[List[T]]())
   }
 
   protected def createOne(document: T)(implicit w: OWrites[T]): Future[T] = {

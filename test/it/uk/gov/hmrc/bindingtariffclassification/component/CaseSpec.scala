@@ -647,12 +647,6 @@ class CaseSpec extends BaseFeatureSpec {
     }
   }
 
-
-  feature("Get Cases by multiple parameters") {
-    // TODO
-  }
-
-
   feature("Get Cases sorted by commodity code") {
 
     val caseWithEmptyCommCode = createCase().copy(decision = None)
@@ -750,6 +744,25 @@ class CaseSpec extends BaseFeatureSpec {
 
       And("The expected cases are returned in the JSON response")
       Json.parse(result.body) shouldBe Json.toJson(Seq(oldCase, newCase))
+    }
+
+  }
+
+  feature("Get Cases with Pagination") {
+
+    scenario("Paginates with 'page_size' and 'page'") {
+
+      storeCases(c1, c2)
+
+      val result1 = Http(s"$serviceUrl/cases?page_size=1&page=1").asString
+
+      result1.code shouldEqual OK
+      Json.parse(result1.body) shouldBe Json.toJson(Seq(c1))
+
+      val result2 = Http(s"$serviceUrl/cases?page_size=1&page=2").asString
+
+      result2.code shouldEqual OK
+      Json.parse(result2.body) shouldBe Json.toJson(Seq(c2))
     }
 
   }

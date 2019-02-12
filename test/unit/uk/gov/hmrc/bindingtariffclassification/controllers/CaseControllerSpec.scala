@@ -192,19 +192,21 @@ class CaseControllerSpec extends UnitSpec with WithFakeApplication with MockitoS
       filter = Filter(queueId = queueId, assigneeId = assigneeId, statuses = Some(Set(CaseStatus.NEW, CaseStatus.OPEN))),
       sort = Some(Sort(field = SortField.DAYS_ELAPSED, direction = SortDirection.DESCENDING)))
 
-    "return 200 with the expected cases" in {
-      when(caseService.get(refEq(search))).thenReturn(successful(Seq(c1, c2)))
+    val pagination = Pagination()
 
-      val result = await(controller.get(search)(fakeRequest))
+    "return 200 with the expected cases" in {
+      when(caseService.get(refEq(search), refEq(pagination))).thenReturn(successful(Seq(c1, c2)))
+
+      val result = await(controller.get(search, pagination)(fakeRequest))
 
       status(result) shouldEqual OK
       jsonBodyOf(result) shouldEqual toJson(Seq(c1, c2))
     }
 
     "return 200 with an empty sequence if there are no cases" in {
-      when(caseService.get(search)).thenReturn(successful(Seq.empty))
+      when(caseService.get(search, pagination)).thenReturn(successful(Seq.empty))
 
-      val result = await(controller.get(search)(fakeRequest))
+      val result = await(controller.get(search, pagination)(fakeRequest))
 
       status(result) shouldEqual OK
       jsonBodyOf(result) shouldEqual toJson(Seq.empty[Case])
@@ -214,9 +216,9 @@ class CaseControllerSpec extends UnitSpec with WithFakeApplication with MockitoS
       val search = Search(Filter(), None)
       val error = new RuntimeException
 
-      when(caseService.get(refEq(search))).thenReturn(failed(error))
+      when(caseService.get(refEq(search), refEq(pagination))).thenReturn(failed(error))
 
-      val result = await(controller.get(search)(fakeRequest))
+      val result = await(controller.get(search, pagination)(fakeRequest))
 
       status(result) shouldEqual INTERNAL_SERVER_ERROR
       jsonBodyOf(result).toString() shouldEqual """{"code":"UNKNOWN_ERROR","message":"An unexpected error occurred"}"""

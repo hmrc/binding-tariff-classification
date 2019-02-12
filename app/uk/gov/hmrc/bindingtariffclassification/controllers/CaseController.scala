@@ -60,8 +60,8 @@ class CaseController @Inject()(appConfig: AppConfig,
     } recover recovery
   }
 
-  def get(search: Search): Action[AnyContent] = Action.async { implicit request =>
-    caseService.get(search) map { cases => Ok(Json.toJson(cases)) } recover recovery
+  def get(search: Search, pagination: Pagination): Action[AnyContent] = Action.async { implicit request =>
+    caseService.get(search, pagination) map { cases => Ok(Json.toJson(cases)) } recover recovery
   }
 
   def getByReference(reference: String): Action[AnyContent] = Action.async { implicit request =>

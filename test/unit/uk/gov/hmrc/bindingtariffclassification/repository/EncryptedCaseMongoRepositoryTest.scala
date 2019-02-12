@@ -22,7 +22,7 @@ import org.mockito.Mockito.verify
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.mockito.MockitoSugar
 import uk.gov.hmrc.bindingtariffclassification.crypto.Crypto
-import uk.gov.hmrc.bindingtariffclassification.model.{Case, Search}
+import uk.gov.hmrc.bindingtariffclassification.model.{Case, Pagination, Search}
 import uk.gov.hmrc.play.test.UnitSpec
 
 import scala.concurrent.Future.successful
@@ -35,6 +35,7 @@ class EncryptedCaseMongoRepositoryTest extends UnitSpec with MockitoSugar with B
   private val encryptedCaseSaved = mock[Case]
   private val rawSearch = mock[Search]
   private val encryptedSearch = mock[Search]
+  private val pagination = mock[Pagination]
   private val crypto = mock[Crypto]
   private val underlyingRepo = mock[CaseMongoRepository]
   private val repo = new EncryptedCaseMongoRepository(underlyingRepo, crypto)
@@ -81,8 +82,8 @@ class EncryptedCaseMongoRepositoryTest extends UnitSpec with MockitoSugar with B
 
   "Get" should {
     "Encrypt and delegate to Repository" in {
-      given(underlyingRepo.get(encryptedSearch)) willReturn successful(Seq(encryptedCaseSaved))
-      await(repo.get(rawSearch)) shouldBe Seq(rawCaseSaved)
+      given(underlyingRepo.get(encryptedSearch, pagination)) willReturn successful(Seq(encryptedCaseSaved))
+      await(repo.get(rawSearch, pagination)) shouldBe Seq(rawCaseSaved)
     }
   }
 
