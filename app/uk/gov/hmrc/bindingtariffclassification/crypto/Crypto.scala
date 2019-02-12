@@ -24,15 +24,23 @@ import uk.gov.hmrc.crypto.{CompositeSymmetricCrypto, Crypted, PlainText}
 class Crypto @Inject()(crypto: CompositeSymmetricCrypto) {
 
   def encrypt(c: Case): Case = {
-    applyCrypto(c) { s: String => crypto.encrypt(PlainText(s)).value }
+    applyCrypto(c)(encryptString)
   }
 
   def encrypt(search: Search): Search = {
-    applyCrypto(search) { s: String => crypto.encrypt(PlainText(s)).value }
+    applyCrypto(search)(encryptString)
   }
 
   def decrypt(c: Case): Case = {
-    applyCrypto(c) { s: String => crypto.decrypt(Crypted(s)).value }
+    applyCrypto(c)(decryptString)
+  }
+
+  private def encryptString: String => String = { s: String =>
+    crypto.encrypt(PlainText(s)).value
+  }
+
+  private def decryptString: String => String = { s: String =>
+    crypto.decrypt(Crypted(s)).value
   }
 
   private def applyCrypto(filter: Filter)(f: String => String): Filter = {
