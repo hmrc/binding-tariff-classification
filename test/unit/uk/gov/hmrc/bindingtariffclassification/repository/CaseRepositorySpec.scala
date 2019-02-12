@@ -459,6 +459,12 @@ class CaseRepositorySpec extends BaseMongoIndexSpec
 
   "pagination" should {
 
+    "return some cases with default Pagination" in {
+      store(case1)
+      store(case2)
+      await(repository.get(Search(), Pagination())).size shouldBe 2
+    }
+
     "return upto 'pageSize' cases" in {
       store(case1)
       store(case2)
