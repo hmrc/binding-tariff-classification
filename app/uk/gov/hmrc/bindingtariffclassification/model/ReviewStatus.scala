@@ -19,14 +19,4 @@ package uk.gov.hmrc.bindingtariffclassification.model
 object ReviewStatus extends Enumeration {
   type ReviewStatus = Value
   val IN_PROGRESS, UPHELD, OVERTURNED = Value
-
-  def format(status: Option[ReviewStatus]): String = {
-    status match {
-      case Some(IN_PROGRESS) => "Under review"
-      case Some(UPHELD) => "Review upheld"
-      case Some(OVERTURNED) => "Review overturned"
-      case None => "None"
-      case _ => ???
-    }
-  }
 }
