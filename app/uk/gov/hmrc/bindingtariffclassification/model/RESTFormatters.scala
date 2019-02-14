@@ -44,7 +44,7 @@ object RESTFormatters {
     .format
 
   implicit val formatAppeal = Json.format[Appeal]
-  implicit val formatReview = Json.format[Appeal]
+  implicit val formatReview = Json.format[Review]
   implicit val formatDecision = Json.format[Decision]
 
   implicit val formatCase = Jsonx.formatCaseClass[Case]
