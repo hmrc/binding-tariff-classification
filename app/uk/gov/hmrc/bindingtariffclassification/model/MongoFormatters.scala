@@ -49,6 +49,7 @@ object MongoFormatters {
   implicit val formatOperator = Json.format[Operator]
   implicit val formatCaseStatus = EnumJson.format(CaseStatus)
   implicit val formatAppealStatus = EnumJson.format(AppealStatus)
+  implicit val formatReviewStatus = EnumJson.format(ReviewStatus)
   implicit val formatStatus = Json.format[Status]
   implicit val formatApplicationType = EnumJson.format(ApplicationType)
   implicit val formatLiabilityStatus = EnumJson.format(LiabilityStatus)
@@ -64,17 +65,20 @@ object MongoFormatters {
     .format
 
   implicit val formatAppeal = Json.format[Appeal]
+  implicit val formatReview = Json.format[Review]
   implicit val formatDecision = Json.format[Decision]
   implicit val formatCase = JsonUtil.convertToOFormat(Jsonx.formatCaseClass[Case])
 
   // `Event` formatters
   implicit val formatCaseStatusChange = Json.format[CaseStatusChange]
   implicit val formatAppealStatusChange = Json.format[AppealStatusChange]
+  implicit val formatReviewStatusChange = Json.format[ReviewStatusChange]
   implicit val formatNote = Json.format[Note]
 
   implicit val formatEventDetail = Union.from[Details]("type")
     .and[CaseStatusChange](EventType.CASE_STATUS_CHANGE.toString)
     .and[AppealStatusChange](EventType.APPEAL_STATUS_CHANGE.toString)
+    .and[ReviewStatusChange](EventType.REVIEW_STATUS_CHANGE.toString)
     .and[Note](EventType.NOTE.toString)
     .format
 
