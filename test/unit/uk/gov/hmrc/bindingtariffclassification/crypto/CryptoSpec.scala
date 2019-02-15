@@ -76,13 +76,6 @@ class CryptoSpec extends UnitSpec with MockitoSugar {
       enc shouldBe c.copy(application = expectedEncryptedLiabilityOrder(k))
     }
 
-    "encrypt Search" in {
-      val search: Search = Search(filter = filter)
-      val enc: Search = crypto.encrypt(search)
-      enc shouldBe search.copy(filter = expectedEncryptedSearchFilter(k))
-
-    }
-
   }
 
   "decrypt()" should {
