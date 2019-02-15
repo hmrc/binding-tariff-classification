@@ -29,7 +29,8 @@ case class Decision
   methodCommercialDenomination: Option[String] = None,
   methodExclusion: Option[String] = None,
   appeal: Option[Appeal] = None,
-  review: Option[Review] = None
+  review: Option[Review] = None,
+  applicationForExtendedUse: Boolean = false
 )
 
 
