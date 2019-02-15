@@ -21,7 +21,7 @@ import play.api.libs.json.Json.JsValueWrapper
 import play.api.libs.json._
 import uk.gov.hmrc.bindingtariffclassification.model.CaseStatus.CaseStatus
 import uk.gov.hmrc.bindingtariffclassification.model.MongoFormatters.formatInstant
-import uk.gov.hmrc.bindingtariffclassification.search.{Filter, Sort}
+import uk.gov.hmrc.bindingtariffclassification.model.{Filter, Sort}
 import uk.gov.hmrc.bindingtariffclassification.sort.SortField._
 
 @Singleton

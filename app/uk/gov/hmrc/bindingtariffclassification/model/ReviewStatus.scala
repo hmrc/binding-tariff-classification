@@ -16,25 +16,7 @@
 
 package uk.gov.hmrc.bindingtariffclassification.model
 
-import java.time.Instant
-
-import uk.gov.hmrc.bindingtariffclassification.model.AppealStatus.AppealStatus
-
-case class Decision
-(
-  bindingCommodityCode: String,
-  effectiveStartDate: Option[Instant] = None,
-  effectiveEndDate: Option[Instant] = None,
-  justification: String,
-  goodsDescription: String,
-  methodSearch: Option[String] = None,
-  methodCommercialDenomination: Option[String] = None,
-  methodExclusion: Option[String] = None,
-  appeal: Option[Appeal] = None,
-  review: Option[Review] = None
-)
-
-case class Appeal
-(
-  status: AppealStatus
-)
+object ReviewStatus extends Enumeration {
+  type ReviewStatus = Value
+  val IN_PROGRESS, UPHELD, OVERTURNED = Value
+}

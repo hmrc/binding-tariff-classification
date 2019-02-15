@@ -17,7 +17,6 @@
 package uk.gov.hmrc.bindingtariffclassification.repository
 
 import javax.inject.{Inject, Singleton}
-import play.api.Logger
 import play.api.libs.json.Json
 import reactivemongo.api.indexes.Index
 import reactivemongo.bson.{BSONArray, BSONDocument, BSONDouble, BSONObjectID, BSONString}
@@ -26,14 +25,11 @@ import reactivemongo.play.json.collection.JSONCollection
 import uk.gov.hmrc.bindingtariffclassification.crypto.Crypto
 import uk.gov.hmrc.bindingtariffclassification.model.CaseStatus.{NEW, OPEN}
 import uk.gov.hmrc.bindingtariffclassification.model.MongoFormatters.formatCase
-import uk.gov.hmrc.bindingtariffclassification.search.Search
-import uk.gov.hmrc.bindingtariffclassification.model.{Case, MongoFormatters}
+import uk.gov.hmrc.bindingtariffclassification.model.{Case, MongoFormatters, Pagination, Search}
 import uk.gov.hmrc.mongo.ReactiveRepository
-import uk.gov.hmrc.mongo.json.ReactiveMongoFormats
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
-import scala.util.{Failure, Success}
 
 trait CaseRepository {
 
@@ -45,15 +41,16 @@ trait CaseRepository {
 
   def getByReference(reference: String): Future[Option[Case]]
 
-  def get(search: Search): Future[Seq[Case]]
+  def get(search: Search, pagination: Pagination): Future[Seq[Case]]
 
   def deleteAll(): Future[Unit]
 }
 
 @Singleton
 class EncryptedCaseMongoRepository @Inject()(repository: CaseMongoRepository, crypto: Crypto) extends CaseRepository {
-  private def encrypt: Case => Case = crypto.encrypt
+
   private def encrypt(search: Search): Search = crypto.encrypt(search)
+  private def encrypt: Case => Case = crypto.encrypt
   private def decrypt: Case => Case = crypto.decrypt
 
   override def insert(c: Case): Future[Case] = repository.insert(encrypt(c)).map(decrypt)
@@ -64,8 +61,8 @@ class EncryptedCaseMongoRepository @Inject()(repository: CaseMongoRepository, cr
 
   override def getByReference(reference: String): Future[Option[Case]] = repository.getByReference(reference).map(_.map(decrypt))
 
-  override def get(search: Search): Future[Seq[Case]] = {
-    repository.get(encrypt(search)).map(_.map(decrypt))
+  override def get(search: Search, pagination: Pagination): Future[Seq[Case]] = {
+    repository.get(encrypt(search), pagination).map(_.map(decrypt))
   }
 
   override def deleteAll(): Future[Unit] = repository.deleteAll()
@@ -76,22 +73,9 @@ class CaseMongoRepository @Inject()(mongoDbProvider: MongoDbProvider, mapper: Se
   extends ReactiveRepository[Case, BSONObjectID](
     collectionName = "cases",
     mongo = mongoDbProvider.mongo,
-    domainFormat = MongoFormatters.formatCase,
-    idFormat = ReactiveMongoFormats.objectIdFormats) with CaseRepository with MongoCrudHelper[Case] {
+    domainFormat = MongoFormatters.formatCase) with CaseRepository with MongoCrudHelper[Case] {
 
   override val mongoCollection: JSONCollection = collection
-
-  //////////////////////////////////////////////////////////////////////////////////////////
-  // TODO: remove this block of code when the old index has been deleted in all environments
-  private def deleteWrongIndex(): Unit = {
-    val oldIndex = "assigneeId_Index"
-    collection.indexesManager.drop(oldIndex) onComplete {
-      case Success(n) => Logger.warn(s"Index $oldIndex has been deleted: $n")
-      case Failure(e) => Logger.error(s"Error found while deleting index $oldIndex.", e)
-    }
-  }
-  deleteWrongIndex()
-  //////////////////////////////////////////////////////////////////////////////////////////
 
   lazy private val uniqueSingleFieldIndexes = Seq("reference")
   lazy private val nonUniqueSingleFieldIndexes = Seq(
@@ -100,6 +84,7 @@ class CaseMongoRepository @Inject()(mongoDbProvider: MongoDbProvider, mapper: Se
     "queueId",
     "status",
     "decision.effectiveEndDate",
+    "decision.bindingCommodityCode",
     "daysElapsed",
     "keywords"
   )
@@ -127,10 +112,11 @@ class CaseMongoRepository @Inject()(mongoDbProvider: MongoDbProvider, mapper: Se
     getOne(selector = mapper.reference(reference))
   }
 
-  override def get(search: Search): Future[Seq[Case]] = {
+  override def get(search: Search, pagination: Pagination): Future[Seq[Case]] = {
     getMany(
       filterBy = mapper.filterBy(search.filter),
-      sortBy = search.sort.map(mapper.sortBy).getOrElse(Json.obj())
+      sortBy = search.sort.map(mapper.sortBy).getOrElse(Json.obj()),
+      pagination
     )
   }
 

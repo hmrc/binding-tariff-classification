@@ -24,7 +24,6 @@ import reactivemongo.play.json.collection.JSONCollection
 import uk.gov.hmrc.bindingtariffclassification.model.MongoFormatters.formatSchedulerRunEvent
 import uk.gov.hmrc.bindingtariffclassification.model.{MongoFormatters, SchedulerRunEvent}
 import uk.gov.hmrc.mongo.ReactiveRepository
-import uk.gov.hmrc.mongo.json.ReactiveMongoFormats
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -41,8 +40,7 @@ class SchedulerLockMongoRepository @Inject()(mongoDbProvider: MongoDbProvider)
   extends ReactiveRepository[SchedulerRunEvent, BSONObjectID](
     collectionName = "scheduler",
     mongo = mongoDbProvider.mongo,
-    domainFormat = MongoFormatters.formatSchedulerRunEvent,
-    idFormat = ReactiveMongoFormats.objectIdFormats) with SchedulerLockRepository with MongoCrudHelper[SchedulerRunEvent] {
+    domainFormat = MongoFormatters.formatSchedulerRunEvent) with SchedulerLockRepository with MongoCrudHelper[SchedulerRunEvent] {
 
   override val mongoCollection: JSONCollection = collection
 

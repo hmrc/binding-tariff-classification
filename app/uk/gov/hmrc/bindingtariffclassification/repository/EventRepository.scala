@@ -24,7 +24,6 @@ import reactivemongo.play.json.collection.JSONCollection
 import uk.gov.hmrc.bindingtariffclassification.model.MongoFormatters.formatEvent
 import uk.gov.hmrc.bindingtariffclassification.model.{Event, MongoFormatters}
 import uk.gov.hmrc.mongo.ReactiveRepository
-import uk.gov.hmrc.mongo.json.ReactiveMongoFormats
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -44,8 +43,7 @@ class EventMongoRepository @Inject()(mongoDbProvider: MongoDbProvider)
   extends ReactiveRepository[Event, BSONObjectID](
     collectionName = "events",
     mongo = mongoDbProvider.mongo,
-    domainFormat = MongoFormatters.formatEvent,
-    idFormat = ReactiveMongoFormats.objectIdFormats) with EventRepository with MongoCrudHelper[Event] {
+    domainFormat = MongoFormatters.formatEvent) with EventRepository with MongoCrudHelper[Event] {
 
   override val mongoCollection: JSONCollection = collection
 

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.component
+package uk.gov.hmrc.bindingtariffclassification.component
 
 import java.util.UUID
 

@@ -19,8 +19,7 @@ package uk.gov.hmrc.bindingtariffclassification.repository
 import java.time.Instant
 
 import play.api.libs.json.{JsNull, Json}
-import uk.gov.hmrc.bindingtariffclassification.model.CaseStatus
-import uk.gov.hmrc.bindingtariffclassification.search.{Filter, Sort}
+import uk.gov.hmrc.bindingtariffclassification.model.{CaseStatus, Filter, Sort}
 import uk.gov.hmrc.bindingtariffclassification.sort.{SortDirection, SortField}
 import uk.gov.hmrc.play.test.UnitSpec
 

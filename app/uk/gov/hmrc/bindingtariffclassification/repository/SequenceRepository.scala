@@ -24,7 +24,6 @@ import reactivemongo.play.json.collection.JSONCollection
 import uk.gov.hmrc.bindingtariffclassification.model.MongoFormatters.formatSequence
 import uk.gov.hmrc.bindingtariffclassification.model.{MongoFormatters, Sequence}
 import uk.gov.hmrc.mongo.ReactiveRepository
-import uk.gov.hmrc.mongo.json.ReactiveMongoFormats
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -44,8 +43,7 @@ class SequenceMongoRepository @Inject()(mongoDbProvider: MongoDbProvider)
   extends ReactiveRepository[Sequence, BSONObjectID](
     collectionName = "sequences",
     mongo = mongoDbProvider.mongo,
-    domainFormat = MongoFormatters.formatSequence,
-    idFormat = ReactiveMongoFormats.objectIdFormats) with SequenceRepository with MongoCrudHelper[Sequence] {
+    domainFormat = MongoFormatters.formatSequence) with SequenceRepository with MongoCrudHelper[Sequence] {
 
   override val mongoCollection: JSONCollection = collection
 

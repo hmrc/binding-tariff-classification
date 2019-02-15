@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.bindingtariffclassifcation.connector
+package uk.gov.hmrc.bindingtariffclassification.connector
 
 import scala.io.Source
 

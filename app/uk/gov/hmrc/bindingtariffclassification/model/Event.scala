@@ -19,8 +19,10 @@ package uk.gov.hmrc.bindingtariffclassification.model
 import java.time.Instant
 import java.util.UUID
 
+import uk.gov.hmrc.bindingtariffclassification.model.AppealStatus.AppealStatus
 import uk.gov.hmrc.bindingtariffclassification.model.CaseStatus.CaseStatus
 import uk.gov.hmrc.bindingtariffclassification.model.EventType.EventType
+import uk.gov.hmrc.bindingtariffclassification.model.ReviewStatus.ReviewStatus
 
 case class Event
 (
@@ -46,6 +48,26 @@ case class CaseStatusChange
   override val `type` = EventType.CASE_STATUS_CHANGE
 }
 
+case class AppealStatusChange
+(
+  from: Option[AppealStatus],
+  to: Option[AppealStatus],
+  override val comment: Option[String] = None
+
+) extends Details {
+  override val `type`: EventType.Value = EventType.APPEAL_STATUS_CHANGE
+}
+
+case class ReviewStatusChange
+(
+  from: Option[ReviewStatus],
+  to: Option[ReviewStatus],
+  override val comment: Option[String] = None
+
+) extends Details {
+  override val `type`: EventType.Value = EventType.REVIEW_STATUS_CHANGE
+}
+
 case class Note
 (
   override val comment: Option[String]
@@ -58,5 +80,5 @@ case class Note
 
 object EventType extends Enumeration {
   type EventType = Value
-  val CASE_STATUS_CHANGE, NOTE = Value
+  val CASE_STATUS_CHANGE, APPEAL_STATUS_CHANGE, REVIEW_STATUS_CHANGE, NOTE = Value
 }

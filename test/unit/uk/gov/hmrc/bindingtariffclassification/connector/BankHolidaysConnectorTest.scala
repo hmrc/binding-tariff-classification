@@ -26,7 +26,6 @@ import org.scalatest.mockito.MockitoSugar
 import play.api.Environment
 import play.api.http.Status
 import play.api.libs.ws.WSClient
-import uk.gov.hmrc.bindingtariffclassifcation.connector.{ResourceFiles, WiremockTestServer}
 import uk.gov.hmrc.bindingtariffclassification.config.AppConfig
 import uk.gov.hmrc.bindingtariffclassification.http.ProxyHttpClient
 import uk.gov.hmrc.http.HeaderCarrier
