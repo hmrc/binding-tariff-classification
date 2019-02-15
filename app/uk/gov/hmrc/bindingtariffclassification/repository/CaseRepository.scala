@@ -79,7 +79,6 @@ class CaseMongoRepository @Inject()(mongoDbProvider: MongoDbProvider, mapper: Se
   lazy private val uniqueSingleFieldIndexes = Seq("reference")
   lazy private val nonUniqueSingleFieldIndexes = Seq(
     "assignee.id",
-    "application.holder.businessName", // TODO: to be removed if later we decide to use non-exact match search
     "queueId",
     "status",
     "decision.effectiveEndDate",
