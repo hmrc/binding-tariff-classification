@@ -27,7 +27,7 @@ object EventData {
   def createEvent(caseReference: String, date :  Instant): Event = {
     Event(
       id = RandomGenerator.randomUUID(),
-      details = Note(Some("This is a random note")),
+      details = Note("This is a random note"),
       operator = Operator(RandomGenerator.randomUUID(), Some("user name")),
       caseReference = caseReference,
       timestamp = date
@@ -37,7 +37,7 @@ object EventData {
   def createNoteEvent(caseReference: String): Event = {
     Event(
       id = RandomGenerator.randomUUID(),
-      details = Note(Some("This is a note")),
+      details = Note("This is a note"),
       operator = Operator(RandomGenerator.randomUUID(), Some("user name")),
       caseReference = caseReference,
       timestamp = Instant.now()

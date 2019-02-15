@@ -109,7 +109,7 @@ class EventSpec extends BaseFeatureSpec {
       storeCases(c1)
 
       When("I create an Event")
-      val payload = NewEventRequest(Note(Some("Note")), Operator("user-id", Some("user name")))
+      val payload = NewEventRequest(Note("Note"), Operator("user-id", Some("user name")))
       val result = Http(s"$serviceUrl/cases/$caseRef/events")
         .headers(Seq(CONTENT_TYPE -> "application/json"))
         .postData(Json.toJson(payload).toString()).asString

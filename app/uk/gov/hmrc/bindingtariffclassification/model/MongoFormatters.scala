@@ -73,12 +73,14 @@ object MongoFormatters {
   implicit val formatCaseStatusChange = Json.format[CaseStatusChange]
   implicit val formatAppealStatusChange = Json.format[AppealStatusChange]
   implicit val formatReviewStatusChange = Json.format[ReviewStatusChange]
+  implicit val formatExtendedUseStatusChange = Json.format[ExtendedUseStatusChange]
   implicit val formatNote = Json.format[Note]
 
   implicit val formatEventDetail = Union.from[Details]("type")
     .and[CaseStatusChange](EventType.CASE_STATUS_CHANGE.toString)
     .and[AppealStatusChange](EventType.APPEAL_STATUS_CHANGE.toString)
     .and[ReviewStatusChange](EventType.REVIEW_STATUS_CHANGE.toString)
+    .and[ExtendedUseStatusChange](EventType.EXTENDED_USE_STATUS_CHANGE.toString)
     .and[Note](EventType.NOTE.toString)
     .format
 

@@ -129,7 +129,7 @@ class EventControllerSpec extends UnitSpec with WithFakeApplication with Mockito
   }
 
   "create" should {
-    val note = Note(Some("note"))
+    val note = Note("note")
     val timestamp = Instant.EPOCH
     val userId = "user-id"
     val newEvent = NewEventRequest(note, Operator(userId, Some("user name")), timestamp)
