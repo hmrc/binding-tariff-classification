@@ -16,10 +16,9 @@
 
 package uk.gov.hmrc.bindingtariffclassification.model
 
-import uk.gov.hmrc.bindingtariffclassification.model.CancelReason.CancelReason
+object CancelReason extends Enumeration {
+  type CancelReason = Value
 
-case class Cancellation
-(
-  reason: CancelReason,
-  applicationForExtendedUse: Boolean = false
-)
+  val ANNULLED, INVALIDATED_CODE_CHANGE, INVALIDATED_EU_MEASURE, INVALIDATED_NATIONAL_MEASURE,
+  INVALIDATED_WRONG_CLASSIFICATION, INVALIDATED_OTHER = Value
+}
