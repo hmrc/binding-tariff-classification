@@ -598,7 +598,7 @@ class CaseSpec extends BaseFeatureSpec {
 
       storeCases(c1, c2, c5)
 
-      val result = Http(s"$serviceUrl/cases?good_description=laptop").asString
+      val result = Http(s"$serviceUrl/cases?decision_details=laptop").asString
 
       result.code shouldEqual OK
       result.body.toString shouldBe "[]"
@@ -608,7 +608,7 @@ class CaseSpec extends BaseFeatureSpec {
 
       storeCases(c1, c2, c7)
 
-      val result = Http(s"$serviceUrl/cases?good_description=LAPTOP").asString
+      val result = Http(s"$serviceUrl/cases?decision_details=LAPTOP").asString
 
       result.code shouldEqual OK
       Json.parse(result.body) shouldBe Json.toJson(Seq(c7))
@@ -618,7 +618,7 @@ class CaseSpec extends BaseFeatureSpec {
 
       storeCases(c1, c2, c7)
 
-      val result = Http(s"$serviceUrl/cases?good_description=laptop").asString
+      val result = Http(s"$serviceUrl/cases?decision_details=laptop").asString
 
       result.code shouldEqual OK
       Json.parse(result.body) shouldBe Json.toJson(Seq(c7))
@@ -628,7 +628,7 @@ class CaseSpec extends BaseFeatureSpec {
 
       storeCases(c1, c2, c7, c8)
 
-      val result = Http(s"$serviceUrl/cases?good_description=laptop").asString
+      val result = Http(s"$serviceUrl/cases?decision_details=laptop").asString
 
       result.code shouldEqual OK
       Json.parse(result.body) shouldBe Json.toJson(Seq(c7, c8))

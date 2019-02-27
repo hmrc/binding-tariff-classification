@@ -36,9 +36,10 @@ class SearchMapper {
         filter.traderName.map("application.holder.businessName" -> contains(_)) ++
         filter.minDecisionEnd.map("decision.effectiveEndDate" -> greaterThan(_)(formatInstant)) ++
         filter.commodityCode.map("decision.bindingCommodityCode" -> numberStartingWith(_)) ++
-        filter.goodDescription.map(description => either(
+        filter.decisionDetails.map(description => either(
           "decision.goodsDescription" -> contains(description),
-          "decision.methodCommercialDenomination" -> contains(description)
+          "decision.methodCommercialDenomination" -> contains(description),
+          "decision.justification" -> contains(description)
         )) ++
         filter.keywords.map("keywords" -> containsAll(_))
     )

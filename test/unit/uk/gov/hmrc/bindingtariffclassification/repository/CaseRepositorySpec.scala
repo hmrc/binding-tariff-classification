@@ -423,17 +423,17 @@ class CaseRepositorySpec extends BaseMongoIndexSpec
 
     "return an empty sequence when there are no matches" in {
       store(case1, c1, c2)
-      await(repository.get(Search(Filter(goodDescription = Some("table"))), Pagination())) shouldBe Seq.empty
+      await(repository.get(Search(Filter(decisionDetails = Some("table"))), Pagination())) shouldBe Seq.empty
     }
 
     "return the expected document when there is one match" in {
       store(case1, c1, c2)
-      await(repository.get(Search(Filter(goodDescription = Some("Football"))), Pagination())) shouldBe Seq(c2)
+      await(repository.get(Search(Filter(decisionDetails = Some("Football"))), Pagination())) shouldBe Seq(c2)
     }
 
     "return the expected documents when there are multiple matches" in {
       store(case1, c1, c2)
-      await(repository.get(Search(Filter(goodDescription = Some("amazing"))), Pagination())) shouldBe Seq(c1, c2)
+      await(repository.get(Search(Filter(decisionDetails = Some("amazing"))), Pagination())) shouldBe Seq(c1, c2)
     }
   }
 

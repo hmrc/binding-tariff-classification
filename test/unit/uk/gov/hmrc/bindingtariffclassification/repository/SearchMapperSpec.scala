@@ -38,7 +38,7 @@ class SearchMapperSpec extends UnitSpec {
         traderName = Some("trader_name"),
         minDecisionEnd = Some(Instant.EPOCH),
         commodityCode = Some(12345.toString),
-        goodDescription = Some("strawberry"),
+        decisionDetails = Some("strawberry"),
         keywords = Some(Set("MTB", "BIKE"))
       )
 
@@ -54,7 +54,8 @@ class SearchMapperSpec extends UnitSpec {
         "decision.bindingCommodityCode" -> Json.obj("$regex" -> "^12345\\d*"),
         "$or" -> Json.arr(
           Json.obj("decision.goodsDescription" -> Json.obj("$regex" -> ".*strawberry.*", "$options" -> "i")),
-          Json.obj("decision.methodCommercialDenomination" -> Json.obj("$regex" -> ".*strawberry.*", "$options" -> "i"))
+          Json.obj("decision.methodCommercialDenomination" -> Json.obj("$regex" -> ".*strawberry.*", "$options" -> "i")),
+          Json.obj("decision.justification" -> Json.obj("$regex" -> ".*strawberry.*", "$options" -> "i"))
         ),
         "keywords" -> Json.obj("$all" -> Json.arr("MTB", "BIKE"))
       )
@@ -102,14 +103,15 @@ class SearchMapperSpec extends UnitSpec {
       jsonMapper.filterBy(Filter(commodityCode = Some("1234"))) shouldBe expectedResult
     }
 
-    "convert to Json when just the `goodDescription` param is taken into account " in {
+    "convert to Json when just the `decisionDetails` param is taken into account " in {
       val expectedResult = Json.obj("$or" ->
         Json.arr(
           Json.obj("decision.goodsDescription" -> Json.obj("$regex" -> ".*strawberry.*", "$options" -> "i")),
-          Json.obj("decision.methodCommercialDenomination" -> Json.obj("$regex" -> ".*strawberry.*", "$options" -> "i"))
+          Json.obj("decision.methodCommercialDenomination" -> Json.obj("$regex" -> ".*strawberry.*", "$options" -> "i")),
+          Json.obj("decision.justification" -> Json.obj("$regex" -> ".*strawberry.*", "$options" -> "i"))
         )
       )
-      jsonMapper.filterBy(Filter(goodDescription = Some("strawberry"))) shouldBe expectedResult
+      jsonMapper.filterBy(Filter(decisionDetails = Some("strawberry"))) shouldBe expectedResult
     }
 
     "convert to Json when fields `queueId` and `assigneeId` are set to `none` " in {
