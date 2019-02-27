@@ -81,10 +81,10 @@ case class ExtendedUseStatusChange
 
 case class AssignmentChange
 (
-  override val from: String,
-  override val to: String,
+  override val from: Option[String],
+  override val to: Option[String],
   override val comment: Option[String] = None
-) extends FieldChange[String] {
+) extends FieldChange[Option[String]] {
   override val `type`: EventType.Value = EventType.ASSIGNMENT_CHANGE
 }
 
