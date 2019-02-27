@@ -59,6 +59,7 @@ object RESTFormatters {
   implicit val formatAppealStatusChange = Json.format[AppealStatusChange]
   implicit val formatReviewStatusChange = Json.format[ReviewStatusChange]
   implicit val formatExtendedUseStatusChange = Json.format[ExtendedUseStatusChange]
+  implicit val formatAssignmentChange = Json.format[AssignmentChange]
   implicit val formatNote = Json.format[Note]
 
   implicit val formatEventDetail = Union.from[Details]("type")
@@ -66,6 +67,7 @@ object RESTFormatters {
     .and[AppealStatusChange](EventType.APPEAL_STATUS_CHANGE.toString)
     .and[ReviewStatusChange](EventType.REVIEW_STATUS_CHANGE.toString)
     .and[ExtendedUseStatusChange](EventType.EXTENDED_USE_STATUS_CHANGE.toString)
+    .and[AssignmentChange](EventType.ASSIGNMENT_CHANGE.toString)
     .and[Note](EventType.NOTE.toString)
     .format
 
