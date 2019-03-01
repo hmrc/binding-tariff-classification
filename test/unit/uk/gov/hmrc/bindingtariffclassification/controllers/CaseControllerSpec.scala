@@ -195,21 +195,21 @@ class CaseControllerSpec extends UnitSpec with WithFakeApplication with MockitoS
     val pagination = Pagination()
 
     "return 200 with the expected cases" in {
-      when(caseService.get(refEq(search), refEq(pagination))).thenReturn(successful(Seq(c1, c2)))
+      when(caseService.get(refEq(search), refEq(pagination))).thenReturn(successful(Paged(Seq(c1, c2))))
 
       val result = await(controller.get(search, pagination)(fakeRequest))
 
       status(result) shouldEqual OK
-      jsonBodyOf(result) shouldEqual toJson(Seq(c1, c2))
+      jsonBodyOf(result) shouldEqual toJson(Paged(Seq(c1, c2)))
     }
 
     "return 200 with an empty sequence if there are no cases" in {
-      when(caseService.get(search, pagination)).thenReturn(successful(Seq.empty))
+      when(caseService.get(search, pagination)).thenReturn(successful(Paged.empty[Case]))
 
       val result = await(controller.get(search, pagination)(fakeRequest))
 
       status(result) shouldEqual OK
-      jsonBodyOf(result) shouldEqual toJson(Seq.empty[Case])
+      jsonBodyOf(result) shouldEqual toJson(Paged.empty[Case])
     }
 
     "return 500 when an error occurred" in {

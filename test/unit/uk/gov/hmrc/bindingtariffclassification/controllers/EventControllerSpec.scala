@@ -98,29 +98,29 @@ class EventControllerSpec extends UnitSpec with WithFakeApplication with Mockito
   "getByCaseReference()" should {
 
     "return 200 with the expected events" in {
-      when(eventService.getByCaseReference(caseReference)).thenReturn(successful(Seq(e1, e2)))
+      when(eventService.getByCaseReference(caseReference, Pagination())).thenReturn(successful(Paged(Seq(e1, e2))))
 
-      val result = await(controller.getByCaseReference(caseReference)(fakeRequest))
+      val result = await(controller.getByCaseReference(caseReference, Pagination())(fakeRequest))
 
       status(result) shouldEqual OK
-      jsonBodyOf(result) shouldEqual toJson(Seq(e1, e2))
+      jsonBodyOf(result) shouldEqual toJson(Paged(Seq(e1, e2)))
     }
 
     "return 200 with an empty sequence when there are no events for a specific case" in {
-      when(eventService.getByCaseReference(caseReference)).thenReturn(successful(Seq.empty))
+      when(eventService.getByCaseReference(caseReference, Pagination())).thenReturn(successful(Paged.empty[Event]))
 
-      val result = await(controller.getByCaseReference(caseReference)(fakeRequest))
+      val result = await(controller.getByCaseReference(caseReference, Pagination())(fakeRequest))
 
       status(result) shouldEqual OK
-      jsonBodyOf(result) shouldEqual toJson(Seq.empty[Event])
+      jsonBodyOf(result) shouldEqual toJson(Paged.empty[Event])
     }
 
     "return 500 when an error occurred" in {
       val error = new RuntimeException
 
-      when(eventService.getByCaseReference(caseReference)).thenReturn(failed(error))
+      when(eventService.getByCaseReference(caseReference, Pagination())).thenReturn(failed(error))
 
-      val result = await(controller.getByCaseReference(caseReference)(fakeRequest))
+      val result = await(controller.getByCaseReference(caseReference, Pagination())(fakeRequest))
 
       status(result) shouldEqual INTERNAL_SERVER_ERROR
       jsonBodyOf(result).toString() shouldEqual """{"code":"UNKNOWN_ERROR","message":"An unexpected error occurred"}"""

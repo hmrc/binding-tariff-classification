@@ -17,7 +17,7 @@
 package uk.gov.hmrc.bindingtariffclassification.service
 
 import javax.inject._
-import uk.gov.hmrc.bindingtariffclassification.model.Event
+import uk.gov.hmrc.bindingtariffclassification.model.{Event, Paged, Pagination}
 import uk.gov.hmrc.bindingtariffclassification.repository.EventRepository
 
 import scala.concurrent.Future
@@ -29,8 +29,8 @@ class EventService @Inject()(repository: EventRepository) {
     repository.insert(e)
   }
 
-  def getByCaseReference(caseReference: String): Future[Seq[Event]] = {
-    repository.getByCaseReference(caseReference)
+  def getByCaseReference(caseReference: String, pagination: Pagination): Future[Paged[Event]] = {
+    repository.getByCaseReference(caseReference, pagination)
   }
 
   def deleteAll(): Future[Unit] = {

@@ -25,7 +25,7 @@ import reactivemongo.play.json.collection.JSONCollection
 import uk.gov.hmrc.bindingtariffclassification.crypto.Crypto
 import uk.gov.hmrc.bindingtariffclassification.model.CaseStatus.{NEW, OPEN}
 import uk.gov.hmrc.bindingtariffclassification.model.MongoFormatters.formatCase
-import uk.gov.hmrc.bindingtariffclassification.model.{Case, MongoFormatters, Pagination, Search}
+import uk.gov.hmrc.bindingtariffclassification.model._
 import uk.gov.hmrc.mongo.ReactiveRepository
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -41,7 +41,7 @@ trait CaseRepository {
 
   def getByReference(reference: String): Future[Option[Case]]
 
-  def get(search: Search, pagination: Pagination): Future[Seq[Case]]
+  def get(search: Search, pagination: Pagination): Future[Paged[Case]]
 
   def deleteAll(): Future[Unit]
 }
@@ -60,7 +60,7 @@ class EncryptedCaseMongoRepository @Inject()(repository: CaseMongoRepository, cr
 
   override def getByReference(reference: String): Future[Option[Case]] = repository.getByReference(reference).map(_.map(decrypt))
 
-  override def get(search: Search, pagination: Pagination): Future[Seq[Case]] = {
+  override def get(search: Search, pagination: Pagination): Future[Paged[Case]] = {
     repository.get(search, pagination).map(_.map(decrypt))
   }
 
@@ -110,7 +110,7 @@ class CaseMongoRepository @Inject()(mongoDbProvider: MongoDbProvider, mapper: Se
     getOne(selector = mapper.reference(reference))
   }
 
-  override def get(search: Search, pagination: Pagination): Future[Seq[Case]] = {
+  override def get(search: Search, pagination: Pagination): Future[Paged[Case]] = {
     getMany(
       filterBy = mapper.filterBy(search.filter),
       sortBy = search.sort.map(mapper.sortBy).getOrElse(Json.obj()),
