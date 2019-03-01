@@ -21,7 +21,7 @@ import play.api.libs.json.Json.JsValueWrapper
 import play.api.libs.json._
 import uk.gov.hmrc.bindingtariffclassification.model.CaseStatus.CaseStatus
 import uk.gov.hmrc.bindingtariffclassification.model.MongoFormatters.formatInstant
-import uk.gov.hmrc.bindingtariffclassification.model.{ApplicationType, Filter, Sort}
+import uk.gov.hmrc.bindingtariffclassification.model.{Filter, Sort}
 import uk.gov.hmrc.bindingtariffclassification.sort.SortField._
 
 @Singleton
@@ -29,7 +29,8 @@ class SearchMapper {
 
   def filterBy(filter: Filter): JsObject = {
     JsObject(
-      Map("application.type" -> JsString(ApplicationType.BTI.toString)) ++
+      Map() ++
+        filter.applicationType.map(s => "application.type" -> JsString(s.toString)) ++
         filter.queueId.map("queueId" -> nullifyNoneValues(_)) ++
         filter.assigneeId.map("assignee.id" -> nullifyNoneValues(_)) ++
         filter.statuses.map("status" -> inArray[CaseStatus](_)) ++

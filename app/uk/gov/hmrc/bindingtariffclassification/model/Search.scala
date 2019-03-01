@@ -19,6 +19,7 @@ package uk.gov.hmrc.bindingtariffclassification.model
 import java.time.Instant
 
 import play.api.mvc.QueryStringBindable
+import uk.gov.hmrc.bindingtariffclassification.model.ApplicationType.ApplicationType
 import uk.gov.hmrc.bindingtariffclassification.model.CaseStatus._
 import uk.gov.hmrc.bindingtariffclassification.sort.SortDirection._
 import uk.gov.hmrc.bindingtariffclassification.sort.SortField._
@@ -35,6 +36,7 @@ case class Search
 
 case class Filter
 (
+  applicationType: Option[ApplicationType] = None,
   queueId: Option[String] = None,
   assigneeId: Option[String] = None,
   statuses: Option[Set[CaseStatus]] = None,
@@ -94,6 +96,7 @@ object Sort {
 
 object Filter {
 
+  private val applicationTypeKey = "application_type"
   private val queueIdKey = "queue_id"
   private val assigneeIdKey = "assignee_id"
   private val statusKey = "status"
@@ -106,7 +109,11 @@ object Filter {
   implicit def bindable(implicit stringBinder: QueryStringBindable[String]): QueryStringBindable[Filter] = new QueryStringBindable[Filter] {
 
     private def bindCaseStatus(key: String): Option[CaseStatus] = {
-      CaseStatus.values.find(_.toString == key)
+      CaseStatus.values.find(_.toString.equalsIgnoreCase(key))
+    }
+
+    private def bindApplicationType(key: String): Option[ApplicationType] = {
+      ApplicationType.values.find(_.toString.equalsIgnoreCase(key))
     }
 
     private def bindInstant(key: String): Option[Instant] = Try(Instant.parse(key)).toOption
@@ -124,6 +131,7 @@ object Filter {
       Some(
         Right(
           Filter(
+            applicationType = param(applicationTypeKey).map(bindApplicationType).filter(_.isDefined).map(_.get),
             queueId = param(queueIdKey),
             assigneeId = param(assigneeIdKey),
             statuses = params(statusKey).map(_.map(bindCaseStatus).filter(_.isDefined).map(_.get)),
@@ -139,6 +147,7 @@ object Filter {
 
     override def unbind(key: String, filter: Filter): String = {
       Seq(
+        filter.applicationType.map(t => stringBinder.unbind(applicationTypeKey, t.toString)),
         filter.queueId.map(stringBinder.unbind(queueIdKey, _)),
         filter.assigneeId.map(stringBinder.unbind(assigneeIdKey, _)),
         filter.statuses.map(_.map(s => stringBinder.unbind(statusKey, s.toString)).mkString("&")),

@@ -635,6 +635,39 @@ class CaseSpec extends BaseFeatureSpec {
     }
   }
 
+  feature("Get Cases by BTI") {
+
+    scenario("No matches") {
+
+      storeCases(c1, c5)
+
+      val result = Http(s"$serviceUrl/cases?application_type=LIABILITY_ORDER").asString
+
+      result.code shouldEqual OK
+      Json.parse(result.body) shouldBe Json.toJson(Paged.empty[Case])
+    }
+
+    scenario("Filtering by existing application type") {
+
+      storeCases(c1, c2, c7)
+
+      val result = Http(s"$serviceUrl/cases?application_type=BTI").asString
+
+      result.code shouldEqual OK
+      Json.parse(result.body) shouldBe Json.toJson(Paged(Seq(c1, c7)))
+    }
+
+    scenario("Case-insensitive search") {
+
+      storeCases(c7)
+
+      val result = Http(s"$serviceUrl/cases?application_type=bti").asString
+
+      result.code shouldEqual OK
+      Json.parse(result.body) shouldBe Json.toJson(Paged(Seq(c7)))
+    }
+  }
+
   feature("Get Cases sorted by commodity code") {
 
     val caseWithEmptyCommCode = createCase().copy(decision = None)

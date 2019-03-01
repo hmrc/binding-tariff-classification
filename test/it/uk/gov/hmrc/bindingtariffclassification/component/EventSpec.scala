@@ -18,7 +18,6 @@ package uk.gov.hmrc.bindingtariffclassification.component
 
 import java.util.UUID
 
-import play.api.Logger
 import play.api.http.HeaderNames.CONTENT_TYPE
 import play.api.http.Status.{NO_CONTENT, OK}
 import play.api.http.{HttpVerbs, Status}
@@ -85,7 +84,7 @@ class EventSpec extends BaseFeatureSpec {
 
       Given("There is a case with events")
       storeCases(c1)
-      storeEvents(e1, e2)
+      storeEvents(e1)
 
       When("I get the events for that specific case")
       val result = Http(s"$serviceUrl/cases/$caseRef/events").asString
@@ -94,8 +93,7 @@ class EventSpec extends BaseFeatureSpec {
       result.code shouldEqual OK
 
       And("All events are returned in the JSON response")
-      Logger.info(result.body)
-      Json.parse(result.body) shouldBe Json.toJson(Paged(Seq(e1, e2)))
+      Json.parse(result.body) shouldBe Json.toJson(Paged(Seq(e1)))
     }
 
   }
