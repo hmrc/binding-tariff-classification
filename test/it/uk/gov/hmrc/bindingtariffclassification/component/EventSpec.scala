@@ -18,13 +18,14 @@ package uk.gov.hmrc.bindingtariffclassification.component
 
 import java.util.UUID
 
+import play.api.Logger
 import play.api.http.HeaderNames.CONTENT_TYPE
 import play.api.http.Status.{NO_CONTENT, OK}
 import play.api.http.{HttpVerbs, Status}
 import play.api.libs.json.Json
 import scalaj.http.Http
 import uk.gov.hmrc.bindingtariffclassification.model.RESTFormatters.{formatEvent, formatNewEventRequest}
-import uk.gov.hmrc.bindingtariffclassification.model.{Event, NewEventRequest, Note, Operator}
+import uk.gov.hmrc.bindingtariffclassification.model._
 import util.CaseData.createCase
 import util.EventData._
 
@@ -77,7 +78,7 @@ class EventSpec extends BaseFeatureSpec {
       result.code shouldEqual OK
 
       And("An empty sequence is returned in the JSON response")
-      Json.parse(result.body).toString() shouldBe "[]"
+      Json.parse(result.body) shouldBe Json.toJson(Paged.empty[Event])
     }
 
     scenario("Events found in any order") {
@@ -93,10 +94,8 @@ class EventSpec extends BaseFeatureSpec {
       result.code shouldEqual OK
 
       And("All events are returned in the JSON response")
-
-      val responseEvent: Seq[Event] = Json.parse(result.body).as[Seq[Event]]
-
-      responseEvent.map(_.id) should contain theSameElementsAs Seq(e1.id, e2.id)
+      Logger.info(result.body)
+      Json.parse(result.body) shouldBe Json.toJson(Paged(Seq(e1, e2)))
     }
 
   }

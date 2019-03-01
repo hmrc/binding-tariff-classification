@@ -745,12 +745,12 @@ class CaseSpec extends BaseFeatureSpec {
       val result1 = Http(s"$serviceUrl/cases?page_size=1&page=1").asString
 
       result1.code shouldEqual OK
-      Json.parse(result1.body) shouldBe Json.toJson(Paged(Seq(c1)))
+      Json.parse(result1.body) shouldBe Json.toJson(Paged(results = Seq(c1), pageIndex = 1, pageSize = 1, resultCount = 2))
 
       val result2 = Http(s"$serviceUrl/cases?page_size=1&page=2").asString
 
       result2.code shouldEqual OK
-      Json.parse(result2.body) shouldBe Json.toJson(Paged(Seq(c2)))
+      Json.parse(result2.body) shouldBe Json.toJson(Paged(results = Seq(c2), pageIndex = 2, pageSize = 1, resultCount = 2))
     }
 
   }
