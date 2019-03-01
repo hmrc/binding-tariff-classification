@@ -18,7 +18,7 @@ package uk.gov.hmrc.bindingtariffclassification.service
 
 import org.mockito.Mockito.when
 import org.scalatest.mockito.MockitoSugar
-import uk.gov.hmrc.bindingtariffclassification.model.Event
+import uk.gov.hmrc.bindingtariffclassification.model.{Event, Paged, Pagination}
 import uk.gov.hmrc.bindingtariffclassification.repository.EventRepository
 import uk.gov.hmrc.play.test.UnitSpec
 
@@ -72,22 +72,16 @@ class EventServiceSpec extends UnitSpec with MockitoSugar {
   "getByCaseReference" should {
 
     "return the expected events" in {
-      when(repository.getByCaseReference(e1.caseReference)).thenReturn(successful(Seq(e1, e2)))
-      val result = await(service.getByCaseReference(e1.caseReference))
-      result shouldBe Seq(e1, e2)
-    }
-
-    "return an empty sequence when events are not found" in {
-      when(repository.getByCaseReference(e1.caseReference)).thenReturn(successful(Seq()))
-      val result = await(service.getByCaseReference(e1.caseReference))
-      result shouldBe Nil
+      when(repository.getByCaseReference(e1.caseReference, Pagination())).thenReturn(successful(Paged(Seq(e1, e2))))
+      val result = await(service.getByCaseReference(e1.caseReference, Pagination()))
+      result shouldBe Paged(Seq(e1, e2))
     }
 
     "propagate any error" in {
-      when(repository.getByCaseReference(e1.caseReference)).thenThrow(emulatedFailure)
+      when(repository.getByCaseReference(e1.caseReference, Pagination())).thenThrow(emulatedFailure)
 
       val caught = intercept[RuntimeException] {
-        await(service.getByCaseReference(e1.caseReference))
+        await(service.getByCaseReference(e1.caseReference, Pagination()))
       }
       caught shouldBe emulatedFailure
     }

@@ -217,7 +217,7 @@ class CaseSpec extends BaseFeatureSpec {
       result.code shouldEqual OK
 
       And("The cases are returned in the JSON response")
-      Json.parse(result.body) shouldBe Json.toJson(Seq(c1, c2))
+      Json.parse(result.body) shouldBe Json.toJson(Paged(Seq(c1, c2)))
     }
 
     scenario("Get no cases") {
@@ -231,7 +231,7 @@ class CaseSpec extends BaseFeatureSpec {
       result.code shouldEqual OK
 
       And("No cases are returned in the JSON response")
-      Json.parse(result.body) shouldBe Json.toJson(Seq.empty[Case])
+      Json.parse(result.body) shouldBe Json.toJson(Paged.empty[Case])
     }
 
   }
@@ -251,7 +251,7 @@ class CaseSpec extends BaseFeatureSpec {
       result.code shouldEqual OK
 
       And("The expected cases are returned in the JSON response")
-      Json.parse(result.body) shouldBe Json.toJson(Seq(c2))
+      Json.parse(result.body) shouldBe Json.toJson(Paged(Seq(c2)))
     }
 
     scenario("Filtering cases by a valid queueId") {
@@ -266,7 +266,7 @@ class CaseSpec extends BaseFeatureSpec {
       result.code shouldEqual OK
 
       And("The expected cases are returned in the JSON response")
-      Json.parse(result.body) shouldBe Json.toJson(Seq(c1))
+      Json.parse(result.body) shouldBe Json.toJson(Paged(Seq(c1)))
     }
 
     scenario("Filtering cases by a wrong queueId") {
@@ -281,7 +281,7 @@ class CaseSpec extends BaseFeatureSpec {
       result.code shouldEqual OK
 
       And("No cases are returned in the JSON response")
-      Json.parse(result.body) shouldBe Json.toJson(Seq.empty[Case])
+      Json.parse(result.body) shouldBe Json.toJson(Paged.empty[Case])
     }
 
   }
@@ -301,7 +301,7 @@ class CaseSpec extends BaseFeatureSpec {
       result.code shouldEqual OK
 
       And("The expected cases are returned in the JSON response")
-      Json.parse(result.body) shouldBe Json.toJson(Seq(c2))
+      Json.parse(result.body) shouldBe Json.toJson(Paged(Seq(c2)))
     }
 
     scenario("Filtering cases by a valid assigneeId") {
@@ -316,7 +316,7 @@ class CaseSpec extends BaseFeatureSpec {
       result.code shouldEqual OK
 
       And("The expected cases are returned in the JSON response")
-      Json.parse(result.body) shouldBe Json.toJson(Seq(c1))
+      Json.parse(result.body) shouldBe Json.toJson(Paged(Seq(c1)))
     }
 
     scenario("Filtering cases by a wrong assigneeId") {
@@ -331,7 +331,7 @@ class CaseSpec extends BaseFeatureSpec {
       result.code shouldEqual OK
 
       And("No cases are returned in the JSON response")
-      Json.parse(result.body) shouldBe Json.toJson(Seq.empty[Case])
+      Json.parse(result.body) shouldBe Json.toJson(Paged.empty[Case])
     }
 
   }
@@ -351,7 +351,7 @@ class CaseSpec extends BaseFeatureSpec {
       result.code shouldEqual OK
 
       And("The expected cases are returned in the JSON response")
-      Json.parse(result.body) shouldBe Json.toJson(Seq(c2))
+      Json.parse(result.body) shouldBe Json.toJson(Paged(Seq(c2)))
     }
 
     scenario("Filtering cases by a valid assigneeId and a valid queueId") {
@@ -366,7 +366,7 @@ class CaseSpec extends BaseFeatureSpec {
       result.code shouldEqual OK
 
       And("The expected cases are returned in the JSON response")
-      Json.parse(result.body) shouldBe Json.toJson(Seq(c1))
+      Json.parse(result.body) shouldBe Json.toJson(Paged(Seq(c1)))
     }
 
     scenario("Filtering cases by a wrong assigneeId and a valid queueId") {
@@ -381,7 +381,7 @@ class CaseSpec extends BaseFeatureSpec {
       result.code shouldEqual OK
 
       And("No cases are returned in the JSON response")
-      Json.parse(result.body) shouldBe Json.toJson(Seq.empty[Case])
+      Json.parse(result.body) shouldBe Json.toJson(Paged.empty[Case])
     }
 
   }
@@ -396,7 +396,7 @@ class CaseSpec extends BaseFeatureSpec {
       val result = Http(s"$serviceUrl/cases?status=SUSPENDED").asString
 
       result.code shouldEqual OK
-      result.body.toString shouldBe "[]"
+      Json.parse(result.body) shouldBe Json.toJson(Paged.empty[Case])
     }
 
     scenario("Filtering cases by single status") {
@@ -406,7 +406,7 @@ class CaseSpec extends BaseFeatureSpec {
       val result = Http(s"$serviceUrl/cases?status=NEW").asString
 
       result.code shouldEqual OK
-      Json.parse(result.body) shouldBe Json.toJson(Seq(c2,c5))
+      Json.parse(result.body) shouldBe Json.toJson(Paged(Seq(c2,c5)))
     }
 
     scenario("Filtering cases by multiple statuses") {
@@ -416,7 +416,7 @@ class CaseSpec extends BaseFeatureSpec {
       val result = Http(s"$serviceUrl/cases?status=NEW&status=CANCELLED").asString
 
       result.code shouldEqual OK
-      Json.parse(result.body) shouldBe Json.toJson(Seq(c1_updated,c2,c5))
+      Json.parse(result.body) shouldBe Json.toJson(Paged(Seq(c1_updated,c2,c5)))
     }
 
     scenario("Filtering cases by multiple statuses - comma separated") {
@@ -426,7 +426,7 @@ class CaseSpec extends BaseFeatureSpec {
       val result = Http(s"$serviceUrl/cases?status=NEW,CANCELLED").asString
 
       result.code shouldEqual OK
-      Json.parse(result.body) shouldBe Json.toJson(Seq(c1_updated,c2,c5))
+      Json.parse(result.body) shouldBe Json.toJson(Paged(Seq(c1_updated,c2,c5)))
     }
 
   }
@@ -441,7 +441,7 @@ class CaseSpec extends BaseFeatureSpec {
       val result = Http(s"$serviceUrl/cases?keyword=PHONE").asString
 
       result.code shouldEqual OK
-      result.body.toString shouldBe "[]"
+      Json.parse(result.body) shouldBe Json.toJson(Paged.empty[Case])
     }
 
     scenario("Filtering cases by single keyword") {
@@ -451,7 +451,7 @@ class CaseSpec extends BaseFeatureSpec {
       val result = Http(s"$serviceUrl/cases?keyword=MTB").asString
 
       result.code shouldEqual OK
-      Json.parse(result.body) shouldBe Json.toJson(Seq(c2, c9))
+      Json.parse(result.body) shouldBe Json.toJson(Paged(Seq(c2, c9)))
     }
 
     scenario("Filtering cases by multiple keywords") {
@@ -461,7 +461,7 @@ class CaseSpec extends BaseFeatureSpec {
       val result = Http(s"$serviceUrl/cases?keyword=MTB&keyword=HARDTAIL").asString
 
       result.code shouldEqual OK
-      Json.parse(result.body) shouldBe Json.toJson(Seq(c2))
+      Json.parse(result.body) shouldBe Json.toJson(Paged(Seq(c2)))
     }
 
     scenario("Filtering cases by multiple keywords - comma separated") {
@@ -471,7 +471,7 @@ class CaseSpec extends BaseFeatureSpec {
       val result = Http(s"$serviceUrl/cases?keyword=MTB,HARDTAIL").asString
 
       result.code shouldEqual OK
-      Json.parse(result.body) shouldBe Json.toJson(Seq(c2))
+      Json.parse(result.body) shouldBe Json.toJson(Paged(Seq(c2)))
     }
 
   }
@@ -486,7 +486,7 @@ class CaseSpec extends BaseFeatureSpec {
       val result = Http(s"$serviceUrl/cases?trader_name=John%20Lewis").asString
 
       result.code shouldEqual OK
-      Json.parse(result.body) shouldBe Json.toJson(Seq(c1,c2))
+      Json.parse(result.body) shouldBe Json.toJson(Paged(Seq(c1,c2)))
     }
 
     scenario("Case-insensitive search") {
@@ -496,7 +496,7 @@ class CaseSpec extends BaseFeatureSpec {
       val result = Http(s"$serviceUrl/cases?trader_name=john%20Lewis").asString
 
       result.code shouldEqual OK
-      Json.parse(result.body) shouldBe Json.toJson(Seq(c1))
+      Json.parse(result.body) shouldBe Json.toJson(Paged(Seq(c1)))
     }
 
     scenario("Search by substring") {
@@ -506,7 +506,7 @@ class CaseSpec extends BaseFeatureSpec {
       val result = Http(s"$serviceUrl/cases?trader_name=Lewis").asString
 
       result.code shouldEqual OK
-      Json.parse(result.body) shouldBe Json.toJson(Seq(c1))
+      Json.parse(result.body) shouldBe Json.toJson(Paged(Seq(c1)))
     }
 
     scenario("No matches") {
@@ -516,7 +516,7 @@ class CaseSpec extends BaseFeatureSpec {
       val result = Http(s"$serviceUrl/cases?trader_name=Albert").asString
 
       result.code shouldEqual OK
-      result.body.toString shouldBe "[]"
+      Json.parse(result.body) shouldBe Json.toJson(Paged.empty[Case])
     }
 
   }
@@ -531,7 +531,7 @@ class CaseSpec extends BaseFeatureSpec {
       val result = Http(s"$serviceUrl/cases?min_decision_end=1970-01-01T00:00:00Z").asString
 
       result.code shouldEqual OK
-      Json.parse(result.body) shouldBe Json.toJson(Seq(c6))
+      Json.parse(result.body) shouldBe Json.toJson(Paged(Seq(c6)))
     }
 
     scenario("Filtering cases by Min Decision End Date - filters decisions in the past") {
@@ -541,7 +541,7 @@ class CaseSpec extends BaseFeatureSpec {
       val result = Http(s"$serviceUrl/cases?min_decision_end=3000-01-01T00:00:00Z").asString
 
       result.code shouldEqual OK
-      Json.parse(result.body) shouldBe Json.toJson(Seq.empty[Case])
+      Json.parse(result.body) shouldBe Json.toJson(Paged.empty[Case])
     }
 
   }
@@ -556,7 +556,7 @@ class CaseSpec extends BaseFeatureSpec {
       val result = Http(s"$serviceUrl/cases?commodity_code=66").asString
 
       result.code shouldEqual OK
-      result.body.toString shouldBe "[]"
+      Json.parse(result.body) shouldBe Json.toJson(Paged.empty[Case])
     }
 
     scenario("filtering by existing commodity code") {
@@ -566,7 +566,7 @@ class CaseSpec extends BaseFeatureSpec {
       val result = Http(s"$serviceUrl/cases?commodity_code=12345678").asString
 
       result.code shouldEqual OK
-      Json.parse(result.body) shouldBe Json.toJson(Seq(c2,c6))
+      Json.parse(result.body) shouldBe Json.toJson(Paged(Seq(c2,c6)))
     }
 
     scenario("Starts-with match") {
@@ -576,7 +576,7 @@ class CaseSpec extends BaseFeatureSpec {
       val result = Http(s"$serviceUrl/cases?commodity_code=123").asString
 
       result.code shouldEqual OK
-      Json.parse(result.body) shouldBe Json.toJson(Seq(c2,c6))
+      Json.parse(result.body) shouldBe Json.toJson(Paged(Seq(c2,c6)))
     }
 
     scenario("Contains-match does not return any result") {
@@ -586,7 +586,7 @@ class CaseSpec extends BaseFeatureSpec {
       val result = Http(s"$serviceUrl/cases?commodity_code=456").asString
 
       result.code shouldEqual OK
-      result.body.toString shouldBe "[]"
+      Json.parse(result.body) shouldBe Json.toJson(Paged.empty[Case])
     }
 
   }
@@ -601,7 +601,7 @@ class CaseSpec extends BaseFeatureSpec {
       val result = Http(s"$serviceUrl/cases?decision_details=laptop").asString
 
       result.code shouldEqual OK
-      result.body.toString shouldBe "[]"
+      Json.parse(result.body) shouldBe Json.toJson(Paged.empty[Case])
     }
 
     scenario("Filtering by existing good description") {
@@ -611,7 +611,7 @@ class CaseSpec extends BaseFeatureSpec {
       val result = Http(s"$serviceUrl/cases?decision_details=LAPTOP").asString
 
       result.code shouldEqual OK
-      Json.parse(result.body) shouldBe Json.toJson(Seq(c7))
+      Json.parse(result.body) shouldBe Json.toJson(Paged(Seq(c7)))
     }
 
     scenario("Case-insensitive search") {
@@ -621,7 +621,7 @@ class CaseSpec extends BaseFeatureSpec {
       val result = Http(s"$serviceUrl/cases?decision_details=laptop").asString
 
       result.code shouldEqual OK
-      Json.parse(result.body) shouldBe Json.toJson(Seq(c7))
+      Json.parse(result.body) shouldBe Json.toJson(Paged(Seq(c7)))
     }
 
     scenario("Filtering by substring") {
@@ -631,7 +631,7 @@ class CaseSpec extends BaseFeatureSpec {
       val result = Http(s"$serviceUrl/cases?decision_details=laptop").asString
 
       result.code shouldEqual OK
-      Json.parse(result.body) shouldBe Json.toJson(Seq(c7, c8))
+      Json.parse(result.body) shouldBe Json.toJson(Paged(Seq(c7, c8)))
     }
   }
 
@@ -653,7 +653,7 @@ class CaseSpec extends BaseFeatureSpec {
       result.code shouldEqual OK
 
       And("The expected cases are returned in the JSON response")
-      Json.parse(result.body) shouldBe Json.toJson(Seq(caseWithEmptyCommCode, caseZ, caseY2, caseY1))
+      Json.parse(result.body) shouldBe Json.toJson(Paged(Seq(caseWithEmptyCommCode, caseZ, caseY2, caseY1)))
     }
 
     scenario("Sorting in ascending order") {
@@ -667,7 +667,7 @@ class CaseSpec extends BaseFeatureSpec {
       result.code shouldEqual OK
 
       And("The expected cases are returned in the JSON response")
-      Json.parse(result.body) shouldBe Json.toJson(Seq(caseWithEmptyCommCode, caseZ, caseY1, caseY2))
+      Json.parse(result.body) shouldBe Json.toJson(Paged(Seq(caseWithEmptyCommCode, caseZ, caseY1, caseY2)))
     }
 
     scenario("Sorting in descending order") {
@@ -681,7 +681,7 @@ class CaseSpec extends BaseFeatureSpec {
       result.code shouldEqual OK
 
       And("The expected cases are returned in the JSON response")
-      Json.parse(result.body) shouldBe Json.toJson(Seq(caseY2, caseY1, caseZ, caseWithEmptyCommCode))
+      Json.parse(result.body) shouldBe Json.toJson(Paged(Seq(caseY2, caseY1, caseZ, caseWithEmptyCommCode)))
     }
 
   }
@@ -703,7 +703,7 @@ class CaseSpec extends BaseFeatureSpec {
       result.code shouldEqual OK
 
       And("The expected cases are returned in the JSON response")
-      Json.parse(result.body) shouldBe Json.toJson(Seq(newCase, oldCase))
+      Json.parse(result.body) shouldBe Json.toJson(Paged(Seq(newCase, oldCase)))
     }
 
     scenario("Sorting in ascending order") {
@@ -717,7 +717,7 @@ class CaseSpec extends BaseFeatureSpec {
       result.code shouldEqual OK
 
       And("The expected cases are returned in the JSON response")
-      Json.parse(result.body) shouldBe Json.toJson(Seq(newCase, oldCase))
+      Json.parse(result.body) shouldBe Json.toJson(Paged(Seq(newCase, oldCase)))
     }
 
     scenario("Sorting in descending order") {
@@ -731,7 +731,7 @@ class CaseSpec extends BaseFeatureSpec {
       result.code shouldEqual OK
 
       And("The expected cases are returned in the JSON response")
-      Json.parse(result.body) shouldBe Json.toJson(Seq(oldCase, newCase))
+      Json.parse(result.body) shouldBe Json.toJson(Paged(Seq(oldCase, newCase)))
     }
 
   }
@@ -745,12 +745,12 @@ class CaseSpec extends BaseFeatureSpec {
       val result1 = Http(s"$serviceUrl/cases?page_size=1&page=1").asString
 
       result1.code shouldEqual OK
-      Json.parse(result1.body) shouldBe Json.toJson(Seq(c1))
+      Json.parse(result1.body) shouldBe Json.toJson(Paged(Seq(c1)))
 
       val result2 = Http(s"$serviceUrl/cases?page_size=1&page=2").asString
 
       result2.code shouldEqual OK
-      Json.parse(result2.body) shouldBe Json.toJson(Seq(c2))
+      Json.parse(result2.body) shouldBe Json.toJson(Paged(Seq(c2)))
     }
 
   }

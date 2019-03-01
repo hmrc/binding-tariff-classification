@@ -22,7 +22,7 @@ import org.mockito.Mockito.verify
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.mockito.MockitoSugar
 import uk.gov.hmrc.bindingtariffclassification.crypto.Crypto
-import uk.gov.hmrc.bindingtariffclassification.model.{Case, Pagination, Search}
+import uk.gov.hmrc.bindingtariffclassification.model.{Case, Paged, Pagination, Search}
 import uk.gov.hmrc.play.test.UnitSpec
 
 import scala.concurrent.Future.successful
@@ -80,8 +80,8 @@ class EncryptedCaseMongoRepositoryTest extends UnitSpec with MockitoSugar with B
 
   "Get" should {
     "Encrypt and delegate to Repository" in {
-      given(underlyingRepo.get(search, pagination)) willReturn successful(Seq(encryptedCaseSaved))
-      await(repo.get(search, pagination)) shouldBe Seq(rawCaseSaved)
+      given(underlyingRepo.get(search, pagination)) willReturn successful(Paged(Seq(encryptedCaseSaved)))
+      await(repo.get(search, pagination)) shouldBe Paged(Seq(rawCaseSaved))
     }
   }
 

@@ -18,7 +18,7 @@ package uk.gov.hmrc.bindingtariffclassification.service
 
 import javax.inject._
 import uk.gov.hmrc.bindingtariffclassification.config.AppConfig
-import uk.gov.hmrc.bindingtariffclassification.model.{Case, Pagination, Search}
+import uk.gov.hmrc.bindingtariffclassification.model.{Case, Paged, Pagination, Search}
 import uk.gov.hmrc.bindingtariffclassification.repository.{CaseRepository, SequenceRepository}
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -46,7 +46,7 @@ class CaseService @Inject()(appConfig: AppConfig,
     caseRepository.getByReference(reference)
   }
 
-  def get(search: Search, pagination: Pagination): Future[Seq[Case]] = {
+  def get(search: Search, pagination: Pagination): Future[Paged[Case]] = {
     caseRepository.get(search, pagination)
   }
 

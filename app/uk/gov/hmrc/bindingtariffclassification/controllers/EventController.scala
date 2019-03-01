@@ -36,8 +36,8 @@ class EventController @Inject()(appConfig: AppConfig, eventService: EventService
     eventService.deleteAll() map ( _ => NoContent ) recover recovery
   }
 
-  def getByCaseReference(caseRef: String): Action[AnyContent] = Action.async { implicit request =>
-    eventService.getByCaseReference(caseRef) map { events => Ok(Json.toJson(events)) } recover recovery
+  def getByCaseReference(caseRef: String, pagination: Pagination): Action[AnyContent] = Action.async { implicit request =>
+    eventService.getByCaseReference(caseRef, pagination) map { events: Paged[Event] => Ok(Json.toJson(events)) } recover recovery
   }
 
   def create(caseRef: String): Action[JsValue] = Action.async(parse.json) { implicit request =>
