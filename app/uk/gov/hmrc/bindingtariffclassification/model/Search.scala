@@ -131,7 +131,7 @@ object Filter {
       Some(
         Right(
           Filter(
-            applicationType = param(applicationTypeKey).map(bindApplicationType).filter(_.isDefined).map(_.get),
+            applicationType = param(applicationTypeKey).flatMap(bindApplicationType),
             queueId = param(queueIdKey),
             assigneeId = param(assigneeIdKey),
             statuses = params(statusKey).map(_.map(bindCaseStatus).filter(_.isDefined).map(_.get)),
