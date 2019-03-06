@@ -81,6 +81,8 @@ class CaseMongoRepository @Inject()(mongoDbProvider: MongoDbProvider, mapper: Se
     "assignee.id",
     "queueId",
     "status",
+    "application.holder.eori",
+    "application.agent.eoriDetails.eori",
     "decision.effectiveEndDate",
     "decision.bindingCommodityCode",
     "daysElapsed",

@@ -85,7 +85,7 @@ object CaseData {
     )
   }
 
-  private def createAgentDetails: AgentDetails = {
+  def createAgentDetails: AgentDetails = {
     AgentDetails(
       eoriDetails = createEORIDetails.copy(businessName = "Frank Agent-Smith"),
       letterOfAuthorisation = Some(createAttachment.copy(public = false))

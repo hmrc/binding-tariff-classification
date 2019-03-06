@@ -49,8 +49,9 @@ class CaseSpec extends BaseFeatureSpec {
   private val c5 = createCase(app = createBasicBTIApplication.copy(holder = eORIDetailForNintedo))
   private val c6 = createCase(decision = Some(createDecision(effectiveEndDate = Some(Instant.now().plusSeconds(60)))))
   private val c7 = createCase(decision = Some(createDecision(goodsDescription = "LAPTOP")))
-  private val c8 = createCase(decision = Some(createDecision(methodCommercialDenomination = Some("this is a great laptop from Mexico"))))
-  private val c9 = createCase(keywords = Set("MTB", "BICYCLE"))
+  private val c8 = createCase(decision = Some(createDecision(methodCommercialDenomination = Some("laptop from Mexico"))))
+  private val c9 = createCase(decision = Some(createDecision(justification = "this LLLLaptoppp")))
+  private val c10 = createCase(keywords = Set("MTB", "BICYCLE"))
 
   private val c0Json = Json.toJson(c0)
   private val c1Json = Json.toJson(c1)
@@ -436,7 +437,7 @@ class CaseSpec extends BaseFeatureSpec {
 
     scenario("No matches") {
 
-      storeCases(c2, c9)
+      storeCases(c2, c10)
 
       val result = Http(s"$serviceUrl/cases?keyword=PHONE").asString
 
@@ -446,17 +447,17 @@ class CaseSpec extends BaseFeatureSpec {
 
     scenario("Filtering cases by single keyword") {
 
-      storeCases(c2, c5, c9)
+      storeCases(c2, c5, c10)
 
       val result = Http(s"$serviceUrl/cases?keyword=MTB").asString
 
       result.code shouldEqual OK
-      Json.parse(result.body) shouldBe Json.toJson(Paged(Seq(c2, c9)))
+      Json.parse(result.body) shouldBe Json.toJson(Paged(Seq(c2, c10)))
     }
 
     scenario("Filtering cases by multiple keywords") {
 
-      storeCases(c2, c5, c9)
+      storeCases(c2, c5, c10)
 
       val result = Http(s"$serviceUrl/cases?keyword=MTB&keyword=HARDTAIL").asString
 
@@ -466,7 +467,7 @@ class CaseSpec extends BaseFeatureSpec {
 
     scenario("Filtering cases by multiple keywords - comma separated") {
 
-      storeCases(c2, c5, c9)
+      storeCases(c2, c5, c10)
 
       val result = Http(s"$serviceUrl/cases?keyword=MTB,HARDTAIL").asString
 
@@ -592,7 +593,7 @@ class CaseSpec extends BaseFeatureSpec {
   }
 
 
-  feature("Get Cases by good description") {
+  feature("Get Cases by decision details") {
 
     scenario("No matches") {
 
@@ -614,6 +615,26 @@ class CaseSpec extends BaseFeatureSpec {
       Json.parse(result.body) shouldBe Json.toJson(Paged(Seq(c7)))
     }
 
+    scenario("Filtering by method commercial denomination") {
+
+      storeCases(c1, c2, c8)
+
+      val result = Http(s"$serviceUrl/cases?decision_details=laptop%20from%20Mexico").asString
+
+      result.code shouldEqual OK
+      Json.parse(result.body) shouldBe Json.toJson(Paged(Seq(c8)))
+    }
+
+    scenario("Filtering by justification") {
+
+      storeCases(c1, c2, c9)
+
+      val result = Http(s"$serviceUrl/cases?decision_details=this%20LLLLaptoppp").asString
+
+      result.code shouldEqual OK
+      Json.parse(result.body) shouldBe Json.toJson(Paged(Seq(c9)))
+    }
+
     scenario("Case-insensitive search") {
 
       storeCases(c1, c2, c7)
@@ -626,14 +647,76 @@ class CaseSpec extends BaseFeatureSpec {
 
     scenario("Filtering by substring") {
 
-      storeCases(c1, c2, c7, c8)
+      storeCases(c1, c2, c7, c8, c9)
 
       val result = Http(s"$serviceUrl/cases?decision_details=laptop").asString
 
       result.code shouldEqual OK
-      Json.parse(result.body) shouldBe Json.toJson(Paged(Seq(c7, c8)))
+      Json.parse(result.body) shouldBe Json.toJson(Paged(Seq(c7, c8, c9)))
     }
   }
+
+
+  feature("Get Cases by EORI number") {
+
+    val holderEori = "eori_01234"
+    val agentEori = "eori_98765"
+
+    val agentDetails = createAgentDetails.copy(eoriDetails = createEORIDetails.copy(eori = agentEori))
+
+    val holderApp = createBasicBTIApplication.copy(holder = createEORIDetails.copy(eori = holderEori), agent = None)
+    val agentApp = createBTIApplicationWithAllFields.copy(holder = createEORIDetails.copy(eori = holderEori), agent = Some(agentDetails))
+
+    val agentCase = createCase(app = agentApp)
+    val holderCase = createCase(app = holderApp)
+
+    scenario("No matches") {
+      storeCases(c1, c2)
+
+      val result = Http(s"$serviceUrl/cases?eori=333333").asString
+
+      result.code shouldEqual OK
+      Json.parse(result.body) shouldBe Json.toJson(Paged.empty[Case])
+    }
+
+    scenario("Filtering by agent EORI") {
+      storeCases(c1, c2, agentCase, holderCase)
+
+      val result = Http(s"$serviceUrl/cases?eori=eori_98765").asString
+
+      result.code shouldEqual OK
+      Json.parse(result.body) shouldBe Json.toJson(Paged(Seq(agentCase)))
+    }
+
+    scenario("Filtering by applicant EORI") {
+      storeCases(c1, c2, agentCase, holderCase)
+
+      val result = Http(s"$serviceUrl/cases?eori=eori_01234").asString
+
+      result.code shouldEqual OK
+      Json.parse(result.body) shouldBe Json.toJson(Paged(Seq(holderCase)))
+    }
+
+    scenario("Case-insensitive search") {
+      storeCases(c1, c2, agentCase, holderCase)
+
+      val result = Http(s"$serviceUrl/cases?eori=EORI_98765").asString
+
+      result.code shouldEqual OK
+      Json.parse(result.body) shouldBe Json.toJson(Paged.empty[Case])
+    }
+
+    scenario("Filtering by substring") {
+      storeCases(c1, c2, agentCase, holderCase)
+
+      val result = Http(s"$serviceUrl/cases?eori=2345").asString
+
+      result.code shouldEqual OK
+      Json.parse(result.body) shouldBe Json.toJson(Paged.empty[Case])
+    }
+
+  }
+
 
   feature("Get Cases by BTI") {
 
@@ -667,6 +750,7 @@ class CaseSpec extends BaseFeatureSpec {
       Json.parse(result.body) shouldBe Json.toJson(Paged(Seq(c7)))
     }
   }
+
 
   feature("Get Cases sorted by commodity code") {
 
@@ -768,6 +852,7 @@ class CaseSpec extends BaseFeatureSpec {
     }
 
   }
+
 
   feature("Get Cases with Pagination") {
 

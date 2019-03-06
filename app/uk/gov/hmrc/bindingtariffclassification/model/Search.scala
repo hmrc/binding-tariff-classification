@@ -38,6 +38,7 @@ case class Filter
 (
   applicationType: Option[ApplicationType] = None,
   queueId: Option[String] = None,
+  eori: Option[String] = None,
   assigneeId: Option[String] = None,
   statuses: Option[Set[CaseStatus]] = None,
   traderName: Option[String] = None,
@@ -98,6 +99,7 @@ object Filter {
 
   private val applicationTypeKey = "application_type"
   private val queueIdKey = "queue_id"
+  private val eoriKey = "eori"
   private val assigneeIdKey = "assignee_id"
   private val statusKey = "status"
   private val traderNameKey = "trader_name"
@@ -133,6 +135,7 @@ object Filter {
           Filter(
             applicationType = param(applicationTypeKey).flatMap(bindApplicationType),
             queueId = param(queueIdKey),
+            eori = param(eoriKey),
             assigneeId = param(assigneeIdKey),
             statuses = params(statusKey).map(_.map(bindCaseStatus).filter(_.isDefined).map(_.get)),
             traderName = param(traderNameKey),
@@ -149,6 +152,7 @@ object Filter {
       Seq(
         filter.applicationType.map(t => stringBinder.unbind(applicationTypeKey, t.toString)),
         filter.queueId.map(stringBinder.unbind(queueIdKey, _)),
+        filter.eori.map(stringBinder.unbind(eoriKey, _)),
         filter.assigneeId.map(stringBinder.unbind(assigneeIdKey, _)),
         filter.statuses.map(_.map(s => stringBinder.unbind(statusKey, s.toString)).mkString("&")),
         filter.traderName.map(stringBinder.unbind(traderNameKey, _)),

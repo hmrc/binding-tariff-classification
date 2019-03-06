@@ -403,37 +403,72 @@ class CaseRepositorySpec extends BaseMongoIndexSpec
       await(repository.get(Search(Filter(traderName = Some("Novak"))), Pagination())).results shouldBe Seq(caseX)
       await(repository.get(Search(Filter(traderName = Some("Djokovic"))), Pagination())).results shouldBe Seq(caseX)
 
-      // case-sensitive
+      // case-insensitive
       await(repository.get(Search(Filter(traderName = Some("novak djokovic"))), Pagination())).results shouldBe Seq(caseX)
     }
 
     "return the expected documents when there are multiple matches" in {
       val novakApp2 = createBasicBTIApplication.copy(holder = createEORIDetails.copy(businessName = "Novak Djokovic 2"))
-      val caseX2 = createCase(app = novakApp)
+      val caseX2 = createCase(app = novakApp2)
       store(caseX, caseX2)
+
       val search = Search(Filter(traderName = Some("Novak Djokovic")))
       await(repository.get(search, Pagination())).results shouldBe Seq(caseX, caseX2)
     }
   }
 
-  "get by good description" should {
+  "get by eori" should {
+
+    val holderEori = "01234"
+    val agentEori = "98765"
+
+    val agentDetails = createAgentDetails.copy(eoriDetails = createEORIDetails.copy(eori = agentEori))
+
+    val holderApp = createBasicBTIApplication.copy(holder = createEORIDetails.copy(eori = holderEori), agent = None)
+    val agentApp = createBTIApplicationWithAllFields.copy(holder = createEORIDetails.copy(eori = holderEori), agent = Some(agentDetails))
+
+    val agentCase = createCase(app = agentApp)
+    val holderCase = createCase(app = holderApp)
+
+    "return an empty sequence when there are no matches" in {
+      store(agentCase, holderCase)
+
+      await(repository.get(Search(Filter(eori = Some("333"))), Pagination())).results shouldBe Seq.empty
+    }
+
+    "return the expected document when there is one match" in {
+      store(agentCase, holderCase)
+
+      await(repository.get(Search(Filter(eori = Some("98765"))), Pagination())).results shouldBe Seq(agentCase)
+    }
+
+    "return the expected documents when there are multiple matches" in {
+      store(agentCase, holderCase)
+
+      await(repository.get(Search(Filter(eori = Some("01234"))), Pagination())).results shouldBe Seq(agentCase, holderCase)
+    }
+
+  }
+
+  "get by decision details" should {
 
     val c1 = createCase(decision = Some(createDecision(goodsDescription = "Amazing HTC smartphone")))
     val c2 = createCase(decision = Some(createDecision(methodCommercialDenomination = Some("amazing football shoes"))))
+    val c3 = createCase(decision = Some(createDecision(justification = "this is absolutely AAAAMAZINGGGG")))
 
     "return an empty sequence when there are no matches" in {
-      store(case1, c1, c2)
+      store(case1, c1, c2, c3)
       await(repository.get(Search(Filter(decisionDetails = Some("table"))), Pagination())).results shouldBe Seq.empty
     }
 
     "return the expected document when there is one match" in {
-      store(case1, c1, c2)
+      store(case1, c1, c2, c3)
       await(repository.get(Search(Filter(decisionDetails = Some("Football"))), Pagination())).results shouldBe Seq(c2)
     }
 
     "return the expected documents when there are multiple matches" in {
-      store(case1, c1, c2)
-      await(repository.get(Search(Filter(decisionDetails = Some("amazing"))), Pagination())).results shouldBe Seq(c1, c2)
+      store(case1, c1, c2, c3)
+      await(repository.get(Search(Filter(decisionDetails = Some("amazing"))), Pagination())).results shouldBe Seq(c1, c2, c3)
     }
   }
 
@@ -472,13 +507,13 @@ class CaseRepositorySpec extends BaseMongoIndexSpec
     "return upto 'pageSize' cases" in {
       store(case1)
       store(case2)
-      await(repository.get(Search(), Pagination(page = 1, pageSize = 1))).size shouldBe 1
+      await(repository.get(Search(), Pagination(pageSize = 1))).size shouldBe 1
     }
 
     "return pages of cases" in {
       store(case1)
       store(case2)
-      await(repository.get(Search(), Pagination(page = 1, pageSize = 1))).size shouldBe 1
+      await(repository.get(Search(), Pagination(pageSize = 1))).size shouldBe 1
       await(repository.get(Search(), Pagination(page = 2, pageSize = 1))).size shouldBe 1
       await(repository.get(Search(), Pagination(page = 3, pageSize = 1))).size shouldBe 0
     }
@@ -537,7 +572,7 @@ class CaseRepositorySpec extends BaseMongoIndexSpec
     }
   }
 
-  "incrementDaysElapsed" should {
+  "increment days elapsed" should {
 
     "increment NEW cases" in {
       val newCase1 = case1.copy(status = NEW, daysElapsed = 0)
@@ -614,6 +649,8 @@ class CaseRepositorySpec extends BaseMongoIndexSpec
         Index(key = Seq("_id" -> Ascending), name = Some("_id_")),
         Index(key = Seq("reference" -> Ascending), name = Some("reference_Index"), unique = true),
         Index(key = Seq("queueId" -> Ascending), name = Some("queueId_Index"), unique = false),
+        Index(key = Seq("application.holder.eori" -> Ascending), name = Some("application.holder.eori_Index"), unique = false),
+        Index(key = Seq("application.agent.eoriDetails.eori" -> Ascending), name = Some("application.agent.eoriDetails.eori_Index"), unique = false),
         Index(key = Seq("daysElapsed" -> Ascending), name = Some("daysElapsed_Index"), unique = false),
         Index(key = Seq("assignee.id" -> Ascending), name = Some("assignee.id_Index"), unique = false),
         Index(key = Seq("decision.effectiveEndDate" -> Ascending), name = Some("decision.effectiveEndDate_Index"), unique = false),

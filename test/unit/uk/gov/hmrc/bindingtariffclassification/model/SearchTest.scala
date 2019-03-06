@@ -34,6 +34,7 @@ class SearchTest extends UnitSpec {
     applicationType = Some(ApplicationType.BTI),
     traderName = Some("trader-name"),
     queueId = Some("queue-id"),
+    eori = Some("eori-number"),
     assigneeId = Some("assignee-id"),
     statuses = Some(Set(NEW, OPEN)),
     minDecisionEnd = Some(Instant.EPOCH),
@@ -47,6 +48,7 @@ class SearchTest extends UnitSpec {
     "application_type" -> Seq("BTI"),
     "trader_name" -> Seq("trader-name"),
     "queue_id" -> Seq("queue-id"),
+    "eori" -> Seq("eori-number"),
     "assignee_id" -> Seq("assignee-id"),
     "status" -> Seq("NEW", "OPEN"),
     "min_decision_end" -> Seq("1970-01-01T00:00:00Z"),
@@ -60,6 +62,7 @@ class SearchTest extends UnitSpec {
     "application_type" -> Seq(""),
     "trader_name" -> Seq(""),
     "queue_id" -> Seq(""),
+    "eori" -> Seq(""),
     "assignee_id" -> Seq(""),
     "status" -> Seq(""),
     "min_decision_end" -> Seq(""),
@@ -81,6 +84,7 @@ class SearchTest extends UnitSpec {
       val populatedQueryParam: String =
         "application_type=BTI" +
           "&queue_id=queue-id" +
+          "&eori=eori-number" +
           "&assignee_id=assignee-id" +
           "&status=NEW" +
           "&status=OPEN" +
@@ -121,6 +125,7 @@ class SearchTest extends UnitSpec {
       val populatedQueryParam: String =
         "application_type=BTI" +
           "&queue_id=queue-id" +
+          "&eori=eori-number" +
           "&assignee_id=assignee-id" +
           "&status=NEW" +
           "&status=OPEN" +

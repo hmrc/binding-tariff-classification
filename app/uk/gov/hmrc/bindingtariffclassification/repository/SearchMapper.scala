@@ -37,16 +37,20 @@ class SearchMapper {
         filter.traderName.map("application.holder.businessName" -> contains(_)) ++
         filter.minDecisionEnd.map("decision.effectiveEndDate" -> greaterThan(_)(formatInstant)) ++
         filter.commodityCode.map("decision.bindingCommodityCode" -> numberStartingWith(_)) ++
-        filter.decisionDetails.map(description => either(
-          "decision.goodsDescription" -> contains(description),
-          "decision.methodCommercialDenomination" -> contains(description),
-          "decision.justification" -> contains(description)
+        filter.decisionDetails.map(desc => either(
+          "decision.goodsDescription" -> contains(desc),
+          "decision.methodCommercialDenomination" -> contains(desc),
+          "decision.justification" -> contains(desc)
+        )) ++
+        filter.eori.map(e => either(
+          "application.holder.eori" -> JsString(e),
+          "application.agent.eoriDetails.eori" -> JsString(e)
         )) ++
         filter.keywords.map("keywords" -> containsAll(_))
     )
   }
 
-  private def either(conditions: (String, JsObject)*): (String, JsArray) = {
+  private def either(conditions: (String, JsValue)*): (String, JsArray) = {
     val objects: Seq[JsObject] = conditions.map(element => Json.obj(element._1 -> element._2))
     "$or" -> JsArray(objects)
   }
@@ -96,10 +100,6 @@ class SearchMapper {
 
   private lazy val caseInsensitiveFilter: (String, JsValueWrapper) = {
     "$options" -> "i"
-  }
-
-  private def notEqualFilter(value: String): JsObject = {
-    Json.obj("$ne" -> value)
   }
 
   private def toMongoField(sort: SortField): String = {

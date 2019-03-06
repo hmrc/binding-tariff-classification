@@ -18,7 +18,7 @@ package uk.gov.hmrc.bindingtariffclassification.repository
 
 import java.time.Instant
 
-import play.api.libs.json.{JsNull, Json}
+import play.api.libs.json.{JsNull, JsString, Json}
 import uk.gov.hmrc.bindingtariffclassification.model.{ApplicationType, CaseStatus, Filter, Sort}
 import uk.gov.hmrc.bindingtariffclassification.sort.{SortDirection, SortField}
 import uk.gov.hmrc.play.test.UnitSpec
@@ -34,6 +34,7 @@ class SearchMapperSpec extends UnitSpec {
       val filter = Filter(
         applicationType = Some(ApplicationType.BTI),
         queueId = Some("valid_queue"),
+        eori = Some("eori-number"),
         assigneeId = Some("valid_assignee"),
         statuses = Some(Set(CaseStatus.NEW, CaseStatus.OPEN)),
         traderName = Some("trader_name"),
@@ -59,6 +60,10 @@ class SearchMapperSpec extends UnitSpec {
           Json.obj("decision.methodCommercialDenomination" -> Json.obj("$regex" -> ".*strawberry.*", "$options" -> "i")),
           Json.obj("decision.justification" -> Json.obj("$regex" -> ".*strawberry.*", "$options" -> "i"))
         ),
+        "$or" -> Json.arr(
+          Json.obj("application.holder.eori" -> JsString("eori-number")),
+          Json.obj("application.agent.eoriDetails.eori" -> JsString("eori-number"))
+        ),
         "keywords" -> Json.obj("$all" -> Json.arr("MTB", "BIKE"))
       )
     }
@@ -72,6 +77,15 @@ class SearchMapperSpec extends UnitSpec {
     "convert to Json when just the `queueId` param is taken into account " in {
       jsonMapper.filterBy(Filter(queueId = Some("valid_queue"))) shouldBe Json.obj(
         "queueId" -> "valid_queue"
+      )
+    }
+
+    "convert to Json when just the `eori` param is taken into account " in {
+      jsonMapper.filterBy(Filter(eori = Some("eori-number"))) shouldBe Json.obj(
+        "$or" -> Json.arr(
+          Json.obj("application.holder.eori" -> JsString("eori-number")),
+          Json.obj("application.agent.eoriDetails.eori" -> JsString("eori-number"))
+        )
       )
     }
 
