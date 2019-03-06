@@ -694,7 +694,7 @@ class CaseSpec extends BaseFeatureSpec {
       val result = Http(s"$serviceUrl/cases?eori=eori_01234").asString
 
       result.code shouldEqual OK
-      Json.parse(result.body) shouldBe Json.toJson(Paged(Seq(holderCase)))
+      Json.parse(result.body) shouldBe Json.toJson(Paged(Seq(agentCase, holderCase)))
     }
 
     scenario("Case-insensitive search") {
