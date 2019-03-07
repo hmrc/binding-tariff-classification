@@ -22,4 +22,6 @@ object SortField extends Enumeration {
 
   val DAYS_ELAPSED = Value("days-elapsed")
   val COMMODITY_CODE = Value("commodity-code")
+  val CREATED_DATE = Value("created-date")
+  val DECISION_END_DATE = Value("decision-end-date")
 }

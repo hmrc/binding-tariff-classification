@@ -17,6 +17,7 @@
 package uk.gov.hmrc.bindingtariffclassification.component
 
 import java.time.Instant
+import java.time.temporal.ChronoUnit
 
 import play.api.http.ContentTypes.JSON
 import play.api.http.HeaderNames.CONTENT_TYPE
@@ -869,6 +870,110 @@ class CaseSpec extends BaseFeatureSpec {
 
       result2.code shouldEqual OK
       Json.parse(result2.body) shouldBe Json.toJson(Paged(results = Seq(c2), pageIndex = 2, pageSize = 1, resultCount = 2))
+    }
+
+  }
+
+  feature("Get Cases sorted by case created date") {
+
+    val caseD0 = createCase().copy(createdDate = Instant.now())
+    val caseD1 = createCase().copy(createdDate = Instant.now().minus(1, ChronoUnit.DAYS))
+    val caseD2 = createCase().copy(createdDate = Instant.now().minus(2, ChronoUnit.DAYS))
+    val caseD3 = createCase().copy(createdDate = Instant.now().minus(3, ChronoUnit.DAYS))
+
+
+    scenario("Sorting default - ascending order") {
+      Given("There are few cases in the database")
+      storeCases(caseD0, caseD1, caseD2, caseD3)
+
+      When("I get all cases sorted by created date")
+      val result = Http(s"$serviceUrl/cases?sort_by=created-date").asString
+
+      Then("The response code should be 200")
+      result.code shouldEqual OK
+
+      And("The expected cases are returned in the JSON response")
+      Json.parse(result.body) shouldBe Json.toJson(Paged(Seq(caseD3, caseD2, caseD1, caseD0)))
+    }
+
+    scenario("Sorting in ascending order") {
+      Given("There are few cases in the database")
+      storeCases(caseD0, caseD1, caseD2, caseD3)
+
+      When("I get all cases sorted by commodity code")
+      val result = Http(s"$serviceUrl/cases?sort_by=created-date&sort_direction=asc").asString
+
+      Then("The response code should be 200")
+      result.code shouldEqual OK
+
+      And("The expected cases are returned in the JSON response")
+      Json.parse(result.body) shouldBe Json.toJson(Paged(Seq(caseD3, caseD2, caseD1, caseD0)))
+    }
+
+    scenario("Sorting in descending order") {
+      Given("There are few cases in the database")
+      storeCases(caseD0, caseD1, caseD2, caseD3)
+
+      When("I get all cases sorted by commodity code")
+      val result = Http(s"$serviceUrl/cases?sort_by=created-date&sort_direction=desc").asString
+
+      Then("The response code should be 200")
+      result.code shouldEqual OK
+
+      And("The expected cases are returned in the JSON response")
+      Json.parse(result.body) shouldBe Json.toJson(Paged(Seq(caseD0, caseD1, caseD2, caseD3)))
+    }
+
+  }
+
+  feature("Get Cases sorted by case decision effective end date") {
+
+    val caseD0 = createCase().copy(decision = Some(createDecision(effectiveEndDate = Some(Instant.now()))))
+    val caseD1 = createCase().copy(decision = Some(createDecision(effectiveEndDate = Some(Instant.now().minus(1, ChronoUnit.DAYS)))))
+    val caseD2 = createCase().copy(decision = Some(createDecision(effectiveEndDate = Some(Instant.now().minus(2, ChronoUnit.DAYS)))))
+    val caseD3 = createCase().copy(decision = Some(createDecision(effectiveEndDate = Some(Instant.now().minus(3, ChronoUnit.DAYS)))))
+
+
+    scenario("Sorting default - ascending order") {
+      Given("There are few cases in the database")
+      storeCases(caseD0, caseD1, caseD2, caseD3)
+
+      When("I get all cases sorted by created date")
+      val result = Http(s"$serviceUrl/cases?sort_by=decision-end-date").asString
+
+      Then("The response code should be 200")
+      result.code shouldEqual OK
+
+      And("The expected cases are returned in the JSON response")
+      Json.parse(result.body) shouldBe Json.toJson(Paged(Seq(caseD3, caseD2, caseD1, caseD0)))
+    }
+
+    scenario("Sorting in ascending order") {
+      Given("There are few cases in the database")
+      storeCases(caseD0, caseD1, caseD2, caseD3)
+
+      When("I get all cases sorted by commodity code")
+      val result = Http(s"$serviceUrl/cases?sort_by=decision-end-date&sort_direction=asc").asString
+
+      Then("The response code should be 200")
+      result.code shouldEqual OK
+
+      And("The expected cases are returned in the JSON response")
+      Json.parse(result.body) shouldBe Json.toJson(Paged(Seq(caseD3, caseD2, caseD1, caseD0)))
+    }
+
+    scenario("Sorting in descending order") {
+      Given("There are few cases in the database")
+      storeCases(caseD0, caseD1, caseD2, caseD3)
+
+      When("I get all cases sorted by commodity code")
+      val result = Http(s"$serviceUrl/cases?sort_by=decision-end-date&sort_direction=desc").asString
+
+      Then("The response code should be 200")
+      result.code shouldEqual OK
+
+      And("The expected cases are returned in the JSON response")
+      Json.parse(result.body) shouldBe Json.toJson(Paged(Seq(caseD0, caseD1, caseD2, caseD3)))
     }
 
   }

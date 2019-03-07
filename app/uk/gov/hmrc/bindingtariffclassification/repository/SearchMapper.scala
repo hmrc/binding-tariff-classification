@@ -106,6 +106,8 @@ class SearchMapper {
     sort match {
       case DAYS_ELAPSED => "daysElapsed"
       case COMMODITY_CODE => "decision.bindingCommodityCode"
+      case CREATED_DATE => "createdDate"
+      case DECISION_END_DATE => "decision.effectiveEndDate"
       case s => throw new IllegalArgumentException(s"cannot sort by field: $s")
     }
   }
