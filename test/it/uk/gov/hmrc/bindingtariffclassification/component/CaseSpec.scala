@@ -900,7 +900,7 @@ class CaseSpec extends BaseFeatureSpec {
       Given("There are few cases in the database")
       storeCases(caseD0, caseD1, caseD2, caseD3)
 
-      When("I get all cases sorted by commodity code")
+      When("I get all cases sorted by created date")
       val result = Http(s"$serviceUrl/cases?sort_by=created-date&sort_direction=asc").asString
 
       Then("The response code should be 200")
@@ -914,7 +914,7 @@ class CaseSpec extends BaseFeatureSpec {
       Given("There are few cases in the database")
       storeCases(caseD0, caseD1, caseD2, caseD3)
 
-      When("I get all cases sorted by commodity code")
+      When("I get all cases sorted by created date")
       val result = Http(s"$serviceUrl/cases?sort_by=created-date&sort_direction=desc").asString
 
       Then("The response code should be 200")
@@ -952,7 +952,7 @@ class CaseSpec extends BaseFeatureSpec {
       Given("There are few cases in the database")
       storeCases(caseD0, caseD1, caseD2, caseD3)
 
-      When("I get all cases sorted by commodity code")
+      When("I get all cases sorted by decision effective end date")
       val result = Http(s"$serviceUrl/cases?sort_by=decision-end-date&sort_direction=asc").asString
 
       Then("The response code should be 200")
@@ -966,7 +966,7 @@ class CaseSpec extends BaseFeatureSpec {
       Given("There are few cases in the database")
       storeCases(caseD0, caseD1, caseD2, caseD3)
 
-      When("I get all cases sorted by commodity code")
+      When("I get all cases sorted by decision effective end date")
       val result = Http(s"$serviceUrl/cases?sort_by=decision-end-date&sort_direction=desc").asString
 
       Then("The response code should be 200")
