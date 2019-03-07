@@ -48,6 +48,7 @@ class EventSpec extends BaseFeatureSpec {
 
       When("I delete all documents")
       val deleteResult = Http(s"$serviceUrl/events")
+        .header(api_token_key,  appConfig.authorization)
         .method(HttpVerbs.DELETE)
         .asString
 
@@ -71,7 +72,9 @@ class EventSpec extends BaseFeatureSpec {
       storeCases(c1)
 
       When("I get the events for a specific case reference")
-      val result = Http(s"$serviceUrl/cases/$caseRef/events").asString
+      val result = Http(s"$serviceUrl/cases/$caseRef/events")
+        .header(api_token_key,  appConfig.authorization)
+        .asString
 
       Then("The response code should be OK")
       result.code shouldEqual OK
@@ -87,7 +90,9 @@ class EventSpec extends BaseFeatureSpec {
       storeEvents(e1)
 
       When("I get the events for that specific case")
-      val result = Http(s"$serviceUrl/cases/$caseRef/events").asString
+      val result = Http(s"$serviceUrl/cases/$caseRef/events")
+        .header(api_token_key,  appConfig.authorization)
+        .asString
 
       Then("The response code should be OK")
       result.code shouldEqual OK
@@ -108,7 +113,8 @@ class EventSpec extends BaseFeatureSpec {
       When("I create an Event")
       val payload = NewEventRequest(Note("Note"), Operator("user-id", Some("user name")))
       val result = Http(s"$serviceUrl/cases/$caseRef/events")
-        .headers(Seq(CONTENT_TYPE -> "application/json"))
+        .header(api_token_key,  appConfig.authorization)
+        .header(CONTENT_TYPE, "application/json")
         .postData(Json.toJson(payload).toString()).asString
 
       Then("The response code should be created")

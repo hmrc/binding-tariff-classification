@@ -39,6 +39,8 @@ class AppConfig @Inject()(val runModeConfiguration: Configuration, environment: 
     getDuration("scheduler.days-elapsed.interval").asInstanceOf[FiniteDuration]
   )
 
+  lazy val authorization: String = getString("auth.api-token")
+
   private def getBooleanConfig(key: String, default: Boolean): Boolean = {
     runModeConfiguration.getBoolean(key).getOrElse(default)
   }
