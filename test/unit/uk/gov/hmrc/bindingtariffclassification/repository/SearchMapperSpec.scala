@@ -180,6 +180,27 @@ class SearchMapperSpec extends UnitSpec {
 
       jsonMapper.sortBy(sort) shouldBe Json.obj("daysElapsed" -> 1)
     }
+
+    "sort by decision start date and set direction descending" in {
+
+      val sort = Sort(
+        field = SortField.DECISION_START_DATE,
+        direction = SortDirection.ASCENDING
+      )
+
+      jsonMapper.sortBy(sort) shouldBe Json.obj("decision.effectiveStartDate" -> 1)
+    }
+
+
+    "sort by created date and set direction descending" in {
+
+      val sort = Sort(
+        field = SortField.CREATED_DATE,
+        direction = SortDirection.DESCENDING
+      )
+
+      jsonMapper.sortBy(sort) shouldBe Json.obj("createdDate" -> -1)
+    }
   }
 
   "fromReference()" should {
