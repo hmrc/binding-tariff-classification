@@ -926,20 +926,20 @@ class CaseSpec extends BaseFeatureSpec {
 
   }
 
-  feature("Get Cases sorted by case decision effective end date") {
+  feature("Get Cases sorted by case decision effective start date") {
 
-    val caseD0 = createCase().copy(decision = Some(createDecision(effectiveEndDate = Some(Instant.now()))))
-    val caseD1 = createCase().copy(decision = Some(createDecision(effectiveEndDate = Some(Instant.now().minus(1, ChronoUnit.DAYS)))))
-    val caseD2 = createCase().copy(decision = Some(createDecision(effectiveEndDate = Some(Instant.now().minus(2, ChronoUnit.DAYS)))))
-    val caseD3 = createCase().copy(decision = Some(createDecision(effectiveEndDate = Some(Instant.now().minus(3, ChronoUnit.DAYS)))))
+    val caseD0 = createCase().copy(decision = Some(createDecision(effectiveStartDate = Some(Instant.now()))))
+    val caseD1 = createCase().copy(decision = Some(createDecision(effectiveStartDate = Some(Instant.now().minus(1, ChronoUnit.DAYS)))))
+    val caseD2 = createCase().copy(decision = Some(createDecision(effectiveStartDate = Some(Instant.now().minus(2, ChronoUnit.DAYS)))))
+    val caseD3 = createCase().copy(decision = Some(createDecision(effectiveStartDate = Some(Instant.now().minus(3, ChronoUnit.DAYS)))))
 
 
     scenario("Sorting default - ascending order") {
       Given("There are few cases in the database")
-      storeCases(caseD0, caseD1, caseD2, caseD3)
+      storeCases(caseD0, caseD3, caseD2, caseD1)
 
       When("I get all cases sorted by created date")
-      val result = Http(s"$serviceUrl/cases?sort_by=decision-end-date").asString
+      val result = Http(s"$serviceUrl/cases?sort_by=decision-start-date").asString
 
       Then("The response code should be 200")
       result.code shouldEqual OK
@@ -952,8 +952,8 @@ class CaseSpec extends BaseFeatureSpec {
       Given("There are few cases in the database")
       storeCases(caseD0, caseD1, caseD2, caseD3)
 
-      When("I get all cases sorted by decision effective end date")
-      val result = Http(s"$serviceUrl/cases?sort_by=decision-end-date&sort_direction=asc").asString
+      When("I get all cases sorted by decision effective start date")
+      val result = Http(s"$serviceUrl/cases?sort_by=decision-start-date&sort_direction=asc").asString
 
       Then("The response code should be 200")
       result.code shouldEqual OK
@@ -964,10 +964,10 @@ class CaseSpec extends BaseFeatureSpec {
 
     scenario("Sorting in descending order") {
       Given("There are few cases in the database")
-      storeCases(caseD0, caseD1, caseD2, caseD3)
+      storeCases(caseD0, caseD3, caseD2, caseD1)
 
-      When("I get all cases sorted by decision effective end date")
-      val result = Http(s"$serviceUrl/cases?sort_by=decision-end-date&sort_direction=desc").asString
+      When("I get all cases sorted by decision effective start date")
+      val result = Http(s"$serviceUrl/cases?sort_by=decision-start-date&sort_direction=desc").asString
 
       Then("The response code should be 200")
       result.code shouldEqual OK
@@ -977,6 +977,5 @@ class CaseSpec extends BaseFeatureSpec {
     }
 
   }
-
 
 }
