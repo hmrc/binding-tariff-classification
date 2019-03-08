@@ -17,18 +17,19 @@
 package uk.gov.hmrc.bindingtariffclassification.filters
 
 import akka.stream.Materializer
-import javax.inject.Inject
+import javax.inject.{Inject, Singleton}
 import play.api.mvc.{Filter, RequestHeader, Result, Results}
 import uk.gov.hmrc.bindingtariffclassification.config.AppConfig
 
 import scala.concurrent.Future
 
+@Singleton
 class AuthFilter @Inject()(appConfig: AppConfig)(implicit override val mat: Materializer) extends Filter {
 
   override def apply(f: RequestHeader => Future[Result])(rh: RequestHeader): Future[Result] = {
 
-    rh.headers.toMap.get("X-Api-Token") match {
-      case Some(Seq(appConfig.authorization)) => f(rh)
+    rh.headers.get("X-Api-Token") match {
+      case Some(appConfig.authorization) => f(rh)
       case _ => Future.successful(Results.Forbidden)
     }
   }

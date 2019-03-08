@@ -47,7 +47,7 @@ class DaysElapsedSpec extends BaseFeatureSpec {
 
       When("I hit the days-elapsed endpoint")
       val result = Http(s"$serviceUrl/scheduler/days-elapsed")
-        .header(api_token_key,  appConfig.authorization)
+        .header(apiTokenKey,  appConfig.authorization)
         .method(HttpVerbs.PUT)
         .asString
 

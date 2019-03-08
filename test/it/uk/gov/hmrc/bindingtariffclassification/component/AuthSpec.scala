@@ -36,12 +36,9 @@ class AuthSpec extends BaseFeatureSpec {
 
     scenario("Auth header present with correct value") {
 
-      Given("There is a case")
-      storeCases(c1)
-
       When("I call an endpoint with the correct auth token")
       val result = Http(s"$serviceUrl/cases")
-        .header(api_token_key, appConfig.authorization)
+        .header(apiTokenKey, appConfig.authorization)
         .method(HttpVerbs.GET)
         .asString
 
@@ -51,12 +48,9 @@ class AuthSpec extends BaseFeatureSpec {
 
     scenario("Auth header present with incorrect value") {
 
-      Given("There is a case")
-      storeCases(c1)
-
-      When("I call an endpoint with the incorrect auth token")
+      When("I call an endpoint with an incorrect auth token")
       val result = Http(s"$serviceUrl/cases")
-        .header(api_token_key, "WRONG_TOKEN")
+        .header(apiTokenKey, "WRONG_TOKEN")
         .method(HttpVerbs.GET)
         .asString
 
@@ -65,9 +59,6 @@ class AuthSpec extends BaseFeatureSpec {
     }
 
     scenario("Auth header not present") {
-
-      Given("There is a case")
-      storeCases(c1)
 
       When("I call an endpoint with the no auth token")
       val result = Http(s"$serviceUrl/cases")
