@@ -16,21 +16,14 @@
 
 package uk.gov.hmrc.bindingtariffclassification.component
 
-import java.util.UUID
-
 import play.api.http.Status._
 import play.api.http.{HttpVerbs, Status}
 import scalaj.http.Http
-import util.CaseData.createCase
 
 class AuthSpec extends BaseFeatureSpec {
 
   override lazy val port = 14682
   protected val serviceUrl = s"http://localhost:$port"
-
-  private val caseRef = UUID.randomUUID().toString
-  private val c1 = createCase(r = caseRef)
-
 
   feature("Authentication") {
 
@@ -67,6 +60,15 @@ class AuthSpec extends BaseFeatureSpec {
 
       Then("The response code should be 403")
       result.code shouldEqual Status.FORBIDDEN
+    }
+
+    scenario("Calls to the health endpoint do not require auth token") {
+      val result = Http(s"$serviceUrl/ping/ping")
+        .method(HttpVerbs.GET)
+        .asString
+
+      Then("The response code should be 200")
+      result.code shouldBe OK
     }
   }
 }

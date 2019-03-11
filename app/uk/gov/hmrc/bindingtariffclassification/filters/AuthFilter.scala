@@ -26,8 +26,17 @@ import scala.concurrent.Future
 @Singleton
 class AuthFilter @Inject()(appConfig: AppConfig)(implicit override val mat: Materializer) extends Filter {
 
+  private lazy val healthEndpointUri = "/ping/ping"
+
   override def apply(f: RequestHeader => Future[Result])(rh: RequestHeader): Future[Result] = {
 
+    rh.uri match {
+      case uri if uri.contains(healthEndpointUri) => f(rh)
+      case _ => ensureAuthTokenIsPresent(f, rh)
+    }
+  }
+
+  private def ensureAuthTokenIsPresent(f: RequestHeader => Future[Result], rh: RequestHeader) = {
     rh.headers.get("X-Api-Token") match {
       case Some(appConfig.authorization) => f(rh)
       case _ => Future.successful(Results.Forbidden)
