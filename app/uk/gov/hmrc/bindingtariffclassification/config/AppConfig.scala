@@ -43,12 +43,7 @@ class AppConfig @Inject()(val runModeConfiguration: Configuration, environment: 
     runModeConfiguration.getBoolean(key).getOrElse(default)
   }
 
-  def bankHolidaysUrl: String = {
-    val protocol = getString("microservice.services.bank-holidays.protocol")
-    val host = getString("microservice.services.bank-holidays.host")
-    val port = runModeConfiguration.getInt("microservice.services.bank-holidays.port")
-    s"$protocol://$host${port.map(p => s":$p").getOrElse("")}"
-  }
+  def bankHolidaysUrl: String = baseUrl("bank-holidays")
 
   lazy val upsertAgents: Seq[String] = getString("upsert-permitted-agents").split(",").filter(_.nonEmpty)
 

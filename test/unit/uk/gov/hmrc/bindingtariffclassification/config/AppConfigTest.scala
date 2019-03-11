@@ -49,14 +49,7 @@ class AppConfigTest extends UnitSpec {
       config.interval shouldBe 1.days
     }
 
-    "build 'bankHolidaysUrl without port" in {
-      configWith(
-        "microservice.services.bank-holidays.protocol" -> "https",
-        "microservice.services.bank-holidays.host" -> "www.host.co.uk"
-      ).bankHolidaysUrl shouldBe "https://www.host.co.uk"
-    }
-
-    "build 'bankHolidaysUrl with port" in {
+    "build 'bankHolidaysUrl" in {
       configWith(
         "microservice.services.bank-holidays.protocol" -> "https",
         "microservice.services.bank-holidays.host" -> "www.host.co.uk",

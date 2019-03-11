@@ -57,7 +57,7 @@ class BankHolidaysConnectorTest extends UnitSpec with WiremockTestServer
   "Connector" should {
     "GET" in {
       stubFor(
-        get("/bank-holidays.json")
+        get("/bank-holidays")
           .willReturn(
             aResponse()
               .withBody(fromFile("bank-holidays.json"))
@@ -72,7 +72,7 @@ class BankHolidaysConnectorTest extends UnitSpec with WiremockTestServer
 
     "Fallback to resources on 4xx" in {
       stubFor(
-        get("/bank-holidays.json")
+        get("/bank-holidays")
           .willReturn(
             aResponse().withStatus(Status.NOT_FOUND)
           )
@@ -83,7 +83,7 @@ class BankHolidaysConnectorTest extends UnitSpec with WiremockTestServer
 
     "Fallback to resources on 5xx" in {
       stubFor(
-        get("/bank-holidays.json")
+        get("/bank-holidays")
           .willReturn(
             aResponse().withStatus(Status.BAD_GATEWAY)
           )

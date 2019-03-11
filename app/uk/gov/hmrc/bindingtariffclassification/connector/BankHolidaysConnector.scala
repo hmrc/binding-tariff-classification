@@ -35,7 +35,7 @@ class BankHolidaysConnector @Inject()(appConfig: AppConfig, http: ProxyHttpClien
                                      (implicit executionContext: ExecutionContext) {
 
   def get()(implicit headerCarrier: HeaderCarrier): Future[Seq[LocalDate]] = {
-    http.GET[BankHolidaysResponse](s"${appConfig.bankHolidaysUrl}/bank-holidays.json")
+    http.GET[BankHolidaysResponse](s"${appConfig.bankHolidaysUrl}/bank-holidays")
       .recover(withResourcesFile)
       .map(_.`england-and-wales`.events.map(_.date))
   }
