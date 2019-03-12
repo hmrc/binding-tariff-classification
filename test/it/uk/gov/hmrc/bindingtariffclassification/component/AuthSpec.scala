@@ -49,6 +49,7 @@ class AuthSpec extends BaseFeatureSpec {
 
       Then("The response code should be 403")
       result.code shouldEqual Status.FORBIDDEN
+      result.body shouldBe "Missing or invalid 'X-Api-Token'"
     }
 
     scenario("Auth header not present") {
@@ -60,6 +61,7 @@ class AuthSpec extends BaseFeatureSpec {
 
       Then("The response code should be 403")
       result.code shouldEqual Status.FORBIDDEN
+      result.body shouldBe "Missing or invalid 'X-Api-Token'"
     }
 
     scenario("Calls to the health endpoint do not require auth token") {
