@@ -33,7 +33,7 @@ class EncryptedCaseMongoRepositoryTest extends UnitSpec with MockitoSugar with B
   private val rawCaseSaved = mock[Case]
   private val encryptedCase = mock[Case]
   private val encryptedCaseSaved = mock[Case]
-  private val search = mock[Search]
+  private val search = Search()
   private val pagination = mock[Pagination]
   private val crypto = mock[Crypto]
   private val underlyingRepo = mock[CaseMongoRepository]
