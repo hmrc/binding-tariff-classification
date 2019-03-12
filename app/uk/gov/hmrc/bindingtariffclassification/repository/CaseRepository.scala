@@ -61,10 +61,15 @@ class EncryptedCaseMongoRepository @Inject()(repository: CaseMongoRepository, cr
   override def getByReference(reference: String): Future[Option[Case]] = repository.getByReference(reference).map(_.map(decrypt))
 
   override def get(search: Search, pagination: Pagination): Future[Paged[Case]] = {
-    repository.get(search, pagination).map(_.map(decrypt))
+    repository.get(enryptSearch(search), pagination).map(_.map(decrypt))
   }
 
   override def deleteAll(): Future[Unit] = repository.deleteAll()
+
+  private def enryptSearch(search: Search) = {
+    val eoriEnc: Option[String] = search.filter.eori.map(crypto.encryptString)
+    search.copy(filter = search.filter.copy(eori = eoriEnc))
+  }
 }
 
 @Singleton

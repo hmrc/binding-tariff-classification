@@ -31,7 +31,7 @@ class Crypto @Inject()(crypto: CompositeSymmetricCrypto) {
     applyCrypto(c)(decryptString)
   }
 
-  private def encryptString: String => String = { s: String =>
+  def encryptString: String => String = { s: String =>
     crypto.encrypt(PlainText(s)).value
   }
 

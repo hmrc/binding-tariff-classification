@@ -97,4 +97,14 @@ class CryptoSpec extends UnitSpec with MockitoSugar {
 
   }
 
+    "encrypt string()" should {
+
+      "encrypt the string " in {
+        val s = " a string"
+        val enc = crypto.encryptString(s)
+        enc shouldNot equal(s)
+      }
+
+    }
+
 }
