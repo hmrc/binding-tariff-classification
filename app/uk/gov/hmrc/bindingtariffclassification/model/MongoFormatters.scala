@@ -77,6 +77,7 @@ object MongoFormatters {
   implicit val formatReviewStatusChange = Json.format[ReviewStatusChange]
   implicit val formatExtendedUseStatusChange = Json.format[ExtendedUseStatusChange]
   implicit val formatAssignmentChange = Json.format[AssignmentChange]
+  implicit val formatQueueChange = Json.format[QueueChange]
   implicit val formatNote = Json.format[Note]
 
   implicit val formatEventDetail = Union.from[Details]("type")
@@ -85,9 +86,9 @@ object MongoFormatters {
     .and[ReviewStatusChange](EventType.REVIEW_STATUS_CHANGE.toString)
     .and[ExtendedUseStatusChange](EventType.EXTENDED_USE_STATUS_CHANGE.toString)
     .and[AssignmentChange](EventType.ASSIGNMENT_CHANGE.toString)
+    .and[QueueChange](EventType.QUEUE_CHANGE.toString)
     .and[Note](EventType.NOTE.toString)
     .format
-
 
   implicit val formatEvent = Json.format[Event]
   implicit val formatSchedulerRunEvent = Json.format[SchedulerRunEvent]
