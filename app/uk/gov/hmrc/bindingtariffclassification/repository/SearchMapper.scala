@@ -31,8 +31,8 @@ class SearchMapper {
     JsObject(
       Map() ++
         filter.applicationType.map(s => "application.type" -> JsString(s.toString)) ++
-        filter.queueId.map("queueId" -> nullifyNoneValues(_)) ++
-        filter.assigneeId.map("assignee.id" -> nullifyNoneValues(_)) ++
+        filter.queueId.map("queueId" -> mappingNoneOrSome(_)) ++
+        filter.assigneeId.map("assignee.id" -> mappingNoneOrSome(_)) ++
         filter.statuses.map("status" -> inArray[CaseStatus](_)) ++
         filter.traderName.map("application.holder.businessName" -> contains(_)) ++
         filter.minDecisionEnd.map("decision.effectiveEndDate" -> greaterThan(_)(formatInstant)) ++
@@ -79,9 +79,10 @@ class SearchMapper {
     JsObject( Map( "$in" -> JsArray(values.toSeq.map(writes.writes)) ) )
   }
 
-  private def nullifyNoneValues: String => JsValue = { v: String =>
+  private def mappingNoneOrSome: String => JsValue = { v: String =>
     v match {
       case "none" => JsNull
+      case "some" => Json.obj("$ne" -> JsNull)
       case _ => JsString(v)
     }
   }

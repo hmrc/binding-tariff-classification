@@ -144,12 +144,21 @@ class SearchMapperSpec extends UnitSpec {
     }
 
     "convert to Json when fields `queueId` and `assigneeId` are set to `none` " in {
-
       val filter = Filter(queueId = Some("none"), assigneeId = Some("none"))
 
       jsonMapper.filterBy(filter) shouldBe Json.obj(
         "queueId" -> JsNull,
         "assignee.id" -> JsNull
+      )
+    }
+
+    "convert to Json when fields `queueId` and `assigneeId` are set to `some` " in {
+
+      val filter = Filter(queueId = Some("some"), assigneeId = Some("some"))
+
+      jsonMapper.filterBy(filter) shouldBe Json.obj(
+        "queueId" -> Json.obj("$ne" -> JsNull),
+        "assignee.id" -> Json.obj("$ne" -> JsNull)
       )
     }
 

@@ -268,6 +268,18 @@ class CaseRepositorySpec extends BaseMongoIndexSpec
       await(repository.get(search, Pagination())).results shouldBe Seq(caseWithAssigneeX1)
     }
 
+    "return the expected documents - with 'none'" in {
+      val search = Search(Filter(assigneeId = Some("none")))
+      store(caseWithEmptyAssignee, caseWithAssigneeX1, caseWithAssigneeY1)
+      await(repository.get(search, Pagination())).results shouldBe Seq(caseWithEmptyAssignee)
+    }
+
+    "return the expected documents - with 'some'" in {
+      val search = Search(Filter(assigneeId = Some("some")))
+      store(caseWithEmptyAssignee, caseWithAssigneeX1, caseWithAssigneeY1)
+      await(repository.get(search, Pagination())).results shouldBe Seq(caseWithAssigneeX1, caseWithAssigneeY1)
+    }
+
     "return the expected documents when there are multiple matches" in {
       val search = Search(Filter(assigneeId = Some(assigneeX.id)))
       store(caseWithEmptyAssignee, caseWithAssigneeX1, caseWithAssigneeX2, caseWithAssigneeY1)

@@ -271,6 +271,23 @@ class CaseSpec extends BaseFeatureSpec {
       Json.parse(result.body) shouldBe Json.toJson(Paged(Seq(c2)))
     }
 
+    scenario("Filtering cases that have defined queueId") {
+
+      Given("There are few cases in the database")
+      storeCases(c1, c2)
+
+      When("I get cases by queue id")
+      val result = Http(s"$serviceUrl/cases?queue_id=some")
+        .header(apiTokenKey, appConfig.authorization)
+        .asString
+
+      Then("The response code should be OK")
+      result.code shouldEqual OK
+
+      And("The expected cases are returned in the JSON response")
+      Json.parse(result.body) shouldBe Json.toJson(Paged(Seq(c1)))
+    }
+
     scenario("Filtering cases by a valid queueId") {
 
       Given("There are few cases in the database")
@@ -325,6 +342,23 @@ class CaseSpec extends BaseFeatureSpec {
 
       And("The expected cases are returned in the JSON response")
       Json.parse(result.body) shouldBe Json.toJson(Paged(Seq(c2)))
+    }
+
+    scenario("Filtering cases that have defined assigneeId") {
+
+      Given("There are few cases in the database")
+      storeCases(c1, c2)
+
+      When("I get cases by assignee id")
+      val result = Http(s"$serviceUrl/cases?assignee_id=some")
+        .header(apiTokenKey, appConfig.authorization)
+        .asString
+
+      Then("The response code should be OK")
+      result.code shouldEqual OK
+
+      And("The expected cases are returned in the JSON response")
+      Json.parse(result.body) shouldBe Json.toJson(Paged(Seq(c1)))
     }
 
     scenario("Filtering cases by a valid assigneeId") {
