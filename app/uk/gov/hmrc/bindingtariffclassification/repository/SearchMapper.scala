@@ -79,12 +79,10 @@ class SearchMapper {
     JsObject( Map( "$in" -> JsArray(values.toSeq.map(writes.writes)) ) )
   }
 
-  private def mappingNoneOrSome: String => JsValue = { v: String =>
-    v match {
-      case "none" => JsNull
-      case "some" => Json.obj("$ne" -> JsNull)
-      case _ => JsString(v)
-    }
+  private def mappingNoneOrSome: String => JsValue = {
+    case "none" => JsNull
+    case "some" => Json.obj("$ne" -> JsNull)
+    case v => JsString(v)
   }
 
   private def numberStartingWith(value: String): JsObject = {
