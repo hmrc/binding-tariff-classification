@@ -104,6 +104,7 @@ class SearchMapper {
 
   private def toMongoField(sort: SortField): String = {
     sort match {
+      case REFERENCE => "reference"
       case DAYS_ELAPSED => "daysElapsed"
       case COMMODITY_CODE => "decision.bindingCommodityCode"
       case CREATED_DATE => "createdDate"

@@ -991,6 +991,61 @@ class CaseSpec extends BaseFeatureSpec {
 
   }
 
+  feature("Get Case sorted by reference") {
+
+    val case1 = createCase().copy(reference = "1")
+    val case2 = createCase().copy(reference = "2")
+
+    scenario("Sorting default - ascending order") {
+      Given("There are few cases in the database")
+      storeCases(case1, case2)
+
+      When("I get all cases sorted by reference")
+      val result = Http(s"$serviceUrl/cases?sort_by=reference")
+        .header(apiTokenKey, appConfig.authorization)
+        .asString
+
+      Then("The response code should be 200")
+      result.code shouldEqual OK
+
+      And("The expected cases are returned in the JSON response")
+      Json.parse(result.body) shouldBe Json.toJson(Paged(Seq(case1, case2)))
+    }
+
+    scenario("Sorting in ascending order") {
+      Given("There are few cases in the database")
+      storeCases(case2, case1)
+
+      When("I get all cases sorted by reference")
+      val result = Http(s"$serviceUrl/cases?sort_by=reference&sort_direction=asc")
+        .header(apiTokenKey, appConfig.authorization)
+        .asString
+
+      Then("The response code should be 200")
+      result.code shouldEqual OK
+
+      And("The expected cases are returned in the JSON response")
+      Json.parse(result.body) shouldBe Json.toJson(Paged(Seq(case1, case2)))
+    }
+
+    scenario("Sorting in descending order") {
+      Given("There are few cases in the database")
+      storeCases(case1, case2)
+
+      When("I get all cases sorted by reference")
+      val result = Http(s"$serviceUrl/cases?sort_by=reference&sort_direction=desc")
+        .header(apiTokenKey, appConfig.authorization)
+        .asString
+
+      Then("The response code should be 200")
+      result.code shouldEqual OK
+
+      And("The expected cases are returned in the JSON response")
+      Json.parse(result.body) shouldBe Json.toJson(Paged(Seq(case2, case1)))
+    }
+
+  }
+
 
   feature("Get Cases sorted by days elapsed") {
 

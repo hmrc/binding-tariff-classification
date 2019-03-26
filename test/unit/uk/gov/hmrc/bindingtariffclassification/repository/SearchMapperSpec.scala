@@ -218,6 +218,16 @@ class SearchMapperSpec extends UnitSpec {
 
       jsonMapper.sortBy(sort) shouldBe Json.obj("createdDate" -> -1)
     }
+
+    "sort by reference " in {
+
+      val sort = Sort(
+        field = SortField.REFERENCE,
+        direction = SortDirection.DESCENDING
+      )
+
+      jsonMapper.sortBy(sort) shouldBe Json.obj("reference" -> -1)
+    }
   }
 
   "fromReference()" should {

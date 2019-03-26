@@ -20,6 +20,7 @@ package uk.gov.hmrc.bindingtariffclassification.sort
 object SortField extends Enumeration {
   type SortField = Value
 
+  val REFERENCE = Value("reference")
   val DAYS_ELAPSED = Value("days-elapsed")
   val COMMODITY_CODE = Value("commodity-code")
   val CREATED_DATE = Value("created-date")
