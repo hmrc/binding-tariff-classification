@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.bindingtariffclassification.scheduler
 
-import java.time.{DayOfWeek, Instant, LocalDate, LocalTime}
+import java.time._
 
 import javax.inject.{Inject, Singleton}
 import uk.gov.hmrc.bindingtariffclassification.config.AppConfig
@@ -71,8 +71,8 @@ class DaysElapsedJob @Inject()(appConfig: AppConfig,
   }
 
   private def refreshDaysElapsed(c: Case)(implicit bankHolidays: Set[LocalDate]): Future[Unit] = {
-    val createdDate = LocalDate.from(c.createdDate)
-    val daysSinceCreated = (createdDate until LocalDate.now(appConfig.clock)).getDays
+    val createdDate: LocalDate = LocalDateTime.ofInstant(c.createdDate, ZoneOffset.UTC).toLocalDate
+    val daysSinceCreated: Int = (createdDate until LocalDate.now(appConfig.clock)).getDays
 
     val workingDays: Seq[Instant] = (0 until daysSinceCreated)
       .map(createdDate.plusDays(_))
@@ -94,8 +94,9 @@ class DaysElapsedJob @Inject()(appConfig: AppConfig,
 
       openDays: Seq[Instant] = workingDays.filterNot(statusTimeline.statusOn(_).contains(CaseStatus.REFERRED))
       daysElapsed: Int = openDays.size
+      updated: Case = c.copy(daysElapsed = daysElapsed)
 
-      _ <- caseService.update(c.copy(daysElapsed = daysElapsed), upsert = false)
+      _ <- caseService.update(updated, upsert = false)
     } yield ()
   }
 

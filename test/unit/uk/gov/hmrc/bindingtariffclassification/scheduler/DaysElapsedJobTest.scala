@@ -22,6 +22,8 @@ import org.mockito.ArgumentCaptor
 import org.mockito.ArgumentMatchers._
 import org.mockito.BDDMockito.given
 import org.mockito.Mockito._
+import org.mockito.invocation.InvocationOnMock
+import org.mockito.stubbing.Answer
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.mockito.MockitoSugar
 import uk.gov.hmrc.bindingtariffclassification.config.{AppConfig, JobConfig}
@@ -29,8 +31,10 @@ import uk.gov.hmrc.bindingtariffclassification.connector.BankHolidaysConnector
 import uk.gov.hmrc.bindingtariffclassification.model.CaseStatus.CaseStatus
 import uk.gov.hmrc.bindingtariffclassification.model._
 import uk.gov.hmrc.bindingtariffclassification.service.{CaseService, EventService}
+import uk.gov.hmrc.bindingtariffclassification.sort.CaseSortField
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.test.UnitSpec
+import util.CaseData
 
 import scala.concurrent.Future
 import scala.concurrent.duration._
@@ -41,12 +45,14 @@ class DaysElapsedJobTest extends UnitSpec with MockitoSugar with BeforeAndAfterE
   private val eventService = mock[EventService]
   private val bankHolidaysConnector = mock[BankHolidaysConnector]
   private val appConfig = mock[AppConfig]
-
-  private val caseSearch = CaseSearch(Filter(statuses = Some(Set(CaseStatus.OPEN, CaseStatus.NEW))))
+  private val caseSearch = CaseSearch(
+    filter = Filter(statuses = Some(Set(CaseStatus.OPEN, CaseStatus.NEW))),
+    sort = Some(CaseSort(CaseSortField.REFERENCE))
+  )
 
   override def afterEach(): Unit = {
     super.afterEach()
-    reset(appConfig, caseService)
+    reset(appConfig, caseService, eventService)
   }
 
   "Scheduled Job" should {
@@ -71,24 +77,89 @@ class DaysElapsedJobTest extends UnitSpec with MockitoSugar with BeforeAndAfterE
   }
 
   "Scheduled Job 'Execute'" should {
-    given(appConfig.daysElapsed).willReturn(JobConfig(LocalTime.MIDNIGHT, 1.day))
 
     "Update Days Elapsed - for case created today" in {
       givenNoBankHolidays()
       givenTodaysDateIs("2019-01-01T00:00:00")
 
-      givenAPageOfCases(1, 1, aCaseWithReferenceAndCreatedDate("reference", "2019-01-01T00:00:00"))
-      givenAPageOfEventsFor("reference", 1, 1)
+      givenUpdatingACaseReturnsItself()
+      givenAPageOfCases(1, 1, aCaseWith(reference = "reference", createdDate = "2019-01-01T00:00:00"))
+      givenThereAreNoEventsFor("reference")
 
-      await(newJob.execute())
+      await(newJob.execute()) shouldBe ()
 
-      theCasesUpdated().daysElapsed  shouldBe 0
+      theCasesUpdated().daysElapsed shouldBe 0
+    }
+
+    "Update Days Elapsed - for case created one working day ago" in {
+      givenNoBankHolidays()
+      givenTodaysDateIs("2019-01-02T00:00:00")
+
+      givenUpdatingACaseReturnsItself()
+      givenAPageOfCases(1, 1, aCaseWith(reference = "reference", createdDate = "2019-01-01T00:00:00"))
+      givenThereAreNoEventsFor("reference")
+
+      await(newJob.execute()) shouldBe ()
+
+      theCasesUpdated().daysElapsed shouldBe 1
+    }
+
+    "Update Days Elapsed - for case created multiple working days ago" in {
+      givenNoBankHolidays()
+      givenTodaysDateIs("2019-01-04T00:00:00")
+
+      givenUpdatingACaseReturnsItself()
+      givenAPageOfCases(1, 1, aCaseWith(reference = "reference", createdDate = "2019-01-01T00:00:00"))
+      givenThereAreNoEventsFor("reference")
+
+      await(newJob.execute()) shouldBe ()
+
+      theCasesUpdated().daysElapsed shouldBe 3
+    }
+
+    "Update Days Elapsed - excluding weekends" in {
+      givenNoBankHolidays()
+      givenTodaysDateIs("2019-01-07T00:00:00")
+
+      givenUpdatingACaseReturnsItself()
+      givenAPageOfCases(1, 1, aCaseWith(reference = "reference", createdDate = "2019-01-05T00:00:00"))
+      givenThereAreNoEventsFor("reference")
+
+      await(newJob.execute()) shouldBe ()
+
+      theCasesUpdated().daysElapsed shouldBe 0
+    }
+
+    "Update Days Elapsed - excluding bank holidays" in {
+      givenABankHolidayOn("2019-01-01")
+      givenTodaysDateIs("2019-01-02T00:00:00")
+
+      givenUpdatingACaseReturnsItself()
+      givenAPageOfCases(1, 1, aCaseWith(reference = "reference", createdDate = "2019-01-01T00:00:00"))
+      givenThereAreNoEventsFor("reference")
+
+      await(newJob.execute()) shouldBe ()
+
+      theCasesUpdated().daysElapsed shouldBe 0
+    }
+
+    "Update Days Elapsed - excluding referred days" in {
+      givenNoBankHolidays()
+      givenTodaysDateIs("2019-01-04T00:00:00")
+
+      givenUpdatingACaseReturnsItself()
+      givenAPageOfCases(1, 1, aCaseWith(reference = "reference", createdDate = "2019-01-01T00:00:00"))
+      givenAPageOfEventsFor("reference", 1, 1, aStatusChangeWith(date = "2019-01-01", status = CaseStatus.REFERRED))
+
+      await(newJob.execute()) shouldBe ()
+
+      theCasesUpdated().daysElapsed shouldBe 0
     }
   }
 
   private def theCasesUpdated(index: Int = 0): Case = {
     val captor: ArgumentCaptor[Case] = ArgumentCaptor.forClass(classOf[Case])
-    verify(caseService).update(captor.capture(), upsert = false)
+    verify(caseService).update(captor.capture(), refEq(false))
     captor.getAllValues.get(index)
   }
 
@@ -107,15 +178,13 @@ class DaysElapsedJobTest extends UnitSpec with MockitoSugar with BeforeAndAfterE
     given(eventService.search(EventSearch(reference, Some(EventType.CASE_STATUS_CHANGE)), pagination)) willReturn Future.successful(Paged.empty[Event])
   }
 
-  private def aCaseWithReferenceAndCreatedDate(ref: String, date: String): Case = {
-    val c = mock[Case]
-    given(c.reference) willReturn ref
-    given(c.createdDate) willReturn LocalDateTime.parse(date).atZone(ZoneOffset.UTC).toInstant
-    given(c.daysElapsed) willReturn 0
-    c
-  }
+  private def aCaseWith(reference: String, createdDate: String): Case = CaseData.createCase().copy(
+    reference = reference,
+    createdDate = LocalDateTime.parse(createdDate).atZone(ZoneOffset.UTC).toInstant,
+    daysElapsed = 0
+  )
 
-  private def aStatusChange(date: String, status: CaseStatus): Event = {
+  private def aStatusChangeWith(date: String, status: CaseStatus): Event = {
     val e = mock[Event]
     given(e.details) willReturn CaseStatusChange(
       mock[CaseStatus],
@@ -139,6 +208,12 @@ class DaysElapsedJobTest extends UnitSpec with MockitoSugar with BeforeAndAfterE
     val zone: ZoneId = ZoneOffset.UTC
     val instant = LocalDateTime.parse(date).atZone(zone).toInstant
     given(appConfig.clock).willReturn(Clock.fixed(instant, zone))
+  }
+
+  private def givenUpdatingACaseReturnsItself(): Unit = {
+    given(caseService.update(any[Case], any[Boolean])).will(new Answer[Future[Option[Case]]] {
+      override def answer(invocation: InvocationOnMock): Future[Option[Case]] = Future.successful(Option(invocation.getArgument[Case](0)))
+    })
   }
 
 }
