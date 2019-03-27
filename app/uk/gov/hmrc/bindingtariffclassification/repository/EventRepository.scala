@@ -62,9 +62,9 @@ class EventMongoRepository @Inject()(mongoDbProvider: MongoDbProvider)
   override def search(search: EventSearch, pagination: Pagination): Future[Paged[Event]] = {
     val query = JsObject(
       Map[String, JsValue](
-        "reference" -> JsString(search.reference)
+        "caseReference" -> JsString(search.reference)
       )
-      ++ search.`type`.map(t => "type" -> JsString(t.toString))
+      ++ search.`type`.map(t => "type" -> Json.toJson(t))
     )
     getMany(query, defaultSortBy, pagination)
   }
