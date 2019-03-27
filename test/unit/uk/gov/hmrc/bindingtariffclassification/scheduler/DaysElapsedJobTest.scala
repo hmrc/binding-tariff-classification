@@ -82,7 +82,7 @@ class DaysElapsedJobTest extends UnitSpec with MockitoSugar with BeforeAndAfterE
       givenNoBankHolidays()
       givenTodaysDateIs("2019-01-01T00:00:00")
 
-      givenAPageOfCases(1, 0)
+      givenAPageOfCases(1, 1, 0)
 
       await(newJob.execute()) shouldBe()
     }
@@ -92,7 +92,7 @@ class DaysElapsedJobTest extends UnitSpec with MockitoSugar with BeforeAndAfterE
       givenTodaysDateIs("2019-01-01T00:00:00")
 
       givenUpdatingACaseReturnsItself()
-      givenAPageOfCases(1, 1, aCaseWith(reference = "reference", createdDate = "2019-01-01T00:00:00"))
+      givenAPageOfCases(1, 1, 1, aCaseWith(reference = "reference", createdDate = "2019-01-01T00:00:00"))
       givenThereAreNoEventsFor("reference")
 
       await(newJob.execute()) shouldBe()
@@ -105,7 +105,7 @@ class DaysElapsedJobTest extends UnitSpec with MockitoSugar with BeforeAndAfterE
       givenTodaysDateIs("2019-01-02T00:00:00")
 
       givenUpdatingACaseReturnsItself()
-      givenAPageOfCases(1, 1, aCaseWith(reference = "reference", createdDate = "2019-01-01T00:00:00"))
+      givenAPageOfCases(1, 1, 1, aCaseWith(reference = "reference", createdDate = "2019-01-01T00:00:00"))
       givenThereAreNoEventsFor("reference")
 
       await(newJob.execute()) shouldBe()
@@ -118,7 +118,7 @@ class DaysElapsedJobTest extends UnitSpec with MockitoSugar with BeforeAndAfterE
       givenTodaysDateIs("2019-01-04T00:00:00")
 
       givenUpdatingACaseReturnsItself()
-      givenAPageOfCases(1, 1, aCaseWith(reference = "reference", createdDate = "2019-01-01T00:00:00"))
+      givenAPageOfCases(1, 1, 1, aCaseWith(reference = "reference", createdDate = "2019-01-01T00:00:00"))
       givenThereAreNoEventsFor("reference")
 
       await(newJob.execute()) shouldBe()
@@ -131,7 +131,7 @@ class DaysElapsedJobTest extends UnitSpec with MockitoSugar with BeforeAndAfterE
       givenTodaysDateIs("2019-01-07T00:00:00")
 
       givenUpdatingACaseReturnsItself()
-      givenAPageOfCases(1, 1, aCaseWith(reference = "reference", createdDate = "2019-01-05T00:00:00"))
+      givenAPageOfCases(1, 1, 1, aCaseWith(reference = "reference", createdDate = "2019-01-05T00:00:00"))
       givenThereAreNoEventsFor("reference")
 
       await(newJob.execute()) shouldBe()
@@ -144,7 +144,7 @@ class DaysElapsedJobTest extends UnitSpec with MockitoSugar with BeforeAndAfterE
       givenTodaysDateIs("2019-01-02T00:00:00")
 
       givenUpdatingACaseReturnsItself()
-      givenAPageOfCases(1, 1, aCaseWith(reference = "reference", createdDate = "2019-01-01T00:00:00"))
+      givenAPageOfCases(1, 1, 1, aCaseWith(reference = "reference", createdDate = "2019-01-01T00:00:00"))
       givenThereAreNoEventsFor("reference")
 
       await(newJob.execute()) shouldBe()
@@ -157,7 +157,7 @@ class DaysElapsedJobTest extends UnitSpec with MockitoSugar with BeforeAndAfterE
       givenTodaysDateIs("2019-01-04T00:00:00")
 
       givenUpdatingACaseReturnsItself()
-      givenAPageOfCases(1, 1, aCaseWith(reference = "reference", createdDate = "2019-01-01T00:00:00"))
+      givenAPageOfCases(1, 1, 1, aCaseWith(reference = "reference", createdDate = "2019-01-01T00:00:00"))
       givenAPageOfEventsFor("reference", 1, 1, aStatusChangeWith(date = "2019-01-01", status = CaseStatus.REFERRED))
 
       await(newJob.execute()) shouldBe()
@@ -170,7 +170,7 @@ class DaysElapsedJobTest extends UnitSpec with MockitoSugar with BeforeAndAfterE
       givenTodaysDateIs("2019-01-04T00:00:00")
 
       givenUpdatingACaseReturnsItself()
-      givenAPageOfCases(1, 1, aCaseWith(reference = "reference", createdDate = "2019-01-01T00:00:00"))
+      givenAPageOfCases(1, 1, 1, aCaseWith(reference = "reference", createdDate = "2019-01-01T00:00:00"))
       givenAPageOfEventsFor("reference", 1, 1,
         aStatusChangeWith(date = "2019-01-01", status = CaseStatus.REFERRED),
         aStatusChangeWith(date = "2019-01-02", status = CaseStatus.OPEN),
@@ -187,10 +187,25 @@ class DaysElapsedJobTest extends UnitSpec with MockitoSugar with BeforeAndAfterE
       givenTodaysDateIs("2019-01-01T00:00:00")
 
       givenUpdatingACaseReturnsItself()
-      givenAPageOfCases(1, 2,
+      givenAPageOfCases(1, 2, 2,
         aCaseWith(reference = "reference-1", createdDate = "2019-01-01T00:00:00"),
         aCaseWith(reference = "reference-2", createdDate = "2019-01-02T00:00:00")
       )
+      givenThereAreNoEventsFor("reference-1")
+      givenThereAreNoEventsFor("reference-2")
+
+      await(newJob.execute()) shouldBe()
+
+      verify(caseService, times(2)).update(any[Case], refEq(false))
+    }
+
+    "Update Days Elapsed - for multiple pages of cases" in {
+      givenNoBankHolidays()
+      givenTodaysDateIs("2019-01-01T00:00:00")
+
+      givenUpdatingACaseReturnsItself()
+      givenAPageOfCases(1, 1, 2, aCaseWith(reference = "reference-1", createdDate = "2019-01-01T00:00:00"))
+      givenAPageOfCases(2, 1, 2, aCaseWith(reference = "reference-2", createdDate = "2019-01-02T00:00:00"))
       givenThereAreNoEventsFor("reference-1")
       givenThereAreNoEventsFor("reference-2")
 
@@ -206,9 +221,9 @@ class DaysElapsedJobTest extends UnitSpec with MockitoSugar with BeforeAndAfterE
     captor.getValue
   }
 
-  private def givenAPageOfCases(page: Int, totalCases: Int, cases: Case*): Unit = {
+  private def givenAPageOfCases(page: Int, pageSize: Int, totalCases: Int, cases: Case*): Unit = {
     val pagination = Pagination(page = page)
-    given(caseService.get(caseSearch, pagination)) willReturn Future.successful(Paged(cases, pagination, totalCases))
+    given(caseService.get(caseSearch, pagination)) willReturn Future.successful(Paged(cases, Pagination(page = page, pageSize = pageSize), totalCases))
   }
 
   private def givenAPageOfEventsFor(reference: String, page: Int, totalEvents: Int, events: Event*): Unit = {

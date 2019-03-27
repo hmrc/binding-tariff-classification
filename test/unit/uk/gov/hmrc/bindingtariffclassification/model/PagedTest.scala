@@ -48,6 +48,14 @@ class PagedTest extends UnitSpec {
         "resultCount" -> 3
       ).as[Paged[String]] shouldBe Paged(Seq("Hello"), 1, 2, 3)
     }
+
+    "calculate has next page" in {
+      Paged.empty.hasNextPage shouldBe false
+      Paged(Seq.empty, pageIndex = 1, pageSize = 1, resultCount = 1).hasNextPage shouldBe false
+      Paged(Seq.empty, pageIndex = 1, pageSize = 1, resultCount = 2).hasNextPage shouldBe true
+      Paged(Seq.empty, pageIndex = 1, pageSize = 1, resultCount = 2).hasNextPage shouldBe true
+      Paged(Seq.empty, pageIndex = 2, pageSize = 1, resultCount = 2).hasNextPage shouldBe false
+    }
   }
 
 }

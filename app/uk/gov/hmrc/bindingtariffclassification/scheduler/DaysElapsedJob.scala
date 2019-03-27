@@ -49,9 +49,7 @@ class DaysElapsedJob @Inject()(appConfig: AppConfig,
 
   override def interval: FiniteDuration = jobConfig.interval
 
-  override def firstRunTime: LocalTime = {
-    jobConfig.elapseTime
-  }
+  override def firstRunTime: LocalTime = jobConfig.elapseTime
 
   override def execute(): Future[Unit] = for {
     bankHolidays <- bankHolidaysConnector.get()
@@ -59,14 +57,14 @@ class DaysElapsedJob @Inject()(appConfig: AppConfig,
   } yield ()
 
   private def process(page: Int)(implicit bankHolidays: Set[LocalDate]): Future[Unit] = {
-    caseService.get(criteria, Pagination(page = page)) map {
+    caseService.get(criteria, Pagination(page = page)) flatMap {
       case pager if pager.hasNextPage =>
         for {
           _ <- Future.sequence(pager.results.map(refreshDaysElapsed))
           _ <- process(page + 1)
         } yield ()
       case pager =>
-        Future.sequence(pager.results.map(refreshDaysElapsed))
+        Future.sequence(pager.results.map(refreshDaysElapsed)).map(_ => ())
     }
   }
 
@@ -95,9 +93,7 @@ class DaysElapsedJob @Inject()(appConfig: AppConfig,
       openDays: Seq[Instant] = workingDays.filterNot(statusTimeline.statusOn(_).contains(CaseStatus.REFERRED))
       daysElapsed: Int = openDays.size
       updated: Case = c.copy(daysElapsed = daysElapsed)
-
-      _ <- caseService.update(updated, upsert = false)
-    } yield ()
+    } yield caseService.update(updated, upsert = false)
   }
 
   private def bankHoliday(date: LocalDate)(implicit bankHolidays: Set[LocalDate]): Boolean = bankHolidays.contains(date)
@@ -108,7 +104,11 @@ class DaysElapsedJob @Inject()(appConfig: AppConfig,
     lazy val timeline: SortedMap[Instant, CaseStatus] = SortedMap[Instant, CaseStatus](events:_*)
 
     def statusOn(date: Instant): Option[CaseStatus] = {
-      timeline.until(date).lastOption.map(_._2)
+      if(timeline.contains(date)) {
+        timeline.get(date)
+      } else {
+        timeline.until(date).lastOption.map(_._2)
+      }
     }
   }
 
