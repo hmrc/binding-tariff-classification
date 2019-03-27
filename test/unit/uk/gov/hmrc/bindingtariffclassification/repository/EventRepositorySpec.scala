@@ -126,6 +126,17 @@ class EventRepositorySpec extends BaseMongoIndexSpec
       await(repository.search(EventSearch("REF_1"), Pagination())) shouldBe Paged(Seq(e1), Pagination(), 1)
     }
 
+    "retrieve all expected events from the collection by type" in {
+      val e1 = createNoteEvent("REF_1")
+      val e2 = createCaseStatusChangeEvent("REF_1")
+
+      await(repository.insert(e1))
+      await(repository.insert(e2))
+      collectionSize shouldBe 2
+
+      await(repository.search(EventSearch("REF_1", Some(EventType.NOTE)), Pagination())) shouldBe Paged(Seq(e1), Pagination(), 1)
+    }
+
 
     "retrieve all expected events from the collection sorted by default date descending" in {
 
