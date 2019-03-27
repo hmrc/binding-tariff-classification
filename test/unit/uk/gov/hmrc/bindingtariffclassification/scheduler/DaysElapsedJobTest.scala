@@ -78,6 +78,15 @@ class DaysElapsedJobTest extends UnitSpec with MockitoSugar with BeforeAndAfterE
 
   "Scheduled Job 'Execute'" should {
 
+    "Update Days Elapsed - for no cases" in {
+      givenNoBankHolidays()
+      givenTodaysDateIs("2019-01-01T00:00:00")
+
+      givenAPageOfCases(1, 0)
+
+      await(newJob.execute()) shouldBe()
+    }
+
     "Update Days Elapsed - for case created today" in {
       givenNoBankHolidays()
       givenTodaysDateIs("2019-01-01T00:00:00")
@@ -86,9 +95,9 @@ class DaysElapsedJobTest extends UnitSpec with MockitoSugar with BeforeAndAfterE
       givenAPageOfCases(1, 1, aCaseWith(reference = "reference", createdDate = "2019-01-01T00:00:00"))
       givenThereAreNoEventsFor("reference")
 
-      await(newJob.execute()) shouldBe ()
+      await(newJob.execute()) shouldBe()
 
-      theCasesUpdated().daysElapsed shouldBe 0
+      theCasesUpdated.daysElapsed shouldBe 0
     }
 
     "Update Days Elapsed - for case created one working day ago" in {
@@ -99,9 +108,9 @@ class DaysElapsedJobTest extends UnitSpec with MockitoSugar with BeforeAndAfterE
       givenAPageOfCases(1, 1, aCaseWith(reference = "reference", createdDate = "2019-01-01T00:00:00"))
       givenThereAreNoEventsFor("reference")
 
-      await(newJob.execute()) shouldBe ()
+      await(newJob.execute()) shouldBe()
 
-      theCasesUpdated().daysElapsed shouldBe 1
+      theCasesUpdated.daysElapsed shouldBe 1
     }
 
     "Update Days Elapsed - for case created multiple working days ago" in {
@@ -112,9 +121,9 @@ class DaysElapsedJobTest extends UnitSpec with MockitoSugar with BeforeAndAfterE
       givenAPageOfCases(1, 1, aCaseWith(reference = "reference", createdDate = "2019-01-01T00:00:00"))
       givenThereAreNoEventsFor("reference")
 
-      await(newJob.execute()) shouldBe ()
+      await(newJob.execute()) shouldBe()
 
-      theCasesUpdated().daysElapsed shouldBe 3
+      theCasesUpdated.daysElapsed shouldBe 3
     }
 
     "Update Days Elapsed - excluding weekends" in {
@@ -125,9 +134,9 @@ class DaysElapsedJobTest extends UnitSpec with MockitoSugar with BeforeAndAfterE
       givenAPageOfCases(1, 1, aCaseWith(reference = "reference", createdDate = "2019-01-05T00:00:00"))
       givenThereAreNoEventsFor("reference")
 
-      await(newJob.execute()) shouldBe ()
+      await(newJob.execute()) shouldBe()
 
-      theCasesUpdated().daysElapsed shouldBe 0
+      theCasesUpdated.daysElapsed shouldBe 0
     }
 
     "Update Days Elapsed - excluding bank holidays" in {
@@ -138,9 +147,9 @@ class DaysElapsedJobTest extends UnitSpec with MockitoSugar with BeforeAndAfterE
       givenAPageOfCases(1, 1, aCaseWith(reference = "reference", createdDate = "2019-01-01T00:00:00"))
       givenThereAreNoEventsFor("reference")
 
-      await(newJob.execute()) shouldBe ()
+      await(newJob.execute()) shouldBe()
 
-      theCasesUpdated().daysElapsed shouldBe 0
+      theCasesUpdated.daysElapsed shouldBe 0
     }
 
     "Update Days Elapsed - excluding referred days" in {
@@ -151,16 +160,50 @@ class DaysElapsedJobTest extends UnitSpec with MockitoSugar with BeforeAndAfterE
       givenAPageOfCases(1, 1, aCaseWith(reference = "reference", createdDate = "2019-01-01T00:00:00"))
       givenAPageOfEventsFor("reference", 1, 1, aStatusChangeWith(date = "2019-01-01", status = CaseStatus.REFERRED))
 
-      await(newJob.execute()) shouldBe ()
+      await(newJob.execute()) shouldBe()
 
-      theCasesUpdated().daysElapsed shouldBe 0
+      theCasesUpdated.daysElapsed shouldBe 0
+    }
+
+    "Update Days Elapsed - excluding multiple referred days" in {
+      givenNoBankHolidays()
+      givenTodaysDateIs("2019-01-04T00:00:00")
+
+      givenUpdatingACaseReturnsItself()
+      givenAPageOfCases(1, 1, aCaseWith(reference = "reference", createdDate = "2019-01-01T00:00:00"))
+      givenAPageOfEventsFor("reference", 1, 1,
+        aStatusChangeWith(date = "2019-01-01", status = CaseStatus.REFERRED),
+        aStatusChangeWith(date = "2019-01-02", status = CaseStatus.OPEN),
+        aStatusChangeWith(date = "2019-01-03", status = CaseStatus.REFERRED)
+      )
+
+      await(newJob.execute()) shouldBe()
+
+      theCasesUpdated.daysElapsed shouldBe 1
+    }
+
+    "Update Days Elapsed - for multiple cases" in {
+      givenNoBankHolidays()
+      givenTodaysDateIs("2019-01-01T00:00:00")
+
+      givenUpdatingACaseReturnsItself()
+      givenAPageOfCases(1, 2,
+        aCaseWith(reference = "reference-1", createdDate = "2019-01-01T00:00:00"),
+        aCaseWith(reference = "reference-2", createdDate = "2019-01-02T00:00:00")
+      )
+      givenThereAreNoEventsFor("reference-1")
+      givenThereAreNoEventsFor("reference-2")
+
+      await(newJob.execute()) shouldBe()
+
+      verify(caseService, times(2)).update(any[Case], refEq(false))
     }
   }
 
-  private def theCasesUpdated(index: Int = 0): Case = {
+  private def theCasesUpdated: Case = {
     val captor: ArgumentCaptor[Case] = ArgumentCaptor.forClass(classOf[Case])
     verify(caseService).update(captor.capture(), refEq(false))
-    captor.getAllValues.get(index)
+    captor.getValue
   }
 
   private def givenAPageOfCases(page: Int, totalCases: Int, cases: Case*): Unit = {
