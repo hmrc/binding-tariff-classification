@@ -41,7 +41,7 @@ trait CaseRepository {
 
   def getByReference(reference: String): Future[Option[Case]]
 
-  def get(search: Search, pagination: Pagination): Future[Paged[Case]]
+  def get(search: CaseSearch, pagination: Pagination): Future[Paged[Case]]
 
   def deleteAll(): Future[Unit]
 }
@@ -60,13 +60,13 @@ class EncryptedCaseMongoRepository @Inject()(repository: CaseMongoRepository, cr
 
   override def getByReference(reference: String): Future[Option[Case]] = repository.getByReference(reference).map(_.map(decrypt))
 
-  override def get(search: Search, pagination: Pagination): Future[Paged[Case]] = {
+  override def get(search: CaseSearch, pagination: Pagination): Future[Paged[Case]] = {
     repository.get(enryptSearch(search), pagination).map(_.map(decrypt))
   }
 
   override def deleteAll(): Future[Unit] = repository.deleteAll()
 
-  private def enryptSearch(search: Search) = {
+  private def enryptSearch(search: CaseSearch) = {
     val eoriEnc: Option[String] = search.filter.eori.map(crypto.encryptString)
     search.copy(filter = search.filter.copy(eori = eoriEnc))
   }
@@ -117,7 +117,7 @@ class CaseMongoRepository @Inject()(mongoDbProvider: MongoDbProvider, mapper: Se
     getOne(selector = mapper.reference(reference))
   }
 
-  override def get(search: Search, pagination: Pagination): Future[Paged[Case]] = {
+  override def get(search: CaseSearch, pagination: Pagination): Future[Paged[Case]] = {
     getMany(
       filterBy = mapper.filterBy(search.filter),
       sortBy = search.sort.map(mapper.sortBy).getOrElse(Json.obj()),

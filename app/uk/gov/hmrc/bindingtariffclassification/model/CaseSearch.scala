@@ -21,17 +21,17 @@ import java.time.Instant
 import play.api.mvc.QueryStringBindable
 import uk.gov.hmrc.bindingtariffclassification.model.ApplicationType.ApplicationType
 import uk.gov.hmrc.bindingtariffclassification.model.CaseStatus._
+import uk.gov.hmrc.bindingtariffclassification.sort.CaseSortField._
 import uk.gov.hmrc.bindingtariffclassification.sort.SortDirection._
-import uk.gov.hmrc.bindingtariffclassification.sort.SortField._
-import uk.gov.hmrc.bindingtariffclassification.sort.{SortDirection, SortField}
+import uk.gov.hmrc.bindingtariffclassification.sort.{CaseSortField, SortDirection}
 
 import scala.util.Try
 
 
-case class Search
+case class CaseSearch
 (
   filter: Filter = Filter(),
-  sort: Option[Sort] = None
+  sort: Option[CaseSort] = None
 )
 
 case class Filter
@@ -49,42 +49,42 @@ case class Filter
   keywords: Option[Set[String]] = None
 )
 
-case class Sort
+case class CaseSort
 (
-  field: SortField,
+  field: CaseSortField,
   direction: SortDirection = SortDirection.ASCENDING
 )
 
-object Sort {
+object CaseSort {
 
   private val sortByKey = "sort_by"
   private val sortDirectionKey = "sort_direction"
 
-  private def bindSortField(key: String): Option[SortField] = {
-    SortField.values.find(_.toString == key)
+  private def bindSortField(key: String): Option[CaseSortField] = {
+    CaseSortField.values.find(_.toString == key)
   }
 
   private def bindSortDirection(key: String): Option[SortDirection] = {
     SortDirection.values.find(_.toString == key)
   }
 
-  implicit def bindable(implicit stringBinder: QueryStringBindable[String]): QueryStringBindable[Sort] = new QueryStringBindable[Sort] {
+  implicit def bindable(implicit stringBinder: QueryStringBindable[String]): QueryStringBindable[CaseSort] = new QueryStringBindable[CaseSort] {
 
-    override def bind(key: String, params: Map[String, Seq[String]]): Option[Either[String, Sort]] = {
+    override def bind(key: String, params: Map[String, Seq[String]]): Option[Either[String, CaseSort]] = {
 
       def param(name: String): Option[String] = stringBinder.bind(name, params).filter(_.isRight).map(_.right.get)
 
-      val field: Option[SortField] = param(sortByKey).flatMap(bindSortField)
+      val field: Option[CaseSortField] = param(sortByKey).flatMap(bindSortField)
       val direction: Option[SortDirection] = param(sortDirectionKey).flatMap(bindSortDirection)
 
       (field, direction) match {
-        case (Some(f), Some(d)) => Some(Right(Sort(field = f, direction = d)))
-        case (Some(f), _) => Some(Right(Sort(field = f)))
+        case (Some(f), Some(d)) => Some(Right(CaseSort(field = f, direction = d)))
+        case (Some(f), _) => Some(Right(CaseSort(field = f)))
         case _ => None
       }
     }
 
-    override def unbind(key: String, query: Sort): String = {
+    override def unbind(key: String, query: CaseSort): String = {
       Seq[String](
         stringBinder.unbind(sortByKey, query.field.toString),
         stringBinder.unbind(sortDirectionKey, query.direction.toString)
@@ -169,20 +169,20 @@ object Filter {
   }
 }
 
-object Search {
+object CaseSearch {
 
   implicit def bindable(implicit filterBinder: QueryStringBindable[Filter],
-                        sortBinder: QueryStringBindable[Sort]): QueryStringBindable[Search] = new QueryStringBindable[Search] {
+                        sortBinder: QueryStringBindable[CaseSort]): QueryStringBindable[CaseSearch] = new QueryStringBindable[CaseSearch] {
 
-    override def bind(key: String, params: Map[String, Seq[String]]): Option[Either[String, Search]] = {
+    override def bind(key: String, params: Map[String, Seq[String]]): Option[Either[String, CaseSearch]] = {
 
       val filter: Option[Either[String, Filter]] = filterBinder.bind(key, params)
 
-      val sort: Option[Either[String, Sort]] = sortBinder.bind(key, params)
+      val sort: Option[Either[String, CaseSort]] = sortBinder.bind(key, params)
 
       Some(
         Right(
-          Search(
+          CaseSearch(
             filter.map(_.right.get).getOrElse(Filter()),
             sort.map(_.right.get)
           )
@@ -190,7 +190,7 @@ object Search {
       )
     }
 
-    override def unbind(key: String, search: Search): String = {
+    override def unbind(key: String, search: CaseSearch): String = {
       Seq[String](
         filterBinder.unbind(key, search.filter),
         search.sort.map(sortBinder.unbind(key, _)).getOrElse("")

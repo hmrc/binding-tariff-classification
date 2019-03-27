@@ -95,10 +95,10 @@ class EventControllerSpec extends UnitSpec with WithFakeApplication with Mockito
 
   }
 
-  "getByCaseReference()" should {
+  "search()" should {
 
     "return 200 with the expected events" in {
-      when(eventService.getByCaseReference(caseReference, Pagination())).thenReturn(successful(Paged(Seq(e1, e2))))
+      when(eventService.search(EventSearch(caseReference), Pagination())).thenReturn(successful(Paged(Seq(e1, e2))))
 
       val result = await(controller.getByCaseReference(caseReference, Pagination())(fakeRequest))
 
@@ -107,7 +107,7 @@ class EventControllerSpec extends UnitSpec with WithFakeApplication with Mockito
     }
 
     "return 200 with an empty sequence when there are no events for a specific case" in {
-      when(eventService.getByCaseReference(caseReference, Pagination())).thenReturn(successful(Paged.empty[Event]))
+      when(eventService.search(EventSearch(caseReference), Pagination())).thenReturn(successful(Paged.empty[Event]))
 
       val result = await(controller.getByCaseReference(caseReference, Pagination())(fakeRequest))
 
@@ -118,7 +118,7 @@ class EventControllerSpec extends UnitSpec with WithFakeApplication with Mockito
     "return 500 when an error occurred" in {
       val error = new RuntimeException
 
-      when(eventService.getByCaseReference(caseReference, Pagination())).thenReturn(failed(error))
+      when(eventService.search(EventSearch(caseReference), Pagination())).thenReturn(failed(error))
 
       val result = await(controller.getByCaseReference(caseReference, Pagination())(fakeRequest))
 

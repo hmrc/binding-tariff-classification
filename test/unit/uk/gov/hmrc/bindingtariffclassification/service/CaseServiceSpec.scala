@@ -20,7 +20,7 @@ import org.mockito.Mockito._
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.mockito.MockitoSugar
 import uk.gov.hmrc.bindingtariffclassification.config.AppConfig
-import uk.gov.hmrc.bindingtariffclassification.model.{Search, _}
+import uk.gov.hmrc.bindingtariffclassification.model.{CaseSearch, _}
 import uk.gov.hmrc.bindingtariffclassification.repository.{CaseRepository, SequenceRepository}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.test.UnitSpec
@@ -142,7 +142,7 @@ class CaseServiceSpec extends UnitSpec with MockitoSugar with BeforeAndAfterEach
   }
 
   "get()" should {
-    val searchBy = mock[Search]
+    val searchBy = mock[CaseSearch]
     val pagination = mock[Pagination]
 
     "return the expected cases" in {
@@ -158,15 +158,6 @@ class CaseServiceSpec extends UnitSpec with MockitoSugar with BeforeAndAfterEach
         await(service.get(searchBy, pagination))
       }
       caught shouldBe emulatedFailure
-    }
-
-  }
-
-  "incrementDaysElapsed()" should {
-
-    "delegate to Repository" in {
-      when(caseRepository.incrementDaysElapsed(1)).thenReturn(successful(1))
-      await(service.incrementDaysElapsed(1)) shouldBe 1
     }
 
   }

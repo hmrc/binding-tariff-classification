@@ -34,10 +34,10 @@ import scala.io.Source
 class BankHolidaysConnector @Inject()(appConfig: AppConfig, http: ProxyHttpClient)
                                      (implicit executionContext: ExecutionContext) {
 
-  def get()(implicit headerCarrier: HeaderCarrier): Future[Seq[LocalDate]] = {
+  def get()(implicit headerCarrier: HeaderCarrier): Future[Set[LocalDate]] = {
     http.GET[BankHolidaysResponse](s"${appConfig.bankHolidaysUrl}/bank-holidays")
       .recover(withResourcesFile)
-      .map(_.`england-and-wales`.events.map(_.date))
+      .map(_.`england-and-wales`.events.map(_.date).toSet)
   }
 
 

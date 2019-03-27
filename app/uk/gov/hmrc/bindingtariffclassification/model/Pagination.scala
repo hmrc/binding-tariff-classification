@@ -22,7 +22,9 @@ case class Pagination
 (
   page: Int = 1,
   pageSize: Int = 100
-)
+) {
+  def next(): Pagination = copy(page = page + 1)
+}
 
 object Pagination {
 

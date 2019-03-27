@@ -21,7 +21,7 @@ import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.{Action, AnyContent, Result}
 import uk.gov.hmrc.bindingtariffclassification.config.AppConfig
 import uk.gov.hmrc.bindingtariffclassification.model.ErrorCode.NOTFOUND
-import uk.gov.hmrc.bindingtariffclassification.model.{Search, _}
+import uk.gov.hmrc.bindingtariffclassification.model.{CaseSearch, _}
 import uk.gov.hmrc.bindingtariffclassification.service.CaseService
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -60,7 +60,7 @@ class CaseController @Inject()(appConfig: AppConfig,
     } recover recovery
   }
 
-  def get(search: Search, pagination: Pagination): Action[AnyContent] = Action.async { implicit request =>
+  def get(search: CaseSearch, pagination: Pagination): Action[AnyContent] = Action.async { implicit request =>
     caseService.get(search, pagination) map { cases => Ok(Json.toJson(cases)) } recover recovery
   }
 

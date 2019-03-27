@@ -23,11 +23,16 @@ import scala.util.Try
 case class Paged[T](results: Seq[T], pageIndex: Int, pageSize: Int, resultCount: Int) {
   def map[X](f: T => X): Paged[X] = this.copy(results = results.map(f))
   def size: Int = results.size
+  def isEmpty: Boolean = results.isEmpty
+  def nonEmpty: Boolean = results.nonEmpty
+  def hasNextPage: Boolean = Math.ceil(resultCount.toDouble / pageSize).toInt == pageIndex
 }
 
 object Paged {
 
-  def empty[T]: Paged[T] = Paged[T](Seq.empty, Pagination(), 0)
+  def empty[T]: Paged[T] = empty(Pagination())
+
+  def empty[T](pagination: Pagination): Paged[T] = Paged[T](Seq.empty, pagination, 0)
 
   def apply[T](results: Seq[T], pagination: Pagination, resultCount: Int): Paged[T] = Paged(results, pagination.page, pagination.pageSize, resultCount)
 

@@ -21,8 +21,8 @@ import play.api.libs.json.Json.JsValueWrapper
 import play.api.libs.json._
 import uk.gov.hmrc.bindingtariffclassification.model.CaseStatus.CaseStatus
 import uk.gov.hmrc.bindingtariffclassification.model.MongoFormatters.formatInstant
-import uk.gov.hmrc.bindingtariffclassification.model.{Filter, Sort}
-import uk.gov.hmrc.bindingtariffclassification.sort.SortField._
+import uk.gov.hmrc.bindingtariffclassification.model.{CaseSort, Filter}
+import uk.gov.hmrc.bindingtariffclassification.sort.CaseSortField._
 
 @Singleton
 class SearchMapper {
@@ -56,7 +56,7 @@ class SearchMapper {
     "$or" -> JsArray(objects)
   }
 
-  def sortBy(sort: Sort): JsObject = {
+  def sortBy(sort: CaseSort): JsObject = {
     Json.obj( toMongoField(sort.field) -> sort.direction.id )
   }
 
@@ -102,7 +102,7 @@ class SearchMapper {
     "$options" -> "i"
   }
 
-  private def toMongoField(sort: SortField): String = {
+  private def toMongoField(sort: CaseSortField): String = {
     sort match {
       case REFERENCE => "reference"
       case DAYS_ELAPSED => "daysElapsed"

@@ -64,7 +64,7 @@ class BankHolidaysConnectorTest extends UnitSpec with WiremockTestServer
           )
       )
 
-      await(connector.get()) shouldBe Seq(
+      await(connector.get()) shouldBe Set(
         LocalDate.of(2012,1,2),
         LocalDate.of(2012,4,6)
       )

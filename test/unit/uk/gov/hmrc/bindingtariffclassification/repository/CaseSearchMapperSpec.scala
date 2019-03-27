@@ -19,11 +19,11 @@ package uk.gov.hmrc.bindingtariffclassification.repository
 import java.time.Instant
 
 import play.api.libs.json.{JsNull, JsString, Json}
-import uk.gov.hmrc.bindingtariffclassification.model.{ApplicationType, CaseStatus, Filter, Sort}
-import uk.gov.hmrc.bindingtariffclassification.sort.{SortDirection, SortField}
+import uk.gov.hmrc.bindingtariffclassification.model.{ApplicationType, CaseSort, CaseStatus, Filter}
+import uk.gov.hmrc.bindingtariffclassification.sort.{CaseSortField, SortDirection}
 import uk.gov.hmrc.play.test.UnitSpec
 
-class SearchMapperSpec extends UnitSpec {
+class CaseSearchMapperSpec extends UnitSpec {
 
   private val jsonMapper = new SearchMapper
 
@@ -180,8 +180,8 @@ class SearchMapperSpec extends UnitSpec {
 
     "sort by passed field and default direction to descending(-1)" in {
 
-      val sort = Sort(
-        field = SortField.COMMODITY_CODE,
+      val sort = CaseSort(
+        field = CaseSortField.COMMODITY_CODE,
         direction = SortDirection.DESCENDING
       )
 
@@ -190,8 +190,8 @@ class SearchMapperSpec extends UnitSpec {
 
     "sort by passed field and set direction ascending(1)" in {
 
-      val sort = Sort(
-        field = SortField.DAYS_ELAPSED,
+      val sort = CaseSort(
+        field = CaseSortField.DAYS_ELAPSED,
         direction = SortDirection.ASCENDING
       )
 
@@ -200,8 +200,8 @@ class SearchMapperSpec extends UnitSpec {
 
     "sort by decision start date and set direction descending" in {
 
-      val sort = Sort(
-        field = SortField.DECISION_START_DATE,
+      val sort = CaseSort(
+        field = CaseSortField.DECISION_START_DATE,
         direction = SortDirection.ASCENDING
       )
 
@@ -211,8 +211,8 @@ class SearchMapperSpec extends UnitSpec {
 
     "sort by created date and set direction descending" in {
 
-      val sort = Sort(
-        field = SortField.CREATED_DATE,
+      val sort = CaseSort(
+        field = CaseSortField.CREATED_DATE,
         direction = SortDirection.DESCENDING
       )
 
@@ -221,8 +221,8 @@ class SearchMapperSpec extends UnitSpec {
 
     "sort by reference " in {
 
-      val sort = Sort(
-        field = SortField.REFERENCE,
+      val sort = CaseSort(
+        field = CaseSortField.REFERENCE,
         direction = SortDirection.DESCENDING
       )
 

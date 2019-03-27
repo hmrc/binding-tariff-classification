@@ -22,7 +22,7 @@ import play.api.libs.json._
 import reactivemongo.bson.BSONObjectID
 import reactivemongo.play.json.collection.JSONCollection
 import uk.gov.hmrc.bindingtariffclassification.model.MongoFormatters.formatEvent
-import uk.gov.hmrc.bindingtariffclassification.model.{Event, MongoFormatters, Paged, Pagination}
+import uk.gov.hmrc.bindingtariffclassification.model._
 import uk.gov.hmrc.mongo.ReactiveRepository
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -33,7 +33,7 @@ trait EventRepository {
 
   def insert(e: Event): Future[Event]
 
-  def getByCaseReference(caseReference: String, pagination: Pagination): Future[Paged[Event]]
+  def search(search: EventSearch, pagination: Pagination): Future[Paged[Event]]
 
   def deleteAll(): Future[Unit]
 }
@@ -57,14 +57,16 @@ class EventMongoRepository @Inject()(mongoDbProvider: MongoDbProvider)
     createOne(e)
   }
 
-  private def byCaseReference(caseReference: String): JsObject = {
-    Json.obj("caseReference" -> caseReference)
-  }
-
   private val defaultSortBy = Json.obj("timestamp" -> -1)
 
-  override def getByCaseReference(caseReference: String, pagination: Pagination): Future[Paged[Event]] = {
-    getMany(byCaseReference(caseReference), defaultSortBy, pagination)
+  override def search(search: EventSearch, pagination: Pagination): Future[Paged[Event]] = {
+    val query = JsObject(
+      Map[String, JsValue](
+        "reference" -> JsString(search.reference)
+      )
+      ++ search.`type`.map(t => "type" -> JsString(t.toString))
+    )
+    getMany(query, defaultSortBy, pagination)
   }
 
   override def deleteAll(): Future[Unit] = {

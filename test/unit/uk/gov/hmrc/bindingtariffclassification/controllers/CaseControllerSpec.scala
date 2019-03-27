@@ -30,7 +30,7 @@ import uk.gov.hmrc.bindingtariffclassification.config.AppConfig
 import uk.gov.hmrc.bindingtariffclassification.model.RESTFormatters._
 import uk.gov.hmrc.bindingtariffclassification.model._
 import uk.gov.hmrc.bindingtariffclassification.service.CaseService
-import uk.gov.hmrc.bindingtariffclassification.sort.{SortDirection, SortField}
+import uk.gov.hmrc.bindingtariffclassification.sort.{CaseSortField, SortDirection}
 import uk.gov.hmrc.http.HttpVerbs
 import uk.gov.hmrc.play.test.{UnitSpec, WithFakeApplication}
 import util.CaseData
@@ -188,9 +188,9 @@ class CaseControllerSpec extends UnitSpec with WithFakeApplication with MockitoS
     val queueId = Some("valid_queueId")
     val assigneeId = Some("valid_assigneeId")
 
-    val search = Search(
+    val search = CaseSearch(
       filter = Filter(queueId = queueId, assigneeId = assigneeId, statuses = Some(Set(CaseStatus.NEW, CaseStatus.OPEN))),
-      sort = Some(Sort(field = SortField.DAYS_ELAPSED, direction = SortDirection.DESCENDING)))
+      sort = Some(CaseSort(field = CaseSortField.DAYS_ELAPSED, direction = SortDirection.DESCENDING)))
 
     val pagination = Pagination()
 
@@ -213,7 +213,7 @@ class CaseControllerSpec extends UnitSpec with WithFakeApplication with MockitoS
     }
 
     "return 500 when an error occurred" in {
-      val search = Search(Filter(), None)
+      val search = CaseSearch(Filter(), None)
       val error = new RuntimeException
 
       when(caseService.get(refEq(search), refEq(pagination))).thenReturn(failed(error))

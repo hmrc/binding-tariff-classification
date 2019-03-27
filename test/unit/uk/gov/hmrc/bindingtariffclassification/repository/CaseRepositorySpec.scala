@@ -31,7 +31,7 @@ import reactivemongo.play.json.ImplicitBSONHandlers._
 import uk.gov.hmrc.bindingtariffclassification.model.CaseStatus._
 import uk.gov.hmrc.bindingtariffclassification.model.MongoFormatters.formatCase
 import uk.gov.hmrc.bindingtariffclassification.model._
-import uk.gov.hmrc.bindingtariffclassification.sort.{SortDirection, SortField}
+import uk.gov.hmrc.bindingtariffclassification.sort.{CaseSortField, SortDirection}
 import uk.gov.hmrc.mongo.MongoSpecSupport
 import util.CaseData._
 
@@ -146,7 +146,7 @@ class CaseRepositorySpec extends BaseMongoIndexSpec
 
     "retrieve all cases from the collection, sorted by insertion order" in {
 
-      val search = Search()
+      val search = CaseSearch()
 
       await(repository.insert(case1))
       await(repository.insert(case2))
@@ -156,7 +156,7 @@ class CaseRepositorySpec extends BaseMongoIndexSpec
     }
 
     "return all cases from the collection sorted in ascending order" in {
-      val search = Search(sort = Some(Sort(SortField.DAYS_ELAPSED, SortDirection.ASCENDING)))
+      val search = CaseSearch(sort = Some(CaseSort(CaseSortField.DAYS_ELAPSED, SortDirection.ASCENDING)))
 
       val oldCase = case1.copy(daysElapsed = 1)
       val newCase = case2.copy(daysElapsed = 0)
@@ -170,7 +170,7 @@ class CaseRepositorySpec extends BaseMongoIndexSpec
 
     "return all cases from the collection sorted in descending order" in {
 
-      val search = Search(sort = Some(Sort(SortField.DAYS_ELAPSED, SortDirection.DESCENDING)))
+      val search = CaseSearch(sort = Some(CaseSort(CaseSortField.DAYS_ELAPSED, SortDirection.DESCENDING)))
 
       val oldCase = case1.copy(daysElapsed = 1)
       val newCase = case2.copy(daysElapsed = 0)
@@ -183,7 +183,7 @@ class CaseRepositorySpec extends BaseMongoIndexSpec
     }
 
     "return an empty sequence when there are no cases in the collection" in {
-      val search = Search()
+      val search = CaseSearch()
       await(repository.get(search, Pagination())).results shouldBe Seq.empty[Case]
     }
   }
@@ -200,20 +200,20 @@ class CaseRepositorySpec extends BaseMongoIndexSpec
     val caseWithQueueY = createCase().copy(queueId = queueIdY)
 
     "return an empty sequence when there are no matches" in {
-      val search = Search(Filter(queueId = unknownQueueId))
+      val search = CaseSearch(Filter(queueId = unknownQueueId))
 
       store(caseWithEmptyQueue, caseWithQueueX1)
       await(repository.get(search, Pagination())).results shouldBe Seq.empty
     }
 
     "return the expected document when there is one match" in {
-      val search = Search(Filter(queueId = queueIdX))
+      val search = CaseSearch(Filter(queueId = queueIdX))
       store(caseWithEmptyQueue, caseWithQueueX1, caseWithQueueY)
       await(repository.get(search, Pagination())).results shouldBe Seq(caseWithQueueX1)
     }
 
     "return the expected documents when there are multiple matches" in {
-      val search = Search(Filter(queueId = queueIdX))
+      val search = CaseSearch(Filter(queueId = queueIdX))
 
       store(caseWithEmptyQueue, caseWithQueueX1, caseWithQueueX2, caseWithQueueY)
       await(repository.get(search, Pagination())).results shouldBe Seq(caseWithQueueX1, caseWithQueueX2)
@@ -232,13 +232,13 @@ class CaseRepositorySpec extends BaseMongoIndexSpec
     val caseWithFutureDecision = createCase(decision = Some(decisionFuture))
 
     "return an empty sequence when there are no matches" in {
-      val search = Search(Filter(minDecisionEnd = Some(Instant.now())))
+      val search = CaseSearch(Filter(minDecisionEnd = Some(Instant.now())))
       store(caseWithExpiredDecision)
       await(repository.get(search, Pagination())).results shouldBe Seq.empty
     }
 
     "return the expected document when there is a match" in {
-      val search = Search(Filter(minDecisionEnd = Some(Instant.now())))
+      val search = CaseSearch(Filter(minDecisionEnd = Some(Instant.now())))
       store(caseWithExpiredDecision, caseWithFutureDecision)
       await(repository.get(search, Pagination())).results shouldBe Seq(caseWithFutureDecision)
     }
@@ -257,31 +257,31 @@ class CaseRepositorySpec extends BaseMongoIndexSpec
     val caseWithAssigneeY1 = createCase().copy(assignee = Some(assigneeY))
 
     "return an empty sequence when there are no matches" in {
-      val search = Search(Filter(assigneeId = Some(unknownAssignee.id)))
+      val search = CaseSearch(Filter(assigneeId = Some(unknownAssignee.id)))
       store(caseWithEmptyAssignee, caseWithAssigneeX1)
       await(repository.get(search, Pagination())).results shouldBe Seq.empty
     }
 
     "return the expected document when there is one match" in {
-      val search = Search(Filter(assigneeId = Some(assigneeX.id)))
+      val search = CaseSearch(Filter(assigneeId = Some(assigneeX.id)))
       store(caseWithEmptyAssignee, caseWithAssigneeX1, caseWithAssigneeY1)
       await(repository.get(search, Pagination())).results shouldBe Seq(caseWithAssigneeX1)
     }
 
     "return the expected documents - with 'none'" in {
-      val search = Search(Filter(assigneeId = Some("none")))
+      val search = CaseSearch(Filter(assigneeId = Some("none")))
       store(caseWithEmptyAssignee, caseWithAssigneeX1, caseWithAssigneeY1)
       await(repository.get(search, Pagination())).results shouldBe Seq(caseWithEmptyAssignee)
     }
 
     "return the expected documents - with 'some'" in {
-      val search = Search(Filter(assigneeId = Some("some")))
+      val search = CaseSearch(Filter(assigneeId = Some("some")))
       store(caseWithEmptyAssignee, caseWithAssigneeX1, caseWithAssigneeY1)
       await(repository.get(search, Pagination())).results shouldBe Seq(caseWithAssigneeX1, caseWithAssigneeY1)
     }
 
     "return the expected documents when there are multiple matches" in {
-      val search = Search(Filter(assigneeId = Some(assigneeX.id)))
+      val search = CaseSearch(Filter(assigneeId = Some(assigneeX.id)))
       store(caseWithEmptyAssignee, caseWithAssigneeX1, caseWithAssigneeX2, caseWithAssigneeY1)
       await(repository.get(search, Pagination())).results shouldBe Seq(caseWithAssigneeX1, caseWithAssigneeX2)
     }
@@ -295,19 +295,19 @@ class CaseRepositorySpec extends BaseMongoIndexSpec
     val caseWithStatusY1 = createCase().copy(status = OPEN)
 
     "return an empty sequence when there are no matches" in {
-      val search = Search(Filter(statuses = Some(Set(DRAFT))))
+      val search = CaseSearch(Filter(statuses = Some(Set(DRAFT))))
       store(caseWithStatusX1)
       await(repository.get(search, Pagination())).results shouldBe Seq.empty
     }
 
     "return the expected document when there is one match" in {
-      val search = Search(Filter(statuses = Some(Set(NEW))))
+      val search = CaseSearch(Filter(statuses = Some(Set(NEW))))
       store(caseWithStatusX1, caseWithStatusY1)
       await(repository.get(search, Pagination())).results shouldBe Seq(caseWithStatusX1)
     }
 
     "return the expected documents when there are multiple matches" in {
-      val search = Search(Filter(statuses = Some(Set(NEW))))
+      val search = CaseSearch(Filter(statuses = Some(Set(NEW))))
       store(caseWithStatusX1, caseWithStatusX2, caseWithStatusY1)
       await(repository.get(search, Pagination())).results shouldBe Seq(caseWithStatusX1, caseWithStatusX2)
     }
@@ -323,19 +323,19 @@ class CaseRepositorySpec extends BaseMongoIndexSpec
     val caseWithStatusW1 = createCase().copy(status = SUPPRESSED)
 
     "return an empty sequence when there are no matches" in {
-      val search = Search(Filter(statuses = Some(Set(DRAFT,REFERRED))))
+      val search = CaseSearch(Filter(statuses = Some(Set(DRAFT,REFERRED))))
       store(caseWithStatusX1, caseWithStatusX2, caseWithStatusY1, caseWithStatusZ1, caseWithStatusW1)
       await(repository.get(search, Pagination())).results shouldBe Seq.empty
     }
 
     "return the expected document when there is one match" in {
-      val search = Search(Filter(statuses = Some(Set(NEW,REFERRED,SUSPENDED))))
+      val search = CaseSearch(Filter(statuses = Some(Set(NEW,REFERRED,SUSPENDED))))
       store(caseWithStatusX1, caseWithStatusY1, caseWithStatusZ1, caseWithStatusW1)
       await(repository.get(search, Pagination())).results shouldBe Seq(caseWithStatusX1)
     }
 
     "return the expected documents when there are multiple matches" in {
-      val search = Search(Filter(statuses = Some(Set(NEW,DRAFT,OPEN))))
+      val search = CaseSearch(Filter(statuses = Some(Set(NEW,DRAFT,OPEN))))
       store(caseWithStatusX1, caseWithStatusX2, caseWithStatusY1, caseWithStatusZ1, caseWithStatusW1)
       await(repository.get(search, Pagination())).results shouldBe Seq(caseWithStatusX1, caseWithStatusX2, caseWithStatusY1)
     }
@@ -350,19 +350,19 @@ class CaseRepositorySpec extends BaseMongoIndexSpec
     val caseWithReferenceW1 = createCase().copy(reference = "w1")
 
     "return an empty sequence when there are no matches" in {
-      val search = Search(Filter(reference = Some(Set("a", "b"))))
+      val search = CaseSearch(Filter(reference = Some(Set("a", "b"))))
       store(caseWithReferenceX1, caseWithReferenceX2, caseWithReferenceY1, caseWithReferenceZ1, caseWithReferenceW1)
       await(repository.get(search, Pagination())).results shouldBe Seq.empty
     }
 
     "return the expected document when there is one match" in {
-      val search = Search(Filter(reference = Some(Set("x1"))))
+      val search = CaseSearch(Filter(reference = Some(Set("x1"))))
       store(caseWithReferenceX1, caseWithReferenceY1, caseWithReferenceZ1, caseWithReferenceW1)
       await(repository.get(search, Pagination())).results shouldBe Seq(caseWithReferenceX1)
     }
 
     "return the expected documents when there are multiple matches" in {
-      val search = Search(Filter(reference = Some(Set("x1", "x2", "y1"))))
+      val search = CaseSearch(Filter(reference = Some(Set("x1", "x2", "y1"))))
       store(caseWithReferenceX1, caseWithReferenceX2, caseWithReferenceY1, caseWithReferenceZ1, caseWithReferenceW1)
       await(repository.get(search, Pagination())).results shouldBe Seq(caseWithReferenceX1, caseWithReferenceX2, caseWithReferenceY1)
     }
@@ -377,19 +377,19 @@ class CaseRepositorySpec extends BaseMongoIndexSpec
 
     "return an empty sequence when there are no matches" in {
       store(case1, c1)
-      val search = Search(Filter(keywords = Some(Set("KNIFE"))))
+      val search = CaseSearch(Filter(keywords = Some(Set("KNIFE"))))
       await(repository.get(search, Pagination())).results shouldBe Seq.empty
     }
 
     "return the expected document when there is one match" in {
       store(case1, c1, c2)
-      val search = Search(Filter(keywords = Some(Set("KNIFE"))))
+      val search = CaseSearch(Filter(keywords = Some(Set("KNIFE"))))
       await(repository.get(search, Pagination())).results shouldBe Seq(c2)
     }
 
     "return the expected documents when there are multiple matches" in {
       store(case1, c1, c2, c3)
-      val search = Search(Filter(keywords = Some(Set("BIKE"))))
+      val search = CaseSearch(Filter(keywords = Some(Set("BIKE"))))
       await(repository.get(search, Pagination())).results shouldBe Seq(c1, c3)
     }
 
@@ -403,19 +403,19 @@ class CaseRepositorySpec extends BaseMongoIndexSpec
 
     "return an empty sequence when there are no matches" in {
       store(case1, c1, c2, c3)
-      val search = Search(Filter(keywords = Some(Set("BIKE", "MTB", "HARDTAIL"))))
+      val search = CaseSearch(Filter(keywords = Some(Set("BIKE", "MTB", "HARDTAIL"))))
       await(repository.get(search, Pagination())).results shouldBe Seq.empty
     }
 
     "return the expected document when there is one match" in {
       store(case1, c1, c2, c3)
-      val search = Search(Filter(keywords = Some(Set("BIKE", "MTB", "29ER"))))
+      val search = CaseSearch(Filter(keywords = Some(Set("BIKE", "MTB", "29ER"))))
       await(repository.get(search, Pagination())).results shouldBe Seq(c2)
     }
 
     "return the expected documents when there are multiple matches" in {
       store(case1, c1, c2, c3)
-      val search = Search(Filter(keywords = Some(Set("BIKE", "MTB"))))
+      val search = CaseSearch(Filter(keywords = Some(Set("BIKE", "MTB"))))
       await(repository.get(search, Pagination())).results shouldBe Seq(c1, c2)
     }
 
@@ -429,21 +429,21 @@ class CaseRepositorySpec extends BaseMongoIndexSpec
     "return an empty sequence when there are no matches" in {
       store(case1, caseX)
 
-      await(repository.get(Search(Filter(traderName = Some("Alfred"))), Pagination())).results shouldBe Seq.empty
+      await(repository.get(CaseSearch(Filter(traderName = Some("Alfred"))), Pagination())).results shouldBe Seq.empty
     }
 
     "return the expected document when there is one match" in {
       store(case1, caseX)
 
       // full name search
-      await(repository.get(Search(Filter(traderName = Some("Novak Djokovic"))), Pagination())).results shouldBe Seq(caseX)
+      await(repository.get(CaseSearch(Filter(traderName = Some("Novak Djokovic"))), Pagination())).results shouldBe Seq(caseX)
 
       // substring search
-      await(repository.get(Search(Filter(traderName = Some("Novak"))), Pagination())).results shouldBe Seq(caseX)
-      await(repository.get(Search(Filter(traderName = Some("Djokovic"))), Pagination())).results shouldBe Seq(caseX)
+      await(repository.get(CaseSearch(Filter(traderName = Some("Novak"))), Pagination())).results shouldBe Seq(caseX)
+      await(repository.get(CaseSearch(Filter(traderName = Some("Djokovic"))), Pagination())).results shouldBe Seq(caseX)
 
       // case-insensitive
-      await(repository.get(Search(Filter(traderName = Some("novak djokovic"))), Pagination())).results shouldBe Seq(caseX)
+      await(repository.get(CaseSearch(Filter(traderName = Some("novak djokovic"))), Pagination())).results shouldBe Seq(caseX)
     }
 
     "return the expected documents when there are multiple matches" in {
@@ -451,7 +451,7 @@ class CaseRepositorySpec extends BaseMongoIndexSpec
       val caseX2 = createCase(app = novakApp2)
       store(caseX, caseX2)
 
-      val search = Search(Filter(traderName = Some("Novak Djokovic")))
+      val search = CaseSearch(Filter(traderName = Some("Novak Djokovic")))
       await(repository.get(search, Pagination())).results shouldBe Seq(caseX, caseX2)
     }
   }
@@ -472,19 +472,19 @@ class CaseRepositorySpec extends BaseMongoIndexSpec
     "return an empty sequence when there are no matches" in {
       store(agentCase, holderCase)
 
-      await(repository.get(Search(Filter(eori = Some("333"))), Pagination())).results shouldBe Seq.empty
+      await(repository.get(CaseSearch(Filter(eori = Some("333"))), Pagination())).results shouldBe Seq.empty
     }
 
     "return the expected document when there is one match" in {
       store(agentCase, holderCase)
 
-      await(repository.get(Search(Filter(eori = Some("98765"))), Pagination())).results shouldBe Seq(agentCase)
+      await(repository.get(CaseSearch(Filter(eori = Some("98765"))), Pagination())).results shouldBe Seq(agentCase)
     }
 
     "return the expected documents when there are multiple matches" in {
       store(agentCase, holderCase)
 
-      await(repository.get(Search(Filter(eori = Some("01234"))), Pagination())).results shouldBe Seq(agentCase, holderCase)
+      await(repository.get(CaseSearch(Filter(eori = Some("01234"))), Pagination())).results shouldBe Seq(agentCase, holderCase)
     }
 
   }
@@ -497,17 +497,17 @@ class CaseRepositorySpec extends BaseMongoIndexSpec
 
     "return an empty sequence when there are no matches" in {
       store(case1, c1, c2, c3)
-      await(repository.get(Search(Filter(decisionDetails = Some("table"))), Pagination())).results shouldBe Seq.empty
+      await(repository.get(CaseSearch(Filter(decisionDetails = Some("table"))), Pagination())).results shouldBe Seq.empty
     }
 
     "return the expected document when there is one match" in {
       store(case1, c1, c2, c3)
-      await(repository.get(Search(Filter(decisionDetails = Some("Football"))), Pagination())).results shouldBe Seq(c2)
+      await(repository.get(CaseSearch(Filter(decisionDetails = Some("Football"))), Pagination())).results shouldBe Seq(c2)
     }
 
     "return the expected documents when there are multiple matches" in {
       store(case1, c1, c2, c3)
-      await(repository.get(Search(Filter(decisionDetails = Some("amazing"))), Pagination())).results shouldBe Seq(c1, c2, c3)
+      await(repository.get(CaseSearch(Filter(decisionDetails = Some("amazing"))), Pagination())).results shouldBe Seq(c1, c2, c3)
     }
   }
 
@@ -518,19 +518,19 @@ class CaseRepositorySpec extends BaseMongoIndexSpec
 
     "return an empty sequence when there are no matches" in {
       store(case1)
-      val search = Search(Filter(commodityCode = Some("234")))
+      val search = CaseSearch(Filter(commodityCode = Some("234")))
       await(repository.get(search, Pagination())).results shouldBe Seq.empty
     }
 
     "return the expected document when there is one match" in {
       store(caseX, case1)
-      val search = Search(Filter(commodityCode = Some("12345")))
+      val search = CaseSearch(Filter(commodityCode = Some("12345")))
       await(repository.get(search, Pagination())).results shouldBe Seq(caseX)
     }
 
     "return the expected documents when there are multiple matches" in {
       store(case1, caseX, caseY)
-      val search = Search(Filter(commodityCode = Some("12345")))
+      val search = CaseSearch(Filter(commodityCode = Some("12345")))
       await(repository.get(search, Pagination())).results shouldBe Seq(caseX, caseY)
     }
   }
@@ -540,21 +540,21 @@ class CaseRepositorySpec extends BaseMongoIndexSpec
     "return some cases with default Pagination" in {
       store(case1)
       store(case2)
-      await(repository.get(Search(), Pagination())).size shouldBe 2
+      await(repository.get(CaseSearch(), Pagination())).size shouldBe 2
     }
 
     "return upto 'pageSize' cases" in {
       store(case1)
       store(case2)
-      await(repository.get(Search(), Pagination(pageSize = 1))).size shouldBe 1
+      await(repository.get(CaseSearch(), Pagination(pageSize = 1))).size shouldBe 1
     }
 
     "return pages of cases" in {
       store(case1)
       store(case2)
-      await(repository.get(Search(), Pagination(pageSize = 1))).size shouldBe 1
-      await(repository.get(Search(), Pagination(page = 2, pageSize = 1))).size shouldBe 1
-      await(repository.get(Search(), Pagination(page = 3, pageSize = 1))).size shouldBe 0
+      await(repository.get(CaseSearch(), Pagination(pageSize = 1))).size shouldBe 1
+      await(repository.get(CaseSearch(), Pagination(page = 2, pageSize = 1))).size shouldBe 1
+      await(repository.get(CaseSearch(), Pagination(page = 3, pageSize = 1))).size shouldBe 0
     }
   }
 
@@ -576,7 +576,7 @@ class CaseRepositorySpec extends BaseMongoIndexSpec
     val caseWithQyAndAxAndSy = createCase().copy(queueId = queueIdY, assignee = Some(assigneeX), status = statusY)
 
     "filter as expected" in {
-      val search = Search(Filter(queueId = queueIdX, assigneeId = Some(assigneeX.id), statuses = Some(Set(NEW))))
+      val search = CaseSearch(Filter(queueId = queueIdX, assigneeId = Some(assigneeX.id), statuses = Some(Set(NEW))))
 
       store(
         caseWithNoQueueAndNoAssignee,

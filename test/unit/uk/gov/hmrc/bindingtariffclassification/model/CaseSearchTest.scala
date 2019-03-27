@@ -20,13 +20,13 @@ import java.net.URLDecoder
 import java.time.Instant
 
 import uk.gov.hmrc.bindingtariffclassification.model.CaseStatus._
-import uk.gov.hmrc.bindingtariffclassification.sort.{SortDirection, SortField}
+import uk.gov.hmrc.bindingtariffclassification.sort.{CaseSortField, SortDirection}
 import uk.gov.hmrc.play.test.UnitSpec
 
-class SearchTest extends UnitSpec {
+class CaseSearchTest extends UnitSpec {
 
-  private val sort = Sort(
-    field = SortField.DAYS_ELAPSED,
+  private val sort = CaseSort(
+    field = CaseSortField.DAYS_ELAPSED,
     direction = SortDirection.DESCENDING
   )
 
@@ -43,7 +43,7 @@ class SearchTest extends UnitSpec {
     decisionDetails = Some("decision-details")
   )
 
-  private val search = Search(filter = filter, sort = Some(sort))
+  private val search = CaseSearch(filter = filter, sort = Some(sort))
 
   private val params: Map[String, Seq[String]] = Map(
     "reference" -> Seq("id1", "id2"),
@@ -80,7 +80,7 @@ class SearchTest extends UnitSpec {
   "Search Binder" should {
 
     "Unbind Unpopulated Search to Query String" in {
-      Search.bindable.unbind("", Search()) shouldBe ""
+      CaseSearch.bindable.unbind("", CaseSearch()) shouldBe ""
     }
 
     "Unbind Populated Search to Query String" in {
@@ -100,23 +100,23 @@ class SearchTest extends UnitSpec {
           "&keyword=MTB" +
           "&sort_by=days-elapsed" +
           "&sort_direction=desc"
-      URLDecoder.decode(Search.bindable.unbind("", search), "UTF-8") shouldBe populatedQueryParam
+      URLDecoder.decode(CaseSearch.bindable.unbind("", search), "UTF-8") shouldBe populatedQueryParam
     }
 
     "Bind empty query string" in {
-      Search.bindable.bind("", Map()) shouldBe Some(Right(Search()))
+      CaseSearch.bindable.bind("", Map()) shouldBe Some(Right(CaseSearch()))
     }
 
     "Bind query string with empty values" in {
-      Search.bindable.bind("", emptyParams) shouldBe Some(Right(Search()))
+      CaseSearch.bindable.bind("", emptyParams) shouldBe Some(Right(CaseSearch()))
     }
 
     "Bind populated query string" in {
-      Search.bindable.bind("", params) shouldBe Some(Right(search))
+      CaseSearch.bindable.bind("", params) shouldBe Some(Right(search))
     }
 
     "Bind query string with missing sort_by" in {
-      Search.bindable.bind("", params.filterKeys(_ != "sort_by")) shouldBe Some(Right(Search(filter, None)))
+      CaseSearch.bindable.bind("", params.filterKeys(_ != "sort_by")) shouldBe Some(Right(CaseSearch(filter, None)))
     }
   }
 
@@ -161,23 +161,23 @@ class SearchTest extends UnitSpec {
 
     "Unbind Populated Sort to Query String" in {
       val populatedQueryParam: String = "sort_by=days-elapsed&sort_direction=desc"
-      Sort.bindable.unbind("", sort) shouldBe populatedQueryParam
+      CaseSort.bindable.unbind("", sort) shouldBe populatedQueryParam
     }
 
     "Bind empty query string" in {
-      Sort.bindable.bind("", Map()) shouldBe None
+      CaseSort.bindable.bind("", Map()) shouldBe None
     }
 
     "Bind query string with empty values" in {
-      Sort.bindable.bind("", emptyParams) shouldBe None
+      CaseSort.bindable.bind("", emptyParams) shouldBe None
     }
 
     "Bind populated query string" in {
-      Sort.bindable.bind("", params) shouldBe Some(Right(sort))
+      CaseSort.bindable.bind("", params) shouldBe Some(Right(sort))
     }
 
     "Bind populated query string with missing sort_by" in {
-      Sort.bindable.bind("", params.filterKeys(_ != "sort_by")) shouldBe None
+      CaseSort.bindable.bind("", params.filterKeys(_ != "sort_by")) shouldBe None
     }
   }
 

@@ -1,7 +1,7 @@
 # microservice specific routes
 
 # cases endpoints
-GET           /cases                          @uk.gov.hmrc.bindingtariffclassification.controllers.CaseController.get(query: uk.gov.hmrc.bindingtariffclassification.model.Search, pagination: uk.gov.hmrc.bindingtariffclassification.model.Pagination ?= uk.gov.hmrc.bindingtariffclassification.model.Pagination())
+GET           /cases                          @uk.gov.hmrc.bindingtariffclassification.controllers.CaseController.get(query: uk.gov.hmrc.bindingtariffclassification.model.CaseSearch, pagination: uk.gov.hmrc.bindingtariffclassification.model.Pagination ?= uk.gov.hmrc.bindingtariffclassification.model.Pagination())
 POST          /cases                          @uk.gov.hmrc.bindingtariffclassification.controllers.CaseController.create
 GET           /cases/:reference               @uk.gov.hmrc.bindingtariffclassification.controllers.CaseController.getByReference(reference: String)
 PUT           /cases/:reference               @uk.gov.hmrc.bindingtariffclassification.controllers.CaseController.update(reference: String)

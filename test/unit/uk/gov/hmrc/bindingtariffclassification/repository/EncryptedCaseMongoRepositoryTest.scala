@@ -22,7 +22,7 @@ import org.mockito.Mockito.verify
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.mockito.MockitoSugar
 import uk.gov.hmrc.bindingtariffclassification.crypto.Crypto
-import uk.gov.hmrc.bindingtariffclassification.model.{Case, Paged, Pagination, Search}
+import uk.gov.hmrc.bindingtariffclassification.model.{Case, CaseSearch, Paged, Pagination}
 import uk.gov.hmrc.play.test.UnitSpec
 
 import scala.concurrent.Future.successful
@@ -33,7 +33,7 @@ class EncryptedCaseMongoRepositoryTest extends UnitSpec with MockitoSugar with B
   private val rawCaseSaved = mock[Case]
   private val encryptedCase = mock[Case]
   private val encryptedCaseSaved = mock[Case]
-  private val search = Search()
+  private val search = CaseSearch()
   private val pagination = mock[Pagination]
   private val crypto = mock[Crypto]
   private val underlyingRepo = mock[CaseMongoRepository]
