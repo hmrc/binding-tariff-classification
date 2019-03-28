@@ -21,7 +21,7 @@ import java.time._
 import org.scalatest.mockito.MockitoSugar
 import play.api.inject.bind
 import play.api.inject.guice.GuiceApplicationBuilder
-import uk.gov.hmrc.bindingtariffclassification.component.utils.MockAppConfig
+import uk.gov.hmrc.bindingtariffclassification.component.utils.AppConfigWithAFixedDate
 import uk.gov.hmrc.bindingtariffclassification.config.AppConfig
 import uk.gov.hmrc.bindingtariffclassification.model.CaseStatus.CaseStatus
 import uk.gov.hmrc.bindingtariffclassification.model.{Case, CaseStatus}
@@ -36,7 +36,7 @@ class DaysElapsedSpec extends BaseFeatureSpec with MockitoSugar {
   protected val serviceUrl = s"http://localhost:$port"
 
   private val injector = new GuiceApplicationBuilder()
-    .bindings(bind[AppConfig].to[MockAppConfig])
+    .bindings(bind[AppConfig].to[AppConfigWithAFixedDate])
     .disable[com.kenshoo.play.metrics.PlayModule]
     .configure("metrics.enabled" -> false)
     .injector()
@@ -55,9 +55,9 @@ class DaysElapsedSpec extends BaseFeatureSpec with MockitoSugar {
       result(job.execute(), timeout)
 
       Then("The days elapsed field is incremented appropriately")
-      daysElapsedForCase(reference = "ref-20181220") shouldBe 6 //
-      daysElapsedForCase(reference = "ref-20181230") shouldBe 1 //???
-      daysElapsedForCase(reference = "ref-20190110") shouldBe 16 // OK!
+      daysElapsedForCase(reference = "ref-20181220") shouldBe 29 //
+      daysElapsedForCase(reference = "ref-20181230") shouldBe 24 //???
+      daysElapsedForCase(reference = "ref-20190110") shouldBe 17 // OK!
     }
   }
 
