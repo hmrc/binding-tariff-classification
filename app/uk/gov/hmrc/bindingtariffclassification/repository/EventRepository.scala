@@ -64,7 +64,7 @@ class EventMongoRepository @Inject()(mongoDbProvider: MongoDbProvider)
       Map[String, JsValue](
         "caseReference" -> JsString(search.reference)
       )
-      ++ search.`type`.map(t => "type" -> Json.toJson(t))
+      ++ search.`type`.map(t => "details.type" -> Json.toJson(t))
     )
     getMany(query, defaultSortBy, pagination)
   }
