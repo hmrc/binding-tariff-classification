@@ -158,7 +158,7 @@ class DaysElapsedJobTest extends UnitSpec with MockitoSugar with BeforeAndAfterE
 
       givenUpdatingACaseReturnsItself()
       givenAPageOfCases(1, 1, 1, aCaseWith(reference = "reference", createdDate = "2019-01-01T00:00:00"))
-      givenAPageOfEventsFor("reference", 1, 1, aStatusChangeWith(date = "2019-01-01", status = CaseStatus.REFERRED))
+      givenAPageOfEventsFor("reference", 1, 1, aStatusChangeWith(date = "2019-01-01T00:00:00", status = CaseStatus.REFERRED))
 
       await(newJob.execute()) shouldBe()
 
@@ -172,9 +172,25 @@ class DaysElapsedJobTest extends UnitSpec with MockitoSugar with BeforeAndAfterE
       givenUpdatingACaseReturnsItself()
       givenAPageOfCases(1, 1, 1, aCaseWith(reference = "reference", createdDate = "2019-01-01T00:00:00"))
       givenAPageOfEventsFor("reference", 1, 1,
-        aStatusChangeWith(date = "2019-01-01", status = CaseStatus.REFERRED),
-        aStatusChangeWith(date = "2019-01-02", status = CaseStatus.OPEN),
-        aStatusChangeWith(date = "2019-01-03", status = CaseStatus.REFERRED)
+        aStatusChangeWith(date = "2019-01-01T00:00:00", status = CaseStatus.REFERRED),
+        aStatusChangeWith(date = "2019-01-02T00:00:00", status = CaseStatus.OPEN),
+        aStatusChangeWith(date = "2019-01-03T00:00:00", status = CaseStatus.REFERRED)
+      )
+
+      await(newJob.execute()) shouldBe()
+
+      theCasesUpdated.daysElapsed shouldBe 1
+    }
+
+    "Update Days Elapsed - excluding multiple referred events on the same day" in {
+      givenNoBankHolidays()
+      givenTodaysDateIs("2019-01-04T00:00:00")
+
+      givenUpdatingACaseReturnsItself()
+      givenAPageOfCases(1, 1, 1, aCaseWith(reference = "reference", createdDate = "2019-01-01T00:00:00"))
+      givenAPageOfEventsFor("reference", 1, 1,
+        aStatusChangeWith(date = "2019-01-02T00:00:00", status = CaseStatus.REFERRED),
+        aStatusChangeWith(date = "2019-01-02T12:00:00", status = CaseStatus.OPEN)
       )
 
       await(newJob.execute()) shouldBe()
@@ -248,7 +264,7 @@ class DaysElapsedJobTest extends UnitSpec with MockitoSugar with BeforeAndAfterE
       mock[CaseStatus],
       status
     )
-    given(e.timestamp) willReturn LocalDate.parse(date).atStartOfDay(ZoneOffset.UTC).toInstant
+    given(e.timestamp) willReturn LocalDateTime.parse(date).toInstant(ZoneOffset.UTC)
     e
   }
 
