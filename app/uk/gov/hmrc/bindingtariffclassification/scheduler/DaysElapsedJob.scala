@@ -20,6 +20,7 @@ import java.time._
 import java.time.temporal.ChronoUnit
 
 import javax.inject.{Inject, Singleton}
+import play.api.Logger
 import uk.gov.hmrc.bindingtariffclassification.config.AppConfig
 import uk.gov.hmrc.bindingtariffclassification.connector.BankHolidaysConnector
 import uk.gov.hmrc.bindingtariffclassification.model.CaseStatus.CaseStatus
@@ -90,6 +91,8 @@ class DaysElapsedJob @Inject()(appConfig: AppConfig,
 
       // Update the case
       _ <- caseService.update(c.copy(daysElapsed = actionableDays.size), upsert = false)
+
+      _ = Logger.info(s"DaysElapsedJob: Updated Days Elapsed of Case [${c.reference}] from [${c.daysElapsed}] to [${actionableDays.size}]")
     } yield ()
   }
 
