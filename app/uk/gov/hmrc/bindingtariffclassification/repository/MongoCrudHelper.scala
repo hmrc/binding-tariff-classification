@@ -17,7 +17,7 @@
 package uk.gov.hmrc.bindingtariffclassification.repository
 
 import play.api.libs.json._
-import reactivemongo.api.{Cursor, QueryOpts}
+import reactivemongo.api.{Cursor, QueryOpts, ReadConcern}
 import reactivemongo.play.json.ImplicitBSONHandlers._
 import reactivemongo.play.json.collection.JSONCollection
 import uk.gov.hmrc.bindingtariffclassification.model.{Paged, Pagination}
@@ -41,8 +41,8 @@ trait MongoCrudHelper[T] extends MongoIndexCreator {
         .options(QueryOpts(skipN = (pagination.page -1) * pagination.pageSize, batchSizeN = pagination.pageSize))
         .cursor[T]()
         .collect[List](pagination.pageSize, Cursor.FailOnError[List[T]]())
-      count <- mongoCollection.count(Some(filterBy))
-    } yield Paged(results, pagination.page, pagination.pageSize, count)
+      count <- mongoCollection.count(Some(filterBy), limit = Some(0), skip = 0, hint = None, readConcern = ReadConcern.Local)
+    } yield Paged(results, pagination.page, pagination.pageSize, count.toInt)
   }
 
   protected def createOne(document: T)(implicit w: OWrites[T]): Future[T] = {

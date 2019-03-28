@@ -20,9 +20,9 @@ import java.time.{Instant, LocalDate, ZoneId}
 
 import org.scalatest.concurrent.Eventually
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
-import reactivemongo.api.DB
 import reactivemongo.api.indexes.Index
 import reactivemongo.api.indexes.IndexType.Ascending
+import reactivemongo.api.{DB, ReadConcern}
 import reactivemongo.bson._
 import reactivemongo.play.json.ImplicitBSONHandlers._
 import uk.gov.hmrc.bindingtariffclassification.model.MongoFormatters.formatSchedulerRunEvent
@@ -60,7 +60,7 @@ class SchedulerLockRepositorySpec extends BaseMongoIndexSpec
   }
 
   private def collectionSize: Int = {
-    await(repository.collection.count())
+    await(repository.collection.count(selector = None, limit = Some(0), skip = 0, hint = None, readConcern = ReadConcern.Local)).toInt
   }
 
   private def selectorByName(name: String): BSONDocument = {
