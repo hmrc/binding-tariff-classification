@@ -24,7 +24,7 @@ import play.api.inject.guice.GuiceApplicationBuilder
 import uk.gov.hmrc.bindingtariffclassification.component.utils.AppConfigWithAFixedDate
 import uk.gov.hmrc.bindingtariffclassification.config.AppConfig
 import uk.gov.hmrc.bindingtariffclassification.model.CaseStatus._
-import uk.gov.hmrc.bindingtariffclassification.model.{Case, CaseStatus, Event}
+import uk.gov.hmrc.bindingtariffclassification.model.{Case, Event}
 import uk.gov.hmrc.bindingtariffclassification.scheduler.DaysElapsedJob
 import util.CaseData._
 import util.EventData
@@ -46,58 +46,59 @@ class DaysElapsedSpec extends BaseFeatureSpec with MockitoSugar {
   private val job: DaysElapsedJob = injector.instanceOf[DaysElapsedJob]
 
   feature("Days Elapsed Job") {
-    scenario("calculate elapsed days correctly for cases on the past year") {
+    scenario("Calculates elapsed days for OPEN & NEW cases") {
       Given("There are cases with mixed statuses in the database")
 
       givenThereIs(aCaseWith(reference = "ref-20181220", status = OPEN, createdDate = "2018-12-20"))
-      givenThereIs(aCaseWith(reference = "ref-20181230", status = OPEN, createdDate = "2018-12-30"))
+      givenThereIs(aCaseWith(reference = "ref-20181230", status = NEW, createdDate = "2018-12-30"))
       givenThereIs(aCaseWith(reference = "ref-20190110", status = OPEN, createdDate = "2019-01-10"))
+      givenThereIs(aCaseWith(reference = "ref-20190203", status = NEW, createdDate = "2019-02-03"))
+      givenThereIs(aCaseWith(reference = "ref-20190201", status = NEW, createdDate = "2019-02-01"))
 
       When("The job runs")
       result(job.execute(), timeout)
 
-      Then("The days elapsed field are calculated correctly")
+      Then("The Days Elapsed should be correct")
       daysElapsedForCase("ref-20181220") shouldBe 29
       daysElapsedForCase("ref-20181230") shouldBe 24
       daysElapsedForCase("ref-20190110") shouldBe 17
+      daysElapsedForCase("ref-20190203") shouldBe 0
+      daysElapsedForCase("ref-20190201") shouldBe 1
     }
 
-    scenario("calculate elapsed days for a referred case") {
-
-      Given("There is case with a referred case")
+    scenario("Calculates elapsed days for a referred case") {
+      Given("A Case which was REFERRED in the past")
       givenThereIs(aCaseWith(reference = "valid-ref", status = OPEN, createdDate = "2019-01-10"))
       givenThereIs(aStatusChangeWith(caseReference = "valid-ref", status = REFERRED, date = "2019-01-15"))
 
       When("The job runs")
       result(job.execute(), timeout)
 
-      Then("The days elapsed field are calculated correctly")
+      Then("The Days Elapsed should be correct")
       daysElapsedForCase("valid-ref") shouldBe 3
     }
 
-    scenario("calculate elapsed days for a referred case today") {
-
-      Given("There is case with a referred case")
+    scenario("Calculates elapsed days for a case created & referred on the same day") {
+      Given("There is case which was REFERRED the day it was created")
       givenThereIs(aCaseWith(reference = "valid-ref", status = OPEN, createdDate = "2019-02-01"))
       givenThereIs(aStatusChangeWith(caseReference = "valid-ref", status = REFERRED, date = "2019-02-01"))
 
       When("The job runs")
       result(job.execute(), timeout)
 
-      Then("The days elapsed field are calculated correctly")
+      Then("The Days Elapsed should be correct")
       daysElapsedForCase("valid-ref") shouldBe 0
     }
 
-    scenario("calculate elapsed days for a referred case on the same day") {
-
+    scenario("Calculates elapsed days for a case referred today") {
       Given("There is case with a referred case")
-
       givenThereIs(aCaseWith(reference = "valid-ref", status = OPEN, createdDate = "2019-02-03"))
+      givenThereIs(aStatusChangeWith(caseReference = "valid-ref", status = REFERRED, date = "2019-02-03"))
 
       When("The job runs")
       result(job.execute(), timeout)
 
-      Then("The days elapsed field are calculated correctly")
+      Then("The Days Elapsed should be correct")
       daysElapsedForCase("valid-ref") shouldBe 0
     }
   }
