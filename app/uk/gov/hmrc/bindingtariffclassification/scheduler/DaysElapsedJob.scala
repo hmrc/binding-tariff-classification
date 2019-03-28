@@ -87,7 +87,9 @@ class DaysElapsedJob @Inject()(appConfig: AppConfig,
       statusTimeline: StatusTimeline = StatusTimeline.from(events.results)
 
       // Filter down to the days the case was not Referred
-      actionableDays: Seq[Instant] = workingDays.filterNot(statusTimeline.statusOn(_).contains(CaseStatus.REFERRED))
+      actionableDays: Seq[Instant] = workingDays
+        .filterNot(statusTimeline.statusOn(_).contains(CaseStatus.REFERRED))
+        .filterNot(statusTimeline.statusOn(_).contains(CaseStatus.SUSPENDED))
 
       // Update the case
       _ <- caseService.update(c.copy(daysElapsed = actionableDays.size), upsert = false)

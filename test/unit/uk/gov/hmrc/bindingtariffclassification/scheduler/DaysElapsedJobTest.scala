@@ -198,6 +198,52 @@ class DaysElapsedJobTest extends UnitSpec with MockitoSugar with BeforeAndAfterE
       theCasesUpdated.daysElapsed shouldBe 2
     }
 
+    "Update Days Elapsed - excluding suspended days" in {
+      givenNoBankHolidays()
+      givenTodaysDateIs("2019-01-04T00:00:00")
+
+      givenUpdatingACaseReturnsItself()
+      givenAPageOfCases(1, 1, 1, aCaseWith(reference = "reference", createdDate = "2019-01-01T00:00:00"))
+      givenAPageOfEventsFor("reference", 1, 1, aStatusChangeWith(date = "2019-01-01T00:00:00", status = CaseStatus.SUSPENDED))
+
+      await(newJob.execute()) shouldBe()
+
+      theCasesUpdated.daysElapsed shouldBe 0
+    }
+
+    "Update Days Elapsed - excluding multiple suspended days" in {
+      givenNoBankHolidays()
+      givenTodaysDateIs("2019-01-04T00:00:00")
+
+      givenUpdatingACaseReturnsItself()
+      givenAPageOfCases(1, 1, 1, aCaseWith(reference = "reference", createdDate = "2019-01-01T00:00:00"))
+      givenAPageOfEventsFor("reference", 1, 1,
+        aStatusChangeWith(date = "2019-01-01T00:00:00", status = CaseStatus.SUSPENDED),
+        aStatusChangeWith(date = "2019-01-02T00:00:00", status = CaseStatus.OPEN),
+        aStatusChangeWith(date = "2019-01-03T00:00:00", status = CaseStatus.SUSPENDED)
+      )
+
+      await(newJob.execute()) shouldBe()
+
+      theCasesUpdated.daysElapsed shouldBe 1
+    }
+
+    "Update Days Elapsed - excluding multiple suspended events on the same day" in {
+      givenNoBankHolidays()
+      givenTodaysDateIs("2019-01-04T00:00:00")
+
+      givenUpdatingACaseReturnsItself()
+      givenAPageOfCases(1, 1, 1, aCaseWith(reference = "reference", createdDate = "2019-01-01T00:00:00"))
+      givenAPageOfEventsFor("reference", 1, 1,
+        aStatusChangeWith(date = "2019-01-02T00:00:00", status = CaseStatus.SUSPENDED),
+        aStatusChangeWith(date = "2019-01-02T12:00:00", status = CaseStatus.OPEN)
+      )
+
+      await(newJob.execute()) shouldBe()
+
+      theCasesUpdated.daysElapsed shouldBe 2
+    }
+
     "Update Days Elapsed - for multiple cases" in {
       givenNoBankHolidays()
       givenTodaysDateIs("2019-01-01T00:00:00")

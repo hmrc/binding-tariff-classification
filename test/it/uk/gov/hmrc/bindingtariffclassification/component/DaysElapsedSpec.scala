@@ -54,6 +54,7 @@ class DaysElapsedSpec extends BaseFeatureSpec with MockitoSugar {
       givenThereIs(aCaseWith(reference = "ref-20190110", status = OPEN, createdDate = "2019-01-10"))
       givenThereIs(aCaseWith(reference = "ref-20190203", status = NEW, createdDate = "2019-02-03"))
       givenThereIs(aCaseWith(reference = "ref-20190201", status = NEW, createdDate = "2019-02-01"))
+      givenThereIs(aCaseWith(reference = "completed", status = COMPLETED, createdDate = "2019-02-01"))
 
       When("The job runs")
       result(job.execute(), timeout)
@@ -64,6 +65,7 @@ class DaysElapsedSpec extends BaseFeatureSpec with MockitoSugar {
       daysElapsedForCase("ref-20190110") shouldBe 17
       daysElapsedForCase("ref-20190203") shouldBe 0
       daysElapsedForCase("ref-20190201") shouldBe 1
+      daysElapsedForCase("completed") shouldBe -1 // Unchanged
     }
 
     scenario("Calculates elapsed days for a referred case") {
@@ -101,6 +103,42 @@ class DaysElapsedSpec extends BaseFeatureSpec with MockitoSugar {
       Then("The Days Elapsed should be correct")
       daysElapsedForCase("valid-ref") shouldBe 0
     }
+
+    scenario("Calculates elapsed days for a suspended case") {
+      Given("A Case which was SUSPENDED in the past")
+      givenThereIs(aCaseWith(reference = "valid-ref", status = OPEN, createdDate = "2019-01-10"))
+      givenThereIs(aStatusChangeWith(caseReference = "valid-ref", status = SUSPENDED, date = "2019-01-15"))
+
+      When("The job runs")
+      result(job.execute(), timeout)
+
+      Then("The Days Elapsed should be correct")
+      daysElapsedForCase("valid-ref") shouldBe 3
+    }
+
+    scenario("Calculates elapsed days for a case created & suspended on the same day") {
+      Given("There is case which was REFERRED the day it was created")
+      givenThereIs(aCaseWith(reference = "valid-ref", status = OPEN, createdDate = "2019-02-01"))
+      givenThereIs(aStatusChangeWith(caseReference = "valid-ref", status = SUSPENDED, date = "2019-02-01"))
+
+      When("The job runs")
+      result(job.execute(), timeout)
+
+      Then("The Days Elapsed should be correct")
+      daysElapsedForCase("valid-ref") shouldBe 0
+    }
+
+    scenario("Calculates elapsed days for a case suspended today") {
+      Given("There is case with a referred case")
+      givenThereIs(aCaseWith(reference = "valid-ref", status = OPEN, createdDate = "2019-02-03"))
+      givenThereIs(aStatusChangeWith(caseReference = "valid-ref", status = SUSPENDED, date = "2019-02-03"))
+
+      When("The job runs")
+      result(job.execute(), timeout)
+
+      Then("The Days Elapsed should be correct")
+      daysElapsedForCase("valid-ref") shouldBe 0
+    }
   }
 
 
@@ -112,7 +150,8 @@ class DaysElapsedSpec extends BaseFeatureSpec with MockitoSugar {
     createCase(app = createBasicBTIApplication).copy(
       reference = reference,
       createdDate = LocalDate.parse(createdDate).atStartOfDay().toInstant(ZoneOffset.UTC),
-      status = status
+      status = status,
+      daysElapsed = -1
     )
   }
 
