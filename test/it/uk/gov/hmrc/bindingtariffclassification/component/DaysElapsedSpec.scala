@@ -18,13 +18,12 @@ package uk.gov.hmrc.bindingtariffclassification.component
 
 import java.time._
 
-import javax.inject.Inject
 import org.scalatest.mockito.MockitoSugar
 import play.api.inject.bind
-import play.api.inject.guice.{GuiceApplicationBuilder, GuiceInjectorBuilder}
-import play.api.{Configuration, Environment}
+import play.api.inject.guice.GuiceApplicationBuilder
 import uk.gov.hmrc.bindingtariffclassification.component.utils.MockAppConfig
 import uk.gov.hmrc.bindingtariffclassification.config.AppConfig
+import uk.gov.hmrc.bindingtariffclassification.model.CaseStatus.CaseStatus
 import uk.gov.hmrc.bindingtariffclassification.model.{Case, CaseStatus}
 import uk.gov.hmrc.bindingtariffclassification.scheduler.DaysElapsedJob
 import util.CaseData._
@@ -36,90 +35,44 @@ class DaysElapsedSpec extends BaseFeatureSpec with MockitoSugar {
   override lazy val port = 14683
   protected val serviceUrl = s"http://localhost:$port"
 
-  private val c: Case = createCase(app = createBasicBTIApplication)
-
-
-//  val application = new GuiceApplicationBuilder()
-//    .bindings(bind[AppConfig].to[MockAppConfig])
-//    //.overrides(bind[AppConfig].to[MockAppConfig])
-//    .build()
-//
-  val injector = new GuiceApplicationBuilder()
+  private val injector = new GuiceApplicationBuilder()
     .bindings(bind[AppConfig].to[MockAppConfig])
-  .disable[com.kenshoo.play.metrics.PlayModule]
-  .configure("metrics.enabled" -> false)
- //   .overrides(bind[AppConfig].to[MockAppConfig])
+    .disable[com.kenshoo.play.metrics.PlayModule]
+    .configure("metrics.enabled" -> false)
     .injector()
 
-//  val injector = new GuiceInjectorBuilder()
-//    .overrides(bind[AppConfig].to[MockAppConfig])
-//    .injector()
 
   private val job: DaysElapsedJob = injector.instanceOf[DaysElapsedJob]
 
-
-//  feature("Days Elapsed Endpoint") {
-//
-//    scenario("Updates Cases with status NEW and OPEN") {
-//
-//      Given("There are cases with mixed statuses in the database")
-//      storeFewCases()
-//
-//      val locks = schedulerLockStoreSize
-//
-//      When("I hit the days-elapsed endpoint")
-//      val result = Http(s"$serviceUrl/scheduler/days-elapsed")
-//        .header(apiTokenKey, appConfig.authorization)
-//        .method(HttpVerbs.PUT)
-//        .asString
-//
-//      Then("The response code should be 204")
-//      result.code shouldEqual NO_CONTENT
-//
-//      // Then
-//      assertDaysElapsed()
-//
-//      Then("A new scheduler lock has not been created in mongo")
-//      assertLocksDidNotIncrement(locks)
-//    }
-//
-//  }
-
   feature("Days Elapsed Job") {
-
     scenario("Updates Cases with status NEW and OPEN") {
-
       Given("There are cases with mixed statuses in the database")
-      storeFewCases()
+      givenThereIs(aCaseWith(reference = "ref-20181220", status = CaseStatus.OPEN, createdDate = "2018-12-20"))
+      givenThereIs(aCaseWith(reference = "ref-20181230", status = CaseStatus.OPEN, createdDate = "2018-12-30"))
+      givenThereIs(aCaseWith(reference = "ref-20190110", status = CaseStatus.OPEN, createdDate = "2019-01-10"))
 
       When("The job runs")
       result(job.execute(), timeout)
 
       Then("The days elapsed field is incremented appropriately")
-      assertDaysElapsed()
+      daysElapsedForCase(reference = "ref-20181220") shouldBe 6 //
+      daysElapsedForCase(reference = "ref-20181230") shouldBe 1 //???
+      daysElapsedForCase(reference = "ref-20190110") shouldBe 16 // OK!
     }
-
   }
 
-  private def storeFewCases(): Unit = {
-    val newCase = c.copy(reference = "from20181220", status = CaseStatus.NEW, createdDate = dateFrom("2018-12-20"))
-    val openCase = c.copy(reference = "from20181230", status = CaseStatus.OPEN,  createdDate = dateFrom("2018-12-30"))
-    val otherCase = c.copy(reference = "from20190110", status = CaseStatus.NEW,  createdDate = dateFrom("2019-01-10"))
-    storeCases(newCase, openCase, otherCase)
+  private def aCaseWith(reference: String, createdDate: String, status: CaseStatus): Case = {
+    createCase(app = createBasicBTIApplication).copy(
+      reference = reference,
+      createdDate = LocalDate.parse(createdDate).atStartOfDay().toInstant(ZoneOffset.UTC),
+      status = status
+    )
   }
 
-  private def dateFrom(from : String ) : Instant = {
-    LocalDate.parse(from).atStartOfDay().toInstant(ZoneOffset.UTC)
-  }
+  private def givenThereIs(c: Case): Unit = storeCases(c)
 
-  private def assertDaysElapsed(): Unit = {
-    daysElapsedFrom("from20181220") shouldBe 6 //
-    daysElapsedFrom("from20181230") shouldBe 1 //???
-    daysElapsedFrom("from20190110") shouldBe 16 // OK!
-  }
-
-  private def daysElapsedFrom(caseReference : String) = {
-    getCase(caseReference).map(_.daysElapsed).getOrElse(0)
+  private def daysElapsedForCase(reference: String) = {
+    getCase(reference).map(_.daysElapsed).getOrElse(0)
   }
 
 }
