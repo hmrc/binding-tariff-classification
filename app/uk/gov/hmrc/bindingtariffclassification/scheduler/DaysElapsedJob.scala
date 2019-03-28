@@ -17,6 +17,7 @@
 package uk.gov.hmrc.bindingtariffclassification.scheduler
 
 import java.time._
+import java.time.temporal.ChronoUnit
 
 import javax.inject.{Inject, Singleton}
 import uk.gov.hmrc.bindingtariffclassification.config.AppConfig
@@ -68,7 +69,7 @@ class DaysElapsedJob @Inject()(appConfig: AppConfig,
 
   private def refreshDaysElapsed(c: Case)(implicit bankHolidays: Set[LocalDate]): Future[Unit] = {
     val createdDate: LocalDate = LocalDateTime.ofInstant(c.createdDate, ZoneOffset.UTC).toLocalDate
-    val daysSinceCreated: Int = (createdDate until LocalDate.now(appConfig.clock)).getDays
+    val daysSinceCreated: Int = ChronoUnit.DAYS.between(createdDate, LocalDate.now(appConfig.clock)).toInt
 
     // Working days between the created date and Noe
     val workingDays: Seq[Instant] = (0 until daysSinceCreated)
