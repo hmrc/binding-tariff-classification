@@ -195,7 +195,7 @@ class DaysElapsedJobTest extends UnitSpec with MockitoSugar with BeforeAndAfterE
 
       await(newJob.execute()) shouldBe()
 
-      theCasesUpdated.daysElapsed shouldBe 1
+      theCasesUpdated.daysElapsed shouldBe 2
     }
 
     "Update Days Elapsed - for multiple cases" in {

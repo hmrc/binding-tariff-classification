@@ -34,7 +34,7 @@ class AppConfig @Inject()(val runModeConfiguration: Configuration, environment: 
 
   lazy val caseReferenceStart: Long = runModeConfiguration.getLong("case-reference-start").getOrElse(504400000)
 
-  lazy val clock: Clock = Clock.systemDefaultZone()
+  lazy val clock: Clock = Clock.systemUTC()
 
   lazy val daysElapsed: JobConfig = JobConfig(
     LocalTime.parse(getString("scheduler.days-elapsed.run-time")),

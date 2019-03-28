@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.bindingtariffclassification.config
 
-import java.time.{LocalTime, ZoneId}
+import java.time.{LocalTime, ZoneOffset}
 
 import play.api.{Configuration, Environment}
 import uk.gov.hmrc.play.test.UnitSpec
@@ -32,7 +32,7 @@ class AppConfigTest extends UnitSpec {
   "Config" should {
 
     "build 'clock'" in {
-      configWith().clock.getZone shouldBe ZoneId.systemDefault()
+      configWith().clock.getZone shouldBe ZoneOffset.UTC
     }
 
     "build 'isTestMode" in {
