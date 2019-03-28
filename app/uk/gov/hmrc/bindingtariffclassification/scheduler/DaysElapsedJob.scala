@@ -72,7 +72,7 @@ class DaysElapsedJob @Inject()(appConfig: AppConfig,
     val daysSinceCreated: Long = ChronoUnit.DAYS.between(createdDate, LocalDate.now(appConfig.clock))
 
     // Working days between the created date and Now
-    val workingDays: Seq[Instant] = (0 until daysSinceCreated)
+    val workingDays: Seq[Instant] = (0L until daysSinceCreated)
       .map(createdDate.plusDays)
       .filterNot(bankHoliday)
       .filterNot(weekend)
