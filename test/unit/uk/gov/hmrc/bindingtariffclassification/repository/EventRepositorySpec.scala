@@ -124,6 +124,7 @@ class EventRepositorySpec extends BaseMongoIndexSpec
       collectionSize shouldBe 2
 
       await(repository.search(EventSearch("REF_1"), Pagination())) shouldBe Paged(Seq(e1), Pagination(), 1)
+      await(repository.search(EventSearch("REF_2"), Pagination())) shouldBe Paged(Seq(e2), Pagination(), 1)
     }
 
     "retrieve all expected events from the collection by type" in {
@@ -134,6 +135,7 @@ class EventRepositorySpec extends BaseMongoIndexSpec
       await(repository.insert(e2))
       collectionSize shouldBe 2
 
+      await(repository.search(EventSearch("REF_1", Some(EventType.NOTE)), Pagination())) shouldBe Paged(Seq(e1), Pagination(), 1)
       await(repository.search(EventSearch("REF_1", Some(EventType.CASE_STATUS_CHANGE)), Pagination())) shouldBe Paged(Seq(e2), Pagination(), 1)
     }
 
