@@ -69,11 +69,11 @@ class DaysElapsedJob @Inject()(appConfig: AppConfig,
 
   private def refreshDaysElapsed(c: Case)(implicit bankHolidays: Set[LocalDate]): Future[Unit] = {
     val createdDate: LocalDate = LocalDateTime.ofInstant(c.createdDate, ZoneOffset.UTC).toLocalDate
-    val daysSinceCreated: Int = ChronoUnit.DAYS.between(createdDate, LocalDate.now(appConfig.clock)).toInt
+    val daysSinceCreated: Long = ChronoUnit.DAYS.between(createdDate, LocalDate.now(appConfig.clock))
 
-    // Working days between the created date and Noe
+    // Working days between the created date and Now
     val workingDays: Seq[Instant] = (0 until daysSinceCreated)
-      .map(createdDate.plusDays(_))
+      .map(createdDate.plusDays)
       .filterNot(bankHoliday)
       .filterNot(weekend)
       .map(toInstant)
@@ -83,13 +83,7 @@ class DaysElapsedJob @Inject()(appConfig: AppConfig,
       events <- eventService.search(EventSearch(c.reference, Some(EventType.CASE_STATUS_CHANGE)), Pagination(1, Integer.MAX_VALUE))
 
       // Generate a timeline of the Case Status over time
-      statusTimeline: StatusTimeline = new StatusTimeline(
-        events.results
-          .filter(_.details.isInstanceOf[CaseStatusChange])
-          .map { event =>
-            (event.timestamp, event.details.asInstanceOf[CaseStatusChange].to)
-          }
-      )
+      statusTimeline: StatusTimeline = StatusTimeline.from(events.results)
 
       // Filter down to the days the case was not Referred
       actionableDays: Seq[Instant] = workingDays.filterNot(statusTimeline.statusOn(_).contains(CaseStatus.REFERRED))
@@ -115,6 +109,16 @@ class DaysElapsedJob @Inject()(appConfig: AppConfig,
         timeline.until(date).lastOption.map(_._2)
       }
     }
+  }
+
+  private object StatusTimeline {
+    def from(events: Seq[Event]): StatusTimeline = new StatusTimeline(
+      events
+        .filter(_.details.isInstanceOf[CaseStatusChange])
+        .map { event =>
+          (event.timestamp, event.details.asInstanceOf[CaseStatusChange].to)
+        }
+    )
   }
 
 }
