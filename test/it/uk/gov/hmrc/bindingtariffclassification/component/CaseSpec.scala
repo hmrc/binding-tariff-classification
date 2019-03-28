@@ -536,24 +536,27 @@ class CaseSpec extends BaseFeatureSpec {
 
       storeCases(c2, c5, c10)
 
-      val result = Http(s"$serviceUrl/cases?reference=${c2.reference}&reference=${c5.reference}&sort_by=reference")
+      val result = Http(s"$serviceUrl/cases?reference=${c2.reference}&reference=${c5.reference}")
         .header(apiTokenKey, appConfig.authorization)
         .asString
 
+
       result.code shouldEqual OK
-      Json.parse(result.body) shouldBe Json.toJson(Paged(Seq(c2, c5)))
+      Json.parse(result.body).as[Paged[Case]].results.map(_.reference) should contain only (c2.reference,c5.reference)
     }
 
     scenario("Filtering cases by multiple references - comma separated") {
 
       storeCases(c2, c5, c10)
 
-      val result = Http(s"$serviceUrl/cases?reference=${c2.reference},${c5.reference}&sort_by=reference")
+      val result = Http(s"$serviceUrl/cases?reference=${c2.reference},${c5.reference}")
         .header(apiTokenKey, appConfig.authorization)
         .asString
 
+      val caseSeq = Json.parse(result.body).as[Paged[Case]].results
+
       result.code shouldEqual OK
-      Json.parse(result.body) shouldBe Json.toJson(Paged(Seq(c2, c5)))
+      Json.parse(result.body).as[Paged[Case]].results.map(_.reference) should contain only (c2.reference,c5.reference)
     }
 
   }
