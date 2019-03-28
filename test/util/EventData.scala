@@ -18,6 +18,7 @@ package util
 
 import java.time.Instant
 
+import uk.gov.hmrc.bindingtariffclassification.model.CaseStatus.{CaseStatus, _}
 import uk.gov.hmrc.bindingtariffclassification.model._
 import uk.gov.hmrc.bindingtariffclassification.utils.RandomGenerator
 
@@ -41,10 +42,10 @@ object EventData {
     )
   }
 
-  def createCaseStatusChangeEvent(caseReference: String): Event = {
+  def createCaseStatusChangeEvent(caseReference: String, from: CaseStatus = DRAFT, to : CaseStatus = NEW): Event = {
     createEvent(
       caseRef = caseReference,
-      details = CaseStatusChange(from = CaseStatus.DRAFT, to = CaseStatus.NEW, comment = Some("comment"))
+      details = CaseStatusChange(from = from, to = to, comment = Some("comment"))
     )
   }
 

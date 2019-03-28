@@ -23,10 +23,11 @@ import play.api.inject.bind
 import play.api.inject.guice.GuiceApplicationBuilder
 import uk.gov.hmrc.bindingtariffclassification.component.utils.AppConfigWithAFixedDate
 import uk.gov.hmrc.bindingtariffclassification.config.AppConfig
-import uk.gov.hmrc.bindingtariffclassification.model.CaseStatus.CaseStatus
-import uk.gov.hmrc.bindingtariffclassification.model.{Case, CaseStatus}
+import uk.gov.hmrc.bindingtariffclassification.model.CaseStatus._
+import uk.gov.hmrc.bindingtariffclassification.model.{Case, CaseStatus, Event}
 import uk.gov.hmrc.bindingtariffclassification.scheduler.DaysElapsedJob
 import util.CaseData._
+import util.EventData
 
 import scala.concurrent.Await.result
 
@@ -45,20 +46,65 @@ class DaysElapsedSpec extends BaseFeatureSpec with MockitoSugar {
   private val job: DaysElapsedJob = injector.instanceOf[DaysElapsedJob]
 
   feature("Days Elapsed Job") {
-    scenario("Updates Cases with status NEW and OPEN") {
+    scenario("calculate elapsed days correctly for cases on the past year") {
       Given("There are cases with mixed statuses in the database")
-      givenThereIs(aCaseWith(reference = "ref-20181220", status = CaseStatus.OPEN, createdDate = "2018-12-20"))
-      givenThereIs(aCaseWith(reference = "ref-20181230", status = CaseStatus.OPEN, createdDate = "2018-12-30"))
-      givenThereIs(aCaseWith(reference = "ref-20190110", status = CaseStatus.OPEN, createdDate = "2019-01-10"))
+
+      givenThereIs(aCaseWith(reference = "ref-20181220", status = OPEN, createdDate = "2018-12-20"))
+      givenThereIs(aCaseWith(reference = "ref-20181230", status = OPEN, createdDate = "2018-12-30"))
+      givenThereIs(aCaseWith(reference = "ref-20190110", status = OPEN, createdDate = "2019-01-10"))
 
       When("The job runs")
       result(job.execute(), timeout)
 
-      Then("The days elapsed field is incremented appropriately")
-      daysElapsedForCase(reference = "ref-20181220") shouldBe 29 //
-      daysElapsedForCase(reference = "ref-20181230") shouldBe 24 //???
-      daysElapsedForCase(reference = "ref-20190110") shouldBe 17 // OK!
+      Then("The days elapsed field are calculated correctly")
+      daysElapsedForCase("ref-20181220") shouldBe 29
+      daysElapsedForCase("ref-20181230") shouldBe 24
+      daysElapsedForCase("ref-20190110") shouldBe 17
     }
+
+    scenario("calculate elapsed days for a referred case") {
+
+      Given("There is case with a referred case")
+      givenThereIs(aCaseWith(reference = "valid-ref", status = OPEN, createdDate = "2019-01-10"))
+      givenThereIs(aStatusChangeWith(caseReference = "valid-ref", status = REFERRED, date = "2019-01-15"))
+
+      When("The job runs")
+      result(job.execute(), timeout)
+
+      Then("The days elapsed field are calculated correctly")
+      daysElapsedForCase("valid-ref") shouldBe 3
+    }
+
+    scenario("calculate elapsed days for a referred case today") {
+
+      Given("There is case with a referred case")
+      givenThereIs(aCaseWith(reference = "valid-ref", status = OPEN, createdDate = "2019-02-01"))
+      givenThereIs(aStatusChangeWith(caseReference = "valid-ref", status = REFERRED, date = "2019-02-01"))
+
+      When("The job runs")
+      result(job.execute(), timeout)
+
+      Then("The days elapsed field are calculated correctly")
+      daysElapsedForCase("valid-ref") shouldBe 0
+    }
+
+    scenario("calculate elapsed days for a referred case on the same day") {
+
+      Given("There is case with a referred case")
+
+      givenThereIs(aCaseWith(reference = "valid-ref", status = OPEN, createdDate = "2019-02-03"))
+
+      When("The job runs")
+      result(job.execute(), timeout)
+
+      Then("The days elapsed field are calculated correctly")
+      daysElapsedForCase("valid-ref") shouldBe 0
+    }
+  }
+
+
+  private def toInstant (date : String) = {
+    LocalDate.parse(date).atStartOfDay().toInstant(ZoneOffset.UTC)
   }
 
   private def aCaseWith(reference: String, createdDate: String, status: CaseStatus): Case = {
@@ -69,10 +115,14 @@ class DaysElapsedSpec extends BaseFeatureSpec with MockitoSugar {
     )
   }
 
-  private def givenThereIs(c: Case): Unit = storeCases(c)
-
-  private def daysElapsedForCase(reference: String) = {
-    getCase(reference).map(_.daysElapsed).getOrElse(0)
+  private def aStatusChangeWith(caseReference: String, status: CaseStatus, date: String): Event = {
+    EventData.createCaseStatusChangeEvent(caseReference, from = OPEN, to = status)
+      .copy(timestamp = toInstant(date))
   }
+
+  private def givenThereIs(c: Case): Unit = storeCases(c)
+  private def givenThereIs(c: Event): Unit = storeEvents(c)
+
+  private def daysElapsedForCase : String => Long = { reference => getCase(reference).map(_.daysElapsed).getOrElse(0)}
 
 }
