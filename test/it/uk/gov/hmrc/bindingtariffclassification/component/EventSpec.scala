@@ -103,6 +103,75 @@ class EventSpec extends BaseFeatureSpec {
 
   }
 
+  feature("Search Events") {
+
+    scenario("No events found") {
+      When("I get the events")
+      val result = Http(s"$serviceUrl/events")
+        .header(apiTokenKey, appConfig.authorization)
+        .asString
+
+      Then("The response code should be OK")
+      result.code shouldEqual OK
+
+      And("An empty sequence is returned in the JSON response")
+      Json.parse(result.body) shouldBe Json.toJson(Paged.empty[Event])
+    }
+
+    scenario("Returns all Events") {
+      Given("There is a case with events")
+      storeCases(c1)
+      storeEvents(e1)
+
+      When("I get the events for that specific case")
+      val result = Http(s"$serviceUrl/events")
+        .header(apiTokenKey, appConfig.authorization)
+        .asString
+
+      Then("The response code should be OK")
+      result.code shouldEqual OK
+
+      And("All events are returned in the JSON response")
+      Json.parse(result.body) shouldBe Json.toJson(Paged(Seq(e1)))
+    }
+
+    scenario("Returns Events by reference") {
+      Given("There is a case with events")
+      storeCases(c1)
+      storeEvents(e1)
+
+      When("I get the events for that specific case")
+      val result = Http(s"$serviceUrl/events?case_reference=${c1.reference}")
+        .header(apiTokenKey, appConfig.authorization)
+        .asString
+
+      Then("The response code should be OK")
+      result.code shouldEqual OK
+
+      And("All events are returned in the JSON response")
+      Json.parse(result.body) shouldBe Json.toJson(Paged(Seq(e1)))
+    }
+
+    scenario("Returns Events by type") {
+      Given("There is a case with events")
+      storeCases(c1)
+      storeEvents(e1)
+      storeEvents(e2)
+
+      When("I get the events for that specific case")
+      val result = Http(s"$serviceUrl/events?type=${e1.details.`type`}")
+        .header(apiTokenKey, appConfig.authorization)
+        .asString
+
+      Then("The response code should be OK")
+      result.code shouldEqual OK
+
+      And("All events are returned in the JSON response")
+      Json.parse(result.body) shouldBe Json.toJson(Paged(Seq(e1)))
+    }
+
+  }
+
   feature("Create Event by case reference") {
 
     scenario("Create new event") {
