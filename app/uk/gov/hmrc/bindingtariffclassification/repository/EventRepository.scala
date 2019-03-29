@@ -50,7 +50,8 @@ class EventMongoRepository @Inject()(mongoDbProvider: MongoDbProvider)
   override def indexes = Seq(
     // TODO: We need to create an index (composed by a single or multiple fields) considering all possible searches needed by the UI.
     createSingleFieldAscendingIndex(indexFieldKey = "id", isUnique = true),
-    createSingleFieldAscendingIndex(indexFieldKey = "caseReference", isUnique = false)
+    createSingleFieldAscendingIndex(indexFieldKey = "caseReference", isUnique = false),
+    createSingleFieldAscendingIndex(indexFieldKey = "type", isUnique = false)
   )
 
   override def insert(e: Event): Future[Event] = {
@@ -59,12 +60,17 @@ class EventMongoRepository @Inject()(mongoDbProvider: MongoDbProvider)
 
   private val defaultSortBy = Json.obj("timestamp" -> -1)
 
+  private def in[T](set: Set[T])(implicit fmt: Format[T]): JsValue = {
+    Json.obj("$in" -> JsArray(set.map(elm => Json.toJson(elm)).toSeq))
+  }
+
   override def search(search: EventSearch, pagination: Pagination): Future[Paged[Event]] = {
+    import MongoFormatters._
+
     val query = JsObject(
-      Map[String, JsValue](
-        "caseReference" -> JsString(search.reference)
-      )
-      ++ search.`type`.map(t => "details.type" -> Json.toJson(t))
+      Map[String, JsValue]()
+        ++ search.caseReference.map(r => "caseReference" -> in(r))
+        ++ search.`type`.map(t => "details.type" -> in(t))
     )
     getMany(query, defaultSortBy, pagination)
   }

@@ -84,7 +84,7 @@ class DaysElapsedJobTest extends UnitSpec with MockitoSugar with BeforeAndAfterE
 
       givenAPageOfCases(1, 1, 0)
 
-      await(newJob.execute()) shouldBe()
+      await(newJob.execute())
     }
 
     "Update Days Elapsed - for case created today" in {
@@ -95,7 +95,7 @@ class DaysElapsedJobTest extends UnitSpec with MockitoSugar with BeforeAndAfterE
       givenAPageOfCases(1, 1, 1, aCaseWith(reference = "reference", createdDate = "2019-01-01T00:00:00"))
       givenThereAreNoEventsFor("reference")
 
-      await(newJob.execute()) shouldBe()
+      await(newJob.execute())
 
       theCasesUpdated.daysElapsed shouldBe 0
     }
@@ -108,7 +108,7 @@ class DaysElapsedJobTest extends UnitSpec with MockitoSugar with BeforeAndAfterE
       givenAPageOfCases(1, 1, 1, aCaseWith(reference = "reference", createdDate = "2019-01-01T00:00:00"))
       givenThereAreNoEventsFor("reference")
 
-      await(newJob.execute()) shouldBe()
+      await(newJob.execute())
 
       theCasesUpdated.daysElapsed shouldBe 1
     }
@@ -121,7 +121,7 @@ class DaysElapsedJobTest extends UnitSpec with MockitoSugar with BeforeAndAfterE
       givenAPageOfCases(1, 1, 1, aCaseWith(reference = "reference", createdDate = "2019-01-01T00:00:00"))
       givenThereAreNoEventsFor("reference")
 
-      await(newJob.execute()) shouldBe()
+      await(newJob.execute())
 
       theCasesUpdated.daysElapsed shouldBe 3
     }
@@ -134,7 +134,7 @@ class DaysElapsedJobTest extends UnitSpec with MockitoSugar with BeforeAndAfterE
       givenAPageOfCases(1, 1, 1, aCaseWith(reference = "reference", createdDate = "2019-01-05T00:00:00"))
       givenThereAreNoEventsFor("reference")
 
-      await(newJob.execute()) shouldBe()
+      await(newJob.execute())
 
       theCasesUpdated.daysElapsed shouldBe 0
     }
@@ -147,7 +147,7 @@ class DaysElapsedJobTest extends UnitSpec with MockitoSugar with BeforeAndAfterE
       givenAPageOfCases(1, 1, 1, aCaseWith(reference = "reference", createdDate = "2019-01-01T00:00:00"))
       givenThereAreNoEventsFor("reference")
 
-      await(newJob.execute()) shouldBe()
+      await(newJob.execute())
 
       theCasesUpdated.daysElapsed shouldBe 0
     }
@@ -160,7 +160,7 @@ class DaysElapsedJobTest extends UnitSpec with MockitoSugar with BeforeAndAfterE
       givenAPageOfCases(1, 1, 1, aCaseWith(reference = "reference", createdDate = "2019-01-01T00:00:00"))
       givenAPageOfEventsFor("reference", 1, 1, aStatusChangeWith(date = "2019-01-01T00:00:00", status = CaseStatus.REFERRED))
 
-      await(newJob.execute()) shouldBe()
+      await(newJob.execute())
 
       theCasesUpdated.daysElapsed shouldBe 0
     }
@@ -177,7 +177,7 @@ class DaysElapsedJobTest extends UnitSpec with MockitoSugar with BeforeAndAfterE
         aStatusChangeWith(date = "2019-01-03T00:00:00", status = CaseStatus.REFERRED)
       )
 
-      await(newJob.execute()) shouldBe()
+      await(newJob.execute())
 
       theCasesUpdated.daysElapsed shouldBe 1
     }
@@ -193,7 +193,7 @@ class DaysElapsedJobTest extends UnitSpec with MockitoSugar with BeforeAndAfterE
         aStatusChangeWith(date = "2019-01-02T12:00:00", status = CaseStatus.OPEN)
       )
 
-      await(newJob.execute()) shouldBe()
+      await(newJob.execute())
 
       theCasesUpdated.daysElapsed shouldBe 2
     }
@@ -206,7 +206,7 @@ class DaysElapsedJobTest extends UnitSpec with MockitoSugar with BeforeAndAfterE
       givenAPageOfCases(1, 1, 1, aCaseWith(reference = "reference", createdDate = "2019-01-01T00:00:00"))
       givenAPageOfEventsFor("reference", 1, 1, aStatusChangeWith(date = "2019-01-01T00:00:00", status = CaseStatus.SUSPENDED))
 
-      await(newJob.execute()) shouldBe()
+      await(newJob.execute())
 
       theCasesUpdated.daysElapsed shouldBe 0
     }
@@ -223,7 +223,7 @@ class DaysElapsedJobTest extends UnitSpec with MockitoSugar with BeforeAndAfterE
         aStatusChangeWith(date = "2019-01-03T00:00:00", status = CaseStatus.SUSPENDED)
       )
 
-      await(newJob.execute()) shouldBe()
+      await(newJob.execute())
 
       theCasesUpdated.daysElapsed shouldBe 1
     }
@@ -239,7 +239,7 @@ class DaysElapsedJobTest extends UnitSpec with MockitoSugar with BeforeAndAfterE
         aStatusChangeWith(date = "2019-01-02T12:00:00", status = CaseStatus.OPEN)
       )
 
-      await(newJob.execute()) shouldBe()
+      await(newJob.execute())
 
       theCasesUpdated.daysElapsed shouldBe 2
     }
@@ -256,7 +256,7 @@ class DaysElapsedJobTest extends UnitSpec with MockitoSugar with BeforeAndAfterE
       givenThereAreNoEventsFor("reference-1")
       givenThereAreNoEventsFor("reference-2")
 
-      await(newJob.execute()) shouldBe()
+      await(newJob.execute())
 
       verify(caseService, times(2)).update(any[Case], refEq(false))
     }
@@ -271,7 +271,7 @@ class DaysElapsedJobTest extends UnitSpec with MockitoSugar with BeforeAndAfterE
       givenThereAreNoEventsFor("reference-1")
       givenThereAreNoEventsFor("reference-2")
 
-      await(newJob.execute()) shouldBe()
+      await(newJob.execute())
 
       verify(caseService, times(2)).update(any[Case], refEq(false))
     }
@@ -290,12 +290,12 @@ class DaysElapsedJobTest extends UnitSpec with MockitoSugar with BeforeAndAfterE
 
   private def givenAPageOfEventsFor(reference: String, page: Int, totalEvents: Int, events: Event*): Unit = {
     val pagination = Pagination(page = page, pageSize = Integer.MAX_VALUE)
-    given(eventService.search(EventSearch(reference, Some(EventType.CASE_STATUS_CHANGE)), pagination)) willReturn Future.successful(Paged(events, pagination, totalEvents))
+    given(eventService.search(EventSearch(Some(Set(reference)), Some(Set(EventType.CASE_STATUS_CHANGE))), pagination)) willReturn Future.successful(Paged(events, pagination, totalEvents))
   }
 
   private def givenThereAreNoEventsFor(reference: String): Unit = {
     val pagination = Pagination(pageSize = Integer.MAX_VALUE)
-    given(eventService.search(EventSearch(reference, Some(EventType.CASE_STATUS_CHANGE)), pagination)) willReturn Future.successful(Paged.empty[Event])
+    given(eventService.search(EventSearch(Some(Set(reference)), Some(Set(EventType.CASE_STATUS_CHANGE))), pagination)) willReturn Future.successful(Paged.empty[Event])
   }
 
   private def aCaseWith(reference: String, createdDate: String): Case = CaseData.createCase().copy(

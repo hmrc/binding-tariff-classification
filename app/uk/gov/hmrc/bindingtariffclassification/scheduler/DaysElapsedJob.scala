@@ -81,7 +81,7 @@ class DaysElapsedJob @Inject()(appConfig: AppConfig,
 
     for {
       // Get the Status Change events for that case
-      events <- eventService.search(EventSearch(c.reference, Some(EventType.CASE_STATUS_CHANGE)), Pagination(1, Integer.MAX_VALUE))
+      events <- eventService.search(EventSearch(Some(Set(c.reference)), Some(Set(EventType.CASE_STATUS_CHANGE))), Pagination(1, Integer.MAX_VALUE))
 
       // Generate a timeline of the Case Status over time
       statusTimeline: StatusTimeline = StatusTimeline.from(events.results)

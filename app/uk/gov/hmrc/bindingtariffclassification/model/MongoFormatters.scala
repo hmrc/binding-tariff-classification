@@ -90,6 +90,8 @@ object MongoFormatters {
     .and[Note](EventType.NOTE.toString)
     .format
 
+
+  implicit val formatEventType = EnumJson.format(EventType)
   implicit val formatEvent = Json.format[Event]
   implicit val formatSchedulerRunEvent = Json.format[SchedulerRunEvent]
 

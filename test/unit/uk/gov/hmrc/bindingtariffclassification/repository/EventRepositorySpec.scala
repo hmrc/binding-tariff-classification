@@ -123,8 +123,8 @@ class EventRepositorySpec extends BaseMongoIndexSpec
       await(repository.insert(e2))
       collectionSize shouldBe 2
 
-      await(repository.search(EventSearch("REF_1"), Pagination())) shouldBe Paged(Seq(e1), Pagination(), 1)
-      await(repository.search(EventSearch("REF_2"), Pagination())) shouldBe Paged(Seq(e2), Pagination(), 1)
+      await(repository.search(EventSearch(Some(Set("REF_1"))), Pagination())) shouldBe Paged(Seq(e1), Pagination(), 1)
+      await(repository.search(EventSearch(Some(Set("REF_2"))), Pagination())) shouldBe Paged(Seq(e2), Pagination(), 1)
     }
 
     "retrieve all expected events from the collection by type" in {
@@ -135,8 +135,8 @@ class EventRepositorySpec extends BaseMongoIndexSpec
       await(repository.insert(e2))
       collectionSize shouldBe 2
 
-      await(repository.search(EventSearch("REF_1", Some(EventType.NOTE)), Pagination())) shouldBe Paged(Seq(e1), Pagination(), 1)
-      await(repository.search(EventSearch("REF_1", Some(EventType.CASE_STATUS_CHANGE)), Pagination())) shouldBe Paged(Seq(e2), Pagination(), 1)
+      await(repository.search(EventSearch(Some(Set("REF_1")), Some(Set(EventType.NOTE))), Pagination())) shouldBe Paged(Seq(e1), Pagination(), 1)
+      await(repository.search(EventSearch(Some(Set("REF_1")), Some(Set(EventType.CASE_STATUS_CHANGE))), Pagination())) shouldBe Paged(Seq(e2), Pagination(), 1)
     }
 
 
@@ -152,7 +152,7 @@ class EventRepositorySpec extends BaseMongoIndexSpec
 
       collectionSize shouldBe 3
 
-      val result: Paged[Event] = await(repository.search(EventSearch("REF_1"), Pagination()))
+      val result: Paged[Event] = await(repository.search(EventSearch(Some(Set("REF_1"))), Pagination()))
 
       result.results.map(_.id) should contain theSameElementsInOrderAs Seq(e20180811.id, e20170917.id, e20170911.id)
     }
@@ -161,27 +161,27 @@ class EventRepositorySpec extends BaseMongoIndexSpec
       await(repository.insert(createCaseStatusChangeEvent("REF_1")))
       collectionSize shouldBe 1
 
-      await(repository.search(EventSearch("REF_2"), Pagination())) shouldBe Paged.empty
+      await(repository.search(EventSearch(Some(Set("REF_2"))), Pagination())) shouldBe Paged.empty
     }
 
     "return some events with default Pagination" in {
       await(repository.insert(createAssignmentChangeEvent("ref")))
       await(repository.insert(createAppealStatusChangeEvent("ref")))
-      await(repository.search(EventSearch("ref"), Pagination())).size shouldBe 2
+      await(repository.search(EventSearch(), Pagination())).size shouldBe 2
     }
 
     "return up to 'pageSize' cases" in {
       await(repository.insert(createCaseStatusChangeEvent("ref")))
       await(repository.insert(createQueueChangeEvent("ref")))
-      await(repository.search(EventSearch("ref"), Pagination(pageSize = 1))).size shouldBe 1
+      await(repository.search(EventSearch(), Pagination(pageSize = 1))).size shouldBe 1
     }
 
     "return pages of cases" in {
       await(repository.insert(createExtendedUseStatusChangeEvent("ref")))
       await(repository.insert(createReviewStatusChangeEvent("ref")))
-      await(repository.search(EventSearch("ref"), Pagination(pageSize = 1))).size shouldBe 1
-      await(repository.search(EventSearch("ref"), Pagination(page = 2, pageSize = 1))).size shouldBe 1
-      await(repository.search(EventSearch("ref"), Pagination(page = 3, pageSize = 1))).size shouldBe 0
+      await(repository.search(EventSearch(), Pagination(pageSize = 1))).size shouldBe 1
+      await(repository.search(EventSearch(), Pagination(page = 2, pageSize = 1))).size shouldBe 1
+      await(repository.search(EventSearch(), Pagination(page = 3, pageSize = 1))).size shouldBe 0
     }
 
   }
@@ -211,6 +211,7 @@ class EventRepositorySpec extends BaseMongoIndexSpec
       val expectedIndexes = List(
         Index(key = Seq("id" -> Ascending), name = Some("id_Index"), unique = true),
         Index(key = Seq("caseReference" -> Ascending), name = Some("caseReference_Index"), unique = false),
+        Index(key = Seq("type" -> Ascending), name = Some("type_Index"), unique = false),
         Index(key = Seq("_id" -> Ascending), name = Some("_id_"))
       )
 

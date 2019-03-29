@@ -95,10 +95,10 @@ class EventControllerSpec extends UnitSpec with WithFakeApplication with Mockito
 
   }
 
-  "search()" should {
+  "getByCaseReference()" should {
 
     "return 200 with the expected events" in {
-      when(eventService.search(EventSearch(caseReference), Pagination())).thenReturn(successful(Paged(Seq(e1, e2))))
+      when(eventService.search(EventSearch(Some(Set(caseReference))), Pagination())).thenReturn(successful(Paged(Seq(e1, e2))))
 
       val result = await(controller.getByCaseReference(caseReference, Pagination())(fakeRequest))
 
@@ -107,7 +107,7 @@ class EventControllerSpec extends UnitSpec with WithFakeApplication with Mockito
     }
 
     "return 200 with an empty sequence when there are no events for a specific case" in {
-      when(eventService.search(EventSearch(caseReference), Pagination())).thenReturn(successful(Paged.empty[Event]))
+      when(eventService.search(EventSearch(Some(Set(caseReference))), Pagination())).thenReturn(successful(Paged.empty[Event]))
 
       val result = await(controller.getByCaseReference(caseReference, Pagination())(fakeRequest))
 
@@ -118,14 +118,36 @@ class EventControllerSpec extends UnitSpec with WithFakeApplication with Mockito
     "return 500 when an error occurred" in {
       val error = new RuntimeException
 
-      when(eventService.search(EventSearch(caseReference), Pagination())).thenReturn(failed(error))
+      when(eventService.search(EventSearch(Some(Set(caseReference))), Pagination())).thenReturn(failed(error))
 
       val result = await(controller.getByCaseReference(caseReference, Pagination())(fakeRequest))
 
       status(result) shouldEqual INTERNAL_SERVER_ERROR
       jsonBodyOf(result).toString() shouldEqual """{"code":"UNKNOWN_ERROR","message":"An unexpected error occurred"}"""
     }
+  }
 
+  "search()" should {
+
+    "return 200 with the expected events" in {
+      when(eventService.search(EventSearch(), Pagination())).thenReturn(successful(Paged(Seq(e1, e2))))
+
+      val result = await(controller.search(EventSearch(), Pagination())(fakeRequest))
+
+      status(result) shouldEqual OK
+      jsonBodyOf(result) shouldEqual toJson(Paged(Seq(e1, e2)))
+    }
+
+    "return 500 when an error occurred" in {
+      val error = new RuntimeException
+
+      when(eventService.search(EventSearch(), Pagination())).thenReturn(failed(error))
+
+      val result = await(controller.search(EventSearch(), Pagination())(fakeRequest))
+
+      status(result) shouldEqual INTERNAL_SERVER_ERROR
+      jsonBodyOf(result).toString() shouldEqual """{"code":"UNKNOWN_ERROR","message":"An unexpected error occurred"}"""
+    }
   }
 
   "create" should {

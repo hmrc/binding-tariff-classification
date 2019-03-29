@@ -7,6 +7,7 @@ GET           /cases/:reference               @uk.gov.hmrc.bindingtariffclassifi
 PUT           /cases/:reference               @uk.gov.hmrc.bindingtariffclassification.controllers.CaseController.update(reference: String)
 
 # events endpoints
+GET           /events                         @uk.gov.hmrc.bindingtariffclassification.controllers.EventController.search(query: uk.gov.hmrc.bindingtariffclassification.model.EventSearch, pagination: uk.gov.hmrc.bindingtariffclassification.model.Pagination ?= uk.gov.hmrc.bindingtariffclassification.model.Pagination())
 GET           /cases/:reference/events        @uk.gov.hmrc.bindingtariffclassification.controllers.EventController.getByCaseReference(reference: String, pagination: uk.gov.hmrc.bindingtariffclassification.model.Pagination ?= uk.gov.hmrc.bindingtariffclassification.model.Pagination())
 POST          /cases/:reference/events        @uk.gov.hmrc.bindingtariffclassification.controllers.EventController.create(reference: String)
 
