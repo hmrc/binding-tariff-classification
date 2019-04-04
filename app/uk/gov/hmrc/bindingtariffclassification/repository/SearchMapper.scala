@@ -118,16 +118,16 @@ class SearchMapper @Inject()(appConfig: AppConfig){
     val concreteStatuses: Set[String] = CaseStatus.values.map(_.toString)
 
     search.partition(status => concreteStatuses.contains(status.toString)) match {
-      case (standard: Set[PseudoCaseStatus], pseudo: Set[PseudoCaseStatus]) if pseudo.isEmpty =>
-        "status"  -> inArray(standard)
+      case (concrete: Set[PseudoCaseStatus], pseudo: Set[PseudoCaseStatus]) if pseudo.isEmpty =>
+        "status"  -> inArray(concrete)
 
-      case (standard: Set[PseudoCaseStatus], pseudo: Set[PseudoCaseStatus]) if standard.isEmpty =>
+      case (concrete: Set[PseudoCaseStatus], pseudo: Set[PseudoCaseStatus]) if concrete.isEmpty =>
         val pseudoFilters: Set[JsObject] = pseudo.map(pseudoStatus).filter(_.isDefined).map(_.get)
         either(pseudoFilters)
 
-      case (standard: Set[PseudoCaseStatus], pseudo: Set[PseudoCaseStatus]) =>
+      case (concrete: Set[PseudoCaseStatus], pseudo: Set[PseudoCaseStatus]) =>
         val pseudoFilters: Set[JsObject] = pseudo.map(pseudoStatus).filter(_.isDefined).map(_.get)
-        either(pseudoFilters + JsObject(Seq("status" -> inArray(standard))))
+        either(pseudoFilters + JsObject(Seq("status" -> inArray(concrete))))
     }
   }
 
