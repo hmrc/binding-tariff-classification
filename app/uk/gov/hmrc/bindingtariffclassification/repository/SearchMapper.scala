@@ -115,9 +115,9 @@ class SearchMapper @Inject()(appConfig: AppConfig){
   }
 
   private def filteringByStatus(search: Set[PseudoCaseStatus.PseudoCaseStatus]): (String, JsValue) = {
-    val allNonPseudoStatuses: Set[String] = CaseStatus.values.map(_.toString)
+    val concreteStatuses: Set[String] = CaseStatus.values.map(_.toString)
 
-    search.partition(status => allNonPseudoStatuses.contains(status.toString)) match {
+    search.partition(status => concreteStatuses.contains(status.toString)) match {
       case (standard: Set[PseudoCaseStatus], pseudo: Set[PseudoCaseStatus]) if pseudo.isEmpty =>
         "status"  -> inArray(standard)
 
