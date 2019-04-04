@@ -44,7 +44,7 @@ class DaysElapsedJob @Inject()(appConfig: AppConfig,
   private implicit val carrier: HeaderCarrier = HeaderCarrier()
   private lazy val jobConfig = appConfig.daysElapsed
   private lazy val criteria = CaseSearch(
-    filter = CaseFilter(statuses = Some(Set(CaseStatus.OPEN, CaseStatus.NEW))),
+    filter = CaseFilter(statuses = Some(Set(PseudoCaseStatus.OPEN, PseudoCaseStatus.NEW))),
     sort = Some(CaseSort(CaseSortField.REFERENCE))
   )
 

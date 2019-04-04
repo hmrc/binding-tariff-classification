@@ -46,7 +46,7 @@ class DaysElapsedJobTest extends UnitSpec with MockitoSugar with BeforeAndAfterE
   private val bankHolidaysConnector = mock[BankHolidaysConnector]
   private val appConfig = mock[AppConfig]
   private val caseSearch = CaseSearch(
-    filter = CaseFilter(statuses = Some(Set(CaseStatus.OPEN, CaseStatus.NEW))),
+    filter = CaseFilter(statuses = Some(Set(PseudoCaseStatus.OPEN, PseudoCaseStatus.NEW))),
     sort = Some(CaseSort(CaseSortField.REFERENCE))
   )
 

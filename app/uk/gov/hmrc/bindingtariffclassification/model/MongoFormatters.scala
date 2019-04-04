@@ -48,6 +48,7 @@ object MongoFormatters {
   // `Case` formatters
   implicit val formatOperator = Json.format[Operator]
   implicit val formatCaseStatus = EnumJson.format(CaseStatus)
+  implicit val formatPseudoCaseStatus = EnumJson.format(PseudoCaseStatus)
   implicit val formatAppealStatus = EnumJson.format(AppealStatus)
   implicit val formatReviewStatus = EnumJson.format(ReviewStatus)
   implicit val formatCancelReason = EnumJson.format(CancelReason)

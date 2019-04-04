@@ -16,8 +16,8 @@
 
 package uk.gov.hmrc.bindingtariffclassification.component
 
-import java.time.Instant
 import java.time.temporal.ChronoUnit
+import java.time.{Clock, Instant}
 
 import play.api.http.ContentTypes.JSON
 import play.api.http.HeaderNames.CONTENT_TYPE
@@ -35,6 +35,7 @@ class CaseSpec extends BaseFeatureSpec {
   override lazy val port = 14681
   protected val serviceUrl = s"http://localhost:$port"
 
+  private val clock = Clock.systemUTC()
   private val q1 = "queue1"
   private val u1 = Operator("user1")
   private val c0 = createNewCase(app = createBasicBTIApplication)
@@ -48,7 +49,8 @@ class CaseSpec extends BaseFeatureSpec {
   private val c3 = createNewCaseWithExtraFields()
   private val c4 = createNewCase(app = createBTIApplicationWithAllFields)
   private val c5 = createCase(r = "case_ref_5", app = createBasicBTIApplication.copy(holder = eORIDetailForNintedo))
-  private val c6 = createCase(decision = Some(createDecision(effectiveEndDate = Some(Instant.now().plusSeconds(60)))))
+  private val c6_live = createCase(status = CaseStatus.COMPLETED, decision = Some(createDecision(effectiveEndDate = Some(Instant.now(clock).plusSeconds(3600 * 24)))))
+  private val c6_expired = createCase(status = CaseStatus.COMPLETED, decision = Some(createDecision(effectiveEndDate = Some(Instant.now(clock).minusSeconds(3600 * 24)))))
   private val c7 = createCase(decision = Some(createDecision(goodsDescription = "LAPTOP")))
   private val c8 = createCase(decision = Some(createDecision(methodCommercialDenomination = Some("laptop from Mexico"))))
   private val c9 = createCase(decision = Some(createDecision(justification = "this LLLLaptoppp")))
@@ -480,6 +482,18 @@ class CaseSpec extends BaseFeatureSpec {
       Json.parse(result.body) shouldBe Json.toJson(Paged(Seq(c2,c5)))
     }
 
+    scenario("Filtering cases by single pseudo status") {
+
+      storeCases(c1_updated, c2, c6_live)
+
+      val result = Http(s"$serviceUrl/cases?status=LIVE")
+        .header(apiTokenKey, appConfig.authorization)
+        .asString
+
+      result.code shouldEqual OK
+      Json.parse(result.body) shouldBe Json.toJson(Paged(Seq(c6_live)))
+    }
+
     scenario("Filtering cases by multiple statuses") {
 
       storeCases(c1_updated, c2, c5)
@@ -490,6 +504,18 @@ class CaseSpec extends BaseFeatureSpec {
 
       result.code shouldEqual OK
       Json.parse(result.body) shouldBe Json.toJson(Paged(Seq(c1_updated,c2,c5)))
+    }
+
+    scenario("Filtering cases by multiple pseudo statuses") {
+
+      storeCases(c1_updated, c6_expired, c6_live)
+
+      val result = Http(s"$serviceUrl/cases?status=LIVE&status=EXPIRED")
+        .header(apiTokenKey, appConfig.authorization)
+        .asString
+
+      result.code shouldEqual OK
+      Json.parse(result.body) shouldBe Json.toJson(Paged(Seq(c6_expired, c6_live)))
     }
 
     scenario("Filtering cases by multiple statuses - comma separated") {
@@ -540,7 +566,6 @@ class CaseSpec extends BaseFeatureSpec {
         .header(apiTokenKey, appConfig.authorization)
         .asString
 
-
       result.code shouldEqual OK
       Json.parse(result.body).as[Paged[Case]].results.map(_.reference) should contain only (c2.reference,c5.reference)
     }
@@ -552,8 +577,6 @@ class CaseSpec extends BaseFeatureSpec {
       val result = Http(s"$serviceUrl/cases?reference=${c2.reference},${c5.reference}")
         .header(apiTokenKey, appConfig.authorization)
         .asString
-
-      val caseSeq = Json.parse(result.body).as[Paged[Case]].results
 
       result.code shouldEqual OK
       Json.parse(result.body).as[Paged[Case]].results.map(_.reference) should contain only (c2.reference,c5.reference)
@@ -672,19 +695,19 @@ class CaseSpec extends BaseFeatureSpec {
 
     scenario("Filtering cases by Min Decision End Date") {
 
-      storeCases(c1, c6)
+      storeCases(c1, c6_live)
 
       val result = Http(s"$serviceUrl/cases?min_decision_end=1970-01-01T00:00:00Z")
         .header(apiTokenKey, appConfig.authorization)
         .asString
 
       result.code shouldEqual OK
-      Json.parse(result.body) shouldBe Json.toJson(Paged(Seq(c6)))
+      Json.parse(result.body) shouldBe Json.toJson(Paged(Seq(c6_live)))
     }
 
     scenario("Filtering cases by Min Decision End Date - filters decisions in the past") {
 
-      storeCases(c1, c6)
+      storeCases(c1, c6_live)
 
       val result = Http(s"$serviceUrl/cases?min_decision_end=3000-01-01T00:00:00Z")
         .header(apiTokenKey, appConfig.authorization)
@@ -713,31 +736,31 @@ class CaseSpec extends BaseFeatureSpec {
 
     scenario("filtering by existing commodity code") {
 
-      storeCases(c1, c2, c5, c6)
+      storeCases(c1, c2, c5, c6_live)
 
       val result = Http(s"$serviceUrl/cases?commodity_code=12345678")
         .header(apiTokenKey, appConfig.authorization)
         .asString
 
       result.code shouldEqual OK
-      Json.parse(result.body) shouldBe Json.toJson(Paged(Seq(c2,c6)))
+      Json.parse(result.body) shouldBe Json.toJson(Paged(Seq(c2,c6_live)))
     }
 
     scenario("Starts-with match") {
 
-      storeCases(c1, c2, c5, c6)
+      storeCases(c1, c2, c5, c6_live)
 
       val result = Http(s"$serviceUrl/cases?commodity_code=123")
         .header(apiTokenKey, appConfig.authorization)
         .asString
 
       result.code shouldEqual OK
-      Json.parse(result.body) shouldBe Json.toJson(Paged(Seq(c2,c6)))
+      Json.parse(result.body) shouldBe Json.toJson(Paged(Seq(c2,c6_live)))
     }
 
     scenario("Contains-match does not return any result") {
 
-      storeCases(c2, c6)
+      storeCases(c2, c6_live)
 
       val result = Http(s"$serviceUrl/cases?commodity_code=456")
         .header(apiTokenKey, appConfig.authorization)

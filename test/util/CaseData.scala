@@ -18,6 +18,7 @@ package util
 
 import java.time.Instant
 
+import uk.gov.hmrc.bindingtariffclassification.model.CaseStatus.CaseStatus
 import uk.gov.hmrc.bindingtariffclassification.model._
 import uk.gov.hmrc.bindingtariffclassification.utils.RandomGenerator
 
@@ -133,6 +134,7 @@ object CaseData {
 
   def createCase(app: Application = createBasicBTIApplication,
                  r: String = RandomGenerator.randomUUID(),
+                 status: CaseStatus = CaseStatus.NEW,
                  decision: Option[Decision] = None,
                  queue: Option[String] = None,
                  assignee: Option[Operator] = None,
@@ -140,7 +142,7 @@ object CaseData {
                  keywords: Set[String] = Set.empty): Case = {
     Case(
       reference = r,
-      status = CaseStatus.NEW,
+      status = status,
       queueId = queue,
       assignee = assignee,
       application = app,

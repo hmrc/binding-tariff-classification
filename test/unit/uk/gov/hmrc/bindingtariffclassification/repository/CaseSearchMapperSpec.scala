@@ -16,20 +16,25 @@
 
 package uk.gov.hmrc.bindingtariffclassification.repository
 
-import java.time.Instant
+import java.time.{Clock, Instant, ZoneOffset}
 
+import org.mockito.BDDMockito._
+import org.scalatest.mockito.MockitoSugar
 import play.api.libs.json.{JsNull, JsString, Json}
-import uk.gov.hmrc.bindingtariffclassification.model.{ApplicationType, CaseFilter, CaseSort, CaseStatus}
+import uk.gov.hmrc.bindingtariffclassification.config.AppConfig
+import uk.gov.hmrc.bindingtariffclassification.model._
 import uk.gov.hmrc.bindingtariffclassification.sort.{CaseSortField, SortDirection}
 import uk.gov.hmrc.play.test.UnitSpec
 
-class CaseSearchMapperSpec extends UnitSpec {
+class CaseSearchMapperSpec extends UnitSpec with MockitoSugar {
 
-  private val jsonMapper = new SearchMapper
+  private val config = mock[AppConfig]
 
-  "filterBy " should {
+  private val jsonMapper = new SearchMapper(config)
 
-    "convert to Json when all possible parameters are taken into account " in {
+  "Search Mapper" should {
+
+    "filter by all fields " in {
 
       val filter = CaseFilter(
         reference = Some(Set("id1", "id2")),
@@ -37,7 +42,7 @@ class CaseSearchMapperSpec extends UnitSpec {
         queueId = Some("valid_queue"),
         eori = Some("eori-number"),
         assigneeId = Some("valid_assignee"),
-        statuses = Some(Set(CaseStatus.NEW, CaseStatus.OPEN)),
+        statuses = Some(Set(PseudoCaseStatus.NEW, PseudoCaseStatus.OPEN)),
         traderName = Some("trader_name"),
         minDecisionEnd = Some(Instant.EPOCH),
         commodityCode = Some(12345.toString),
@@ -70,25 +75,25 @@ class CaseSearchMapperSpec extends UnitSpec {
       )
     }
 
-    "convert to Json when just the `reference` param is taken into account " in {
+    "filter by 'reference'" in {
       jsonMapper.filterBy(CaseFilter(reference = Some(Set("id1", "id2")))) shouldBe Json.obj(
         "reference" -> Json.obj("$in" -> Json.arr("id1", "id2"))
       )
     }
 
-    "convert to Json when just the `applicationType` param is taken into account " in {
+    "filter by 'application type'" in {
       jsonMapper.filterBy(CaseFilter(applicationType = Some(ApplicationType.BTI))) shouldBe Json.obj(
         "application.type" -> "BTI"
       )
     }
 
-    "convert to Json when just the `queueId` param is taken into account " in {
+    "filter by 'queue id'" in {
       jsonMapper.filterBy(CaseFilter(queueId = Some("valid_queue"))) shouldBe Json.obj(
         "queueId" -> "valid_queue"
       )
     }
 
-    "convert to Json when just the `eori` param is taken into account " in {
+    "filter by 'eori'" in {
       jsonMapper.filterBy(CaseFilter(eori = Some("eori-number"))) shouldBe Json.obj(
         "$or" -> Json.arr(
           Json.obj("application.holder.eori" -> JsString("eori-number")),
@@ -97,21 +102,64 @@ class CaseSearchMapperSpec extends UnitSpec {
       )
     }
 
-    "convert to Json when just the `assigneeId` param is taken into account " in {
+    "filter by 'assignee id'" in {
       jsonMapper.filterBy(CaseFilter(assigneeId = Some("valid_assignee"))) shouldBe Json.obj(
         "assignee.id" -> "valid_assignee"
       )
     }
 
-    "convert to Json when just the `status` param is taken into account " in {
-      jsonMapper.filterBy(CaseFilter(statuses = Some(Set(CaseStatus.NEW, CaseStatus.OPEN)))) shouldBe Json.obj(
+    "filter by 'status' - with concrete statuses only" in {
+      jsonMapper.filterBy(CaseFilter(statuses = Some(Set(PseudoCaseStatus.NEW, PseudoCaseStatus.OPEN)))) shouldBe Json.obj(
         "status" -> Json.obj(
           "$in" -> Json.arr("NEW", "OPEN")
         )
       )
     }
 
-    "convert to Json when just the `keywords` param is taken into account " in {
+    "filter by 'status' - with pseudo statuses only" in {
+      given(config.clock) willReturn Clock.fixed(Instant.EPOCH, ZoneOffset.UTC)
+
+      jsonMapper.filterBy(CaseFilter(statuses = Some(Set(PseudoCaseStatus.LIVE, PseudoCaseStatus.EXPIRED)))) shouldBe Json.obj(
+        "$or" -> Json.arr(
+          Json.obj(
+            "status" -> "COMPLETED",
+            "decision.effectiveEndDate" -> Json.obj("$gte" -> Json.obj("$date" -> 0))
+          ),
+          Json.obj(
+            "status" -> "COMPLETED",
+            "decision.effectiveEndDate" -> Json.obj("$lte" -> Json.obj("$date" -> 0))
+          )
+        )
+      )
+    }
+
+    "filter by 'status' - with status type mix" in {
+      given(config.clock) willReturn Clock.fixed(Instant.EPOCH, ZoneOffset.UTC)
+
+      val filter = jsonMapper.filterBy(CaseFilter(
+        statuses = Some(Set(PseudoCaseStatus.NEW, PseudoCaseStatus.OPEN, PseudoCaseStatus.LIVE, PseudoCaseStatus.EXPIRED)))
+      )
+
+      filter shouldBe Json.obj(
+        "$or" -> Json.arr(
+          Json.obj(
+            "status" -> "COMPLETED",
+            "decision.effectiveEndDate" -> Json.obj("$gte" -> Json.obj("$date" -> 0))
+          ),
+          Json.obj(
+            "status" -> "COMPLETED",
+            "decision.effectiveEndDate" -> Json.obj("$lte" -> Json.obj("$date" -> 0))
+          ),
+          Json.obj(
+            "status" -> Json.obj(
+              "$in" -> Json.arr("NEW", "OPEN")
+            )
+          )
+        )
+      )
+    }
+
+    "filter by 'keywords'" in {
       jsonMapper.filterBy(CaseFilter(keywords = Some(Set("BIKE", "MTB")))) shouldBe Json.obj(
         "keywords" -> Json.obj(
           "$all" -> Json.arr("BIKE", "MTB")
@@ -119,7 +167,7 @@ class CaseSearchMapperSpec extends UnitSpec {
       )
     }
 
-    "convert to Json when just the `traderName` param is taken into account " in {
+    "filter by 'trader name'" in {
       jsonMapper.filterBy(CaseFilter(traderName = Some("traderName"))) shouldBe Json.obj(
         "application.holder.businessName" -> Json.obj(
           "$regex" -> ".*traderName.*",
@@ -128,19 +176,19 @@ class CaseSearchMapperSpec extends UnitSpec {
       )
     }
 
-    "convert to Json when just the `minDecisionEnd` param is taken into account " in {
+    "filter by 'min decision end'" in {
       jsonMapper.filterBy(CaseFilter(minDecisionEnd = Some(Instant.EPOCH))) shouldBe Json.obj(
         "decision.effectiveEndDate" -> Json.obj("$gte" -> Json.obj("$date" -> 0))
       )
     }
 
-    "convert to Json when just the `commodityCode` param is taken into account " in {
+    "filter by 'commodity code'" in {
       jsonMapper.filterBy(CaseFilter(commodityCode = Some("1234"))) shouldBe Json.obj(
         "decision.bindingCommodityCode" -> Json.obj("$regex" -> "^1234\\d*")
       )
     }
 
-    "convert to Json when just the `decisionDetails` param is taken into account " in {
+    "filter by 'decision details'" in {
       jsonMapper.filterBy(CaseFilter(decisionDetails = Some("strawberry"))) shouldBe Json.obj(
         "$or" ->
           Json.arr(
@@ -151,7 +199,7 @@ class CaseSearchMapperSpec extends UnitSpec {
       )
     }
 
-    "convert to Json when fields `queueId` and `assigneeId` are set to `none` " in {
+    "filter fields with 'none' representing a missing field" in {
       val filter = CaseFilter(queueId = Some("none"), assigneeId = Some("none"))
 
       jsonMapper.filterBy(filter) shouldBe Json.obj(
@@ -160,7 +208,7 @@ class CaseSearchMapperSpec extends UnitSpec {
       )
     }
 
-    "convert to Json when fields `queueId` and `assigneeId` are set to `some` " in {
+    "filter fields with 'some' representing a populated field " in {
 
       val filter = CaseFilter(queueId = Some("some"), assigneeId = Some("some"))
 
@@ -170,7 +218,7 @@ class CaseSearchMapperSpec extends UnitSpec {
       )
     }
 
-    "convert to Json when there are no filters" in {
+    "filter nothing" in {
       jsonMapper.filterBy(CaseFilter()) shouldBe Json.obj()
     }
 

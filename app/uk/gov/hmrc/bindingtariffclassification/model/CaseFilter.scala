@@ -20,7 +20,7 @@ import java.time.Instant
 
 import play.api.mvc.QueryStringBindable
 import uk.gov.hmrc.bindingtariffclassification.model.ApplicationType.ApplicationType
-import uk.gov.hmrc.bindingtariffclassification.model.CaseStatus.CaseStatus
+import uk.gov.hmrc.bindingtariffclassification.model.PseudoCaseStatus.PseudoCaseStatus
 
 import scala.util.Try
 
@@ -31,7 +31,7 @@ case class CaseFilter
   queueId: Option[String] = None,
   eori: Option[String] = None,
   assigneeId: Option[String] = None,
-  statuses: Option[Set[CaseStatus]] = None,
+  statuses: Option[Set[PseudoCaseStatus]] = None,
   traderName: Option[String] = None,
   minDecisionEnd: Option[Instant] = None,
   commodityCode: Option[String] = None,
@@ -47,6 +47,7 @@ object CaseFilter {
   private val eoriKey = "eori"
   private val assigneeIdKey = "assignee_id"
   private val statusKey = "status"
+  private val pseudoStatusKey = "pseudo_status"
   private val traderNameKey = "trader_name"
   private val minDecisionEndKey = "min_decision_end"
   private val commodityCodeKey = "commodity_code"
@@ -55,8 +56,8 @@ object CaseFilter {
 
   implicit def bindable(implicit stringBinder: QueryStringBindable[String]): QueryStringBindable[CaseFilter] = new QueryStringBindable[CaseFilter] {
 
-    private def bindCaseStatus(key: String): Option[CaseStatus] = {
-      CaseStatus.values.find(_.toString.equalsIgnoreCase(key))
+    private def bindPseudoCaseStatus(key: String): Option[PseudoCaseStatus] = {
+      PseudoCaseStatus.values.find(_.toString.equalsIgnoreCase(key))
     }
 
     private def bindApplicationType(key: String): Option[ApplicationType] = {
@@ -83,7 +84,7 @@ object CaseFilter {
             queueId = param(queueIdKey),
             eori = param(eoriKey),
             assigneeId = param(assigneeIdKey),
-            statuses = params(statusKey).map(_.map(bindCaseStatus).filter(_.isDefined).map(_.get)),
+            statuses = params(statusKey).map(_.map(bindPseudoCaseStatus).filter(_.isDefined).map(_.get)),
             traderName = param(traderNameKey),
             minDecisionEnd = param(minDecisionEndKey).flatMap(bindInstant),
             commodityCode = param(commodityCodeKey),

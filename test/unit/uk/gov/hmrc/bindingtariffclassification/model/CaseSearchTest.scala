@@ -19,7 +19,6 @@ package uk.gov.hmrc.bindingtariffclassification.model
 import java.net.URLDecoder
 import java.time.Instant
 
-import uk.gov.hmrc.bindingtariffclassification.model.CaseStatus._
 import uk.gov.hmrc.bindingtariffclassification.sort.{CaseSortField, SortDirection}
 import uk.gov.hmrc.play.test.UnitSpec
 
@@ -37,7 +36,7 @@ class CaseSearchTest extends UnitSpec {
     queueId = Some("queue-id"),
     eori = Some("eori-number"),
     assigneeId = Some("assignee-id"),
-    statuses = Some(Set(NEW, OPEN)),
+    statuses = Some(Set(PseudoCaseStatus.NEW, PseudoCaseStatus.OPEN)),
     minDecisionEnd = Some(Instant.EPOCH),
     keywords = Some(Set("BIKE", "MTB")),
     decisionDetails = Some("decision-details")
