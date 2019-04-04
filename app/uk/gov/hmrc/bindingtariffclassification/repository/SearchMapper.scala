@@ -114,7 +114,7 @@ class SearchMapper @Inject()(appConfig: AppConfig){
     "$options" -> "i"
   }
 
-  private def filteringByStatus(search: Set[PseudoCaseStatus.PseudoCaseStatus]): (String, JsValue) = {
+  private def filteringByStatus(search: Set[PseudoCaseStatus]): (String, JsValue) = {
     val concreteStatuses: Set[String] = CaseStatus.values.map(_.toString)
 
     search.partition(status => concreteStatuses.contains(status.toString)) match {
