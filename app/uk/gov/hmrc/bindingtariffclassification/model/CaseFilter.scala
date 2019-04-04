@@ -47,7 +47,6 @@ object CaseFilter {
   private val eoriKey = "eori"
   private val assigneeIdKey = "assignee_id"
   private val statusKey = "status"
-  private val pseudoStatusKey = "pseudo_status"
   private val traderNameKey = "trader_name"
   private val minDecisionEndKey = "min_decision_end"
   private val commodityCodeKey = "commodity_code"
