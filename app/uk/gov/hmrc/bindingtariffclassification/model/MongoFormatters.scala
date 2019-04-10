@@ -20,6 +20,7 @@ import java.time.Instant
 
 import play.api.libs.json._
 import play.json.extra.Jsonx
+import uk.gov.hmrc.bindingtariffclassification.model.reporting.ReportResult
 import uk.gov.hmrc.bindingtariffclassification.utils.JsonUtil
 import uk.gov.hmrc.play.json.Union
 
@@ -46,6 +47,7 @@ object MongoFormatters {
   implicit val formatSequence = Json.format[Sequence]
 
   // `Case` formatters
+  implicit val formatReportResult = Json.format[ReportResult]
   implicit val formatOperator = Json.format[Operator]
   implicit val formatCaseStatus = EnumJson.format(CaseStatus)
   implicit val formatPseudoCaseStatus = EnumJson.format(PseudoCaseStatus)

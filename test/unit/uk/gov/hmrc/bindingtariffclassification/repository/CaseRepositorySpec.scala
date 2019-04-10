@@ -31,10 +31,12 @@ import reactivemongo.core.errors.DatabaseException
 import reactivemongo.play.json.ImplicitBSONHandlers._
 import uk.gov.hmrc.bindingtariffclassification.config.AppConfig
 import uk.gov.hmrc.bindingtariffclassification.model.MongoFormatters.formatCase
+import uk.gov.hmrc.bindingtariffclassification.model.reporting._
 import uk.gov.hmrc.bindingtariffclassification.model.{CaseStatus, PseudoCaseStatus, _}
 import uk.gov.hmrc.bindingtariffclassification.sort.{CaseSortField, SortDirection}
 import uk.gov.hmrc.mongo.MongoSpecSupport
 import util.CaseData._
+import util.Cases._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -680,6 +682,48 @@ class CaseRepositorySpec extends BaseMongoIndexSpec
       collectionSize shouldBe 1
 
       await(repository.incrementDaysElapsed()) shouldBe 0
+    }
+  }
+
+  "generate report" should {
+
+    "group by queue id" in {
+      val c1 = aCase(withQueue("queue-1"), withDaysElapsed(1))
+      val c2 = aCase(withQueue("queue-1"), withDaysElapsed(2))
+      val c3 = aCase(withQueue("queue-2"), withDaysElapsed(3))
+
+      await(repository.insert(c1))
+      await(repository.insert(c2))
+      await(repository.insert(c3))
+      collectionSize shouldBe 3
+
+      val report = CaseReport(
+        group = CaseReportGroup.QUEUE,
+        field = CaseReportField.DAYS_ELAPSED
+      )
+
+      val results = await(repository.generateReport(report))
+      results should contain(ReportResult("queue-1", Seq(1, 2)))
+      results should contain(ReportResult("queue-2", Seq(3)))
+    }
+
+    "filter on Decision Start Date" in {
+      val date = LocalDate.of(2019,1,1).atStartOfDay(ZoneOffset.UTC).toInstant
+      val c1 = aCase(withQueue("queue-1"), withDaysElapsed(1), withDecision(effectiveStartDate = Some(date)))
+      val c2 = aCase(withQueue("queue-1"), withDaysElapsed(2), withDecision(effectiveStartDate = Some(date.plusSeconds(1))))
+
+      await(repository.insert(c1))
+      await(repository.insert(c2))
+      collectionSize shouldBe 2
+
+      val report = CaseReport(
+        filter = Some(CaseReportFilter(minDecisionStartDate = date, maxDecisionStartDate = date)),
+        group = CaseReportGroup.QUEUE,
+        field = CaseReportField.DAYS_ELAPSED
+      )
+
+      val results = await(repository.generateReport(report))
+      results should contain(ReportResult("queue-1", Seq(1)))
     }
   }
 

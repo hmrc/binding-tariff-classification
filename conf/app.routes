@@ -11,6 +11,9 @@ GET           /events                         @uk.gov.hmrc.bindingtariffclassifi
 GET           /cases/:reference/events        @uk.gov.hmrc.bindingtariffclassification.controllers.EventController.getByCaseReference(reference: String, pagination: uk.gov.hmrc.bindingtariffclassification.model.Pagination ?= uk.gov.hmrc.bindingtariffclassification.model.Pagination())
 POST          /cases/:reference/events        @uk.gov.hmrc.bindingtariffclassification.controllers.EventController.create(reference: String)
 
+# reporting endpoints
+#GET           /report                         @uk.gov.hmrc.bindingtariffclassification.controllers.ReportingController.report(start: Option[Instant], end: Option[Instant])
+
 # admin/test endpoints
 DELETE        /cases                          @uk.gov.hmrc.bindingtariffclassification.controllers.CaseController.deleteAll()
 DELETE        /events                         @uk.gov.hmrc.bindingtariffclassification.controllers.EventController.deleteAll()
