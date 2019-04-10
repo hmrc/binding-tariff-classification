@@ -106,7 +106,7 @@ class CaseSpec extends BaseFeatureSpec {
       val responseCase = Json.parse(result.body).as[Case]
       responseCase.reference shouldBe "504400001"
       responseCase.status shouldBe CaseStatus.NEW
-      responseCase.application.asInstanceOf[BTIApplication].importOrExport shouldBe None
+      responseCase.application.asBTI.importOrExport shouldBe None
     }
 
     scenario("Extra fields are ignored when creating a case") {
@@ -144,7 +144,7 @@ class CaseSpec extends BaseFeatureSpec {
       val responseCase = Json.parse(result.body).as[Case]
       responseCase.reference shouldBe "504400001"
       responseCase.status shouldBe CaseStatus.NEW
-      responseCase.application.asInstanceOf[BTIApplication].importOrExport shouldBe Some(EXPORT)
+      responseCase.application.asBTI.importOrExport shouldBe Some(EXPORT)
     }
 
   }

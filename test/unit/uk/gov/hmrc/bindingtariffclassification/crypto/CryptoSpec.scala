@@ -67,7 +67,7 @@ class CryptoSpec extends UnitSpec with MockitoSugar {
     "encrypt BTI applications" in {
       val c = createCase(app = bti)
       val enc = crypto.encrypt(c)
-      enc shouldBe c.copy(application = expectedEncryptedBti(k, c.application.asInstanceOf[BTIApplication].agent.get.letterOfAuthorisation))
+      enc shouldBe c.copy(application = expectedEncryptedBti(k, c.application.asBTI.agent.get.letterOfAuthorisation))
     }
 
     "encrypt Liability orders" in {
@@ -86,7 +86,7 @@ class CryptoSpec extends UnitSpec with MockitoSugar {
     "decrypt BTI applications" in {
       val c = createCase(app = bti)
       val dec = crypto.decrypt(c)
-      dec shouldBe c.copy(application = expectedEncryptedBti(k, c.application.asInstanceOf[BTIApplication].agent.get.letterOfAuthorisation))
+      dec shouldBe c.copy(application = expectedEncryptedBti(k, c.application.asBTI.agent.get.letterOfAuthorisation))
     }
 
     "decrypt Liability orders" in {

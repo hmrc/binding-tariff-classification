@@ -18,6 +18,7 @@ package uk.gov.hmrc.bindingtariffclassification.model
 
 import java.time.Instant
 
+import uk.gov.hmrc.bindingtariffclassification.model
 import uk.gov.hmrc.bindingtariffclassification.model.ApplicationType.ApplicationType
 import uk.gov.hmrc.bindingtariffclassification.model.ImportExport.ImportExport
 import uk.gov.hmrc.bindingtariffclassification.model.LiabilityStatus.LiabilityStatus
@@ -27,6 +28,8 @@ sealed trait Application {
   val holder: EORIDetails
   val contact: Contact
 
+  def asBTI: BTIApplication = asInstanceOf[BTIApplication]
+  def asLiabilityOrder: LiabilityOrder = asInstanceOf[LiabilityOrder]
 }
 
 case class BTIApplication
@@ -47,7 +50,7 @@ case class BTIApplication
   sampleToBeProvided: Boolean = false,
   sampleToBeReturned: Boolean = false
 ) extends Application {
-  override val `type` = ApplicationType.BTI
+  override val `type`: model.ApplicationType.Value = ApplicationType.BTI
 }
 
 case class LiabilityOrder
@@ -60,7 +63,7 @@ case class LiabilityOrder
   entryNumber: String,
   endDate: Instant
 ) extends Application {
-  override val `type` = ApplicationType.LIABILITY_ORDER
+  override val `type`: model.ApplicationType.Value = ApplicationType.LIABILITY_ORDER
 }
 
 case class EORIDetails
