@@ -703,6 +703,7 @@ class CaseRepositorySpec extends BaseMongoIndexSpec
       )
 
       val results = await(repository.generateReport(report))
+      results should have length 2
       results should contain(ReportResult("queue-1", Seq(1, 2)))
       results should contain(ReportResult("queue-2", Seq(3)))
     }
@@ -722,8 +723,7 @@ class CaseRepositorySpec extends BaseMongoIndexSpec
         field = CaseReportField.DAYS_ELAPSED
       )
 
-      val results = await(repository.generateReport(report))
-      results should contain(ReportResult("queue-1", Seq(1)))
+      await(repository.generateReport(report)) shouldBe Seq(ReportResult("queue-1", Seq(1)))
     }
   }
 
