@@ -58,6 +58,9 @@ object MongoFormatters {
   implicit val formatEORIDetails = Json.format[EORIDetails]
   implicit val formatAgentDetails = Json.format[AgentDetails]
   implicit val formatContact = Json.format[Contact]
+
+  implicit val formatImportExport = EnumJson.format(ImportExport)
+
   implicit val formatLiabilityOrder = Json.format[LiabilityOrder]
   implicit val formatBTIApplication = Json.format[BTIApplication]
   implicit val formatApplication = Union.from[Application]("type")

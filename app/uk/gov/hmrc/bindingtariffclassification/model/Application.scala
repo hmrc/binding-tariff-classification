@@ -19,6 +19,7 @@ package uk.gov.hmrc.bindingtariffclassification.model
 import java.time.Instant
 
 import uk.gov.hmrc.bindingtariffclassification.model.ApplicationType.ApplicationType
+import uk.gov.hmrc.bindingtariffclassification.model.ImportExport.ImportExport
 import uk.gov.hmrc.bindingtariffclassification.model.LiabilityStatus.LiabilityStatus
 
 sealed trait Application {
@@ -37,6 +38,7 @@ case class BTIApplication
   goodName: String,
   goodDescription: String,
   confidentialInformation: Option[String] = None,
+  importOrExport: Option[ImportExport] = None,
   otherInformation: Option[String] = None,
   reissuedBTIReference: Option[String] = None,
   relatedBTIReference: Option[String] = None,
@@ -93,4 +95,9 @@ object LiabilityStatus extends Enumeration {
 object ApplicationType extends Enumeration {
   type ApplicationType = Value
   val BTI, LIABILITY_ORDER = Value
+}
+
+object ImportExport extends Enumeration {
+  type ImportExport = Value
+  val IMPORT, EXPORT = Value
 }
