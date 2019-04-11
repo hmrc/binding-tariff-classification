@@ -22,6 +22,7 @@ import org.mockito.Mockito.verify
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.mockito.MockitoSugar
 import uk.gov.hmrc.bindingtariffclassification.crypto.Crypto
+import uk.gov.hmrc.bindingtariffclassification.model.reporting.{CaseReport, ReportResult}
 import uk.gov.hmrc.bindingtariffclassification.model.{Case, CaseSearch, Paged, Pagination}
 import uk.gov.hmrc.play.test.UnitSpec
 
@@ -34,6 +35,8 @@ class EncryptedCaseMongoRepositoryTest extends UnitSpec with MockitoSugar with B
   private val encryptedCase = mock[Case]
   private val encryptedCaseSaved = mock[Case]
   private val search = CaseSearch()
+  private val rawReport = mock[CaseReport]
+  private val rawReportResult = mock[ReportResult]
   private val pagination = mock[Pagination]
   private val crypto = mock[Crypto]
   private val underlyingRepo = mock[CaseMongoRepository]
@@ -90,6 +93,13 @@ class EncryptedCaseMongoRepositoryTest extends UnitSpec with MockitoSugar with B
       given(underlyingRepo.deleteAll()) willReturn successful((): Unit)
       await(repo.deleteAll())
       verify(underlyingRepo).deleteAll()
+    }
+  }
+
+  "Generate Report" should {
+    "Encrypt and delegate to Repository" in {
+      given(underlyingRepo.generateReport(rawReport)) willReturn successful(Seq(rawReportResult))
+      await(repo.generateReport(rawReport)) shouldBe Seq(rawReportResult)
     }
   }
 }

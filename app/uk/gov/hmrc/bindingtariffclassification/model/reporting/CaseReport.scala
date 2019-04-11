@@ -16,12 +16,46 @@
 
 package uk.gov.hmrc.bindingtariffclassification.model.reporting
 
+import play.api.mvc.QueryStringBindable
 import uk.gov.hmrc.bindingtariffclassification.model.reporting.CaseReportField.CaseReportField
 import uk.gov.hmrc.bindingtariffclassification.model.reporting.CaseReportGroup.CaseReportGroup
 
 case class CaseReport
 (
-  filter: Option[CaseReportFilter] = None,
+  filter: CaseReportFilter,
   group: CaseReportGroup,
   field: CaseReportField
 )
+
+object CaseReport {
+  private val reportGroupKey = "report_group"
+  private val reportFieldKey = "report_field"
+
+  implicit def bindable(implicit stringBinder: QueryStringBindable[String],
+                        filterBinder: QueryStringBindable[CaseReportFilter]
+                     ): QueryStringBindable[CaseReport] = new QueryStringBindable[CaseReport] {
+    override def bind(key: String, requestParams: Map[String, Seq[String]]): Option[Either[String, CaseReport]] = {
+      import uk.gov.hmrc.bindingtariffclassification.model.utils.BinderUtil._
+      implicit val rp: Map[String, Seq[String]] = requestParams
+
+      val filter: CaseReportFilter = filterBinder.bind("", requestParams).get.right.get
+      val group: Option[CaseReportGroup] = param(reportGroupKey).flatMap(bindCaseReportGroup)
+      val field: Option[CaseReportField] = param(reportFieldKey).flatMap(bindCaseReportField)
+
+      (group, field) match {
+        case (Some(g), Some(f)) => Some(Right(CaseReport(filter, g, f)))
+        case (None, Some(_)) => Some(Left("Invalid Group"))
+        case (Some(_), None) => Some(Left("Invalid Field"))
+        case _ => Some(Left("Invalid Field/Group"))
+      }
+    }
+
+    override def unbind(key: String, report: CaseReport): String = {
+      Seq(
+        filterBinder.unbind("", report.filter),
+        stringBinder.unbind(reportGroupKey, report.group.toString),
+        stringBinder.unbind(reportFieldKey, report.field.toString)
+      ).filter(_.nonEmpty).mkString("&")
+    }
+  }
+}

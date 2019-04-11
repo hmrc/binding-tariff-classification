@@ -16,10 +16,37 @@
 
 package uk.gov.hmrc.bindingtariffclassification.model.reporting
 
-import java.time.Instant
+import play.api.mvc.QueryStringBindable
 
 case class CaseReportFilter
 (
-  minDecisionStartDate: Instant,
-  maxDecisionStartDate: Instant
+  decisionStartDate: Option[InstantRange] = None
 )
+
+object CaseReportFilter {
+
+  val decisionStartKey = "decision_start"
+
+  implicit def binder(implicit rangeBinder: QueryStringBindable[InstantRange]): QueryStringBindable[CaseReportFilter]
+  = new QueryStringBindable[CaseReportFilter] {
+
+    override def bind(key: String, requestParams: Map[String, Seq[String]]): Option[Either[String, CaseReportFilter]] = {
+      implicit val rp: Map[String, Seq[String]] = requestParams
+
+      val decisionStart: Option[InstantRange] = rangeBinder.bind(decisionStartKey, requestParams).filter(_.isRight).map(_.right.get)
+
+      Some(
+        Right(
+          CaseReportFilter(
+            decisionStart
+          )
+        )
+      )
+    }
+
+    override def unbind(key: String, filter: CaseReportFilter): String = {
+      filter.decisionStartDate.map(r => rangeBinder.unbind(decisionStartKey, r))
+        .getOrElse("")
+    }
+  }
+}

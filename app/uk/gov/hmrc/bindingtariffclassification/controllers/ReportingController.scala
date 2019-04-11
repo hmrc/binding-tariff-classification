@@ -17,13 +17,19 @@
 package uk.gov.hmrc.bindingtariffclassification.controllers
 
 import javax.inject.{Inject, Singleton}
+import play.api.libs.json.Json
+import play.api.mvc.{Action, AnyContent}
+import uk.gov.hmrc.bindingtariffclassification.model.RESTFormatters._
+import uk.gov.hmrc.bindingtariffclassification.model.reporting.CaseReport
 import uk.gov.hmrc.bindingtariffclassification.service.ReportService
+
+import scala.concurrent.ExecutionContext.Implicits.global
 
 @Singleton
 class ReportingController @Inject()(reportService: ReportService) extends CommonController {
 
-//  def report(report: CaseReport): Action[AnyContent] = Action.async { request =>
-//
-//  }
+  def report(report: CaseReport): Action[AnyContent] = Action.async { implicit request =>
+    reportService.generate(report) map { result => Ok(Json.toJson(result))}
+  }
 
 }

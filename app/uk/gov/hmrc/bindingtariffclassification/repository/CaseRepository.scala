@@ -17,6 +17,7 @@
 package uk.gov.hmrc.bindingtariffclassification.repository
 
 import javax.inject.{Inject, Singleton}
+import play.api.libs.json.Json.toJson
 import play.api.libs.json._
 import reactivemongo.api.indexes.Index
 import reactivemongo.bson.{BSONArray, BSONDocument, BSONDouble, BSONObjectID, BSONString}
@@ -26,7 +27,7 @@ import uk.gov.hmrc.bindingtariffclassification.crypto.Crypto
 import uk.gov.hmrc.bindingtariffclassification.model.CaseStatus.{NEW, OPEN}
 import uk.gov.hmrc.bindingtariffclassification.model.MongoFormatters.formatCase
 import uk.gov.hmrc.bindingtariffclassification.model._
-import uk.gov.hmrc.bindingtariffclassification.model.reporting.{CaseReport, ReportResult}
+import uk.gov.hmrc.bindingtariffclassification.model.reporting.{CaseReport, CaseReportField, CaseReportGroup, ReportResult}
 import uk.gov.hmrc.mongo.ReactiveRepository
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -151,20 +152,28 @@ class CaseMongoRepository @Inject()(mongoDbProvider: MongoDbProvider, mapper: Se
   }
 
   override def generateReport(report: CaseReport): Future[Seq[ReportResult]] = {
+    import MongoFormatters.formatInstant
     import collection.BatchCommands.AggregationFramework._
 
-    val filter: Option[PipelineOperator] = report.filter map { f =>
-      Match(Json.obj(
-        "decision.effectiveStartDate" -> Json.obj(
-          "$lte" -> Json.toJson(f.maxDecisionStartDate)(MongoFormatters.formatInstant),
-          "$gte" -> Json.toJson(f.maxDecisionStartDate)(MongoFormatters.formatInstant)
+    val filter: Option[PipelineOperator] = report.filter.decisionStartDate.map {
+      range =>
+        Match(
+          Json.obj("decision.effectiveStartDate" -> Json.obj(
+            "$lte" -> toJson(range.max),
+            "$gte" -> toJson(range.min)
+          ))
         )
-      ))
     }
 
-    val group: PipelineOperator = GroupField(report.group.toString)(
-      "field" -> PushField(report.field.toString)
-    )
+    val groupField = report.group match {
+      case CaseReportGroup.QUEUE => "queueId"
+    }
+
+    val reportField = report.field match {
+      case CaseReportField.DAYS_ELAPSED => "daysElapsed"
+    }
+
+    val group: PipelineOperator = GroupField(groupField)("field" -> PushField(reportField))
 
     val aggregation = filter match {
       case Some(f) => (f, List(group))
@@ -176,7 +185,7 @@ class CaseMongoRepository @Inject()(mongoDbProvider: MongoDbProvider, mapper: Se
       .map {
         _.map { obj: JsObject =>
           ReportResult(
-            obj.value("_id").as[JsString].value,
+            Option(obj.value("_id")).filter(_.isInstanceOf[JsString]).map(_.as[JsString].value),
             obj.value("field").as[JsArray].value.map(_.as[JsNumber].value.toInt).toList
           )
         }

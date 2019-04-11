@@ -22,8 +22,6 @@ import play.api.mvc.QueryStringBindable
 import uk.gov.hmrc.bindingtariffclassification.model.ApplicationType.ApplicationType
 import uk.gov.hmrc.bindingtariffclassification.model.PseudoCaseStatus.PseudoCaseStatus
 
-import scala.util.Try
-
 case class CaseFilter
 (
   reference: Option[Set[String]] = None,
@@ -55,25 +53,9 @@ object CaseFilter {
 
   implicit def bindable(implicit stringBinder: QueryStringBindable[String]): QueryStringBindable[CaseFilter] = new QueryStringBindable[CaseFilter] {
 
-    private def bindPseudoCaseStatus(key: String): Option[PseudoCaseStatus] = {
-      PseudoCaseStatus.values.find(_.toString.equalsIgnoreCase(key))
-    }
-
-    private def bindApplicationType(key: String): Option[ApplicationType] = {
-      ApplicationType.values.find(_.toString.equalsIgnoreCase(key))
-    }
-
-    private def bindInstant(key: String): Option[Instant] = Try(Instant.parse(key)).toOption
-
     override def bind(key: String, requestParams: Map[String, Seq[String]]): Option[Either[String, CaseFilter]] = {
-
-      def params(name: String): Option[Set[String]] = {
-        requestParams.get(name).map(_.flatMap(_.split(",")).toSet).filter(_.exists(_.nonEmpty))
-      }
-
-      def param(name: String): Option[String] = {
-        params(name).map(_.head)
-      }
+      import uk.gov.hmrc.bindingtariffclassification.model.utils.BinderUtil._
+      implicit val rp: Map[String, Seq[String]] = requestParams
 
       Some(
         Right(

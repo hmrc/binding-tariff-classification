@@ -18,6 +18,9 @@ package uk.gov.hmrc.bindingtariffclassification.model.reporting
 
 case class ReportResult
 (
-  group: String,
+  group: Option[String],
   value: Seq[Int]
 )
+object ReportResult {
+  def apply(group: String, value: Seq[Int]): ReportResult = ReportResult(Some(group), value)
+}

@@ -18,6 +18,7 @@ package uk.gov.hmrc.bindingtariffclassification.model
 
 import play.api.libs.json._
 import play.json.extra.Jsonx
+import uk.gov.hmrc.bindingtariffclassification.model.reporting.ReportResult
 import uk.gov.hmrc.play.json.Union
 
 object RESTFormatters {
@@ -31,6 +32,7 @@ object RESTFormatters {
   implicit val formatReviewStatus = EnumJson.format(ReviewStatus)
   implicit val formatCancelReason = EnumJson.format(CancelReason)
 
+  implicit val formatReportResult = Json.format[ReportResult]
   implicit val formatOperator = Json.format[Operator]
   implicit val formatEORIDetails = Json.format[EORIDetails]
   implicit val formatAttachment = Json.format[Attachment]

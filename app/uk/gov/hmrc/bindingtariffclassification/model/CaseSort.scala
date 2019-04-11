@@ -18,8 +18,8 @@ package uk.gov.hmrc.bindingtariffclassification.model
 
 import play.api.mvc.QueryStringBindable
 import uk.gov.hmrc.bindingtariffclassification.sort.CaseSortField.CaseSortField
+import uk.gov.hmrc.bindingtariffclassification.sort.SortDirection
 import uk.gov.hmrc.bindingtariffclassification.sort.SortDirection.SortDirection
-import uk.gov.hmrc.bindingtariffclassification.sort.{CaseSortField, SortDirection}
 
 case class CaseSort
 (
@@ -32,19 +32,11 @@ object CaseSort {
   private val sortByKey = "sort_by"
   private val sortDirectionKey = "sort_direction"
 
-  private def bindSortField(key: String): Option[CaseSortField] = {
-    CaseSortField.values.find(_.toString == key)
-  }
-
-  private def bindSortDirection(key: String): Option[SortDirection] = {
-    SortDirection.values.find(_.toString == key)
-  }
-
   implicit def bindable(implicit stringBinder: QueryStringBindable[String]): QueryStringBindable[CaseSort] = new QueryStringBindable[CaseSort] {
 
-    override def bind(key: String, params: Map[String, Seq[String]]): Option[Either[String, CaseSort]] = {
-
-      def param(name: String): Option[String] = stringBinder.bind(name, params).filter(_.isRight).map(_.right.get)
+    override def bind(key: String, requestParams: Map[String, Seq[String]]): Option[Either[String, CaseSort]] = {
+      import uk.gov.hmrc.bindingtariffclassification.model.utils.BinderUtil._
+      implicit val rp: Map[String, Seq[String]] = requestParams
 
       val field: Option[CaseSortField] = param(sortByKey).flatMap(bindSortField)
       val direction: Option[SortDirection] = param(sortDirectionKey).flatMap(bindSortDirection)

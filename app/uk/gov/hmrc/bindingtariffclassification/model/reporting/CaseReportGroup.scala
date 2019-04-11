@@ -18,5 +18,5 @@ package uk.gov.hmrc.bindingtariffclassification.model.reporting
 
 object CaseReportGroup extends Enumeration {
   type CaseReportGroup = Value
-  val QUEUE = Value("queueId")
+  val QUEUE = Value("queue-id")
 }

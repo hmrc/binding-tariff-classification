@@ -18,5 +18,5 @@ package uk.gov.hmrc.bindingtariffclassification.model.reporting
 
 object CaseReportField extends Enumeration {
   type CaseReportField = Value
-  val DAYS_ELAPSED = Value("daysElapsed")
+  val DAYS_ELAPSED = Value("days-elapsed")
 }
