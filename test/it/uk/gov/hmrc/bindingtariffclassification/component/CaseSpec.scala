@@ -25,6 +25,7 @@ import play.api.http.HttpVerbs
 import play.api.http.Status._
 import play.api.libs.json.Json
 import scalaj.http.{Http, HttpResponse}
+import uk.gov.hmrc.bindingtariffclassification.model.ImportExport.EXPORT
 import uk.gov.hmrc.bindingtariffclassification.model.RESTFormatters._
 import uk.gov.hmrc.bindingtariffclassification.model._
 import util.CaseData._
@@ -105,6 +106,7 @@ class CaseSpec extends BaseFeatureSpec {
       val responseCase = Json.parse(result.body).as[Case]
       responseCase.reference shouldBe "504400001"
       responseCase.status shouldBe CaseStatus.NEW
+      responseCase.application.asBTI.importOrExport shouldBe None
     }
 
     scenario("Extra fields are ignored when creating a case") {
@@ -142,6 +144,7 @@ class CaseSpec extends BaseFeatureSpec {
       val responseCase = Json.parse(result.body).as[Case]
       responseCase.reference shouldBe "504400001"
       responseCase.status shouldBe CaseStatus.NEW
+      responseCase.application.asBTI.importOrExport shouldBe Some(EXPORT)
     }
 
   }

@@ -32,6 +32,15 @@ class LocalCryptoSpec extends UnitSpec with MockitoSugar {
       Mockito.when(config.mongoEncryption).thenReturn(MongoEncryption(true, Some("YjQ+NiViNGY4V2l2cSxnCg==")))
       (new LocalCrypto(config)).encrypt(PlainText("hello")).toString shouldBe "Crypted(gUfxIXsmMDAbdTgm36BmEg==)"
     }
+
+    "error on missing config" in {
+      Mockito.when(config.mongoEncryption).thenReturn(MongoEncryption(true, None))
+
+      val caught = intercept[RuntimeException] {
+        await(new LocalCrypto(config)).encrypt(PlainText("hello"))
+      }
+      caught.getMessage shouldBe "Missing config: 'mongodb.encryption.enabled'"
+    }
   }
 
 }

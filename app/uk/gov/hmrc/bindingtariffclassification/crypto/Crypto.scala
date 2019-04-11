@@ -69,7 +69,7 @@ class Crypto @Inject()(crypto: CompositeSymmetricCrypto) {
 
     c.application.`type` match {
       case BTI =>
-        val bti = c.application.asInstanceOf[BTIApplication]
+        val bti = c.application.asBTI
         c.copy(
           application = bti.copy(
             holder = applyCrypto(bti.holder)(f),
@@ -79,7 +79,7 @@ class Crypto @Inject()(crypto: CompositeSymmetricCrypto) {
           )
         )
       case LIABILITY_ORDER =>
-        val l = c.application.asInstanceOf[LiabilityOrder]
+        val l = c.application.asLiabilityOrder
         c.copy(
           application = l.copy(
             holder = applyCrypto(l.holder)(f),

@@ -47,6 +47,7 @@ object CaseData {
       goodDescription = "this is a BTI application for HTC Wildfire mobile phones",
       goodName = "HTC Wildfire smartphone",
       confidentialInformation = Some("This phone has a secret processor."),
+      importOrExport = Some(ImportExport.EXPORT),
       otherInformation = Some("The phone comes in multiple colors"),
       reissuedBTIReference = Some("BTI123"),
       relatedBTIReference = Some("BTI987"),
