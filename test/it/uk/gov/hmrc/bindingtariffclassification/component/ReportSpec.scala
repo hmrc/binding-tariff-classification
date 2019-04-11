@@ -78,10 +78,11 @@ class ReportSpec extends BaseFeatureSpec {
 
   private def date(d: String): Instant = LocalDateTime.parse(d).atOffset(ZoneOffset.UTC).toInstant
 
-  private def withParams(params: (String, String)*): String = if (params.isEmpty) "" else "?" + params.map(p => s"${p._1}=${p._2}").mkString("&")
+  private def withParams(params: (String, String)*): Map[String, String] = Map(params:_*)
 
-  private def whenIGET(path: String, params: String = ""): HttpResponse[String] = {
-    val url = s"$serviceUrl/$path$params"
+  private def whenIGET(path: String, params: Map[String, String]): HttpResponse[String] = {
+    val query = if (params.isEmpty) "" else "?" + params.map(p => s"${p._1}=${p._2}").mkString("&")
+    val url = s"$serviceUrl/$path$query"
     Logger.info(s"GET-ing [$url]")
     Http(url)
       .header(apiTokenKey, appConfig.authorization)
