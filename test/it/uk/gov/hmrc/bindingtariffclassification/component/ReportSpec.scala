@@ -43,10 +43,10 @@ class ReportSpec extends BaseFeatureSpec {
       When("I request the report")
       val result = whenIGET("report", withParams("report_field" -> "days-elapsed", "report_group" -> "queue-id"))
 
-      Then("The response code should be 204")
+      Then("The response code should be 200")
       result.code shouldBe OK
 
-      And("The response body is empty")
+      And("The response body contains the report")
       thenTheJsonBodyOf[Seq[ReportResult]](result) shouldBe Some(Seq(ReportResult("queue-1", Seq(1, 2))))
     }
 
@@ -66,10 +66,10 @@ class ReportSpec extends BaseFeatureSpec {
         )
       )
 
-      Then("The response code should be 204")
+      Then("The response code should be 200")
       result.code shouldBe OK
 
-      And("The response body is empty")
+      And("The response body contains the report")
       thenTheJsonBodyOf[Seq[ReportResult]](result) shouldBe Some(Seq(ReportResult("queue-1", Seq(2))))
     }
 
