@@ -16,6 +16,9 @@
 
 package uk.gov.hmrc.bindingtariffclassification.component
 
+import java.time.{Instant, LocalDateTime, ZoneOffset}
+
+import play.api.Logger
 import play.api.http.HttpVerbs
 import play.api.http.Status.OK
 import play.api.libs.json.{Json, Reads}
@@ -38,7 +41,7 @@ class ReportSpec extends BaseFeatureSpec {
       givenThereIs(aCase(withQueue("queue-1"), withDaysElapsed(2)))
 
       When("I request the report")
-      val result = whenIGET("report?report_field=days-elapsed&report_group=queue-id")
+      val result = whenIGET("report", withParams("report_field" -> "days-elapsed", "report_group" -> "queue-id"))
 
       Then("The response code should be 204")
       result.code shouldBe OK
@@ -47,12 +50,43 @@ class ReportSpec extends BaseFeatureSpec {
       thenTheJsonBodyOf[Seq[ReportResult]](result) shouldBe Some(Seq(ReportResult("queue-1", Seq(1, 2))))
     }
 
+    scenario("Generate a Report filtering by decision date") {
+      Given("There are some documents in the collection")
+      givenThereIs(aCase(withQueue("queue-1"), withDaysElapsed(1), withDecision(effectiveStartDate = Some(date("2019-01-01T00:00:00")))))
+      givenThereIs(aCase(withQueue("queue-1"), withDaysElapsed(2), withDecision(effectiveStartDate = Some(date("2019-02-01T00:00:00")))))
+      givenThereIs(aCase(withQueue("queue-1"), withDaysElapsed(3), withDecision(effectiveStartDate = Some(date("2019-03-01T00:00:00")))))
+
+      When("I request the report")
+      val result = whenIGET("report",
+        withParams(
+          "report_field" -> "days-elapsed",
+          "report_group" -> "queue-id",
+          "min_decision_start" -> "2019-01-15T00:00:00Z",
+          "max_decision_start" -> "2019-02-15T00:00:00Z"
+        )
+      )
+
+      Then("The response code should be 204")
+      result.code shouldBe OK
+
+      And("The response body is empty")
+      thenTheJsonBodyOf[Seq[ReportResult]](result) shouldBe Some(Seq(ReportResult("queue-1", Seq(2))))
+    }
+
   }
 
-  private def whenIGET(path: String): HttpResponse[String] = Http(s"$serviceUrl/$path")
-    .header(apiTokenKey, appConfig.authorization)
-    .method(HttpVerbs.GET)
-    .asString
+  private def date(d: String): Instant = LocalDateTime.parse(d).atOffset(ZoneOffset.UTC).toInstant
+
+  private def withParams(params: (String, String)*): String = if (params.isEmpty) "" else "?" + params.map(p => s"${p._1}=${p._2}").mkString("&")
+
+  private def whenIGET(path: String, params: String = ""): HttpResponse[String] = {
+    val url = s"$serviceUrl/$path$params"
+    Logger.info(s"GET-ing [$url]")
+    Http(url)
+      .header(apiTokenKey, appConfig.authorization)
+      .method(HttpVerbs.GET)
+      .asString
+  }
 
   private def thenTheJsonBodyOf[T](response: HttpResponse[String])(implicit rds: Reads[T]): Option[T] = Json.fromJson[T](Json.parse(response.body)).asOpt
 
