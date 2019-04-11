@@ -37,6 +37,7 @@ class ReportSpec extends BaseFeatureSpec {
 
     scenario("Generate a Report on Days Elapsed Grouping by Queue") {
       Given("There are some documents in the collection")
+      givenThereIs(aCase(withoutQueue(), withDaysElapsed(0)))
       givenThereIs(aCase(withQueue("queue-1"), withDaysElapsed(1)))
       givenThereIs(aCase(withQueue("queue-1"), withDaysElapsed(2)))
 
@@ -47,7 +48,7 @@ class ReportSpec extends BaseFeatureSpec {
       result.code shouldBe OK
 
       And("The response body contains the report")
-      thenTheJsonBodyOf[Seq[ReportResult]](result) shouldBe Some(Seq(ReportResult("queue-1", Seq(1, 2))))
+      thenTheJsonBodyOf[Seq[ReportResult]](result).get.toSet shouldBe Set(ReportResult(None, Seq(0)), ReportResult("queue-1", Seq(1, 2)))
     }
 
     scenario("Generate a Report filtering by decision date") {
