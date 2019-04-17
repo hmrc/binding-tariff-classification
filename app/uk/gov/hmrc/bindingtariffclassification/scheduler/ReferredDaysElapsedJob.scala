@@ -36,19 +36,19 @@ import scala.concurrent.Future._
 import scala.concurrent.duration._
 
 @Singleton
-class DaysElapsedJob @Inject()(appConfig: AppConfig,
-                               caseService: CaseService,
-                               eventService: EventService,
-                               bankHolidaysConnector: BankHolidaysConnector) extends ScheduledJob {
+class ReferredDaysElapsedJob @Inject()(appConfig: AppConfig,
+                                       caseService: CaseService,
+                                       eventService: EventService,
+                                       bankHolidaysConnector: BankHolidaysConnector) extends ScheduledJob {
 
   private implicit val carrier: HeaderCarrier = HeaderCarrier()
-  private lazy val jobConfig = appConfig.daysElapsed
+  private lazy val jobConfig = appConfig.referredDaysElapsed
   private lazy val criteria = CaseSearch(
-    filter = CaseFilter(statuses = Some(Set(PseudoCaseStatus.OPEN, PseudoCaseStatus.NEW))),
+    filter = CaseFilter(statuses = Some(Set(PseudoCaseStatus.REFERRED))),
     sort = Some(CaseSort(CaseSortField.REFERENCE))
   )
 
-  override val name: String = "DaysElapsed"
+  override val name: String = "ReferredDaysElapsed"
 
   override def interval: FiniteDuration = jobConfig.interval
 
@@ -86,15 +86,14 @@ class DaysElapsedJob @Inject()(appConfig: AppConfig,
       // Generate a timeline of the Case Status over time
       statusTimeline: StatusTimeline = StatusTimeline.from(events.results)
 
-      // Filter down to the days the case was not Referred
-      actionableDays: Seq[Instant] = workingDays
-        .filterNot(statusTimeline.statusOn(_).contains(CaseStatus.REFERRED))
-        .filterNot(statusTimeline.statusOn(_).contains(CaseStatus.SUSPENDED))
+      // Filter down to the days the case was Referred
+      referredDays: Seq[Instant] = workingDays
+        .filter(statusTimeline.statusOn(_).contains(CaseStatus.REFERRED))
 
       // Update the case
-      _ <- caseService.update(c.copy(daysElapsed = actionableDays.size), upsert = false)
+      _ <- caseService.update(c.copy(referredDaysElapsed = referredDays.size), upsert = false)
 
-      _ = Logger.info(s"DaysElapsedJob: Updated Days Elapsed of Case [${c.reference}] from [${c.daysElapsed}] to [${actionableDays.size}]")
+      _ = Logger.info(s"$name: Updated Days Elapsed of Case [${c.reference}] from [${c.daysElapsed}] to [${referredDays.size}]")
     } yield ()
   }
 

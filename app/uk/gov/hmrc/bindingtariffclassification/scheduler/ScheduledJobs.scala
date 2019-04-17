@@ -14,24 +14,6 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.bindingtariffclassification.model
+package uk.gov.hmrc.bindingtariffclassification.scheduler
 
-import java.time.Instant
-
-import uk.gov.hmrc.bindingtariffclassification.model.CaseStatus.CaseStatus
-
-case class Case
-(
-  reference: String,
-  status: CaseStatus,
-  createdDate: Instant = Instant.now(),
-  daysElapsed: Long = 0,
-  referredDaysElapsed: Long = 0,
-  caseBoardsFileNumber: Option[String] = None,
-  assignee: Option[Operator] = None,
-  queueId: Option[String] = None,
-  application: Application,
-  decision: Option[Decision] = None,
-  attachments: Seq[Attachment] = Seq.empty,
-  keywords: Set[String] = Set.empty
-)
+case class ScheduledJobs(jobs: Iterable[ScheduledJob])

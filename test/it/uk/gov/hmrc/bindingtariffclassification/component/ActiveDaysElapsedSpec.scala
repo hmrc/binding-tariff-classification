@@ -25,13 +25,13 @@ import uk.gov.hmrc.bindingtariffclassification.component.utils.AppConfigWithAFix
 import uk.gov.hmrc.bindingtariffclassification.config.AppConfig
 import uk.gov.hmrc.bindingtariffclassification.model.CaseStatus._
 import uk.gov.hmrc.bindingtariffclassification.model.{Case, Event}
-import uk.gov.hmrc.bindingtariffclassification.scheduler.DaysElapsedJob
+import uk.gov.hmrc.bindingtariffclassification.scheduler.ActiveDaysElapsedJob
 import util.CaseData._
 import util.EventData
 
 import scala.concurrent.Await.result
 
-class DaysElapsedSpec extends BaseFeatureSpec with MockitoSugar {
+class ActiveDaysElapsedSpec extends BaseFeatureSpec with MockitoSugar {
 
   override lazy val port = 14683
   protected val serviceUrl = s"http://localhost:$port"
@@ -43,7 +43,7 @@ class DaysElapsedSpec extends BaseFeatureSpec with MockitoSugar {
     .injector()
 
 
-  private val job: DaysElapsedJob = injector.instanceOf[DaysElapsedJob]
+  private val job: ActiveDaysElapsedJob = injector.instanceOf[ActiveDaysElapsedJob]
 
   feature("Days Elapsed Job") {
     scenario("Calculates elapsed days for OPEN & NEW cases") {

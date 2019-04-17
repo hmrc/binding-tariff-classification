@@ -109,6 +109,30 @@ class SchedulerTest extends UnitSpec with MockitoSugar with BeforeAndAfterEach w
 
   "Scheduler" should {
 
+    "Execute by class" in {
+      givenTheLockFails() // Ensures the job isn't run by the scheduler
+
+      val job1 = mock[ActiveDaysElapsedJob]
+      given(job1.interval) willReturn 3.minutes
+      given(job1.firstRunTime) willReturn "00:00"
+      given(job1.name) willReturn "name1"
+      given(util.nextRun(job1.firstRunTime, job1.interval)) willReturn "2019-01-01T00:00:00"
+
+      val job2 = mock[ReferredDaysElapsedJob]
+
+      given(job2.interval) willReturn 3.minutes
+      given(job2.firstRunTime) willReturn "00:00"
+      given(job2.name) willReturn "name2"
+      given(util.nextRun(job2.firstRunTime, job2.interval)) willReturn "2019-01-01T00:00:00"
+
+      // When
+      whenTheSchedulerStarts(withJobs = Set(job1, job2)).execute(job1.getClass)
+
+      // Then
+      verify(job1).execute()
+      verify(job2, never()).execute()
+    }
+
     "Run job with valid schedule" in {
       // Given
       givenTheLockSucceeds()
@@ -119,7 +143,7 @@ class SchedulerTest extends UnitSpec with MockitoSugar with BeforeAndAfterEach w
       given(util.closestRun(job.firstRunTime, job.interval)) willReturn "2018-12-25T12:00:00"
 
       // When
-      whenTheSchedulerStarts
+      whenTheSchedulerStarts()
 
       // Then
       val schedule = theSchedule
@@ -141,7 +165,7 @@ class SchedulerTest extends UnitSpec with MockitoSugar with BeforeAndAfterEach w
       given(util.closestRun(job.firstRunTime, job.interval)) willReturn "2018-12-25T12:00:10"
 
       // When
-      whenTheSchedulerStarts
+      whenTheSchedulerStarts()
 
       // Then
       val schedule = theSchedule
@@ -163,7 +187,7 @@ class SchedulerTest extends UnitSpec with MockitoSugar with BeforeAndAfterEach w
 
       // When
       intercept[IllegalArgumentException] {
-        whenTheSchedulerStarts
+        whenTheSchedulerStarts()
       }
       verifyNoMoreInteractions(internalScheduler)
     }
@@ -176,15 +200,15 @@ class SchedulerTest extends UnitSpec with MockitoSugar with BeforeAndAfterEach w
       given(util.nextRun(job.firstRunTime, job.interval)) willReturn "2018-12-25T12:00:00"
 
       // When
-      whenTheSchedulerStarts
+      whenTheSchedulerStarts()
 
       verify(job, never()).execute()
     }
 
   }
 
-  private def whenTheSchedulerStarts: Scheduler = {
-    new Scheduler(actorSystem, config, schedulerRepository, util, job)
+  private def whenTheSchedulerStarts(withJobs: Set[ScheduledJob] = Set(job)): Scheduler = {
+    new Scheduler(actorSystem, config, schedulerRepository, util, ScheduledJobs(withJobs))
   }
 
   private case class Schedule(initialDelay: FiniteDuration, interval: FiniteDuration)

@@ -36,9 +36,14 @@ class AppConfig @Inject()(val runModeConfiguration: Configuration, environment: 
 
   lazy val clock: Clock = Clock.systemUTC()
 
-  lazy val daysElapsed: JobConfig = JobConfig(
-    LocalTime.parse(getString("scheduler.days-elapsed.run-time")),
-    getDuration("scheduler.days-elapsed.interval").asInstanceOf[FiniteDuration]
+  lazy val activeDaysElapsed: JobConfig = JobConfig(
+    LocalTime.parse(getString("scheduler.active-days-elapsed.run-time")),
+    getDuration("scheduler.active-days-elapsed.interval").asInstanceOf[FiniteDuration]
+  )
+
+  lazy val referredDaysElapsed: JobConfig = JobConfig(
+    LocalTime.parse(getString("scheduler.referred-days-elapsed.run-time")),
+    getDuration("scheduler.referred-days-elapsed.interval").asInstanceOf[FiniteDuration]
   )
 
   lazy val authorization: String = getString("auth.api-token")

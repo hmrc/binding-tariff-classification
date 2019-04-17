@@ -40,11 +40,20 @@ class AppConfigTest extends UnitSpec {
       configWith("testMode" -> "false").isTestMode shouldBe false
     }
 
-    "build 'DaysElapsedConfig" in {
+    "build 'ActiveDaysElapsedConfig" in {
       val config = configWith(
-        "scheduler.days-elapsed.run-time" -> "00:00",
-        "scheduler.days-elapsed.interval" -> "1d"
-      ).daysElapsed
+        "scheduler.active-days-elapsed.run-time" -> "00:00",
+        "scheduler.active-days-elapsed.interval" -> "1d"
+      ).activeDaysElapsed
+      config.elapseTime shouldBe LocalTime.of(0, 0, 0)
+      config.interval shouldBe 1.days
+    }
+
+    "build 'ReferredDaysElapsedConfig" in {
+      val config = configWith(
+        "scheduler.referred-days-elapsed.run-time" -> "00:00",
+        "scheduler.referred-days-elapsed.interval" -> "1d"
+      ).referredDaysElapsed
       config.elapseTime shouldBe LocalTime.of(0, 0, 0)
       config.interval shouldBe 1.days
     }

@@ -19,7 +19,7 @@ package uk.gov.hmrc.bindingtariffclassification.controllers
 import javax.inject.{Inject, Singleton}
 import play.api.mvc.{Action, AnyContent}
 import uk.gov.hmrc.bindingtariffclassification.config.AppConfig
-import uk.gov.hmrc.bindingtariffclassification.scheduler.Scheduler
+import uk.gov.hmrc.bindingtariffclassification.scheduler.{ActiveDaysElapsedJob, ReferredDaysElapsedJob, Scheduler}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -28,8 +28,12 @@ class SchedulerController @Inject()(appConfig: AppConfig, scheduler: Scheduler) 
 
   lazy private val testModeFilter = TestMode.actionFilter(appConfig)
 
-  def incrementDaysElapsed(): Action[AnyContent] = testModeFilter.async { implicit request =>
-    scheduler.execute map ( _ => NoContent ) recover recovery
+  def incrementActiveDaysElapsed(): Action[AnyContent] = testModeFilter.async { implicit request =>
+    scheduler.execute(classOf[ActiveDaysElapsedJob]) map (_ => NoContent ) recover recovery
+  }
+
+  def incrementReferredDaysElapsed(): Action[AnyContent] = testModeFilter.async { implicit request =>
+    scheduler.execute(classOf[ReferredDaysElapsedJob]) map (_ => NoContent ) recover recovery
   }
 
 }

@@ -22,7 +22,7 @@ import org.scalatest.mockito.MockitoSugar
 import play.api.http.Status._
 import play.api.test.FakeRequest
 import uk.gov.hmrc.bindingtariffclassification.config.AppConfig
-import uk.gov.hmrc.bindingtariffclassification.scheduler.Scheduler
+import uk.gov.hmrc.bindingtariffclassification.scheduler.{ActiveDaysElapsedJob, ReferredDaysElapsedJob, Scheduler}
 import uk.gov.hmrc.http.HttpVerbs
 import uk.gov.hmrc.play.test.{UnitSpec, WithFakeApplication}
 
@@ -39,11 +39,11 @@ class SchedulerControllerSpec extends UnitSpec with WithFakeApplication with Moc
 
   private val controller = new SchedulerController(appConfig, scheduler)
 
-  "incrementDaysElapsed()" should {
+  "Increment Active Days Elapsed" should {
 
     "return 403 if the test mode is disabled" in {
-
-      val result = await(controller.incrementDaysElapsed()(fakeRequest))
+      when(appConfig.isTestMode).thenReturn(false)
+      val result = await(controller.incrementActiveDaysElapsed()(fakeRequest))
 
       status(result) shouldEqual FORBIDDEN
       jsonBodyOf(result).toString() shouldEqual s"""{"code":"FORBIDDEN","message":"You are not allowed to call ${fakeRequest.method} ${fakeRequest.path}"}"""
@@ -51,19 +51,47 @@ class SchedulerControllerSpec extends UnitSpec with WithFakeApplication with Moc
 
     "return 204 if the test mode is enabled and the scheduler executed successfully" in {
       when(appConfig.isTestMode).thenReturn(true)
-      when(scheduler.execute()).thenReturn(successful(()))
+      when(scheduler.execute(classOf[ActiveDaysElapsedJob])).thenReturn(successful(()))
 
-      val result = await(controller.incrementDaysElapsed()(fakeRequest))
+      val result = await(controller.incrementActiveDaysElapsed()(fakeRequest))
       status(result) shouldEqual NO_CONTENT
     }
 
     "return 500 when an error occurred" in {
-      val error = new RuntimeException
-
       when(appConfig.isTestMode).thenReturn(true)
-      when(scheduler.execute()).thenReturn(failed(error))
+      when(scheduler.execute(classOf[ActiveDaysElapsedJob])).thenReturn(failed(new RuntimeException))
 
-      val result = await(controller.incrementDaysElapsed()(fakeRequest))
+      val result = await(controller.incrementActiveDaysElapsed()(fakeRequest))
+
+      status(result) shouldEqual INTERNAL_SERVER_ERROR
+      jsonBodyOf(result).toString() shouldEqual """{"code":"UNKNOWN_ERROR","message":"An unexpected error occurred"}"""
+    }
+
+  }
+
+  "Increment Referred Days Elapsed" should {
+
+    "return 403 if the test mode is disabled" in {
+      when(appConfig.isTestMode).thenReturn(false)
+      val result = await(controller.incrementReferredDaysElapsed()(fakeRequest))
+
+      status(result) shouldEqual FORBIDDEN
+      jsonBodyOf(result).toString() shouldEqual s"""{"code":"FORBIDDEN","message":"You are not allowed to call ${fakeRequest.method} ${fakeRequest.path}"}"""
+    }
+
+    "return 204 if the test mode is enabled and the scheduler executed successfully" in {
+      when(appConfig.isTestMode).thenReturn(true)
+      when(scheduler.execute(classOf[ReferredDaysElapsedJob])).thenReturn(successful(()))
+
+      val result = await(controller.incrementReferredDaysElapsed()(fakeRequest))
+      status(result) shouldEqual NO_CONTENT
+    }
+
+    "return 500 when an error occurred" in {
+      when(appConfig.isTestMode).thenReturn(true)
+      when(scheduler.execute(classOf[ReferredDaysElapsedJob])).thenReturn(failed(new RuntimeException))
+
+      val result = await(controller.incrementReferredDaysElapsed()(fakeRequest))
 
       status(result) shouldEqual INTERNAL_SERVER_ERROR
       jsonBodyOf(result).toString() shouldEqual """{"code":"UNKNOWN_ERROR","message":"An unexpected error occurred"}"""
