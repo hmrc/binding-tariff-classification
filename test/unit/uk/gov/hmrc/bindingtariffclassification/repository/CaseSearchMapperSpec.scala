@@ -62,14 +62,16 @@ class CaseSearchMapperSpec extends UnitSpec with MockitoSugar {
         ),
         "decision.effectiveEndDate" -> Json.obj("$gte" -> Json.obj("$date" -> 0)),
         "decision.bindingCommodityCode" -> Json.obj("$regex" -> "^12345\\d*"),
-        "$or" -> Json.arr(
-          Json.obj("decision.goodsDescription" -> Json.obj("$regex" -> ".*strawberry.*", "$options" -> "i")),
-          Json.obj("decision.methodCommercialDenomination" -> Json.obj("$regex" -> ".*strawberry.*", "$options" -> "i")),
-          Json.obj("decision.justification" -> Json.obj("$regex" -> ".*strawberry.*", "$options" -> "i"))
-        ),
-        "$or" -> Json.arr(
-          Json.obj("application.holder.eori" -> JsString("eori-number")),
-          Json.obj("application.agent.eoriDetails.eori" -> JsString("eori-number"))
+        "$and" -> Json.arr(
+          Json.obj("$or" -> Json.arr(
+            Json.obj("decision.goodsDescription" -> Json.obj("$regex" -> ".*strawberry.*", "$options" -> "i")),
+            Json.obj("decision.methodCommercialDenomination" -> Json.obj("$regex" -> ".*strawberry.*", "$options" -> "i")),
+            Json.obj("decision.justification" -> Json.obj("$regex" -> ".*strawberry.*", "$options" -> "i"))
+        )),
+          Json.obj("$or" -> Json.arr(
+            Json.obj("application.holder.eori" -> JsString("eori-number")),
+            Json.obj("application.agent.eoriDetails.eori" -> JsString("eori-number"))
+          ))
         ),
         "keywords" -> Json.obj("$all" -> Json.arr("MTB", "BIKE"))
       )
