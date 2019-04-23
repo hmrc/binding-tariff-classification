@@ -68,7 +68,12 @@ class CaseSpec extends BaseFeatureSpec {
     effectiveEndDate = Some(Instant.now().minus(1, ChronoUnit.DAYS)))
   ),
     status = CaseStatus.COMPLETED)
-
+  private val c13 = createCase(decision = Some(createDecision(
+    goodsDescription = "LAPTOP",
+    effectiveStartDate = Some(Instant.now()),
+    effectiveEndDate = Some(Instant.now().plus(1, ChronoUnit.DAYS)))
+  ),
+    status = CaseStatus.COMPLETED)
   private val c0Json = Json.toJson(c0)
   private val c1Json = Json.toJson(c1)
   private val c1UpdatedJson = Json.toJson(c1_updated)
@@ -863,7 +868,7 @@ class CaseSpec extends BaseFeatureSpec {
 
     scenario("Filtering by goods description and expired case status") {
 
-      storeCases(c11, c12)
+      storeCases(c11, c12, c13)
 
       val result = Http(s"$serviceUrl/cases?decision_details=LAPTOP&status=EXPIRED")
         .header(apiTokenKey, appConfig.authorization)
