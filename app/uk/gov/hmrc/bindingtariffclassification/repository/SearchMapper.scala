@@ -64,7 +64,17 @@ class SearchMapper @Inject()(appConfig: AppConfig) {
       filter.statuses.map(filteringByStatus)
     ).filter(_.isDefined).map(_.get)
 
-    JsObject(params)
+    val query: Map[String, JsValue] = params.groupBy(_._1) // Group by Key
+      .mapValues(_.map(_._2)) // Map the values from Seq(key -> value) to Seq(value)
+      .map {
+      // If there is only one entry in params with a specific key, map it how we usually would: (key -> value)
+      case (key: String, value: Seq[JsValue]) if value.size == 1 => key -> value.head
+
+      // If there is multiple entries in params with a specific key, wrap them in an $and
+      case (key, value: Seq[JsValue]) => "$and" -> JsArray(value.map(value => Json.obj(key -> value)))
+    }
+
+    JsObject(query)
   }
 
   private def either(conditions: Iterable[JsObject]): (String, JsArray) = "$or" -> JsArray(conditions.toSeq)

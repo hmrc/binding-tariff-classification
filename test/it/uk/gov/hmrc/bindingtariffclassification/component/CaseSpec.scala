@@ -56,6 +56,18 @@ class CaseSpec extends BaseFeatureSpec {
   private val c8 = createCase(decision = Some(createDecision(methodCommercialDenomination = Some("laptop from Mexico"))))
   private val c9 = createCase(decision = Some(createDecision(justification = "this LLLLaptoppp")))
   private val c10 = createCase(keywords = Set("MTB", "BICYCLE"))
+  private val c11 = createCase(decision = Some(createDecision(
+      goodsDescription = "LAPTOP",
+      effectiveStartDate = Some(Instant.now().minus(3, ChronoUnit.DAYS)),
+      effectiveEndDate = Some(Instant.now().minus(1, ChronoUnit.DAYS)))
+    ),
+    status = CaseStatus.COMPLETED)
+  private val c12 = createCase(decision = Some(createDecision(
+    goodsDescription = "SPANNER",
+    effectiveStartDate = Some(Instant.now().minus(3, ChronoUnit.DAYS)),
+    effectiveEndDate = Some(Instant.now().minus(1, ChronoUnit.DAYS)))
+  ),
+    status = CaseStatus.COMPLETED)
 
   private val c0Json = Json.toJson(c0)
   private val c1Json = Json.toJson(c1)
@@ -847,6 +859,18 @@ class CaseSpec extends BaseFeatureSpec {
 
       result.code shouldEqual OK
       Json.parse(result.body) shouldBe Json.toJson(Paged(Seq(c7, c8, c9)))
+    }
+
+    scenario("Filtering by goods description and expired case status") {
+
+      storeCases(c11, c12)
+
+      val result = Http(s"$serviceUrl/cases?decision_details=LAPTOP&status=EXPIRED")
+        .header(apiTokenKey, appConfig.authorization)
+        .asString
+
+      result.code shouldEqual OK
+      Json.parse(result.body) shouldBe Json.toJson(Paged(Seq(c11)))
     }
   }
 
