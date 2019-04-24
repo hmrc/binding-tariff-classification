@@ -30,7 +30,8 @@ case class Decision
   methodExclusion: Option[String] = None,
   appeal: Option[Appeal] = None,
   review: Option[Review] = None,
-  cancellation: Option[Cancellation] = None
+  cancellation: Option[Cancellation] = None,
+  explanation: Option[String] = None
 )
 
 
