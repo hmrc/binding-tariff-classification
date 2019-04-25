@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.bindingtariffclassification.repository
 
-import java.time.Instant
+import java.time.{Instant, LocalDate, ZoneOffset}
 
 import org.scalatest.concurrent.Eventually
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
@@ -137,6 +137,25 @@ class EventRepositorySpec extends BaseMongoIndexSpec
 
       await(repository.search(EventSearch(Some(Set("REF_1")), Some(Set(EventType.NOTE))), Pagination())) shouldBe Paged(Seq(e1), Pagination(), 1)
       await(repository.search(EventSearch(Some(Set("REF_1")), Some(Set(EventType.CASE_STATUS_CHANGE))), Pagination())) shouldBe Paged(Seq(e2), Pagination(), 1)
+    }
+
+    "retrieve all expected events from the collection by timestamp" in {
+      val timestamp1 = LocalDate.of(2019,1,1).atStartOfDay(ZoneOffset.UTC).toInstant
+      val timestamp2 = LocalDate.of(2020,1,1).atStartOfDay(ZoneOffset.UTC).toInstant
+      val e1 = createNoteEvent("REF_1", date = timestamp1)
+      val e2 = createCaseStatusChangeEvent("REF_2", date = timestamp2)
+
+      await(repository.insert(e1))
+      await(repository.insert(e2))
+      collectionSize shouldBe 2
+
+      await(repository.search(EventSearch(timestampMin = Some(timestamp1)), Pagination())) shouldBe Paged(Seq(e2, e1), Pagination(), 2)
+      await(repository.search(EventSearch(timestampMin = Some(timestamp2)), Pagination())) shouldBe Paged(Seq(e2), Pagination(), 1)
+      await(repository.search(EventSearch(timestampMax = Some(timestamp1)), Pagination())) shouldBe Paged(Seq(e1), Pagination(), 1)
+      await(repository.search(EventSearch(timestampMax = Some(timestamp2)), Pagination())) shouldBe Paged(Seq(e2, e1), Pagination(), 2)
+      await(repository.search(EventSearch(timestampMin = Some(timestamp1), timestampMax = Some(timestamp2)), Pagination())) shouldBe Paged(Seq(e2, e1), Pagination(), 2)
+      await(repository.search(EventSearch(timestampMin = Some(timestamp1), timestampMax = Some(timestamp1)), Pagination())) shouldBe Paged(Seq(e1), Pagination(), 1)
+      await(repository.search(EventSearch(timestampMin = Some(timestamp2), timestampMax = Some(timestamp2)), Pagination())) shouldBe Paged(Seq(e2), Pagination(), 1)
     }
 
 

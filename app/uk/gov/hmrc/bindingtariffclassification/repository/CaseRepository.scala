@@ -155,29 +155,35 @@ class CaseMongoRepository @Inject()(mongoDbProvider: MongoDbProvider, mapper: Se
     import MongoFormatters.formatInstant
     import collection.BatchCommands.AggregationFramework._
 
-    val filter: Option[PipelineOperator] = report.filter.decisionStartDate.map {
-      range =>
-        Match(
-          Json.obj("decision.effectiveStartDate" -> Json.obj(
-            "$lte" -> toJson(range.max),
-            "$gte" -> toJson(range.min)
-          ))
-        )
-    }
-
     val groupField = report.group match {
       case CaseReportGroup.QUEUE => "queueId"
     }
 
     val reportField = report.field match {
-      case CaseReportField.DAYS_ELAPSED => "daysElapsed"
+      case CaseReportField.ACTIVE_DAYS_ELAPSED => "daysElapsed"
+      case CaseReportField.REFERRED_DAYS_ELAPSED => "referredDaysElapsed"
     }
 
     val group: PipelineOperator = GroupField(groupField)("field" -> PushField(reportField))
 
-    val aggregation = filter match {
-      case Some(f) => (f, List(group))
-      case None => (group, List.empty)
+    val filters = Seq[JsObject]()
+      .++(report.filter.decisionStartDate.map { range =>
+        Json.obj("decision.effectiveStartDate" -> Json.obj(
+          "$lte" -> toJson(range.max),
+          "$gte" -> toJson(range.min)
+        ))
+      })
+      .++(report.filter.reference.map { references =>
+        Json.obj("reference" -> Json.obj("$in" -> JsArray(references.map(JsString).toSeq)))
+      })
+
+    val aggregation = filters match {
+      case s if s.isEmpty =>
+        (group, List.empty)
+      case s if s.size == 1 =>
+        (Match(s.head), List(group))
+      case s =>
+        (Match(Json.obj("$and" -> JsArray(s))), List(group))
     }
 
     collection.aggregateWith[JsObject]()(_ => aggregation)

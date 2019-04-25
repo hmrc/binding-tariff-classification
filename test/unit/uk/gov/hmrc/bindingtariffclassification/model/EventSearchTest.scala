@@ -17,6 +17,7 @@
 package uk.gov.hmrc.bindingtariffclassification.model
 
 import java.net.URLDecoder
+import java.time.Instant
 
 import uk.gov.hmrc.play.test.UnitSpec
 
@@ -24,12 +25,16 @@ class EventSearchTest extends UnitSpec {
 
   private val search = EventSearch(
     caseReference = Some(Set("ref1", "ref2")),
-    `type` = Some(Set(EventType.NOTE, EventType.CASE_STATUS_CHANGE))
+    `type` = Some(Set(EventType.NOTE, EventType.CASE_STATUS_CHANGE)),
+    timestampMin = Some(Instant.EPOCH),
+    timestampMax = Some(Instant.EPOCH.plusSeconds(1))
   )
 
   private val params: Map[String, Seq[String]] = Map(
     "case_reference" -> Seq("ref1", "ref2"),
-    "type" -> Seq("NOTE", "CASE_STATUS_CHANGE")
+    "type" -> Seq("NOTE", "CASE_STATUS_CHANGE"),
+    "min_timestamp" -> Seq("1970-01-01T00:00:00Z"),
+    "max_timestamp" -> Seq("1970-01-01T00:00:01Z")
   )
 
   private val emptyParams: Map[String, Seq[String]] = params.mapValues(_.map(_ => ""))
@@ -48,7 +53,9 @@ class EventSearchTest extends UnitSpec {
         "case_reference=ref1" +
           "&case_reference=ref2" +
           "&type=NOTE" +
-          "&type=CASE_STATUS_CHANGE"
+          "&type=CASE_STATUS_CHANGE" +
+          "&min_timestamp=1970-01-01T00:00:00Z" +
+          "&max_timestamp=1970-01-01T00:00:01Z"
       URLDecoder.decode(EventSearch.bindable.unbind("", search), "UTF-8") shouldBe populatedQueryParam
     }
 

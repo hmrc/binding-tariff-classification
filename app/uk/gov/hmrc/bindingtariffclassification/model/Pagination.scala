@@ -27,6 +27,7 @@ case class Pagination
 }
 
 object Pagination {
+  val max: Pagination = Pagination(1, Integer.MAX_VALUE)
 
   private val pageKey = "page"
   private val pageSizeKey = "page_size"

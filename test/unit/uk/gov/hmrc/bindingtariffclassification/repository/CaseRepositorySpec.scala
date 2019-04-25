@@ -688,10 +688,10 @@ class CaseRepositorySpec extends BaseMongoIndexSpec
   "generate report" should {
 
     "group by queue id" in {
-      val c1 = aCase(withQueue("queue-1"), withDaysElapsed(1))
-      val c2 = aCase(withQueue("queue-1"), withDaysElapsed(2))
-      val c3 = aCase(withQueue("queue-2"), withDaysElapsed(3))
-      val c4 = aCase(withoutQueue(), withDaysElapsed(4))
+      val c1 = aCase(withQueue("queue-1"), withActiveDaysElapsed(1))
+      val c2 = aCase(withQueue("queue-1"), withActiveDaysElapsed(2))
+      val c3 = aCase(withQueue("queue-2"), withActiveDaysElapsed(3))
+      val c4 = aCase(withoutQueue(), withActiveDaysElapsed(4))
 
       await(repository.insert(c1))
       await(repository.insert(c2))
@@ -702,7 +702,7 @@ class CaseRepositorySpec extends BaseMongoIndexSpec
       val report = CaseReport(
         filter = CaseReportFilter(),
         group = CaseReportGroup.QUEUE,
-        field = CaseReportField.DAYS_ELAPSED
+        field = CaseReportField.ACTIVE_DAYS_ELAPSED
       )
 
       val results = await(repository.generateReport(report))
@@ -712,10 +712,48 @@ class CaseRepositorySpec extends BaseMongoIndexSpec
       results should contain(ReportResult(None, Seq(4)))
     }
 
+    "report on active days elapsed" in {
+      val c1 = aCase(withQueue("queue-1"), withActiveDaysElapsed(1))
+      val c2 = aCase(withQueue("queue-1"), withActiveDaysElapsed(2))
+
+      await(repository.insert(c1))
+      await(repository.insert(c2))
+      collectionSize shouldBe 2
+
+      val report = CaseReport(
+        filter = CaseReportFilter(),
+        group = CaseReportGroup.QUEUE,
+        field = CaseReportField.ACTIVE_DAYS_ELAPSED
+      )
+
+      val results = await(repository.generateReport(report))
+      results should have length 1
+      results should contain(ReportResult("queue-1", Seq(1, 2)))
+    }
+
+    "report on referred days elapsed" in {
+      val c1 = aCase(withQueue("queue-1"), withReferredDaysElapsed(1))
+      val c2 = aCase(withQueue("queue-1"), withReferredDaysElapsed(2))
+
+      await(repository.insert(c1))
+      await(repository.insert(c2))
+      collectionSize shouldBe 2
+
+      val report = CaseReport(
+        filter = CaseReportFilter(),
+        group = CaseReportGroup.QUEUE,
+        field = CaseReportField.REFERRED_DAYS_ELAPSED
+      )
+
+      val results = await(repository.generateReport(report))
+      results should have length 1
+      results should contain(ReportResult("queue-1", Seq(1, 2)))
+    }
+
     "filter on Decision Start Date" in {
       val date = LocalDate.of(2019, 1, 1).atStartOfDay(ZoneOffset.UTC).toInstant
-      val c1 = aCase(withoutQueue(), withDaysElapsed(1), withDecision(effectiveStartDate = Some(date)))
-      val c2 = aCase(withoutQueue(), withDaysElapsed(2), withDecision(effectiveStartDate = Some(date.plusSeconds(1))))
+      val c1 = aCase(withoutQueue(), withActiveDaysElapsed(1), withDecision(effectiveStartDate = Some(date)))
+      val c2 = aCase(withoutQueue(), withActiveDaysElapsed(2), withDecision(effectiveStartDate = Some(date.plusSeconds(1))))
 
       await(repository.insert(c1))
       await(repository.insert(c2))
@@ -724,10 +762,43 @@ class CaseRepositorySpec extends BaseMongoIndexSpec
       val report = CaseReport(
         filter = CaseReportFilter(decisionStartDate = Some(InstantRange(date, date))),
         group = CaseReportGroup.QUEUE,
-        field = CaseReportField.DAYS_ELAPSED
+        field = CaseReportField.ACTIVE_DAYS_ELAPSED
       )
 
       await(repository.generateReport(report)) shouldBe Seq(ReportResult(None, Seq(1)))
+    }
+
+    "filter on Reference" in {
+      val c1 = aCase(withoutQueue(), withActiveDaysElapsed(1), withReference("1"))
+      val c2 = aCase(withoutQueue(), withActiveDaysElapsed(2), withReference("2"))
+
+      await(repository.insert(c1))
+      await(repository.insert(c2))
+      collectionSize shouldBe 2
+
+      val report = CaseReport(
+        filter = CaseReportFilter(reference = Some(Set("1"))),
+        group = CaseReportGroup.QUEUE,
+        field = CaseReportField.ACTIVE_DAYS_ELAPSED
+      )
+      await(repository.generateReport(report)) shouldBe Seq(ReportResult(None, Seq(1)))
+    }
+
+    "filter on multiple References" in {
+      val c1 = aCase(withoutQueue(), withActiveDaysElapsed(1), withReference("1"))
+      val c2 = aCase(withoutQueue(), withActiveDaysElapsed(2), withReference("2"))
+
+      await(repository.insert(c1))
+      await(repository.insert(c2))
+      collectionSize shouldBe 2
+
+      val report = CaseReport(
+        filter = CaseReportFilter(reference = Some(Set("1", "2"))),
+        group = CaseReportGroup.QUEUE,
+        field = CaseReportField.ACTIVE_DAYS_ELAPSED
+      )
+
+      await(repository.generateReport(report)) shouldBe Seq(ReportResult(None, Seq(1, 2)))
     }
   }
 

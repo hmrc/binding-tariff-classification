@@ -17,15 +17,48 @@
 package uk.gov.hmrc.bindingtariffclassification.service
 
 import javax.inject.Inject
-import uk.gov.hmrc.bindingtariffclassification.model.reporting.{CaseReport, ReportResult}
-import uk.gov.hmrc.bindingtariffclassification.repository.CaseRepository
+import uk.gov.hmrc.bindingtariffclassification.model._
+import uk.gov.hmrc.bindingtariffclassification.model.reporting.{CaseReport, InstantRange, ReportResult}
+import uk.gov.hmrc.bindingtariffclassification.repository.{CaseRepository, EventRepository}
 
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class ReportService @Inject()(caseRepository: CaseRepository) {
+class ReportService @Inject()(caseRepository: CaseRepository, eventRepository: EventRepository) {
 
   def generate(report: CaseReport): Future[Seq[ReportResult]] = {
-    caseRepository.generateReport(report)
+    for {
+      report: CaseReport <- report.filter.referralDate match {
+        case Some(range) => appendReferredCaseReferencesTo(report, range)
+        case None => Future.successful(report)
+      }
+
+      report <- caseRepository.generateReport(report)
+    } yield report
+  }
+
+  private def appendReferredCaseReferencesTo(report: CaseReport, range: InstantRange): Future[CaseReport] = {
+    val filter = report.filter
+    val search = EventSearch(
+      timestampMin = Some(range.min),
+      timestampMax = Some(range.max),
+      `type` = Some(Set(EventType.CASE_STATUS_CHANGE))
+    )
+
+    eventRepository
+      .search(search, Pagination.max)
+      .map(_.results)
+      .map {
+        _.filter { event =>
+          val change = event.details.asInstanceOf[CaseStatusChange]
+          change.to == CaseStatus.REFERRED || change.from == CaseStatus.REFERRED
+        }
+      }
+      .map(_.map(_.caseReference))
+      .map { referredCaseReferences =>
+        val references = filter.reference.getOrElse(Set.empty) ++ referredCaseReferences
+        report.copy(filter = filter.copy(reference = Some(references), referralDate = None))
+      }
   }
 
 }

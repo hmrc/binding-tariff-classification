@@ -16,7 +16,8 @@
 
 package util
 
-import java.time.Instant
+import java.time.{Instant, LocalDateTime, ZoneOffset}
+import java.util.UUID
 
 import uk.gov.hmrc.bindingtariffclassification.model.CaseStatus.{CaseStatus, _}
 import uk.gov.hmrc.bindingtariffclassification.model._
@@ -42,10 +43,11 @@ object EventData {
     )
   }
 
-  def createCaseStatusChangeEvent(caseReference: String, from: CaseStatus = DRAFT, to : CaseStatus = NEW): Event = {
+  def createCaseStatusChangeEvent(caseReference: String, from: CaseStatus = DRAFT, to : CaseStatus = NEW, date: Instant = Instant.now()): Event = {
     createEvent(
       caseRef = caseReference,
-      details = CaseStatusChange(from = from, to = to, comment = Some("comment"))
+      details = CaseStatusChange(from = from, to = to, comment = Some("comment")),
+      date = date
     )
   }
 
@@ -86,5 +88,17 @@ object EventData {
       details = AssignmentChange(from = Some(o1), to = Some(o2), comment = Some("comment"))
     )
   }
+
+  def anEvent(withModifier: (Event => Event)*): Event = {
+    val example = createCaseStatusChangeEvent(UUID.randomUUID().toString)
+
+    withModifier.foldLeft(example)((current: Event, modifier) => modifier.apply(current))
+  }
+
+  def withCaseReference(reference: String): Event => Event = _.copy(caseReference = reference)
+
+  def withStatusChange(from: CaseStatus, to: CaseStatus): Event =>  Event = _.copy(details = CaseStatusChange(from, to))
+
+  def withTimestamp(date: String): Event => Event = _.copy(timestamp = LocalDateTime.parse(date).atOffset(ZoneOffset.UTC).toInstant)
 
 }

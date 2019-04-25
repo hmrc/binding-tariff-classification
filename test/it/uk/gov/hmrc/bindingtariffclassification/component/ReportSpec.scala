@@ -27,6 +27,7 @@ import uk.gov.hmrc.bindingtariffclassification.model.RESTFormatters._
 import uk.gov.hmrc.bindingtariffclassification.model._
 import uk.gov.hmrc.bindingtariffclassification.model.reporting.ReportResult
 import util.Cases._
+import util.EventData._
 
 class ReportSpec extends BaseFeatureSpec {
 
@@ -35,14 +36,30 @@ class ReportSpec extends BaseFeatureSpec {
 
   feature("Report") {
 
-    scenario("Generate a Report on Days Elapsed Grouping by Queue") {
+    scenario("Generate a Report on Active Days Elapsed Grouping by Queue") {
       Given("There are some documents in the collection")
-      givenThereIs(aCase(withoutQueue(), withDaysElapsed(0)))
-      givenThereIs(aCase(withQueue("queue-1"), withDaysElapsed(1)))
-      givenThereIs(aCase(withQueue("queue-1"), withDaysElapsed(2)))
+      givenThereIs(aCase(withoutQueue(), withActiveDaysElapsed(0)))
+      givenThereIs(aCase(withQueue("queue-1"), withActiveDaysElapsed(1)))
+      givenThereIs(aCase(withQueue("queue-1"), withActiveDaysElapsed(2)))
 
       When("I request the report")
-      val result = whenIGET("report", withParams("report_field" -> "days-elapsed", "report_group" -> "queue-id"))
+      val result = whenIGET("report", withParams("report_field" -> "active-days-elapsed", "report_group" -> "queue-id"))
+
+      Then("The response code should be 200")
+      result.code shouldBe OK
+
+      And("The response body contains the report")
+      thenTheJsonBodyOf[Seq[ReportResult]](result).get.toSet shouldBe Set(ReportResult(None, Seq(0)), ReportResult("queue-1", Seq(1, 2)))
+    }
+
+    scenario("Generate a Report on Referred Days Elapsed Grouping by Queue") {
+      Given("There are some documents in the collection")
+      givenThereIs(aCase(withoutQueue(), withReferredDaysElapsed(0)))
+      givenThereIs(aCase(withQueue("queue-1"), withReferredDaysElapsed(1)))
+      givenThereIs(aCase(withQueue("queue-1"), withReferredDaysElapsed(2)))
+
+      When("I request the report")
+      val result = whenIGET("report", withParams("report_field" -> "referred-days-elapsed", "report_group" -> "queue-id"))
 
       Then("The response code should be 200")
       result.code shouldBe OK
@@ -53,14 +70,14 @@ class ReportSpec extends BaseFeatureSpec {
 
     scenario("Generate a Report filtering by decision date") {
       Given("There are some documents in the collection")
-      givenThereIs(aCase(withQueue("queue-1"), withDaysElapsed(1), withDecision(effectiveStartDate = Some(date("2019-01-01T00:00:00")))))
-      givenThereIs(aCase(withQueue("queue-1"), withDaysElapsed(2), withDecision(effectiveStartDate = Some(date("2019-02-01T00:00:00")))))
-      givenThereIs(aCase(withQueue("queue-1"), withDaysElapsed(3), withDecision(effectiveStartDate = Some(date("2019-03-01T00:00:00")))))
+      givenThereIs(aCase(withQueue("queue-1"), withActiveDaysElapsed(1), withDecision(effectiveStartDate = Some(date("2019-01-01T00:00:00")))))
+      givenThereIs(aCase(withQueue("queue-1"), withActiveDaysElapsed(2), withDecision(effectiveStartDate = Some(date("2019-02-01T00:00:00")))))
+      givenThereIs(aCase(withQueue("queue-1"), withActiveDaysElapsed(3), withDecision(effectiveStartDate = Some(date("2019-03-01T00:00:00")))))
 
       When("I request the report")
       val result = whenIGET("report",
         withParams(
-          "report_field" -> "days-elapsed",
+          "report_field" -> "active-days-elapsed",
           "report_group" -> "queue-id",
           "min_decision_start" -> "2019-01-15T00:00:00Z",
           "max_decision_start" -> "2019-02-15T00:00:00Z"
@@ -72,6 +89,53 @@ class ReportSpec extends BaseFeatureSpec {
 
       And("The response body contains the report")
       thenTheJsonBodyOf[Seq[ReportResult]](result) shouldBe Some(Seq(ReportResult("queue-1", Seq(2))))
+    }
+
+    scenario("Generate a Report filtering by referral date") {
+      Given("There are some documents in the collection")
+      givenThereIs(aCase(withReference("ref1"), withQueue("queue-1"), withActiveDaysElapsed(1)))
+      givenThereIs(anEvent(withCaseReference("ref1"), withStatusChange(CaseStatus.OPEN, CaseStatus.REFERRED), withTimestamp("2019-02-01T00:00:00")))
+
+      givenThereIs(aCase(withReference("ref2"), withQueue("queue-1"), withActiveDaysElapsed(2)))
+      givenThereIs(anEvent(withCaseReference("ref1"), withStatusChange(CaseStatus.REFERRED, CaseStatus.OPEN), withTimestamp("2019-03-01T00:00:00")))
+
+      When("I request the report")
+      val result = whenIGET("report",
+        withParams(
+          "report_field" -> "active-days-elapsed",
+          "report_group" -> "queue-id",
+          "min_referral_date" -> "2019-01-15T00:00:00Z",
+          "max_referral_date" -> "2019-02-15T00:00:00Z"
+        )
+      )
+
+      Then("The response code should be 200")
+      result.code shouldBe OK
+
+      And("The response body contains the report")
+      thenTheJsonBodyOf[Seq[ReportResult]](result) shouldBe Some(Seq(ReportResult("queue-1", Seq(1))))
+    }
+
+    scenario("Generate a Report filtering by reference") {
+      Given("There are some documents in the collection")
+      givenThereIs(aCase(withReference("1"), withQueue("queue-1"), withActiveDaysElapsed(1)))
+      givenThereIs(aCase(withReference("2"), withQueue("queue-1"), withActiveDaysElapsed(2)))
+      givenThereIs(aCase(withReference("3"), withQueue("queue-1"), withActiveDaysElapsed(3)))
+
+      When("I request the report")
+      val result = whenIGET("report",
+        withParams(
+          "report_field" -> "active-days-elapsed",
+          "report_group" -> "queue-id",
+          "reference" -> "1, 2"
+        )
+      )
+
+      Then("The response code should be 200")
+      result.code shouldBe OK
+
+      And("The response body contains the report")
+      thenTheJsonBodyOf[Seq[ReportResult]](result) shouldBe Some(Seq(ReportResult("queue-1", Seq(1, 2))))
     }
 
   }
@@ -93,5 +157,7 @@ class ReportSpec extends BaseFeatureSpec {
   private def thenTheJsonBodyOf[T](response: HttpResponse[String])(implicit rds: Reads[T]): Option[T] = Json.fromJson[T](Json.parse(response.body)).asOpt
 
   private def givenThereIs(c: Case): Unit = storeCases(c)
+
+  private def givenThereIs(e: Event): Unit = storeEvents(e)
 
 }

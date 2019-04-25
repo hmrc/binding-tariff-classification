@@ -55,8 +55,12 @@ object Cases {
     _.copy(assignee = None)
   }
 
-  def withDaysElapsed(elapsed: Int): Case => Case = {
+  def withActiveDaysElapsed(elapsed: Int): Case => Case = {
     _.copy(daysElapsed = elapsed)
+  }
+
+  def withReferredDaysElapsed(elapsed: Int): Case => Case = {
+    _.copy(referredDaysElapsed = elapsed)
   }
 
   def withQueue(queue: String): Case => Case = {
