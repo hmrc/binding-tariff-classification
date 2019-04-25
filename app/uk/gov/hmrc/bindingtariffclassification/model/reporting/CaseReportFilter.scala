@@ -17,6 +17,7 @@
 package uk.gov.hmrc.bindingtariffclassification.model.reporting
 
 import play.api.mvc.QueryStringBindable
+import uk.gov.hmrc.bindingtariffclassification.model.utils.BinderUtil._
 
 case class CaseReportFilter
 (
@@ -31,20 +32,23 @@ object CaseReportFilter {
   val referralDateKey = "referral_date"
   val referenceKey = "reference"
 
-  implicit def binder(implicit rangeBinder: QueryStringBindable[InstantRange], stringBinder: QueryStringBindable[String]): QueryStringBindable[CaseReportFilter]
-  = new QueryStringBindable[CaseReportFilter] {
+  implicit def binder(implicit
+                      rangeBinder: QueryStringBindable[InstantRange],
+                      stringBinder: QueryStringBindable[String]): QueryStringBindable[CaseReportFilter] = new QueryStringBindable[CaseReportFilter] {
 
     override def bind(key: String, requestParams: Map[String, Seq[String]]): Option[Either[String, CaseReportFilter]] = {
       implicit val rp: Map[String, Seq[String]] = requestParams
 
       val decisionStart: Option[InstantRange] = rangeBinder.bind(decisionStartKey, requestParams).filter(_.isRight).map(_.right.get)
       val referralDate: Option[InstantRange] = rangeBinder.bind(referralDateKey, requestParams).filter(_.isRight).map(_.right.get)
+      val reference: Option[Set[String]] = params(referenceKey)
 
       Some(
         Right(
           CaseReportFilter(
             decisionStart,
-            referralDate
+            referralDate,
+            reference
           )
         )
       )

@@ -34,7 +34,8 @@ class CaseReportTest extends UnitSpec {
       referralDate = Some(InstantRange(
         min = Instant.EPOCH,
         max  = Instant.EPOCH.plusSeconds(1)
-      ))
+      )),
+      reference = Some(Set("reference1", "reference2"))
     ),
     field = CaseReportField.ACTIVE_DAYS_ELAPSED,
     group = CaseReportGroup.QUEUE
@@ -46,7 +47,8 @@ class CaseReportTest extends UnitSpec {
     "min_referral_date" -> Seq("1970-01-01T00:00:00Z"),
     "max_referral_date" -> Seq("1970-01-01T00:00:01Z"),
     "report_field" -> Seq("active-days-elapsed"),
-    "report_group" -> Seq("queue-id")
+    "report_group" -> Seq("queue-id"),
+    "reference" -> Seq("reference1,reference2")
   )
 
   /**
@@ -60,6 +62,8 @@ class CaseReportTest extends UnitSpec {
           "max_decision_start=1970-01-01T00:00:01Z&" +
           "min_referral_date=1970-01-01T00:00:00Z&" +
           "max_referral_date=1970-01-01T00:00:01Z&" +
+          "reference=reference1&" +
+          "reference=reference2&" +
           "report_group=queue-id&" +
           "report_field=active-days-elapsed"
       URLDecoder.decode(CaseReport.bindable.unbind("", report), "UTF-8") shouldBe populatedQueryParam

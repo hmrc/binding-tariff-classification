@@ -43,7 +43,12 @@ class ReportSpec extends BaseFeatureSpec {
       givenThereIs(aCase(withQueue("queue-1"), withActiveDaysElapsed(2)))
 
       When("I request the report")
-      val result = whenIGET("report", withParams("report_field" -> "active-days-elapsed", "report_group" -> "queue-id"))
+      val result = whenIGET("report",
+        withParams(
+          "report_field" -> "active-days-elapsed",
+          "report_group" -> "queue-id"
+        )
+      )
 
       Then("The response code should be 200")
       result.code shouldBe OK
@@ -59,7 +64,12 @@ class ReportSpec extends BaseFeatureSpec {
       givenThereIs(aCase(withQueue("queue-1"), withReferredDaysElapsed(2)))
 
       When("I request the report")
-      val result = whenIGET("report", withParams("report_field" -> "referred-days-elapsed", "report_group" -> "queue-id"))
+      val result = whenIGET("report",
+        withParams(
+          "report_field" -> "referred-days-elapsed",
+          "report_group" -> "queue-id"
+        )
+      )
 
       Then("The response code should be 200")
       result.code shouldBe OK
@@ -127,7 +137,7 @@ class ReportSpec extends BaseFeatureSpec {
         withParams(
           "report_field" -> "active-days-elapsed",
           "report_group" -> "queue-id",
-          "reference" -> "1, 2"
+          "reference" -> "1,2"
         )
       )
 
@@ -142,7 +152,7 @@ class ReportSpec extends BaseFeatureSpec {
 
   private def date(d: String): Instant = LocalDateTime.parse(d).atOffset(ZoneOffset.UTC).toInstant
 
-  private def withParams(params: (String, String)*): Map[String, String] = Map(params:_*)
+  private def withParams(params: (String, String)*): Map[String, String] = Map(params: _*)
 
   private def whenIGET(path: String, params: Map[String, String]): HttpResponse[String] = {
     val query = if (params.isEmpty) "" else "?" + params.map(p => s"${p._1}=${p._2}").mkString("&")
