@@ -29,6 +29,7 @@ object RESTFormatters {
   implicit val formatApplicationType = EnumJson.format(ApplicationType)
   implicit val formatLiabilityStatus = EnumJson.format(LiabilityStatus)
   implicit val formatAppealStatus = EnumJson.format(AppealStatus)
+  implicit val formatAppealType: Format[AppealType.Value] = EnumJson.format(AppealType)
   implicit val formatReviewStatus = EnumJson.format(ReviewStatus)
   implicit val formatCancelReason = EnumJson.format(CancelReason)
 

@@ -28,7 +28,7 @@ case class Decision
   methodSearch: Option[String] = None,
   methodCommercialDenomination: Option[String] = None,
   methodExclusion: Option[String] = None,
-  appeal: Option[Appeal] = None,
+  appeal: Seq[Appeal] = Seq.empty,
   review: Option[Review] = None,
   cancellation: Option[Cancellation] = None,
   explanation: Option[String] = None
