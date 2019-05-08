@@ -21,6 +21,7 @@ import uk.gov.hmrc.bindingtariffclassification.model.AppealType.AppealType
 
 case class Appeal
 (
+  id: String,
   status: AppealStatus,
   `type`: AppealType
 )
