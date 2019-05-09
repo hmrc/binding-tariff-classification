@@ -185,7 +185,7 @@ class EventRepositorySpec extends BaseMongoIndexSpec
 
     "return some events with default Pagination" in {
       await(repository.insert(createAssignmentChangeEvent("ref")))
-      await(repository.insert(createAppealStatusChangeEvent("ref")))
+      await(repository.insert(createNoteEvent("ref")))
       await(repository.search(EventSearch(), Pagination())).size shouldBe 2
     }
 
@@ -197,7 +197,7 @@ class EventRepositorySpec extends BaseMongoIndexSpec
 
     "return pages of cases" in {
       await(repository.insert(createExtendedUseStatusChangeEvent("ref")))
-      await(repository.insert(createReviewStatusChangeEvent("ref")))
+      await(repository.insert(createNoteEvent("ref")))
       await(repository.search(EventSearch(), Pagination(pageSize = 1))).size shouldBe 1
       await(repository.search(EventSearch(), Pagination(page = 2, pageSize = 1))).size shouldBe 1
       await(repository.search(EventSearch(), Pagination(page = 3, pageSize = 1))).size shouldBe 0
