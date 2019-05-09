@@ -20,9 +20,9 @@ import java.time.Instant
 import java.util.UUID
 
 import uk.gov.hmrc.bindingtariffclassification.model.AppealStatus.AppealStatus
+import uk.gov.hmrc.bindingtariffclassification.model.AppealType.AppealType
 import uk.gov.hmrc.bindingtariffclassification.model.CaseStatus.CaseStatus
 import uk.gov.hmrc.bindingtariffclassification.model.EventType.EventType
-import uk.gov.hmrc.bindingtariffclassification.model.ReviewStatus.ReviewStatus
 
 case class Event
 (
@@ -52,22 +52,22 @@ case class CaseStatusChange
   override val `type`: EventType.Value = EventType.CASE_STATUS_CHANGE
 }
 
-case class AppealStatusChange
+case class AppealAdded
 (
-  override val from: Option[AppealStatus],
-  override val to: Option[AppealStatus],
-  override val comment: Option[String] = None
-) extends FieldChange[Option[AppealStatus]] {
-  override val `type`: EventType.Value = EventType.APPEAL_STATUS_CHANGE
+  appealType: AppealType,
+  appealStatus: AppealStatus
+) extends Details {
+  override val `type`: EventType.Value = EventType.APPEAL_ADDED
 }
 
-case class ReviewStatusChange
+case class AppealStatusChange
 (
-  override val from: Option[ReviewStatus],
-  override val to: Option[ReviewStatus],
+  appealType: AppealType,
+  override val from: AppealStatus,
+  override val to: AppealStatus,
   override val comment: Option[String] = None
-) extends FieldChange[Option[ReviewStatus]] {
-  override val `type`: EventType.Value = EventType.REVIEW_STATUS_CHANGE
+) extends FieldChange[AppealStatus] {
+  override val `type`: EventType.Value = EventType.APPEAL_STATUS_CHANGE
 }
 
 case class ExtendedUseStatusChange
@@ -107,5 +107,5 @@ case class Note
 
 object EventType extends Enumeration {
   type EventType = Value
-  val CASE_STATUS_CHANGE, APPEAL_STATUS_CHANGE, REVIEW_STATUS_CHANGE, EXTENDED_USE_STATUS_CHANGE, ASSIGNMENT_CHANGE, QUEUE_CHANGE, NOTE = Value
+  val CASE_STATUS_CHANGE, APPEAL_STATUS_CHANGE, APPEAL_ADDED, EXTENDED_USE_STATUS_CHANGE, ASSIGNMENT_CHANGE, QUEUE_CHANGE, NOTE = Value
 }

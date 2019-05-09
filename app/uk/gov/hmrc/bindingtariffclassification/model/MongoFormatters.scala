@@ -80,7 +80,7 @@ object MongoFormatters {
   // `Event` formatters
   implicit val formatCaseStatusChange: OFormat[CaseStatusChange] = Json.format[CaseStatusChange]
   implicit val formatAppealStatusChange: OFormat[AppealStatusChange] = Json.format[AppealStatusChange]
-  implicit val formatReviewStatusChange: OFormat[ReviewStatusChange] = Json.format[ReviewStatusChange]
+  implicit val formatAppealAdded: OFormat[AppealAdded] = Json.format[AppealAdded]
   implicit val formatExtendedUseStatusChange: OFormat[ExtendedUseStatusChange] = Json.format[ExtendedUseStatusChange]
   implicit val formatAssignmentChange: OFormat[AssignmentChange] = Json.format[AssignmentChange]
   implicit val formatQueueChange: OFormat[QueueChange] = Json.format[QueueChange]
@@ -89,7 +89,7 @@ object MongoFormatters {
   implicit val formatEventDetail: Format[Details] = Union.from[Details]("type")
     .and[CaseStatusChange](EventType.CASE_STATUS_CHANGE.toString)
     .and[AppealStatusChange](EventType.APPEAL_STATUS_CHANGE.toString)
-    .and[ReviewStatusChange](EventType.REVIEW_STATUS_CHANGE.toString)
+    .and[AppealAdded](EventType.APPEAL_ADDED.toString)
     .and[ExtendedUseStatusChange](EventType.EXTENDED_USE_STATUS_CHANGE.toString)
     .and[AssignmentChange](EventType.ASSIGNMENT_CHANGE.toString)
     .and[QueueChange](EventType.QUEUE_CHANGE.toString)
