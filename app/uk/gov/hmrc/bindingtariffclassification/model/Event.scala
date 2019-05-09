@@ -37,10 +37,13 @@ sealed trait Details {
   val `type`: EventType
 }
 
-sealed trait FieldChange[T] extends Details {
+sealed trait OptionalComment {
+  val comment: Option[String]
+}
+
+sealed trait FieldChange[T] extends Details with OptionalComment {
   val from: T
   val to: T
-  val comment: Option[String]
 }
 
 case class CaseStatusChange
@@ -55,8 +58,9 @@ case class CaseStatusChange
 case class AppealAdded
 (
   appealType: AppealType,
-  appealStatus: AppealStatus
-) extends Details {
+  appealStatus: AppealStatus,
+  override val comment: Option[String] = None
+) extends Details with OptionalComment {
   override val `type`: EventType.Value = EventType.APPEAL_ADDED
 }
 
