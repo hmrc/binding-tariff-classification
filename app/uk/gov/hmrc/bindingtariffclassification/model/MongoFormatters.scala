@@ -52,6 +52,7 @@ object MongoFormatters {
   implicit val formatCaseStatus: Format[CaseStatus.Value] = EnumJson.format(CaseStatus)
   implicit val formatPseudoCaseStatus: Format[PseudoCaseStatus.Value] = EnumJson.format(PseudoCaseStatus)
   implicit val formatAppealStatus: Format[AppealStatus.Value] = EnumJson.format(AppealStatus)
+  implicit val formatSampleStatus: Format[SampleStatus.Value] = EnumJson.format(SampleStatus)
   implicit val formatReviewStatus: Format[ReviewStatus.Value] = EnumJson.format(ReviewStatus)
   implicit val formatCancelReason: Format[CancelReason.Value] = EnumJson.format(CancelReason)
   implicit val formatApplicationType: Format[ApplicationType.Value] = EnumJson.format(ApplicationType)
@@ -79,6 +80,7 @@ object MongoFormatters {
   // `Event` formatters
   implicit val formatCaseStatusChange: OFormat[CaseStatusChange] = Json.format[CaseStatusChange]
   implicit val formatAppealStatusChange: OFormat[AppealStatusChange] = Json.format[AppealStatusChange]
+  implicit val formatSampleStatusChange: OFormat[SampleStatusChange] = Json.format[SampleStatusChange]
   implicit val formatReviewStatusChange: OFormat[ReviewStatusChange] = Json.format[ReviewStatusChange]
   implicit val formatExtendedUseStatusChange: OFormat[ExtendedUseStatusChange] = Json.format[ExtendedUseStatusChange]
   implicit val formatAssignmentChange: OFormat[AssignmentChange] = Json.format[AssignmentChange]
@@ -88,6 +90,7 @@ object MongoFormatters {
   implicit val formatEventDetail: Format[Details] = Union.from[Details]("type")
     .and[CaseStatusChange](EventType.CASE_STATUS_CHANGE.toString)
     .and[AppealStatusChange](EventType.APPEAL_STATUS_CHANGE.toString)
+    .and[SampleStatusChange](EventType.SAMPLE_STATUS_CHANGE.toString)
     .and[ReviewStatusChange](EventType.REVIEW_STATUS_CHANGE.toString)
     .and[ExtendedUseStatusChange](EventType.EXTENDED_USE_STATUS_CHANGE.toString)
     .and[AssignmentChange](EventType.ASSIGNMENT_CHANGE.toString)

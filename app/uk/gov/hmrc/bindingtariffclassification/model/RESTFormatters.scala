@@ -29,6 +29,7 @@ object RESTFormatters {
   implicit val formatApplicationType = EnumJson.format(ApplicationType)
   implicit val formatLiabilityStatus = EnumJson.format(LiabilityStatus)
   implicit val formatAppealStatus = EnumJson.format(AppealStatus)
+  implicit val formatSampleStatus = EnumJson.format(SampleStatus)
   implicit val formatReviewStatus = EnumJson.format(ReviewStatus)
   implicit val formatCancelReason = EnumJson.format(CancelReason)
 
@@ -59,6 +60,7 @@ object RESTFormatters {
   // `Event` formatters
   implicit val formatCaseStatusChange = Json.format[CaseStatusChange]
   implicit val formatAppealStatusChange = Json.format[AppealStatusChange]
+  implicit val formatSampleStatusChange = Json.format[SampleStatusChange]
   implicit val formatReviewStatusChange = Json.format[ReviewStatusChange]
   implicit val formatExtendedUseStatusChange = Json.format[ExtendedUseStatusChange]
   implicit val formatAssignmentChange = Json.format[AssignmentChange]
@@ -69,6 +71,7 @@ object RESTFormatters {
   implicit val formatEventDetail = Union.from[Details]("type")
     .and[CaseStatusChange](EventType.CASE_STATUS_CHANGE.toString)
     .and[AppealStatusChange](EventType.APPEAL_STATUS_CHANGE.toString)
+    .and[SampleStatusChange](EventType.SAMPLE_STATUS_CHANGE.toString)
     .and[ReviewStatusChange](EventType.REVIEW_STATUS_CHANGE.toString)
     .and[ExtendedUseStatusChange](EventType.EXTENDED_USE_STATUS_CHANGE.toString)
     .and[AssignmentChange](EventType.ASSIGNMENT_CHANGE.toString)

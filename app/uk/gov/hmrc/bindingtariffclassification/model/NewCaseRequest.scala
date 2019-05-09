@@ -16,6 +16,8 @@
 
 package uk.gov.hmrc.bindingtariffclassification.model
 
+import uk.gov.hmrc.bindingtariffclassification.model.SampleStatus.SampleStatus
+
 case class NewCaseRequest
 (
   application: Application,
@@ -25,6 +27,10 @@ case class NewCaseRequest
   def toCase(reference: String) = Case(
     reference = reference,
     status = CaseStatus.NEW,
+    sampleStatus = application.asBTI.sampleToBeProvided match {
+      case true => SampleStatus.AWAITING
+      case false => SampleStatus.NONE
+    },
     application = application,
     attachments = attachments
   )

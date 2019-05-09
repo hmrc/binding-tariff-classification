@@ -23,6 +23,7 @@ import uk.gov.hmrc.bindingtariffclassification.model.AppealStatus.AppealStatus
 import uk.gov.hmrc.bindingtariffclassification.model.CaseStatus.CaseStatus
 import uk.gov.hmrc.bindingtariffclassification.model.EventType.EventType
 import uk.gov.hmrc.bindingtariffclassification.model.ReviewStatus.ReviewStatus
+import uk.gov.hmrc.bindingtariffclassification.model.SampleStatus.SampleStatus
 
 case class Event
 (
@@ -104,8 +105,18 @@ case class Note
   override val `type`: EventType.Value = EventType.NOTE
 }
 
+case class SampleStatusChange
+(
+  override val from: SampleStatus,
+  override val to: SampleStatus,
+  override val comment: Option[String] = None
+) extends FieldChange[SampleStatus] {
+  override val `type`: EventType.Value = EventType.SAMPLE_STATUS_CHANGE
+}
+
 
 object EventType extends Enumeration {
   type EventType = Value
-  val CASE_STATUS_CHANGE, APPEAL_STATUS_CHANGE, REVIEW_STATUS_CHANGE, EXTENDED_USE_STATUS_CHANGE, ASSIGNMENT_CHANGE, QUEUE_CHANGE, NOTE = Value
+  val CASE_STATUS_CHANGE, APPEAL_STATUS_CHANGE, REVIEW_STATUS_CHANGE, EXTENDED_USE_STATUS_CHANGE, ASSIGNMENT_CHANGE,
+  QUEUE_CHANGE, NOTE, SAMPLE_STATUS_CHANGE  = Value
 }
