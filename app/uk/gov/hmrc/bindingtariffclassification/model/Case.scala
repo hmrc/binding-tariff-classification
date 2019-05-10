@@ -25,7 +25,7 @@ case class Case
 (
   reference: String,
   status: CaseStatus,
-  sampleStatus: SampleStatus = SampleStatus.NONE,
+  sampleStatus: Option[SampleStatus] = None,
   createdDate: Instant = Instant.now(),
   daysElapsed: Long = 0,
   referredDaysElapsed: Long = 0,

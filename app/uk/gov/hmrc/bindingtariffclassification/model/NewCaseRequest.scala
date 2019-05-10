@@ -28,8 +28,8 @@ case class NewCaseRequest
     reference = reference,
     status = CaseStatus.NEW,
     sampleStatus = application.asBTI.sampleToBeProvided match {
-      case true => SampleStatus.AWAITING
-      case false => SampleStatus.NONE
+      case true => Some(SampleStatus.AWAITING)
+      case false => None
     },
     application = application,
     attachments = attachments

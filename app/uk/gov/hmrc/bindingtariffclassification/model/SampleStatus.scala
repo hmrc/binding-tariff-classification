@@ -18,5 +18,6 @@ package uk.gov.hmrc.bindingtariffclassification.model
 
 object SampleStatus extends Enumeration {
   type SampleStatus = Value
-  val NONE, AWAITING, MOVED_TO_ACT, MOVED_TO_ELM, SENT_TO_LAB, STORAGE, RETURNED, COURIER, DESTROYED = Value
+  val AWAITING, MOVED_TO_ACT, MOVED_TO_ELM, SENT_FOR_ANALYSIS, SENT_TO_APPEALS, STORAGE, RETURNED_APPLICANT,
+  RETURNED_PORT_OFFICER, RETURNED_COURIER, DESTROYED = Value
 }
