@@ -173,6 +173,15 @@ class CaseMongoRepository @Inject()(mongoDbProvider: MongoDbProvider, mapper: Se
           "$gte" -> toJson(range.min)
         ))
       })
+      .++(report.filter.status.map { statuses =>
+        Json.obj("status" -> Json.obj(
+          "$in" -> JsArray(statuses.map(_.toString).map(JsString).toSeq)
+        ))
+      })
+      .++(report.filter.assigneeId.map {
+        case "none" =>  Json.obj("assignee.id" -> JsNull)
+        case a =>   Json.obj("assignee.id" -> a)
+      })
       .++(report.filter.reference.map { references =>
         Json.obj("reference" -> Json.obj("$in" -> JsArray(references.map(JsString).toSeq)))
       })

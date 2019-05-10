@@ -17,13 +17,17 @@
 package uk.gov.hmrc.bindingtariffclassification.model.reporting
 
 import play.api.mvc.QueryStringBindable
+import uk.gov.hmrc.bindingtariffclassification.model.CaseStatus
+import uk.gov.hmrc.bindingtariffclassification.model.CaseStatus.CaseStatus
 import uk.gov.hmrc.bindingtariffclassification.model.utils.BinderUtil._
 
 case class CaseReportFilter
 (
   decisionStartDate: Option[InstantRange] = None,
   referralDate: Option[InstantRange] = None,
-  reference: Option[Set[String]] = None
+  reference: Option[Set[String]] = None,
+  status: Option[Set[CaseStatus]] = None,
+  assigneeId: Option[String] = None
 )
 
 object CaseReportFilter {
@@ -31,6 +35,8 @@ object CaseReportFilter {
   val decisionStartKey = "decision_start"
   val referralDateKey = "referral_date"
   val referenceKey = "reference"
+  val statusKey = "status"
+  val assigneeIdKey = "assignee_id"
 
   implicit def binder(implicit
                       rangeBinder: QueryStringBindable[InstantRange],
@@ -42,13 +48,17 @@ object CaseReportFilter {
       val decisionStart: Option[InstantRange] = rangeBinder.bind(decisionStartKey, requestParams).filter(_.isRight).map(_.right.get)
       val referralDate: Option[InstantRange] = rangeBinder.bind(referralDateKey, requestParams).filter(_.isRight).map(_.right.get)
       val reference: Option[Set[String]] = params(referenceKey)
+      val status: Option[Set[CaseStatus]] = params(statusKey).map(_.map(CaseStatus.withName))
+      val assigneeId: Option[String] = param(assigneeIdKey)
 
       Some(
         Right(
           CaseReportFilter(
             decisionStart,
             referralDate,
-            reference
+            reference,
+            status,
+            assigneeId
           )
         )
       )
@@ -58,7 +68,9 @@ object CaseReportFilter {
       Seq(
         filter.decisionStartDate.map(r => rangeBinder.unbind(decisionStartKey, r)),
         filter.referralDate.map(r => rangeBinder.unbind(referralDateKey, r)),
-        filter.reference.map(_.map(r => stringBinder.unbind(referenceKey, r)).mkString("&"))
+        filter.reference.map(_.map(r => stringBinder.unbind(referenceKey, r)).mkString("&")),
+        filter.status.map(_.map(r => stringBinder.unbind(statusKey, r.toString)).mkString("&")),
+        filter.assigneeId.map(r => stringBinder.unbind(assigneeIdKey, r))
       ).filter(_.isDefined).map(_.get).mkString("&")
     }
   }

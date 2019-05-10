@@ -768,6 +768,56 @@ class CaseRepositorySpec extends BaseMongoIndexSpec
       await(repository.generateReport(report)) shouldBe Seq(ReportResult(None, Seq(1)))
     }
 
+    "filter on status" in {
+      val c1 = aCase(withoutQueue(), withActiveDaysElapsed(1), withStatus(CaseStatus.NEW))
+      val c2 = aCase(withoutQueue(), withActiveDaysElapsed(2), withStatus(CaseStatus.OPEN))
+
+      await(repository.insert(c1))
+      await(repository.insert(c2))
+      collectionSize shouldBe 2
+
+      val report = CaseReport(
+        filter = CaseReportFilter(status = Some(Set(CaseStatus.NEW))),
+        group = CaseReportGroup.QUEUE,
+        field = CaseReportField.ACTIVE_DAYS_ELAPSED
+      )
+      await(repository.generateReport(report)) shouldBe Seq(ReportResult(None, Seq(1)))
+    }
+
+
+    "filter on mulitple statuses" in {
+      val c1 = aCase(withoutQueue(), withActiveDaysElapsed(1), withStatus(CaseStatus.NEW))
+      val c2 = aCase(withoutQueue(), withActiveDaysElapsed(2), withStatus(CaseStatus.OPEN))
+
+      await(repository.insert(c1))
+      await(repository.insert(c2))
+      collectionSize shouldBe 2
+
+      val report = CaseReport(
+        filter = CaseReportFilter(status = Some(Set(CaseStatus.NEW,CaseStatus.OPEN))),
+        group = CaseReportGroup.QUEUE,
+        field = CaseReportField.ACTIVE_DAYS_ELAPSED
+      )
+      await(repository.generateReport(report)) shouldBe Seq(ReportResult(None, Seq(1, 2)))
+    }
+
+    "filter on assignee" in {
+      val c1 = aCase(withoutQueue(), withActiveDaysElapsed(1), withAssignee(Some(Operator(id="123"))))
+      val c2 = aCase(withoutQueue(), withActiveDaysElapsed(2),  withAssignee(Some(Operator(id="456"))))
+
+      await(repository.insert(c1))
+      await(repository.insert(c2))
+      collectionSize shouldBe 2
+
+      val report = CaseReport(
+        filter = CaseReportFilter(assigneeId = Some("123")),
+        group = CaseReportGroup.QUEUE,
+        field = CaseReportField.ACTIVE_DAYS_ELAPSED
+      )
+      await(repository.generateReport(report)) shouldBe Seq(ReportResult(None, Seq(1)))
+    }
+
+
     "filter on Reference" in {
       val c1 = aCase(withoutQueue(), withActiveDaysElapsed(1), withReference("1"))
       val c2 = aCase(withoutQueue(), withActiveDaysElapsed(2), withReference("2"))

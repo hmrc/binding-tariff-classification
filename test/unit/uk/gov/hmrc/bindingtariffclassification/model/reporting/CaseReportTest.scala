@@ -20,6 +20,7 @@ import java.net.URLDecoder
 import java.time.Instant
 
 import play.api.mvc.QueryStringBindable.bindableString
+import uk.gov.hmrc.bindingtariffclassification.model.CaseStatus
 import uk.gov.hmrc.bindingtariffclassification.model.reporting.CaseReportFilter.binder
 import uk.gov.hmrc.play.test.UnitSpec
 
@@ -29,13 +30,15 @@ class CaseReportTest extends UnitSpec {
     filter = CaseReportFilter(
       decisionStartDate = Some(InstantRange(
         min = Instant.EPOCH,
-        max  = Instant.EPOCH.plusSeconds(1)
+        max = Instant.EPOCH.plusSeconds(1)
       )),
       referralDate = Some(InstantRange(
         min = Instant.EPOCH,
-        max  = Instant.EPOCH.plusSeconds(1)
+        max = Instant.EPOCH.plusSeconds(1)
       )),
-      reference = Some(Set("reference1", "reference2"))
+      reference = Some(Set("reference1", "reference2")),
+      status = Some(Set(CaseStatus.OPEN, CaseStatus.NEW)),
+      assigneeId = Some("assignee_123")
     ),
     field = CaseReportField.ACTIVE_DAYS_ELAPSED,
     group = CaseReportGroup.QUEUE
@@ -48,7 +51,9 @@ class CaseReportTest extends UnitSpec {
     "max_referral_date" -> Seq("1970-01-01T00:00:01Z"),
     "report_field" -> Seq("active-days-elapsed"),
     "report_group" -> Seq("queue-id"),
-    "reference" -> Seq("reference1,reference2")
+    "reference" -> Seq("reference1,reference2"),
+    "status" -> Seq("OPEN", "NEW"),
+    "assignee_id" -> Seq("assignee_123")
   )
 
   /**
@@ -64,8 +69,12 @@ class CaseReportTest extends UnitSpec {
           "max_referral_date=1970-01-01T00:00:01Z&" +
           "reference=reference1&" +
           "reference=reference2&" +
+          "status=OPEN&" +
+          "status=NEW&" +
+          "assignee_id=assignee_123&" +
           "report_group=queue-id&" +
           "report_field=active-days-elapsed"
+
       URLDecoder.decode(CaseReport.bindable.unbind("", report), "UTF-8") shouldBe populatedQueryParam
     }
 
@@ -84,6 +93,7 @@ class CaseReportTest extends UnitSpec {
     "Bind populated query string" in {
       CaseReport.bindable.bind("", params) shouldBe Some(Right(report))
     }
+
   }
 
 }
