@@ -16,8 +16,6 @@
 
 package uk.gov.hmrc.bindingtariffclassification.model
 
-import uk.gov.hmrc.bindingtariffclassification.model.SampleStatus.SampleStatus
-
 case class NewCaseRequest
 (
   application: Application,
