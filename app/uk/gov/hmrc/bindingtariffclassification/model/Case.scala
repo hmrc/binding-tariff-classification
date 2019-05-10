@@ -25,7 +25,6 @@ case class Case
 (
   reference: String,
   status: CaseStatus,
-  sampleStatus: Option[SampleStatus] = None,
   createdDate: Instant = Instant.now(),
   daysElapsed: Long = 0,
   referredDaysElapsed: Long = 0,
@@ -35,5 +34,6 @@ case class Case
   application: Application,
   decision: Option[Decision] = None,
   attachments: Seq[Attachment] = Seq.empty,
-  keywords: Set[String] = Set.empty
+  keywords: Set[String] = Set.empty,
+  sampleStatus: Option[SampleStatus] = None
 )

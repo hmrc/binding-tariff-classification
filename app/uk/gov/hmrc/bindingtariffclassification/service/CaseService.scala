@@ -20,11 +20,9 @@ import java.time.Instant
 import java.util.UUID
 
 import javax.inject._
-import play.api.Logger
 import uk.gov.hmrc.bindingtariffclassification.config.AppConfig
-import uk.gov.hmrc.bindingtariffclassification.model.{Case, CaseSearch, Event, Operator, Paged, Pagination, SampleStatusChange}
+import uk.gov.hmrc.bindingtariffclassification.model._
 import uk.gov.hmrc.bindingtariffclassification.repository.{CaseRepository, SequenceRepository}
-import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -44,7 +42,7 @@ class CaseService @Inject()(appConfig: AppConfig,
       val details = SampleStatusChange(None, c.sampleStatus, None)
       eventService.insert(Event(UUID.randomUUID().toString, details, Operator("-1",Some(c.application.holder.businessName)), c.reference, Instant.now()))
     }
-    Future.successful()
+    Future.successful((): Unit)
   }
 
   def nextCaseReference: Future[String] = {
