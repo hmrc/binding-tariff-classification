@@ -37,7 +37,7 @@ object Cases {
     eoriDetailsExample, contactExample, Some(eoriAgentDetailsExample), offline = false, "Laptop", "Personal Computer", None, None, None, None, None, None
   )
   private val decision = Decision(
-    "040900", Some(Instant.now()), Some(Instant.now().plusSeconds(2 * 3600 * 24 * 365)), "justification", "good description", None, None, Some("denomination"), None
+    "040900", Some(Instant.now()), Some(Instant.now().plusSeconds(2 * 3600 * 24 * 365)), "justification", "good description", None, None, Some("denomination"), Seq.empty
   )
   private val btiCaseExample = Case(
     UUID.randomUUID().toString, CaseStatus.OPEN, Instant.now(), 0, 0, None, None, None, btiApplicationExample, Some(decision), Seq()
@@ -182,8 +182,7 @@ object Cases {
                    methodSearch: Option[String] = None,
                    methodExclusion: Option[String] = None,
                    methodCommercialDenomination: Option[String] = None,
-                   appeal: Option[Appeal] = None,
-                   review: Option[Review] = None,
+                   appeal: Seq[Appeal] = Seq.empty,
                    cancellation: Option[Cancellation] = None
                   ): Case => Case = {
     _.copy(decision = Some(
@@ -197,7 +196,6 @@ object Cases {
         methodExclusion,
         methodCommercialDenomination,
         appeal,
-        review,
         cancellation
       )))
   }

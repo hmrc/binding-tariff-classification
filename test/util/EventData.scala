@@ -51,20 +51,6 @@ object EventData {
     )
   }
 
-  def createAppealStatusChangeEvent(caseReference: String): Event = {
-    createEvent(
-      caseRef = caseReference,
-      details = AppealStatusChange(from = Some(AppealStatus.ALLOWED), to = Some(AppealStatus.IN_PROGRESS), comment = Some("comment"))
-    )
-  }
-
-  def createReviewStatusChangeEvent(caseReference: String): Event = {
-    createEvent(
-      caseRef = caseReference,
-      details = ReviewStatusChange(from = Some(ReviewStatus.IN_PROGRESS), to = Some(ReviewStatus.OVERTURNED), comment = Some("comment"))
-    )
-  }
-
   def createExtendedUseStatusChangeEvent(caseReference: String): Event = {
     createEvent(
       caseRef = caseReference,

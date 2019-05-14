@@ -16,10 +16,7 @@
 
 package uk.gov.hmrc.bindingtariffclassification.model
 
-import uk.gov.hmrc.bindingtariffclassification.model.ReviewStatus.ReviewStatus
-
-
-case class Review
-(
-  status: ReviewStatus
-)
+object AppealType extends Enumeration {
+  type AppealType = Value
+  val REVIEW, APPEAL_TIER_1, APPEAL_TIER_2, COURT_OF_APPEALS, SUPREME_COURT = Value
+}
