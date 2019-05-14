@@ -18,5 +18,5 @@ package uk.gov.hmrc.bindingtariffclassification.model
 
 object AppealStatus extends Enumeration {
   type AppealStatus = Value
-  val IN_PROGRESS, ALLOWED, DISMISSED = Value
+  val IN_PROGRESS, ALLOWED, DISMISSED, MEDIATION = Value
 }

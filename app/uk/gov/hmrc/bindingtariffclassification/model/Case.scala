@@ -19,6 +19,7 @@ package uk.gov.hmrc.bindingtariffclassification.model
 import java.time.Instant
 
 import uk.gov.hmrc.bindingtariffclassification.model.CaseStatus.CaseStatus
+import uk.gov.hmrc.bindingtariffclassification.model.SampleStatus.SampleStatus
 
 case class Case
 (
@@ -33,5 +34,6 @@ case class Case
   application: Application,
   decision: Option[Decision] = None,
   attachments: Seq[Attachment] = Seq.empty,
-  keywords: Set[String] = Set.empty
+  keywords: Set[String] = Set.empty,
+  sampleStatus: Option[SampleStatus] = None
 )

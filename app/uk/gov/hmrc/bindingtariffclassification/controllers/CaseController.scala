@@ -44,6 +44,7 @@ class CaseController @Inject()(appConfig: AppConfig,
       for {
         r <- caseService.nextCaseReference
         c <- caseService.insert(caseRequest.toCase(r))
+        _ <- caseService.addInitialSampleStatusIfExists(c)
       } yield Created(Json.toJson(c))
     } recover recovery
   }

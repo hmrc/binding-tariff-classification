@@ -21,6 +21,8 @@ import java.time.Instant
 import org.scalatest.mockito.MockitoSugar
 import uk.gov.hmrc.play.test.UnitSpec
 import util.Matchers.roughlyBe
+import org.mockito.Mockito.when
+import util.CaseData
 
 class CaseRequestSpec extends UnitSpec with MockitoSugar {
 
@@ -30,6 +32,7 @@ class CaseRequestSpec extends UnitSpec with MockitoSugar {
   "To Case" should {
 
     "Convert NewCaseRequest To A Case" in {
+      when(application.asBTI).thenReturn(CaseData.createBasicBTIApplication)
       val c = NewCaseRequest(application, attachments).toCase("reference")
       c.status shouldBe CaseStatus.NEW
       c.createdDate should roughlyBe(Instant.now())
@@ -40,6 +43,13 @@ class CaseRequestSpec extends UnitSpec with MockitoSugar {
       c.decision shouldBe None
       c.application shouldBe application
       c.attachments shouldBe attachments
+      c.sampleStatus shouldBe None
+    }
+
+    "Convert NewCaseRequest To A Case with sample provided" in {
+      when(application.asBTI).thenReturn(CaseData.createBTIApplicationWithAllFields)
+      val c = NewCaseRequest(application, attachments).toCase("reference")
+      c.sampleStatus shouldBe Some(SampleStatus.AWAITING)
     }
   }
 
