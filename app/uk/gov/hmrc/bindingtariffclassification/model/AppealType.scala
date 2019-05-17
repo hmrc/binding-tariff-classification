@@ -18,5 +18,5 @@ package uk.gov.hmrc.bindingtariffclassification.model
 
 object AppealType extends Enumeration {
   type AppealType = Value
-  val REVIEW, APPEAL_TIER_1, APPEAL_TIER_2, COURT_OF_APPEALS, SUPREME_COURT = Value
+  val ADR, REVIEW, APPEAL_TIER_1, APPEAL_TIER_2, COURT_OF_APPEALS, SUPREME_COURT = Value
 }
