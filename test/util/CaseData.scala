@@ -81,7 +81,7 @@ object CaseData {
       contact = createContact,
       status = LiabilityStatus.LIVE,
       traderName = "John Lewis",
-      caseBoardNumber = Some("port-A"),
+      goodName = "Hair dryer",
       entryNumber = Some("23-SGD"),
       entryDate = Some(Instant.now())
     )

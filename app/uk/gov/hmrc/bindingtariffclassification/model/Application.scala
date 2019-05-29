@@ -26,6 +26,7 @@ import uk.gov.hmrc.bindingtariffclassification.model.LiabilityStatus.LiabilitySt
 sealed trait Application {
   val `type`: ApplicationType
   val contact: Contact
+  val goodName: String
 
   def asBTI: BTIApplication = asInstanceOf[BTIApplication]
   def asLiabilityOrder: LiabilityOrder = asInstanceOf[LiabilityOrder]
@@ -37,7 +38,7 @@ case class BTIApplication
   override val contact: Contact,
   agent: Option[AgentDetails] = None,
   offline: Boolean = false,
-  goodName: String,
+  override val goodName: String,
   goodDescription: String,
   confidentialInformation: Option[String] = None,
   importOrExport: Option[ImportExport] = None,
@@ -55,12 +56,11 @@ case class BTIApplication
 case class LiabilityOrder
 (
   override val contact: Contact,
+  override val goodName: String,
   status: LiabilityStatus,
   traderName: String,
-  caseBoardNumber: Option[String] = None,
   entryDate: Option[Instant] = None,
-  entryNumber: Option[String] = None,
-  itemName: Option[String] = None
+  entryNumber: Option[String] = None
 ) extends Application {
   override val `type`: model.ApplicationType.Value = ApplicationType.LIABILITY_ORDER
 }

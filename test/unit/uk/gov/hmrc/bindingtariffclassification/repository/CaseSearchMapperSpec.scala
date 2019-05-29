@@ -56,18 +56,18 @@ class CaseSearchMapperSpec extends UnitSpec with MockitoSugar {
         "queueId" -> "valid_queue",
         "assignee.id" -> "valid_assignee",
         "status" -> Json.obj("$in" -> Json.arr("NEW", "OPEN")),
-        "application.holder.businessName" -> Json.obj(
-          "$regex" -> ".*trader_name.*",
-          "$options" -> "i"
-        ),
         "decision.effectiveEndDate" -> Json.obj("$gte" -> Json.obj("$date" -> 0)),
         "decision.bindingCommodityCode" -> Json.obj("$regex" -> "^12345\\d*"),
         "$and" -> Json.arr(
           Json.obj("$or" -> Json.arr(
+            Json.obj("application.holder.businessName" -> Json.obj("$regex" -> ".*trader_name.*", "$options" -> "i")),
+            Json.obj("application.traderName" -> Json.obj("$regex" -> ".*trader_name.*", "$options" -> "i"))
+          )),
+          Json.obj("$or" -> Json.arr(
             Json.obj("decision.goodsDescription" -> Json.obj("$regex" -> ".*strawberry.*", "$options" -> "i")),
             Json.obj("decision.methodCommercialDenomination" -> Json.obj("$regex" -> ".*strawberry.*", "$options" -> "i")),
             Json.obj("decision.justification" -> Json.obj("$regex" -> ".*strawberry.*", "$options" -> "i"))
-        )),
+          )),
           Json.obj("$or" -> Json.arr(
             Json.obj("application.holder.eori" -> JsString("eori-number")),
             Json.obj("application.agent.eoriDetails.eori" -> JsString("eori-number"))
@@ -170,11 +170,12 @@ class CaseSearchMapperSpec extends UnitSpec with MockitoSugar {
     }
 
     "filter by 'trader name'" in {
-      jsonMapper.filterBy(CaseFilter(traderName = Some("traderName"))) shouldBe Json.obj(
-        "application.holder.businessName" -> Json.obj(
-          "$regex" -> ".*traderName.*",
-          "$options" -> "i"
-        )
+      jsonMapper.filterBy(CaseFilter(traderName = Some("trader_name"))) shouldBe Json.obj(
+        "$or" ->
+          Json.arr(
+            Json.obj("application.holder.businessName" -> Json.obj("$regex" -> ".*trader_name.*", "$options" -> "i")),
+            Json.obj("application.traderName" -> Json.obj("$regex" -> ".*trader_name.*", "$options" -> "i"))
+          )
       )
     }
 
