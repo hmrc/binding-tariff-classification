@@ -50,8 +50,8 @@ class CryptoSpec extends UnitSpec with MockitoSugar {
 
   private def expectedEncryptedLiabilityOrder(k: String): LiabilityOrder = {
     lo.copy(
-      holder = encEori(k),
-      contact = encContacts(k)
+      contact = encContacts(k),
+      traderName = k
     )
   }
 

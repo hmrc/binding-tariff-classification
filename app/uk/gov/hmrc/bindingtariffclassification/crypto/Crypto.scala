@@ -82,8 +82,8 @@ class Crypto @Inject()(crypto: CompositeSymmetricCrypto) {
         val l = c.application.asLiabilityOrder
         c.copy(
           application = l.copy(
-            holder = applyCrypto(l.holder)(f),
-            contact = applyCrypto(l.contact)(f)
+            contact = applyCrypto(l.contact)(f),
+            traderName = f(l.traderName)
           )
         )
       case t: ApplicationType =>

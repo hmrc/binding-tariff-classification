@@ -78,12 +78,12 @@ object CaseData {
 
   def createLiabilityOrder: LiabilityOrder = {
     LiabilityOrder(
-      holder = createEORIDetails,
       contact = createContact,
-      LiabilityStatus.LIVE,
-      "port-A",
-      "23-SGD",
-      Instant.now()
+      status = LiabilityStatus.LIVE,
+      traderName = "John Lewis",
+      caseBoardNumber = Some("port-A"),
+      entryNumber = Some("23-SGD"),
+      entryDate = Some(Instant.now())
     )
   }
 

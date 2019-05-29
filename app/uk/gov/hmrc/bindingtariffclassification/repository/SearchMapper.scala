@@ -48,7 +48,10 @@ class SearchMapper @Inject()(appConfig: AppConfig) {
       filter.applicationType.map(s => "application.type" -> JsString(s.toString)),
       filter.queueId.map("queueId" -> mappingNoneOrSome(_)),
       filter.assigneeId.map("assignee.id" -> mappingNoneOrSome(_)),
-      filter.traderName.map("application.holder.businessName" -> contains(_)),
+      filter.traderName.map(traderName => either(
+        "application.holder.businessName" -> contains(traderName),
+        "application.traderName" -> contains(traderName)
+      )),
       filter.minDecisionEnd.map("decision.effectiveEndDate" -> greaterThan(_)(formatInstant)),
       filter.commodityCode.map("decision.bindingCommodityCode" -> numberStartingWith(_)),
       filter.decisionDetails.map(desc => either(
