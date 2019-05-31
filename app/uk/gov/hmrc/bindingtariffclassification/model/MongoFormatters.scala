@@ -81,6 +81,7 @@ object MongoFormatters {
   implicit val formatCaseStatusChange: OFormat[CaseStatusChange] = Json.format[CaseStatusChange]
   implicit val formatCancellationCaseStatusChange: OFormat[CancellationCaseStatusChange] = Json.format[CancellationCaseStatusChange]
   implicit val formatReferralCaseStatusChange: OFormat[ReferralCaseStatusChange] = Json.format[ReferralCaseStatusChange]
+  implicit val formatCompletedCaseStatusChange: OFormat[CompletedCaseStatusChange] = Json.format[CompletedCaseStatusChange]
   implicit val formatAppealStatusChange: OFormat[AppealStatusChange] = Json.format[AppealStatusChange]
   implicit val formatAppealAdded: OFormat[AppealAdded] = Json.format[AppealAdded]
   implicit val formatSampleStatusChange: OFormat[SampleStatusChange] = Json.format[SampleStatusChange]
@@ -93,6 +94,7 @@ object MongoFormatters {
     .and[CaseStatusChange](EventType.CASE_STATUS_CHANGE.toString)
     .and[CancellationCaseStatusChange](EventType.CASE_CANCELLATION.toString)
     .and[ReferralCaseStatusChange](EventType.CASE_REFERRAL.toString)
+    .and[CompletedCaseStatusChange](EventType.CASE_COMPLETED.toString)
     .and[AppealStatusChange](EventType.APPEAL_STATUS_CHANGE.toString)
     .and[AppealAdded](EventType.APPEAL_ADDED.toString)
     .and[SampleStatusChange](EventType.SAMPLE_STATUS_CHANGE.toString)

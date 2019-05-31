@@ -80,10 +80,20 @@ case class ReferralCaseStatusChange
   override val from: CaseStatus,
   override val comment: Option[String] = None,
   override val attachmentId: Option[String] = None,
-  subject: String,
+  referredTo: String,
   reason: Seq[ReferralReason]
 ) extends FieldChange[CaseStatus] with OptionalAttachment {
   override val to: CaseStatus = CaseStatus.REFERRED
+  override val `type`: EventType.Value = EventType.CASE_REFERRAL
+}
+
+case class CompletedCaseStatusChange
+(
+  override val from: CaseStatus,
+  override val comment: Option[String] = None,
+  email: String
+) extends FieldChange[CaseStatus] {
+  override val to: CaseStatus = CaseStatus.COMPLETED
   override val `type`: EventType.Value = EventType.CASE_REFERRAL
 }
 
@@ -154,6 +164,7 @@ object EventType extends Enumeration {
   type EventType = Value
   val CASE_STATUS_CHANGE = Value
   val CASE_REFERRAL = Value
+  val CASE_COMPLETED = Value
   val CASE_CANCELLATION = Value
   val APPEAL_STATUS_CHANGE = Value
   val APPEAL_ADDED = Value
