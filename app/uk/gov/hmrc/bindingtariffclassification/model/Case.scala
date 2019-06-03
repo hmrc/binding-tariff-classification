@@ -35,5 +35,7 @@ case class Case
   decision: Option[Decision] = None,
   attachments: Seq[Attachment] = Seq.empty,
   keywords: Set[String] = Set.empty,
-  sampleStatus: Option[SampleStatus] = None
+  sampleStatus: Option[SampleStatus] = None,
+  sampleRequested: Option[Boolean] = None,
+  sampleToBeReturned: Option[Boolean] = None
 )
