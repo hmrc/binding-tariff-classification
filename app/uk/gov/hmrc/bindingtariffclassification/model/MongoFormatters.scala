@@ -76,6 +76,7 @@ object MongoFormatters {
   implicit val formatAppeal: OFormat[Appeal] = Json.format[Appeal]
   implicit val formatCancellation: OFormat[Cancellation] = Json.format[Cancellation]
   implicit val formatDecision: OFormat[Decision] = Json.format[Decision]
+  implicit val formatSample: OFormat[Sample] = Json.format[Sample]
   implicit val formatCase: OFormat[Case] = JsonUtil.convertToOFormat(Jsonx.formatCaseClass[Case])
 
   // `Event` formatters

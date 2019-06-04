@@ -16,18 +16,14 @@
 
 package uk.gov.hmrc.bindingtariffclassification.model
 
-case class NewCaseRequest
+import uk.gov.hmrc.bindingtariffclassification.model.SampleReturn.SampleReturn
+import uk.gov.hmrc.bindingtariffclassification.model.SampleStatus.SampleStatus
+
+case class Sample
 (
-  application: Application,
-  attachments: Seq[Attachment] = Seq.empty
-) {
+  status: SampleStatus = SampleStatus.AWAITING,
+  requestedBy: Option[Operator] = None,
+  returnStatus: Option[SampleReturn] = None
+)
 
-  def toCase(reference: String) = Case(
-    reference = reference,
-    status = CaseStatus.NEW,
-    sample = if (application.asBTI.sampleToBeProvided) Some(new Sample) else None,
-    application = application,
-    attachments = attachments
-  )
 
-}
