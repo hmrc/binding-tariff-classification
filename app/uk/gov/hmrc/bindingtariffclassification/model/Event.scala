@@ -25,6 +25,7 @@ import uk.gov.hmrc.bindingtariffclassification.model.CancelReason.CancelReason
 import uk.gov.hmrc.bindingtariffclassification.model.CaseStatus.CaseStatus
 import uk.gov.hmrc.bindingtariffclassification.model.EventType.EventType
 import uk.gov.hmrc.bindingtariffclassification.model.ReferralReason.ReferralReason
+import uk.gov.hmrc.bindingtariffclassification.model.SampleReturn.SampleReturn
 import uk.gov.hmrc.bindingtariffclassification.model.SampleStatus.SampleStatus
 
 case class Event
@@ -159,6 +160,15 @@ case class SampleStatusChange
   override val `type`: EventType.Value = EventType.SAMPLE_STATUS_CHANGE
 }
 
+case class SampleReturnChange
+(
+  override val from: Option[SampleReturn],
+  override val to: Option[SampleReturn],
+  override val comment: Option[String] = None
+) extends FieldChange[Option[SampleReturn]] {
+  override val `type`: EventType.Value = EventType.SAMPLE_RETURN_CHANGE
+}
+
 
 object EventType extends Enumeration {
   type EventType = Value
@@ -173,4 +183,5 @@ object EventType extends Enumeration {
   val QUEUE_CHANGE = Value
   val NOTE = Value
   val SAMPLE_STATUS_CHANGE = Value
+  val SAMPLE_RETURN_CHANGE = Value
 }

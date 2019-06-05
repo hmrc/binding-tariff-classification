@@ -21,7 +21,7 @@ import uk.gov.hmrc.bindingtariffclassification.model.SampleStatus.SampleStatus
 
 case class Sample
 (
-  status: SampleStatus = SampleStatus.AWAITING,
+  status: Option[SampleStatus] = None,
   requestedBy: Option[Operator] = None,
   returnStatus: Option[SampleReturn] = None
 )

@@ -43,13 +43,13 @@ class CaseRequestSpec extends UnitSpec with MockitoSugar {
       c.decision shouldBe None
       c.application shouldBe application
       c.attachments shouldBe attachments
-      c.sample shouldBe None
+      c.sample.status shouldBe None
     }
 
     "Convert NewCaseRequest To A Case with sample provided" in {
       when(application.asBTI).thenReturn(CaseData.createBTIApplicationWithAllFields)
       val c = NewCaseRequest(application, attachments).toCase("reference")
-      c.sample shouldBe Some(Sample(status = SampleStatus.AWAITING))
+      c.sample.status shouldBe Some(SampleStatus.AWAITING)
     }
   }
 
