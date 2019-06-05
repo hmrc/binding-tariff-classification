@@ -27,6 +27,7 @@ import uk.gov.hmrc.bindingtariffclassification.crypto.Crypto
 import uk.gov.hmrc.bindingtariffclassification.model.CaseStatus.{NEW, OPEN}
 import uk.gov.hmrc.bindingtariffclassification.model.MongoFormatters.formatCase
 import uk.gov.hmrc.bindingtariffclassification.model._
+import uk.gov.hmrc.bindingtariffclassification.model.reporting.CaseReportGroup.CaseReportGroup
 import uk.gov.hmrc.bindingtariffclassification.model.reporting.{CaseReport, CaseReportField, CaseReportGroup, ReportResult}
 import uk.gov.hmrc.mongo.ReactiveRepository
 
@@ -151,12 +152,13 @@ class CaseMongoRepository @Inject()(mongoDbProvider: MongoDbProvider, mapper: Se
     ).map(_.nModified)
   }
 
+  //noinspection ScalaStyle
   override def generateReport(report: CaseReport): Future[Seq[ReportResult]] = {
     import MongoFormatters.formatInstant
     import collection.BatchCommands.AggregationFramework._
 
-    val groupField = report.group match {
-      case CaseReportGroup.QUEUE => "queueId"
+    def groupField: CaseReportGroup => (String, String) = {
+      case CaseReportGroup.QUEUE => (CaseReportGroup.QUEUE.toString, "queueId")
     }
 
     val reportField = report.field match {
@@ -164,7 +166,8 @@ class CaseMongoRepository @Inject()(mongoDbProvider: MongoDbProvider, mapper: Se
       case CaseReportField.REFERRED_DAYS_ELAPSED => "referredDaysElapsed"
     }
 
-    val group: PipelineOperator = GroupField(groupField)("field" -> PushField(reportField))
+    val groupFields: Seq[(String, String)] = report.group.map(groupField).toSeq
+    val group: PipelineOperator = GroupMulti(groupFields: _*)("field" -> PushField(reportField))
 
     val filters = Seq[JsObject]()
       .++(report.filter.decisionStartDate.map { range =>
@@ -199,8 +202,17 @@ class CaseMongoRepository @Inject()(mongoDbProvider: MongoDbProvider, mapper: Se
       .collect[List](Int.MaxValue, reactivemongo.api.Cursor.FailOnError())
       .map {
         _.map { obj: JsObject =>
+          // Extract ID fields (group fields)
+          val id: JsObject = obj.value("_id").as[JsObject]
+          val fields: Map[CaseReportGroup, Option[String]] = groupFields.map {
+            case (field, _) =>
+              CaseReportGroup.withName(field) -> Option(
+                id.value(field)).filter(_.isInstanceOf[JsString]).map(_.as[JsString].value
+              )
+          }.toMap
+
           ReportResult(
-            Option(obj.value("_id")).filter(_.isInstanceOf[JsString]).map(_.as[JsString].value),
+            fields,
             obj.value("field").as[JsArray].value.map(_.as[JsNumber].value.toInt).toList
           )
         }

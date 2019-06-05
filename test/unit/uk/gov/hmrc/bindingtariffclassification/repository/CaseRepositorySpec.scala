@@ -707,9 +707,9 @@ class CaseRepositorySpec extends BaseMongoIndexSpec
 
       val results = await(repository.generateReport(report))
       results should have length 3
-      results should contain(ReportResult("queue-1", Seq(1, 2)))
-      results should contain(ReportResult("queue-2", Seq(3)))
-      results should contain(ReportResult(None, Seq(4)))
+      results should contain(ReportResult(CaseReportGroup.QUEUE -> Some("queue-1"), Seq(1, 2)))
+      results should contain(ReportResult(CaseReportGroup.QUEUE -> Some("queue-2"), Seq(3)))
+      results should contain(ReportResult(CaseReportGroup.QUEUE -> None, Seq(4)))
     }
 
     "report on active days elapsed" in {
@@ -728,7 +728,7 @@ class CaseRepositorySpec extends BaseMongoIndexSpec
 
       val results = await(repository.generateReport(report))
       results should have length 1
-      results should contain(ReportResult("queue-1", Seq(1, 2)))
+      results should contain(ReportResult(CaseReportGroup.QUEUE -> Some("queue-1"), Seq(1, 2)))
     }
 
     "report on referred days elapsed" in {
@@ -747,7 +747,7 @@ class CaseRepositorySpec extends BaseMongoIndexSpec
 
       val results = await(repository.generateReport(report))
       results should have length 1
-      results should contain(ReportResult("queue-1", Seq(1, 2)))
+      results should contain(ReportResult(CaseReportGroup.QUEUE -> Some("queue-1"), Seq(1, 2)))
     }
 
     "filter on Decision Start Date" in {
@@ -765,7 +765,7 @@ class CaseRepositorySpec extends BaseMongoIndexSpec
         field = CaseReportField.ACTIVE_DAYS_ELAPSED
       )
 
-      await(repository.generateReport(report)) shouldBe Seq(ReportResult(None, Seq(1)))
+      await(repository.generateReport(report)) shouldBe Seq(ReportResult(CaseReportGroup.QUEUE -> None, Seq(1)))
     }
 
     "filter on status" in {
@@ -781,7 +781,7 @@ class CaseRepositorySpec extends BaseMongoIndexSpec
         group = CaseReportGroup.QUEUE,
         field = CaseReportField.ACTIVE_DAYS_ELAPSED
       )
-      await(repository.generateReport(report)) shouldBe Seq(ReportResult(None, Seq(1)))
+      await(repository.generateReport(report)) shouldBe Seq(ReportResult(CaseReportGroup.QUEUE -> None, Seq(1)))
     }
 
 
@@ -798,7 +798,7 @@ class CaseRepositorySpec extends BaseMongoIndexSpec
         group = CaseReportGroup.QUEUE,
         field = CaseReportField.ACTIVE_DAYS_ELAPSED
       )
-      await(repository.generateReport(report)) shouldBe Seq(ReportResult(None, Seq(1, 2)))
+      await(repository.generateReport(report)) shouldBe Seq(ReportResult(CaseReportGroup.QUEUE -> None, Seq(1, 2)))
     }
 
     "filter on assignee" in {
@@ -814,7 +814,7 @@ class CaseRepositorySpec extends BaseMongoIndexSpec
         group = CaseReportGroup.QUEUE,
         field = CaseReportField.ACTIVE_DAYS_ELAPSED
       )
-      await(repository.generateReport(report)) shouldBe Seq(ReportResult(None, Seq(1)))
+      await(repository.generateReport(report)) shouldBe Seq(ReportResult(CaseReportGroup.QUEUE -> None, Seq(1)))
     }
 
 
@@ -831,7 +831,7 @@ class CaseRepositorySpec extends BaseMongoIndexSpec
         group = CaseReportGroup.QUEUE,
         field = CaseReportField.ACTIVE_DAYS_ELAPSED
       )
-      await(repository.generateReport(report)) shouldBe Seq(ReportResult(None, Seq(1)))
+      await(repository.generateReport(report)) shouldBe Seq(ReportResult(CaseReportGroup.QUEUE -> None, Seq(1)))
     }
 
     "filter on multiple References" in {
@@ -848,7 +848,7 @@ class CaseRepositorySpec extends BaseMongoIndexSpec
         field = CaseReportField.ACTIVE_DAYS_ELAPSED
       )
 
-      await(repository.generateReport(report)) shouldBe Seq(ReportResult(None, Seq(1, 2)))
+      await(repository.generateReport(report)) shouldBe Seq(ReportResult(CaseReportGroup.QUEUE -> None, Seq(1, 2)))
     }
   }
 
