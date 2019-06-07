@@ -36,6 +36,9 @@ object Cases {
   private val btiApplicationExample = BTIApplication(
     eoriDetailsExample, contactExample, Some(eoriAgentDetailsExample), offline = false, "Laptop", "Personal Computer", None, None, None, None, None, None
   )
+  private val liabilityApplicationExample = LiabilityOrder(
+    contactExample, Some("good name"), LiabilityStatus.LIVE, "trader name"
+  )
   private val decision = Decision(
     "040900", Some(Instant.now()), Some(Instant.now().plusSeconds(2 * 3600 * 24 * 365)), "justification", "good description", None, None, Some("denomination"), Seq.empty
   )
@@ -71,6 +74,14 @@ object Cases {
     _.copy(queueId = None)
   }
 
+  def withLiabilityDetails(goodName: Option[String] = Some("good name")
+                          ): Case => Case = { c =>
+    c.copy(application = liabilityApplicationExample.copy(
+      goodName = goodName
+    ))
+
+  }
+
   def withBTIDetails(offline: Boolean = false,
                      goodName: String = "good name",
                      goodDescription: String = "good description",
@@ -82,7 +93,7 @@ object Cases {
                      envisagedCommodityCode: Option[String] = None,
                      sampleToBeProvided: Boolean = false,
                      sampleToBeReturned: Boolean = false): Case => Case = { c =>
-    c.copy(application = c.application.asInstanceOf[BTIApplication].copy(
+    c.copy(application = btiApplicationExample.copy(
       offline = offline,
       goodName = goodName,
       goodDescription = goodDescription,

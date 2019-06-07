@@ -20,8 +20,8 @@ import java.net.URLDecoder
 import java.time.Instant
 
 import play.api.mvc.QueryStringBindable.bindableString
-import uk.gov.hmrc.bindingtariffclassification.model.CaseStatus
 import uk.gov.hmrc.bindingtariffclassification.model.reporting.CaseReportFilter.binder
+import uk.gov.hmrc.bindingtariffclassification.model.{ApplicationType, CaseStatus}
 import uk.gov.hmrc.play.test.UnitSpec
 
 class CaseReportTest extends UnitSpec {
@@ -38,6 +38,7 @@ class CaseReportTest extends UnitSpec {
       )),
       reference = Some(Set("reference1", "reference2")),
       status = Some(Set(CaseStatus.OPEN, CaseStatus.NEW)),
+      applicationType = Some(Set(ApplicationType.BTI, ApplicationType.LIABILITY_ORDER)),
       assigneeId = Some("assignee_123")
     ),
     field = CaseReportField.ACTIVE_DAYS_ELAPSED,
@@ -53,6 +54,7 @@ class CaseReportTest extends UnitSpec {
     "report_group" -> Seq("queue-id"),
     "reference" -> Seq("reference1,reference2"),
     "status" -> Seq("OPEN", "NEW"),
+    "application_type" -> Seq("BTI", "LIABILITY_ORDER"),
     "assignee_id" -> Seq("assignee_123")
   )
 
@@ -71,6 +73,8 @@ class CaseReportTest extends UnitSpec {
           "reference=reference2&" +
           "status=OPEN&" +
           "status=NEW&" +
+          "application_type=BTI&" +
+          "application_type=LIABILITY_ORDER&" +
           "assignee_id=assignee_123&" +
           "report_group=queue-id&" +
           "report_field=active-days-elapsed"

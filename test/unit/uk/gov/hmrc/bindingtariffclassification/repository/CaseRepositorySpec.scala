@@ -801,6 +801,38 @@ class CaseRepositorySpec extends BaseMongoIndexSpec
       await(repository.generateReport(report)) shouldBe Seq(ReportResult(None, Seq(1, 2)))
     }
 
+    "filter on type" in {
+      val c1 = aCase(withoutQueue(), withActiveDaysElapsed(1), withLiabilityDetails())
+      val c2 = aCase(withoutQueue(), withActiveDaysElapsed(2), withBTIDetails())
+
+      await(repository.insert(c1))
+      await(repository.insert(c2))
+      collectionSize shouldBe 2
+
+      val report = CaseReport(
+        filter = CaseReportFilter(applicationType = Some(Set(ApplicationType.BTI))),
+        group = CaseReportGroup.QUEUE,
+        field = CaseReportField.ACTIVE_DAYS_ELAPSED
+      )
+      await(repository.generateReport(report)) shouldBe Seq(ReportResult(None, Seq(2)))
+    }
+
+    "filter on multiple types" in {
+      val c1 = aCase(withoutQueue(), withActiveDaysElapsed(1), withLiabilityDetails())
+      val c2 = aCase(withoutQueue(), withActiveDaysElapsed(2), withBTIDetails())
+
+      await(repository.insert(c1))
+      await(repository.insert(c2))
+      collectionSize shouldBe 2
+
+      val report = CaseReport(
+        filter = CaseReportFilter(applicationType = Some(Set(ApplicationType.BTI, ApplicationType.LIABILITY_ORDER))),
+        group = CaseReportGroup.QUEUE,
+        field = CaseReportField.ACTIVE_DAYS_ELAPSED
+      )
+      await(repository.generateReport(report)) shouldBe Seq(ReportResult(None, Seq(1, 2)))
+    }
+
     "filter on assignee" in {
       val c1 = aCase(withoutQueue(), withActiveDaysElapsed(1), withAssignee(Some(Operator(id="123"))))
       val c2 = aCase(withoutQueue(), withActiveDaysElapsed(2),  withAssignee(Some(Operator(id="456"))))

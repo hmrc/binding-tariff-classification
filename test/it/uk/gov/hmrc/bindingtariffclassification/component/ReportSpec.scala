@@ -148,6 +148,27 @@ class ReportSpec extends BaseFeatureSpec {
       thenTheJsonBodyOf[Seq[ReportResult]](result) shouldBe Some(Seq(ReportResult("queue-1", Seq(1, 2))))
     }
 
+    scenario("Generate a Report filtering by application type") {
+      Given("There are some documents in the collection")
+      givenThereIs(aCase(withQueue("queue-1"), withActiveDaysElapsed(1), withBTIDetails()))
+      givenThereIs(aCase(withQueue("queue-1"), withActiveDaysElapsed(2), withLiabilityDetails()))
+
+      When("I request the report")
+      val result = whenIGET("report",
+        withParams(
+          "report_field" -> "active-days-elapsed",
+          "report_group" -> "queue-id",
+          "application_type" -> "BTI"
+        )
+      )
+
+      Then("The response code should be 200")
+      result.code shouldBe OK
+
+      And("The response body contains the report")
+      thenTheJsonBodyOf[Seq[ReportResult]](result) shouldBe Some(Seq(ReportResult("queue-1", Seq(1))))
+    }
+
   }
 
   private def date(d: String): Instant = LocalDateTime.parse(d).atOffset(ZoneOffset.UTC).toInstant

@@ -178,6 +178,11 @@ class CaseMongoRepository @Inject()(mongoDbProvider: MongoDbProvider, mapper: Se
           "$in" -> JsArray(statuses.map(_.toString).map(JsString).toSeq)
         ))
       })
+      .++(report.filter.applicationType.map { types =>
+        Json.obj("application.type" -> Json.obj(
+          "$in" -> JsArray(types.map(_.toString).map(JsString).toSeq)
+        ))
+      })
       .++(report.filter.assigneeId.map {
         case "none" =>  Json.obj("assignee.id" -> JsNull)
         case a =>   Json.obj("assignee.id" -> a)

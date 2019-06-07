@@ -17,9 +17,10 @@
 package uk.gov.hmrc.bindingtariffclassification.model.reporting
 
 import play.api.mvc.QueryStringBindable
-import uk.gov.hmrc.bindingtariffclassification.model.CaseStatus
+import uk.gov.hmrc.bindingtariffclassification.model.ApplicationType.ApplicationType
 import uk.gov.hmrc.bindingtariffclassification.model.CaseStatus.CaseStatus
 import uk.gov.hmrc.bindingtariffclassification.model.utils.BinderUtil._
+import uk.gov.hmrc.bindingtariffclassification.model.{ApplicationType, CaseStatus}
 
 case class CaseReportFilter
 (
@@ -27,6 +28,7 @@ case class CaseReportFilter
   referralDate: Option[InstantRange] = None,
   reference: Option[Set[String]] = None,
   status: Option[Set[CaseStatus]] = None,
+  applicationType: Option[Set[ApplicationType]] = None,
   assigneeId: Option[String] = None
 )
 
@@ -36,6 +38,7 @@ object CaseReportFilter {
   val referralDateKey = "referral_date"
   val referenceKey = "reference"
   val statusKey = "status"
+  val applicationTypeKey = "application_type"
   val assigneeIdKey = "assignee_id"
 
   implicit def binder(implicit
@@ -49,6 +52,7 @@ object CaseReportFilter {
       val referralDate: Option[InstantRange] = rangeBinder.bind(referralDateKey, requestParams).filter(_.isRight).map(_.right.get)
       val reference: Option[Set[String]] = params(referenceKey)
       val status: Option[Set[CaseStatus]] = params(statusKey).map(_.map(CaseStatus.withName))
+      val applicationType: Option[Set[ApplicationType]] = params(applicationTypeKey).map(_.map(ApplicationType.withName))
       val assigneeId: Option[String] = param(assigneeIdKey)
 
       Some(
@@ -58,6 +62,7 @@ object CaseReportFilter {
             referralDate,
             reference,
             status,
+            applicationType,
             assigneeId
           )
         )
@@ -70,6 +75,7 @@ object CaseReportFilter {
         filter.referralDate.map(r => rangeBinder.unbind(referralDateKey, r)),
         filter.reference.map(_.map(r => stringBinder.unbind(referenceKey, r)).mkString("&")),
         filter.status.map(_.map(r => stringBinder.unbind(statusKey, r.toString)).mkString("&")),
+        filter.applicationType.map(_.map(r => stringBinder.unbind(applicationTypeKey, r.toString)).mkString("&")),
         filter.assigneeId.map(r => stringBinder.unbind(assigneeIdKey, r))
       ).filter(_.isDefined).map(_.get).mkString("&")
     }
