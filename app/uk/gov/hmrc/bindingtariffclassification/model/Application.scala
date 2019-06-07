@@ -27,6 +27,8 @@ sealed trait Application {
   val `type`: ApplicationType
   val contact: Contact
 
+  def isBTI: Boolean = isInstanceOf[BTIApplication]
+  def isLiabilityOrder: Boolean = isInstanceOf[LiabilityOrder]
   def asBTI: BTIApplication = asInstanceOf[BTIApplication]
   def asLiabilityOrder: LiabilityOrder = asInstanceOf[LiabilityOrder]
 }

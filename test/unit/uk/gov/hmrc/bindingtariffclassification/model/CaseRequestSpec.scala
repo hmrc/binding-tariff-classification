@@ -18,11 +18,11 @@ package uk.gov.hmrc.bindingtariffclassification.model
 
 import java.time.Instant
 
+import org.mockito.Mockito.when
 import org.scalatest.mockito.MockitoSugar
 import uk.gov.hmrc.play.test.UnitSpec
-import util.Matchers.roughlyBe
-import org.mockito.Mockito.when
 import util.CaseData
+import util.Matchers.roughlyBe
 
 class CaseRequestSpec extends UnitSpec with MockitoSugar {
 
@@ -47,6 +47,7 @@ class CaseRequestSpec extends UnitSpec with MockitoSugar {
     }
 
     "Convert NewCaseRequest To A Case with sample provided" in {
+      when(application.isBTI).thenReturn(true)
       when(application.asBTI).thenReturn(CaseData.createBTIApplicationWithAllFields)
       val c = NewCaseRequest(application, attachments).toCase("reference")
       c.sample.status shouldBe Some(SampleStatus.AWAITING)
