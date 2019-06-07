@@ -83,7 +83,9 @@ object CaseData {
       traderName = "John Lewis",
       goodName = Some("Hair dryer"),
       entryNumber = Some("23-SGD"),
-      entryDate = Some(Instant.now())
+      entryDate = Some(Instant.now()),
+      traderCommodityCode = Some("1234567890"),
+      officerCommodityCode = Some("0987654321")
     )
   }
 
