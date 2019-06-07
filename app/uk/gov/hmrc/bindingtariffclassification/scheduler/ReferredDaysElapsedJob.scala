@@ -44,7 +44,7 @@ class ReferredDaysElapsedJob @Inject()(appConfig: AppConfig,
   private lazy val jobConfig = appConfig.referredDaysElapsed
   private lazy val criteria = CaseSearch(
     filter = CaseFilter(statuses = Some(Set(PseudoCaseStatus.REFERRED))),
-    sort = Some(CaseSort(CaseSortField.REFERENCE))
+    sort = Some(CaseSort(Set(CaseSortField.REFERENCE)))
   )
 
   override val name: String = "ReferredDaysElapsed"

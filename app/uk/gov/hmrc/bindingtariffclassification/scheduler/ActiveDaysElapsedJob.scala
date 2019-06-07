@@ -45,7 +45,7 @@ class ActiveDaysElapsedJob @Inject()(appConfig: AppConfig,
   private lazy val jobConfig = appConfig.activeDaysElapsed
   private lazy val criteria = CaseSearch(
     filter = CaseFilter(statuses = Some(Set(PseudoCaseStatus.OPEN, PseudoCaseStatus.NEW))),
-    sort = Some(CaseSort(CaseSortField.REFERENCE))
+    sort = Some(CaseSort(Set(CaseSortField.REFERENCE)))
   )
 
   override val name: String = "ActiveDaysElapsed"

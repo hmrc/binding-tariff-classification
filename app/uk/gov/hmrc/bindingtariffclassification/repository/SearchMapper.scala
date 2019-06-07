@@ -24,6 +24,7 @@ import play.api.libs.json._
 import uk.gov.hmrc.bindingtariffclassification.config.AppConfig
 import uk.gov.hmrc.bindingtariffclassification.model.MongoFormatters.formatInstant
 import uk.gov.hmrc.bindingtariffclassification.model.PseudoCaseStatus.PseudoCaseStatus
+import uk.gov.hmrc.bindingtariffclassification.model.ApplicationType.ApplicationType
 import uk.gov.hmrc.bindingtariffclassification.model.{CaseFilter, CaseSort, CaseStatus, PseudoCaseStatus}
 import uk.gov.hmrc.bindingtariffclassification.sort.CaseSortField._
 
@@ -39,13 +40,13 @@ class SearchMapper @Inject()(appConfig: AppConfig) {
   }
 
   def sortBy(sort: CaseSort): JsObject = {
-    Json.obj(toMongoField(sort.field) -> sort.direction.id)
+    JsObject(sort.field.toSeq.map(field => (toMongoField(field) , Json.toJson(toMongoDirection(field, sort.direction.id)))))
   }
 
   def filterBy(filter: CaseFilter): JsObject = {
     val params = Seq[Option[(String, JsValue)]](
       filter.reference.map("reference" -> inArray[String](_)),
-      filter.applicationType.map(s => "application.type" -> JsString(s.toString)),
+      filter.applicationType.map(filteringByApplicationType),
       filter.queueId.map("queueId" -> mappingNoneOrSome(_)),
       filter.assigneeId.map("assignee.id" -> mappingNoneOrSome(_)),
       filter.traderName.map(traderName => either(
@@ -123,6 +124,10 @@ class SearchMapper @Inject()(appConfig: AppConfig) {
 
   private lazy val caseInsensitiveFilter: (String, JsValueWrapper) = "$options" -> "i"
 
+  private def filteringByApplicationType(search: Set[ApplicationType]) : (String, JsValue) = {
+    "application.type" -> inArray(search)
+  }
+
   private def filteringByStatus(search: Set[PseudoCaseStatus]): (String, JsValue) = {
     val concreteStatuses: Set[String] = CaseStatus.values.map(_.toString)
 
@@ -165,7 +170,16 @@ class SearchMapper @Inject()(appConfig: AppConfig) {
       case COMMODITY_CODE => "decision.bindingCommodityCode"
       case CREATED_DATE => "createdDate"
       case DECISION_START_DATE => "decision.effectiveStartDate"
+      case APPLICATION_STATUS => "application.status"
+      case APPLICATION_TYPE => "application.type"
       case s => throw new IllegalArgumentException(s"cannot sort by field: $s")
+    }
+  }
+
+  private def toMongoDirection(sort: CaseSortField, default: Int): Int = {
+    sort match {
+      case APPLICATION_STATUS => 1
+      case _ => default
     }
   }
 

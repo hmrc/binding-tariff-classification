@@ -25,7 +25,7 @@ import uk.gov.hmrc.bindingtariffclassification.model.PseudoCaseStatus.PseudoCase
 case class CaseFilter
 (
   reference: Option[Set[String]] = None,
-  applicationType: Option[ApplicationType] = None,
+  applicationType: Option[Set[ApplicationType]] = None,
   queueId: Option[String] = None,
   eori: Option[String] = None,
   assigneeId: Option[String] = None,
@@ -61,7 +61,7 @@ object CaseFilter {
         Right(
           CaseFilter(
             reference = params(referenceKey),
-            applicationType = param(applicationTypeKey).flatMap(bindApplicationType),
+            applicationType = params(applicationTypeKey).map(_.map(bindApplicationType).filter(_.isDefined).map(_.get)),
             queueId = param(queueIdKey),
             eori = param(eoriKey),
             assigneeId = param(assigneeIdKey),
@@ -79,7 +79,7 @@ object CaseFilter {
     override def unbind(key: String, filter: CaseFilter): String = {
       Seq(
         filter.reference.map(_.map(s => stringBinder.unbind(referenceKey, s.toString)).mkString("&")),
-        filter.applicationType.map(t => stringBinder.unbind(applicationTypeKey, t.toString)),
+        filter.applicationType.map(_.map(s => stringBinder.unbind(applicationTypeKey, s.toString)).mkString("&")),
         filter.queueId.map(stringBinder.unbind(queueIdKey, _)),
         filter.eori.map(stringBinder.unbind(eoriKey, _)),
         filter.assigneeId.map(stringBinder.unbind(assigneeIdKey, _)),
