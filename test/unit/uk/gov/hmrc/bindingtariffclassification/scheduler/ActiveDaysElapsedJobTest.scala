@@ -47,7 +47,7 @@ class ActiveDaysElapsedJobTest extends UnitSpec with MockitoSugar with BeforeAnd
   private val appConfig = mock[AppConfig]
   private val caseSearch = CaseSearch(
     filter = CaseFilter(statuses = Some(Set(PseudoCaseStatus.OPEN, PseudoCaseStatus.NEW))),
-    sort = Some(CaseSort(CaseSortField.REFERENCE))
+    sort = Some(CaseSort(Set(CaseSortField.REFERENCE)))
   )
 
   override def afterEach(): Unit = {

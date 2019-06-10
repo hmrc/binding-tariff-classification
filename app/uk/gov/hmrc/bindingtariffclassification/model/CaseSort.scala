@@ -17,6 +17,7 @@
 package uk.gov.hmrc.bindingtariffclassification.model
 
 import play.api.mvc.QueryStringBindable
+import uk.gov.hmrc.bindingtariffclassification.model.CaseFilter.referenceKey
 import uk.gov.hmrc.bindingtariffclassification.sort.CaseSortField.CaseSortField
 import uk.gov.hmrc.bindingtariffclassification.sort.SortDirection
 import uk.gov.hmrc.bindingtariffclassification.sort.SortDirection.SortDirection
@@ -50,7 +51,7 @@ object CaseSort {
 
     override def unbind(key: String, query: CaseSort): String = {
       Seq[String](
-        stringBinder.unbind(sortByKey, query.field.toString),
+        query.field.map(value => stringBinder.unbind(sortByKey, value.toString)).mkString("&"),
         stringBinder.unbind(sortDirectionKey, query.direction.toString)
       ).mkString("&")
 

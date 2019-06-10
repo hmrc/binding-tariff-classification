@@ -25,13 +25,13 @@ import uk.gov.hmrc.play.test.UnitSpec
 class CaseSearchTest extends UnitSpec {
 
   private val sort = CaseSort(
-    field = CaseSortField.DAYS_ELAPSED,
+    field = Set(CaseSortField.DAYS_ELAPSED),
     direction = SortDirection.DESCENDING
   )
 
   private val filter = CaseFilter(
     reference = Some(Set("id1", "id2")),
-    applicationType = Some(ApplicationType.BTI),
+    applicationType = Some(Set(ApplicationType.BTI)),
     traderName = Some("trader-name"),
     queueId = Some("queue-id"),
     eori = Some("eori-number"),

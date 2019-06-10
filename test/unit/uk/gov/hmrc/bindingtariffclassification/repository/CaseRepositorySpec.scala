@@ -62,6 +62,7 @@ class CaseRepositorySpec extends BaseMongoIndexSpec
 
   private val case1: Case = createCase()
   private val case2: Case = createCase()
+  private val liabCase1: Case = createCase(app = createLiabilityOrder)
 
   override def beforeEach(): Unit = {
     super.beforeEach()
@@ -157,7 +158,7 @@ class CaseRepositorySpec extends BaseMongoIndexSpec
     }
 
     "return all cases from the collection sorted in ascending order" in {
-      val search = CaseSearch(sort = Some(CaseSort(CaseSortField.DAYS_ELAPSED, SortDirection.ASCENDING)))
+      val search = CaseSearch(sort = Some(CaseSort(Set(CaseSortField.DAYS_ELAPSED), SortDirection.ASCENDING)))
 
       val oldCase = case1.copy(daysElapsed = 1)
       val newCase = case2.copy(daysElapsed = 0)
@@ -169,9 +170,25 @@ class CaseRepositorySpec extends BaseMongoIndexSpec
       await(repository.get(search, Pagination())).results shouldBe Seq(newCase, oldCase)
     }
 
+    "return all cases from the collection sorted in complex order, when specified" in {
+      val search = CaseSearch(sort = Some(CaseSort(Set(CaseSortField.APPLICATION_TYPE, CaseSortField.APPLICATION_STATUS, CaseSortField.DAYS_ELAPSED),
+        SortDirection.DESCENDING)))
+
+      val oldCase = case1.copy(daysElapsed = 1)
+      val newCase = case2.copy(daysElapsed = 0)
+      val liabCase = liabCase1
+      await(repository.insert(oldCase))
+      await(repository.insert(newCase))
+      await(repository.insert(liabCase))
+
+      collectionSize shouldBe 3
+
+      await(repository.get(search, Pagination())).results shouldBe Seq(liabCase, oldCase, newCase)
+    }
+
     "return all cases from the collection sorted in descending order" in {
 
-      val search = CaseSearch(sort = Some(CaseSort(CaseSortField.DAYS_ELAPSED, SortDirection.DESCENDING)))
+      val search = CaseSearch(sort = Some(CaseSort(Set(CaseSortField.DAYS_ELAPSED), SortDirection.DESCENDING)))
 
       val oldCase = case1.copy(daysElapsed = 1)
       val newCase = case2.copy(daysElapsed = 0)
@@ -566,6 +583,27 @@ class CaseRepositorySpec extends BaseMongoIndexSpec
       store(case1, caseX, caseY)
       val search = CaseSearch(CaseFilter(commodityCode = Some("12345")))
       await(repository.get(search, Pagination())).results shouldBe Seq(caseX, caseY)
+    }
+  }
+
+  "get by type " should {
+
+    "filter on only BTI when specified in search" in {
+      store(case1, case2, liabCase1)
+      val search = CaseSearch(CaseFilter(applicationType = Some(Set(ApplicationType.BTI))))
+      await(repository.get(search, Pagination())).results shouldBe Seq(case1, case2)
+    }
+
+    "filter on only Liability when specified in search" in {
+      store(case1, case2, liabCase1)
+      val search = CaseSearch(CaseFilter(applicationType = Some(Set(ApplicationType.LIABILITY_ORDER))))
+      await(repository.get(search, Pagination())).results shouldBe Seq(liabCase1)
+    }
+
+    "not filter on type when both specified in search" in {
+      store(case1, case2, liabCase1)
+      val search = CaseSearch(CaseFilter(applicationType = Some(Set(ApplicationType.BTI, ApplicationType.LIABILITY_ORDER))))
+      await(repository.get(search, Pagination())).results shouldBe Seq(case1, case2, liabCase1)
     }
   }
 

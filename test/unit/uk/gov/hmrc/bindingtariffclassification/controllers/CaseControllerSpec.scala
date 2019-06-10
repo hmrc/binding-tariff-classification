@@ -192,7 +192,7 @@ class CaseControllerSpec extends UnitSpec with WithFakeApplication with MockitoS
 
     val search = CaseSearch(
       filter = CaseFilter(queueId = queueId, assigneeId = assigneeId, statuses = Some(Set(PseudoCaseStatus.NEW, PseudoCaseStatus.OPEN))),
-      sort = Some(CaseSort(field = CaseSortField.DAYS_ELAPSED, direction = SortDirection.DESCENDING)))
+      sort = Some(CaseSort(field = Set(CaseSortField.DAYS_ELAPSED), direction = SortDirection.DESCENDING)))
 
     val pagination = Pagination()
 
