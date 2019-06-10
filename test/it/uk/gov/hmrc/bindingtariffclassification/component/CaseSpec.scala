@@ -951,7 +951,7 @@ class CaseSpec extends BaseFeatureSpec {
   }
 
 
-  feature("Get Cases by BTI") {
+  feature("Get Cases by application type") {
 
     scenario("No matches") {
 

@@ -31,7 +31,7 @@ class CaseSearchTest extends UnitSpec {
 
   private val filter = CaseFilter(
     reference = Some(Set("id1", "id2")),
-    applicationType = Some(Set(ApplicationType.BTI)),
+    applicationType = Some(Set(ApplicationType.BTI, ApplicationType.LIABILITY_ORDER)),
     traderName = Some("trader-name"),
     queueId = Some("queue-id"),
     eori = Some("eori-number"),
@@ -46,7 +46,7 @@ class CaseSearchTest extends UnitSpec {
 
   private val params: Map[String, Seq[String]] = Map(
     "reference" -> Seq("id1", "id2"),
-    "application_type" -> Seq("BTI"),
+    "application_type" -> Seq("BTI", "LIABILITY_ORDER"),
     "trader_name" -> Seq("trader-name"),
     "queue_id" -> Seq("queue-id"),
     "eori" -> Seq("eori-number"),
@@ -87,6 +87,7 @@ class CaseSearchTest extends UnitSpec {
         "reference=id1" +
           "&reference=id2" +
           "&application_type=BTI" +
+          "&application_type=LIABILITY_ORDER" +
           "&queue_id=queue-id" +
           "&eori=eori-number" +
           "&assignee_id=assignee-id" +
@@ -130,6 +131,7 @@ class CaseSearchTest extends UnitSpec {
         "reference=id1" +
           "&reference=id2" +
           "&application_type=BTI" +
+          "&application_type=LIABILITY_ORDER" +
           "&queue_id=queue-id" +
           "&eori=eori-number" +
           "&assignee_id=assignee-id" +

@@ -38,7 +38,7 @@ class CaseSearchMapperSpec extends UnitSpec with MockitoSugar {
 
       val filter = CaseFilter(
         reference = Some(Set("id1", "id2")),
-        applicationType = Some(Set(ApplicationType.BTI)),
+        applicationType = Some(Set(ApplicationType.BTI, ApplicationType.LIABILITY_ORDER)),
         queueId = Some("valid_queue"),
         eori = Some("eori-number"),
         assigneeId = Some("valid_assignee"),
@@ -52,7 +52,7 @@ class CaseSearchMapperSpec extends UnitSpec with MockitoSugar {
 
       jsonMapper.filterBy(filter) shouldBe Json.obj(
         "reference" -> Json.obj("$in" -> Json.arr("id1", "id2")),
-        "application.type" -> Json.obj("$in" -> Json.arr("BTI")),
+        "application.type" -> Json.obj("$in" -> Json.arr("BTI", "LIABILITY_ORDER")),
         "queueId" -> "valid_queue",
         "assignee.id" -> "valid_assignee",
         "status" -> Json.obj("$in" -> Json.arr("NEW", "OPEN")),
