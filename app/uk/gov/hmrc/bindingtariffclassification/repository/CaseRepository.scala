@@ -156,7 +156,8 @@ class CaseMongoRepository @Inject()(mongoDbProvider: MongoDbProvider, mapper: Se
     import collection.BatchCommands.AggregationFramework._
 
     val groupField = report.group match {
-      case CaseReportGroup.QUEUE => "queueId"
+      case CaseReportGroup.QUEUE if report.splitByType => Seq("queueId", "application.type")
+      case CaseReportGroup.QUEUE => Seq("queueId")
     }
 
     val reportField = report.field match {
@@ -164,7 +165,10 @@ class CaseMongoRepository @Inject()(mongoDbProvider: MongoDbProvider, mapper: Se
       case CaseReportField.REFERRED_DAYS_ELAPSED => "referredDaysElapsed"
     }
 
-    val group: PipelineOperator = GroupField(groupField)("field" -> PushField(reportField))
+    val group: PipelineOperator = groupField match {
+      case Seq(first, second) => GroupMulti(("queueId",first),("type",second))("field" -> PushField(reportField))
+      case Seq(first) => GroupField(first)("field" -> PushField(reportField))
+    }
 
     val filters = Seq[JsObject]()
       .++(report.filter.decisionStartDate.map { range =>
@@ -204,8 +208,13 @@ class CaseMongoRepository @Inject()(mongoDbProvider: MongoDbProvider, mapper: Se
       .collect[List](Int.MaxValue, reactivemongo.api.Cursor.FailOnError())
       .map {
         _.map { obj: JsObject =>
+
           ReportResult(
-            Option(obj.value("_id")).filter(_.isInstanceOf[JsString]).map(_.as[JsString].value),
+            obj.value("_id") match {
+              case JsObject(map) => Some(s"${map.getOrElse("queueId",JsString("")).as[JsString].value}-${map.getOrElse("type",JsString("")).as[JsString].value}")
+              case JsString(value) => Some(value)
+              case _ => None
+            },
             obj.value("field").as[JsArray].value.map(_.as[JsNumber].value.toInt).toList
           )
         }
