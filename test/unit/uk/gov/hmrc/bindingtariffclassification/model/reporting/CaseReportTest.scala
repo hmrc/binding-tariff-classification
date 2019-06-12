@@ -55,7 +55,8 @@ class CaseReportTest extends UnitSpec {
     "reference" -> Seq("reference1,reference2"),
     "status" -> Seq("OPEN", "NEW"),
     "application_type" -> Seq("BTI", "LIABILITY_ORDER"),
-    "assignee_id" -> Seq("assignee_123")
+    "assignee_id" -> Seq("assignee_123"),
+    "split_by_type" -> Seq("false")
   )
 
   /**
@@ -77,7 +78,8 @@ class CaseReportTest extends UnitSpec {
           "application_type=LIABILITY_ORDER&" +
           "assignee_id=assignee_123&" +
           "report_group=queue-id&" +
-          "report_field=active-days-elapsed"
+          "report_field=active-days-elapsed&" +
+          "split_by_type=false"
 
       URLDecoder.decode(CaseReport.bindable.unbind("", report), "UTF-8") shouldBe populatedQueryParam
     }

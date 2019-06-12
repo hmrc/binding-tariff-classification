@@ -750,6 +750,35 @@ class CaseRepositorySpec extends BaseMongoIndexSpec
       results should contain(ReportResult(None, Seq(4)))
     }
 
+    "group by queue id and type when split by type chosen" in {
+      val c1 = aCase(withQueue("queue-1"), withActiveDaysElapsed(1))
+      val c2 = aCase(withQueue("queue-1"), withActiveDaysElapsed(2))
+      val c3 = aCase(withQueue("queue-2"), withActiveDaysElapsed(3))
+      val c4 = aCase(withQueue("queue-2"), withActiveDaysElapsed(5), withLiabilityDetails(Some("sausages")))
+      val c5 = aCase(withoutQueue(), withActiveDaysElapsed(4))
+
+      await(repository.insert(c1))
+      await(repository.insert(c2))
+      await(repository.insert(c3))
+      await(repository.insert(c4))
+      await(repository.insert(c5))
+      collectionSize shouldBe 5
+
+      val report = CaseReport(
+        filter = CaseReportFilter(),
+        group = CaseReportGroup.QUEUE,
+        field = CaseReportField.ACTIVE_DAYS_ELAPSED,
+        splitByType = true
+      )
+
+      val results = await(repository.generateReport(report))
+      results should have length 4
+      results should contain(ReportResult("queue-1-BTI", Seq(1, 2)))
+      results should contain(ReportResult("queue-2-BTI", Seq(3)))
+      results should contain(ReportResult("queue-2-LIABILITY_ORDER", Seq(5)))
+      results should contain(ReportResult("-BTI", Seq(4)))
+    }
+
     "report on active days elapsed" in {
       val c1 = aCase(withQueue("queue-1"), withActiveDaysElapsed(1))
       val c2 = aCase(withQueue("queue-1"), withActiveDaysElapsed(2))
