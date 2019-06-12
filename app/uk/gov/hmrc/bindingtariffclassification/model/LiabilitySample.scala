@@ -19,5 +19,5 @@ package uk.gov.hmrc.bindingtariffclassification.model
 object LiabilitySample extends Enumeration {
   type LiabilitySample = Value
 
-  val YES, NO = Value
+  val SENDING, NOT_SENDING = Value
 }
