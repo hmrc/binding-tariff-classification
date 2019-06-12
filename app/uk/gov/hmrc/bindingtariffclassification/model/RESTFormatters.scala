@@ -23,15 +23,6 @@ import uk.gov.hmrc.play.json.Union
 
 object RESTFormatters {
 
-  case class Something(value: String)
-
-  implicit val formatSomething = Json.format[Something]
-
-  //val formats = Json.format[]
-  Json.toJson(Something(""))
-  Json.toJson(Map[String, Option[String]]("" -> Some("")))
-
-
   // `Case` formatters
   implicit val formatCaseStatus: Format[CaseStatus.Value] = EnumJson.format(CaseStatus)
   implicit val formatApplicationType: Format[ApplicationType.Value] = EnumJson.format(ApplicationType)
