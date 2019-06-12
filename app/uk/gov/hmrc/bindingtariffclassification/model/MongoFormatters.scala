@@ -55,6 +55,7 @@ object MongoFormatters {
   implicit val formatAppealType: Format[AppealType.Value] = EnumJson.format(AppealType)
   implicit val formatSampleStatus: Format[SampleStatus.Value] = EnumJson.format(SampleStatus)
   implicit val formatSampleReturn: Format[SampleReturn.Value] = EnumJson.format(SampleReturn)
+  implicit val formatLiabilitySample: Format[LiabilitySample.Value] = EnumJson.format(LiabilitySample)
   implicit val formatCancelReason: Format[CancelReason.Value] = EnumJson.format(CancelReason)
   implicit val formatReferralReason: Format[ReferralReason.Value] = EnumJson.format(ReferralReason)
   implicit val formatApplicationType: Format[ApplicationType.Value] = EnumJson.format(ApplicationType)
@@ -88,6 +89,7 @@ object MongoFormatters {
   implicit val formatAppealAdded: OFormat[AppealAdded] = Json.format[AppealAdded]
   implicit val formatSampleStatusChange: OFormat[SampleStatusChange] = Json.format[SampleStatusChange]
   implicit val formatSampleReturnChange: OFormat[SampleReturnChange] = Json.format[SampleReturnChange]
+  implicit val formatLiabilitySampleChange: OFormat[LiabilitySampleChange] = Json.format[LiabilitySampleChange]
   implicit val formatExtendedUseStatusChange: OFormat[ExtendedUseStatusChange] = Json.format[ExtendedUseStatusChange]
   implicit val formatAssignmentChange: OFormat[AssignmentChange] = Json.format[AssignmentChange]
   implicit val formatQueueChange: OFormat[QueueChange] = Json.format[QueueChange]
@@ -102,6 +104,7 @@ object MongoFormatters {
     .and[AppealAdded](EventType.APPEAL_ADDED.toString)
     .and[SampleStatusChange](EventType.SAMPLE_STATUS_CHANGE.toString)
     .and[SampleReturnChange](EventType.SAMPLE_RETURN_CHANGE.toString)
+    .and[LiabilitySampleChange](EventType.LIABILITY_SAMPLE_CHANGE.toString)
     .and[ExtendedUseStatusChange](EventType.EXTENDED_USE_STATUS_CHANGE.toString)
     .and[AssignmentChange](EventType.ASSIGNMENT_CHANGE.toString)
     .and[QueueChange](EventType.QUEUE_CHANGE.toString)
