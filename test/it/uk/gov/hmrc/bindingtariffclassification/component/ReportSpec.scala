@@ -25,7 +25,7 @@ import play.api.libs.json.{Json, Reads}
 import scalaj.http.{Http, HttpResponse}
 import uk.gov.hmrc.bindingtariffclassification.model.RESTFormatters._
 import uk.gov.hmrc.bindingtariffclassification.model._
-import uk.gov.hmrc.bindingtariffclassification.model.reporting.ReportResult
+import uk.gov.hmrc.bindingtariffclassification.model.reporting.{CaseReportGroup, ReportResult}
 import util.Cases._
 import util.EventData._
 
@@ -54,7 +54,7 @@ class ReportSpec extends BaseFeatureSpec {
       result.code shouldBe OK
 
       And("The response body contains the report")
-      thenTheJsonBodyOf[Seq[ReportResult]](result).get.toSet shouldBe Set(ReportResult(None, Seq(0)), ReportResult("queue-1", Seq(1, 2)))
+      thenTheJsonBodyOf[Seq[ReportResult]](result).get.toSet shouldBe Set(ReportResult(CaseReportGroup.QUEUE -> None, Seq(0)), ReportResult(CaseReportGroup.QUEUE -> Some("queue-1"), Seq(1, 2)))
     }
 
     scenario("Generate a Report on Referred Days Elapsed Grouping by Queue") {
@@ -75,7 +75,7 @@ class ReportSpec extends BaseFeatureSpec {
       result.code shouldBe OK
 
       And("The response body contains the report")
-      thenTheJsonBodyOf[Seq[ReportResult]](result).get.toSet shouldBe Set(ReportResult(None, Seq(0)), ReportResult("queue-1", Seq(1, 2)))
+      thenTheJsonBodyOf[Seq[ReportResult]](result).get.toSet shouldBe Set(ReportResult(CaseReportGroup.QUEUE -> None, Seq(0)), ReportResult(CaseReportGroup.QUEUE -> Some("queue-1"), Seq(1, 2)))
     }
 
     scenario("Generate a Report filtering by decision date") {
@@ -98,7 +98,7 @@ class ReportSpec extends BaseFeatureSpec {
       result.code shouldBe OK
 
       And("The response body contains the report")
-      thenTheJsonBodyOf[Seq[ReportResult]](result) shouldBe Some(Seq(ReportResult("queue-1", Seq(2))))
+      thenTheJsonBodyOf[Seq[ReportResult]](result) shouldBe Some(Seq(ReportResult(CaseReportGroup.QUEUE -> Some("queue-1"), Seq(2))))
     }
 
     scenario("Generate a Report filtering by referral date") {
@@ -123,7 +123,7 @@ class ReportSpec extends BaseFeatureSpec {
       result.code shouldBe OK
 
       And("The response body contains the report")
-      thenTheJsonBodyOf[Seq[ReportResult]](result) shouldBe Some(Seq(ReportResult("queue-1", Seq(1))))
+      thenTheJsonBodyOf[Seq[ReportResult]](result) shouldBe Some(Seq(ReportResult(CaseReportGroup.QUEUE -> Some("queue-1"), Seq(1))))
     }
 
     scenario("Generate a Report filtering by reference") {
@@ -145,7 +145,7 @@ class ReportSpec extends BaseFeatureSpec {
       result.code shouldBe OK
 
       And("The response body contains the report")
-      thenTheJsonBodyOf[Seq[ReportResult]](result) shouldBe Some(Seq(ReportResult("queue-1", Seq(1, 2))))
+      thenTheJsonBodyOf[Seq[ReportResult]](result) shouldBe Some(Seq(ReportResult(CaseReportGroup.QUEUE -> Some("queue-1"), Seq(1, 2))))
     }
 
     scenario("Generate a Report filtering by application type") {
@@ -166,7 +166,7 @@ class ReportSpec extends BaseFeatureSpec {
       result.code shouldBe OK
 
       And("The response body contains the report")
-      thenTheJsonBodyOf[Seq[ReportResult]](result) shouldBe Some(Seq(ReportResult("queue-1", Seq(1))))
+      thenTheJsonBodyOf[Seq[ReportResult]](result) shouldBe Some(Seq(ReportResult(CaseReportGroup.QUEUE -> Some("queue-1"), Seq(1))))
     }
 
   }

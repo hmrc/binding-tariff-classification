@@ -18,11 +18,17 @@ package uk.gov.hmrc.bindingtariffclassification.model
 
 import play.api.libs.json._
 import play.json.extra.{InvariantFormat, Jsonx}
-import uk.gov.hmrc.bindingtariffclassification.model.reporting.ReportResult
+import uk.gov.hmrc.bindingtariffclassification.model.reporting.{CaseReportGroup, ReportResult}
 import uk.gov.hmrc.play.json.Union
 
 object RESTFormatters {
 
+  case class Something(value: String)
+
+  implicit val formatSomething = Json.format[Something]
+
+  Json.toJson(Something(""))
+  Json.toJson(Map[String, Option[String]]("" -> Some("")))
 
   // `Case` formatters
   implicit val formatCaseStatus: Format[CaseStatus.Value] = EnumJson.format(CaseStatus)
@@ -34,6 +40,13 @@ object RESTFormatters {
   implicit val formatSampleReturn: Format[SampleReturn.Value] = EnumJson.format(SampleReturn)
   implicit val formatCancelReason: Format[CancelReason.Value] = EnumJson.format(CancelReason)
   implicit val formatReferralReason: Format[ReferralReason.Value] = EnumJson.format(ReferralReason)
+  implicit val formatCaseReportGroup: Format[CaseReportGroup.Value] = EnumJson.format(CaseReportGroup)
+
+
+  implicit val formatReportResultMap: OFormat[Map[CaseReportGroup.Value, Option[String]]] = {
+    implicit val optrds: Reads[Option[String]] = Reads.optionNoError[String]
+    EnumJson.formatMap[CaseReportGroup.Value, Option[String]]
+  }
 
   implicit val formatReportResult: OFormat[ReportResult] = Json.format[ReportResult]
   implicit val formatImportExport: Format[ImportExport.Value] = EnumJson.format(ImportExport)

@@ -27,6 +27,7 @@ import uk.gov.hmrc.bindingtariffclassification.crypto.Crypto
 import uk.gov.hmrc.bindingtariffclassification.model.CaseStatus.{NEW, OPEN}
 import uk.gov.hmrc.bindingtariffclassification.model.MongoFormatters.formatCase
 import uk.gov.hmrc.bindingtariffclassification.model._
+import uk.gov.hmrc.bindingtariffclassification.model.reporting.CaseReportGroup.CaseReportGroup
 import uk.gov.hmrc.bindingtariffclassification.model.reporting.{CaseReport, CaseReportField, CaseReportGroup, ReportResult}
 import uk.gov.hmrc.mongo.ReactiveRepository
 
@@ -155,16 +156,21 @@ class CaseMongoRepository @Inject()(mongoDbProvider: MongoDbProvider, mapper: Se
     import MongoFormatters.formatInstant
     import collection.BatchCommands.AggregationFramework._
 
-    val groupField = report.group match {
-      case CaseReportGroup.QUEUE => "queueId"
+    def groupField: CaseReportGroup => (String, String) = {
+      case CaseReportGroup.QUEUE => (CaseReportGroup.QUEUE.toString, "queueId")
+      case CaseReportGroup.APPLICATION_TYPE => (CaseReportGroup.APPLICATION_TYPE.toString, "application.type")
     }
+
 
     val reportField = report.field match {
       case CaseReportField.ACTIVE_DAYS_ELAPSED => "daysElapsed"
       case CaseReportField.REFERRED_DAYS_ELAPSED => "referredDaysElapsed"
     }
 
-    val group: PipelineOperator = GroupField(groupField)("field" -> PushField(reportField))
+
+    val groupFields: Seq[(String, String)] = report.group.map(groupField).toSeq
+    val group: PipelineOperator = GroupMulti(groupFields: _*)("field" -> PushField(reportField))
+    
 
     val filters = Seq[JsObject]()
       .++(report.filter.decisionStartDate.map { range =>
@@ -204,8 +210,17 @@ class CaseMongoRepository @Inject()(mongoDbProvider: MongoDbProvider, mapper: Se
       .collect[List](Int.MaxValue, reactivemongo.api.Cursor.FailOnError())
       .map {
         _.map { obj: JsObject =>
+          val id: JsObject = obj.value("_id").as[JsObject]
+          val fields: Map[CaseReportGroup, Option[String]] = groupFields.map {
+            case (field, _) if id.value.contains(field) =>
+              CaseReportGroup.withName(field) -> Option(
+                id.value(field)).filter(_.isInstanceOf[JsString]).map(_.as[JsString].value
+              )
+            case (field, _) =>
+              CaseReportGroup.withName(field) -> None
+          }.toMap
           ReportResult(
-            Option(obj.value("_id")).filter(_.isInstanceOf[JsString]).map(_.as[JsString].value),
+            fields,
             obj.value("field").as[JsArray].value.map(_.as[JsNumber].value.toInt).toList
           )
         }

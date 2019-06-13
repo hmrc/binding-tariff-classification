@@ -42,7 +42,7 @@ class CaseReportTest extends UnitSpec {
       assigneeId = Some("assignee_123")
     ),
     field = CaseReportField.ACTIVE_DAYS_ELAPSED,
-    group = CaseReportGroup.QUEUE
+    group = Set(CaseReportGroup.QUEUE)
   )
 
   private val params: Map[String, Seq[String]] = Map(

@@ -16,11 +16,14 @@
 
 package uk.gov.hmrc.bindingtariffclassification.model.reporting
 
+import uk.gov.hmrc.bindingtariffclassification.model.reporting.CaseReportGroup.CaseReportGroup
+
 case class ReportResult
 (
-  group: Option[String],
+  group: Map[CaseReportGroup, Option[String]],
   value: Seq[Int]
 )
 object ReportResult {
-  def apply(group: String, value: Seq[Int]): ReportResult = ReportResult(Some(group), value)
+  def apply(group: (CaseReportGroup, Option[String]), value: Seq[Int]): ReportResult = ReportResult(Map(group), value)
+  def apply(group: Seq[(CaseReportGroup, String)], value: Seq[Int]): ReportResult = ReportResult(group.toMap.mapValues(Some(_)), value)
 }
