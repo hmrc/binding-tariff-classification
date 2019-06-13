@@ -47,7 +47,7 @@ class ReportServiceTest extends UnitSpec with MockitoSugar with BeforeAndAfterEa
     "Delegate to Case Repository for simple report" in {
       val report = CaseReport(
         filter = CaseReportFilter(),
-        group = CaseReportGroup.QUEUE,
+        group = Set(CaseReportGroup.QUEUE),
         field = CaseReportField.ACTIVE_DAYS_ELAPSED
       )
 
@@ -72,7 +72,7 @@ class ReportServiceTest extends UnitSpec with MockitoSugar with BeforeAndAfterEa
             max = Instant.MAX
           ))
         ),
-        group = CaseReportGroup.QUEUE,
+        group = Set(CaseReportGroup.QUEUE),
         field = CaseReportField.ACTIVE_DAYS_ELAPSED
       )
 
@@ -86,7 +86,7 @@ class ReportServiceTest extends UnitSpec with MockitoSugar with BeforeAndAfterEa
 
       theReportGenerated shouldBe CaseReport(
         filter = CaseReportFilter(reference = Some(Set("ref1", "ref2"))),
-        group = CaseReportGroup.QUEUE,
+        group = Set(CaseReportGroup.QUEUE),
         field = CaseReportField.ACTIVE_DAYS_ELAPSED
       )
     }
@@ -104,7 +104,7 @@ class ReportServiceTest extends UnitSpec with MockitoSugar with BeforeAndAfterEa
             max = Instant.MAX
           ))
         ),
-        group = CaseReportGroup.QUEUE,
+        group = Set(CaseReportGroup.QUEUE),
         field = CaseReportField.ACTIVE_DAYS_ELAPSED
       )
 
@@ -118,7 +118,7 @@ class ReportServiceTest extends UnitSpec with MockitoSugar with BeforeAndAfterEa
 
       theReportGenerated shouldBe CaseReport(
         filter = CaseReportFilter(reference = Some(Set("ref1", "ref2"))),
-        group = CaseReportGroup.QUEUE,
+        group = Set(CaseReportGroup.QUEUE),
         field = CaseReportField.ACTIVE_DAYS_ELAPSED
       )
     }
@@ -136,7 +136,7 @@ class ReportServiceTest extends UnitSpec with MockitoSugar with BeforeAndAfterEa
             max = Instant.MAX
           ))
         ),
-        group = CaseReportGroup.QUEUE,
+        group = Set(CaseReportGroup.QUEUE),
         field = CaseReportField.ACTIVE_DAYS_ELAPSED
       )
 
@@ -150,7 +150,7 @@ class ReportServiceTest extends UnitSpec with MockitoSugar with BeforeAndAfterEa
 
       theReportGenerated shouldBe CaseReport(
         filter = CaseReportFilter(reference = Some(Set("ref1"))),
-        group = CaseReportGroup.QUEUE,
+        group = Set(CaseReportGroup.QUEUE),
         field = CaseReportField.ACTIVE_DAYS_ELAPSED
       )
     }

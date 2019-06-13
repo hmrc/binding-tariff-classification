@@ -24,4 +24,21 @@ object EnumJson {
     Format(Reads.enumNameReads(enum), Writes.enumNameWrites)
   }
 
+  def readsMap[E, B](implicit erds: Reads[E], brds: Reads[B]): JsValue => JsResult[Map[E, B]] = (js: JsValue) => {
+    val maprds: Reads[Map[String, B]] = Reads.mapReads[B]
+    Json.fromJson[Map[String, B]](js)(maprds).map(_.map {
+      case (key: String, value: B) => erds.reads(JsString(key)).get -> value
+    })
+  }
+
+  def writesMap[E, B](implicit ewrts: Writes[E], bwrts: Writes[B]): Map[E, B] => JsObject = (map: Map[E, B]) =>
+    Json.toJson(map.map {
+      case (group, value) => group.toString -> value
+    }).as[JsObject]
+
+  def formatMap[E, B](implicit efmt: Format[E], bfmt: Format[B]): OFormat[Map[E, B]] = OFormat(
+    read = readsMap(efmt, bfmt),
+    write = writesMap(efmt, bfmt)
+  )
+
 }
