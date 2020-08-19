@@ -87,6 +87,7 @@ object RESTFormatters {
   implicit val formatExtendedUseStatusChange: OFormat[ExtendedUseStatusChange] = Json.format[ExtendedUseStatusChange]
   implicit val formatAssignmentChange: OFormat[AssignmentChange] = Json.format[AssignmentChange]
   implicit val formatQueueChange: OFormat[QueueChange] = Json.format[QueueChange]
+  implicit val formatCaseCreated: OFormat[CaseCreated] = Json.format[CaseCreated]
 
   implicit val formatNote: OFormat[Note] = Json.format[Note]
 
@@ -103,6 +104,7 @@ object RESTFormatters {
     .and[AssignmentChange](EventType.ASSIGNMENT_CHANGE.toString)
     .and[QueueChange](EventType.QUEUE_CHANGE.toString)
     .and[Note](EventType.NOTE.toString)
+    .and[CaseCreated](EventType.CASE_CREATED.toString)
     .format
 
 
