@@ -38,7 +38,6 @@ class EventSpec extends BaseFeatureSpec {
   private val e1 = createCaseStatusChangeEvent(caseReference = caseRef)
   private val e2 = createNoteEvent(caseReference = caseRef)
 
-
   feature("Delete All") {
 
     scenario("Clear Collection") {
@@ -194,6 +193,28 @@ class EventSpec extends BaseFeatureSpec {
       responseEvent.caseReference shouldBe caseRef
     }
 
+  }
+
+  feature("Add a case created event") {
+
+    scenario("Create new event") {
+      Given("A case that will get created")
+      storeCases(c1)
+
+      When("I create an Event")
+      val payload = NewEventRequest(CaseCreated("Case created"), Operator("user-id", Some("user name")))
+      val result = Http(s"$serviceUrl/cases/$caseRef/events")
+        .header(apiTokenKey, appConfig.authorization)
+        .header(CONTENT_TYPE, ContentTypes.JSON)
+        .postData(Json.toJson(payload).toString()).asString
+
+      Then("The response code should be CREATED")
+      result.code shouldEqual Status.CREATED
+
+      And("The event is returned in the JSON response")
+      val responseEvent = Json.parse(result.body).as[Event]
+      responseEvent.caseReference shouldBe caseRef
+    }
   }
 
 }
