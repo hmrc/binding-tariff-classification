@@ -46,7 +46,7 @@ object EventData {
   def createCaseCreatedEvent(caseReference: String, date: Instant = Instant.now()): Event = {
     createEvent(
       caseRef = caseReference,
-      details = CaseCreated("Case created"),
+      details = CaseCreated("Liability case created"),
       date = date
     )
   }

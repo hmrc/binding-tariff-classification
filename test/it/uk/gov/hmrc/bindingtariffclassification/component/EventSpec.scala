@@ -202,7 +202,7 @@ class EventSpec extends BaseFeatureSpec {
       storeCases(c1)
 
       When("I create an Event")
-      val payload = NewEventRequest(CaseCreated("Case created"), Operator("user-id", Some("user name")))
+      val payload = NewEventRequest(CaseCreated("Liability case created"), Operator("user-id", Some("user name")))
       val result = Http(s"$serviceUrl/cases/$caseRef/events")
         .header(apiTokenKey, appConfig.authorization)
         .header(CONTENT_TYPE, ContentTypes.JSON)
@@ -214,6 +214,9 @@ class EventSpec extends BaseFeatureSpec {
       And("The event is returned in the JSON response")
       val responseEvent = Json.parse(result.body).as[Event]
       responseEvent.caseReference shouldBe caseRef
+
+      val x = responseEvent.details.asInstanceOf[CaseCreated]
+      x.comment shouldBe "Liability case created"
     }
   }
 
