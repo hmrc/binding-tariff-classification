@@ -54,9 +54,18 @@ object EventData {
   def createCaseStatusChangeEvent(caseReference: String, from: CaseStatus = DRAFT, to : CaseStatus = NEW, date: Instant = Instant.now()): Event = {
     createEvent(
       caseRef = caseReference,
-      details = CaseStatusChange(from = from, to = to, comment = Some("comment")),
+      details = createCaseStatusChangeEventDetails(from, to),
       date = date
     )
+  }
+
+  def createCaseStatusChangeEventDetails(from: CaseStatus, to: CaseStatus): Details = {
+    to match {
+      case CaseStatus.COMPLETED => CompletedCaseStatusChange(from, Some("comment"), None)
+      case CaseStatus.REFERRED => ReferralCaseStatusChange(from, Some("comment"), None, "referredTo", Nil)
+      case CaseStatus.CANCELLED => CancellationCaseStatusChange(from, Some("comment"), None, CancelReason.INVALIDATED_OTHER)
+      case _ => CaseStatusChange(from, to, Some("comment"), None)
+    }
   }
 
   def createExtendedUseStatusChangeEvent(caseReference: String): Event = {
@@ -91,7 +100,7 @@ object EventData {
 
   def withCaseReference(reference: String): Event => Event = _.copy(caseReference = reference)
 
-  def withStatusChange(from: CaseStatus, to: CaseStatus): Event =>  Event = _.copy(details = CaseStatusChange(from, to))
+  def withStatusChange(from: CaseStatus, to: CaseStatus): Event =>  Event = _.copy(details = createCaseStatusChangeEventDetails(from, to))
 
   def withTimestamp(date: String): Event => Event = _.copy(timestamp = LocalDateTime.parse(date).atOffset(ZoneOffset.UTC).toInstant)
 

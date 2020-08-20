@@ -19,7 +19,7 @@ package uk.gov.hmrc.bindingtariffclassification.scheduler
 import java.time.Instant
 
 import uk.gov.hmrc.bindingtariffclassification.model.CaseStatus.CaseStatus
-import uk.gov.hmrc.bindingtariffclassification.model.{CaseStatusChange, Event}
+import uk.gov.hmrc.bindingtariffclassification.model.{Event, FieldChange}
 
 import scala.collection.immutable.SortedMap
 
@@ -38,9 +38,9 @@ class StatusTimeline(statusChanges: Seq[(Instant, CaseStatus)]) {
 object StatusTimeline {
   def from(events: Seq[Event]): StatusTimeline = new StatusTimeline(
     events
-      .filter(_.details.isInstanceOf[CaseStatusChange])
+      .filter(_.details.isInstanceOf[FieldChange[CaseStatus]])
       .map { event =>
-        (event.timestamp, event.details.asInstanceOf[CaseStatusChange].to)
+        (event.timestamp, event.details.asInstanceOf[FieldChange[CaseStatus]].to)
       }
   )
 }

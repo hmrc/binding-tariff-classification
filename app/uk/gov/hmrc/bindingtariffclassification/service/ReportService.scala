@@ -17,6 +17,7 @@
 package uk.gov.hmrc.bindingtariffclassification.service
 
 import javax.inject.Inject
+import uk.gov.hmrc.bindingtariffclassification.model.CaseStatus.CaseStatus
 import uk.gov.hmrc.bindingtariffclassification.model._
 import uk.gov.hmrc.bindingtariffclassification.model.reporting.{CaseReport, InstantRange, ReportResult}
 import uk.gov.hmrc.bindingtariffclassification.repository.{CaseRepository, EventRepository}
@@ -38,11 +39,12 @@ class ReportService @Inject()(caseRepository: CaseRepository, eventRepository: E
   }
 
   private def appendReferredCaseReferencesTo(report: CaseReport, range: InstantRange): Future[CaseReport] = {
+    val caseStatusChangeEventTypes = Set(EventType.CASE_STATUS_CHANGE, EventType.CASE_REFERRAL, EventType.CASE_COMPLETED, EventType.CASE_CANCELLATION)
     val filter = report.filter
     val search = EventSearch(
       timestampMin = Some(range.min),
       timestampMax = Some(range.max),
-      `type` = Some(Set(EventType.CASE_STATUS_CHANGE))
+      `type` = Some(caseStatusChangeEventTypes)
     )
 
     eventRepository
@@ -50,7 +52,7 @@ class ReportService @Inject()(caseRepository: CaseRepository, eventRepository: E
       .map(_.results)
       .map {
         _.filter { event =>
-          val change = event.details.asInstanceOf[CaseStatusChange]
+          val change = event.details.asInstanceOf[FieldChange[CaseStatus]]
           change.to == CaseStatus.REFERRED || change.from == CaseStatus.REFERRED
         }
       }

@@ -34,6 +34,7 @@ import uk.gov.hmrc.bindingtariffclassification.service.{CaseService, EventServic
 import uk.gov.hmrc.bindingtariffclassification.sort.CaseSortField
 import uk.gov.hmrc.http.HeaderCarrier
 import util.CaseData
+import util.EventData.createCaseStatusChangeEventDetails
 
 import scala.concurrent.Future
 import scala.concurrent.duration._
@@ -376,17 +377,22 @@ class ActiveDaysElapsedJobTest extends BaseSpec with BeforeAndAfterEach {
 
   private def givenAPageOfCases(page: Int, pageSize: Int, totalCases: Int, cases: Case*): Unit = {
     val pagination = Pagination(page = page)
-    given(caseService.get(caseSearch, pagination)) willReturn Future.successful(Paged(cases, Pagination(page = page, pageSize = pageSize), totalCases))
+    given(caseService.get(caseSearch, pagination)) willReturn
+      Future.successful(Paged(cases, Pagination(page = page, pageSize = pageSize), totalCases))
   }
+
+  private val caseStatusChangeEventTypes = Set(EventType.CASE_STATUS_CHANGE, EventType.CASE_REFERRAL, EventType.CASE_COMPLETED, EventType.CASE_CANCELLATION)
 
   private def givenAPageOfEventsFor(reference: String, page: Int, totalEvents: Int, events: Event*): Unit = {
     val pagination = Pagination(page = page, pageSize = Integer.MAX_VALUE)
-    given(eventService.search(EventSearch(Some(Set(reference)), Some(Set(EventType.CASE_STATUS_CHANGE))), pagination)) willReturn Future.successful(Paged(events, pagination, totalEvents))
+    given(eventService.search(EventSearch(Some(Set(reference)), Some(caseStatusChangeEventTypes)), pagination)) willReturn
+      Future.successful(Paged(events, pagination, totalEvents))
   }
 
   private def givenThereAreNoEventsFor(reference: String): Unit = {
     val pagination = Pagination(pageSize = Integer.MAX_VALUE)
-    given(eventService.search(EventSearch(Some(Set(reference)), Some(Set(EventType.CASE_STATUS_CHANGE))), pagination)) willReturn Future.successful(Paged.empty[Event])
+    given(eventService.search(EventSearch(Some(Set(reference)), Some(caseStatusChangeEventTypes)), pagination)) willReturn
+      Future.successful(Paged.empty[Event])
   }
 
   private def aCaseWith(reference: String, createdDate: String): Case = CaseData.createCase().copy(
@@ -403,10 +409,7 @@ class ActiveDaysElapsedJobTest extends BaseSpec with BeforeAndAfterEach {
 
   private def aStatusChangeWith(date: String, status: CaseStatus): Event = {
     val e = mock[Event]
-    given(e.details) willReturn CaseStatusChange(
-      mock[CaseStatus],
-      status
-    )
+    given(e.details) willReturn createCaseStatusChangeEventDetails(mock[CaseStatus], status)
     given(e.timestamp) willReturn LocalDateTime.parse(date).toInstant(ZoneOffset.UTC)
     e
   }

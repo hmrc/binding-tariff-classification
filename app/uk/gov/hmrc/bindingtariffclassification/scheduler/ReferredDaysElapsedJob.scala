@@ -23,6 +23,7 @@ import javax.inject.{Inject, Singleton}
 import play.api.Logger
 import uk.gov.hmrc.bindingtariffclassification.config.AppConfig
 import uk.gov.hmrc.bindingtariffclassification.connector.BankHolidaysConnector
+import uk.gov.hmrc.bindingtariffclassification.model.CaseStatus.CaseStatus
 import uk.gov.hmrc.bindingtariffclassification.model._
 import uk.gov.hmrc.bindingtariffclassification.service.{CaseService, EventService}
 import uk.gov.hmrc.bindingtariffclassification.sort.CaseSortField
@@ -33,6 +34,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.concurrent.Future._
 import scala.concurrent.duration._
+
 @Singleton
 class ReferredDaysElapsedJob @Inject()(appConfig: AppConfig,
                                        caseService: CaseService,
@@ -43,7 +45,7 @@ class ReferredDaysElapsedJob @Inject()(appConfig: AppConfig,
   private implicit val carrier: HeaderCarrier = HeaderCarrier()
   private lazy val jobConfig = appConfig.referredDaysElapsed
   private lazy val criteria = CaseSearch(
-    filter = CaseFilter(statuses = Some(Set(PseudoCaseStatus.REFERRED))),
+    filter = CaseFilter(statuses = Some(Set(PseudoCaseStatus.REFERRED, PseudoCaseStatus.SUSPENDED))),
     sort = Some(CaseSort(Set(CaseSortField.REFERENCE)))
   )
 
@@ -60,40 +62,66 @@ class ReferredDaysElapsedJob @Inject()(appConfig: AppConfig,
 
   private def process(page: Int)(implicit bankHolidays: Set[LocalDate]): Future[Unit] = {
     caseService.get(criteria, Pagination(page = page)) flatMap { pager =>
-      sequence(pager.results.map(refreshDaysElapsed)).map(_ => pager)
+      sequence(pager.results.map(refreshReferredDaysElapsed)).map(_ => pager)
     } flatMap {
       case pager if pager.hasNextPage => process(page + 1)
       case _ => successful(())
     }
   }
 
-  private def refreshDaysElapsed(c: Case)(implicit bankHolidays: Set[LocalDate]): Future[Unit] = {
-    val createdDate: LocalDate = LocalDateTime.ofInstant(c.createdDate, ZoneOffset.UTC).toLocalDate
-    val daysSinceCreated: Long = ChronoUnit.DAYS.between(createdDate, LocalDate.now(appConfig.clock))
+  private def getReferralStartDate(c: Case): Future[Option[LocalDate]] =
+    for {
+      eventSearch <- eventService.search(
+        search = EventSearch(Some(Set(c.reference)), Some(Set(EventType.CASE_STATUS_CHANGE, EventType.CASE_REFERRAL))),
+        pagination = Pagination(1, Integer.MAX_VALUE))
 
-    // Working days between the created date and Now
-    val workingDays: Seq[Instant] = (0L until daysSinceCreated)
-      .map(createdDate.plusDays)
+      startTimestamp = eventSearch.results
+        .filter(_.details.isInstanceOf[FieldChange[CaseStatus]])
+        .sortBy(_.timestamp)(Ordering[Instant].reverse)
+        .headOption
+        .filter(event => Set(CaseStatus.REFERRED, CaseStatus.SUSPENDED).contains(event.details.asInstanceOf[FieldChange[CaseStatus]].to))
+        .map(_.timestamp)
+
+    } yield startTimestamp.map(LocalDateTime.ofInstant(_, ZoneOffset.UTC).toLocalDate)
+
+  private def getReferredDaysElapsed(startDate: LocalDate)(implicit bankHolidays: Set[LocalDate]): Long = {
+    val daysOnReferral = ChronoUnit.DAYS.between(startDate, LocalDate.now(appConfig.clock))
+
+    val referredDaysElapsed = (0L until daysOnReferral)
+      .map(startDate.plusDays)
       .filterNot(bankHoliday)
       .filterNot(weekend)
-      .map(toInstant)
+      .length
 
+    referredDaysElapsed
+  }
+
+  private def refreshReferredDaysElapsed(c: Case)(implicit bankHolidays: Set[LocalDate]): Future[Unit] = {
     for {
-      // Get the Status Change events for that case
-      events <- eventService.search(EventSearch(Some(Set(c.reference)), Some(Set(EventType.CASE_STATUS_CHANGE))), Pagination(1, Integer.MAX_VALUE))
+      referralStartDate <- getReferralStartDate(c)
 
-      // Generate a timeline of the Case Status over time
-      statusTimeline: StatusTimeline = StatusTimeline.from(events.results)
-
-      // Filter down to the days the case was Referred
-      referredDays: Seq[Instant] = workingDays
-        .filter(statusTimeline.statusOn(_).contains(CaseStatus.REFERRED))
+      referredDaysElapsed = referralStartDate
+        .map(getReferredDaysElapsed)
+        .getOrElse {
+          Logger.warn(s"$name: Unable to find referral event for [${c.reference}]")
+          0L
+        }
 
       // Update the case
-      _ <- caseService.update(c.copy(referredDaysElapsed = referredDays.size), upsert = false)
-
-      _ = Logger.info(s"$name: Updated Days Elapsed of Case [${c.reference}] from [${c.daysElapsed}] to [${referredDays.size}]")
+      updatedCase <- caseService.update(c.copy(referredDaysElapsed = referredDaysElapsed), upsert = false)
+      _ = logResult(c, updatedCase)
     } yield ()
+  }
+
+  private def logResult(original: Case, updated: Option[Case]): Unit = {
+    updated match {
+      case Some(c) if original.referredDaysElapsed != c.referredDaysElapsed =>
+        Logger.info(s"$name: Updated Referred Days Elapsed of Case [${original.reference}] from [${original.referredDaysElapsed}] to [${c.referredDaysElapsed}]")
+      case None =>
+        Logger.warn(s"$name: Failed to update Referred Days Elapsed of Case [${original.reference}]")
+      case _ =>
+        ()
+    }
   }
 
 }

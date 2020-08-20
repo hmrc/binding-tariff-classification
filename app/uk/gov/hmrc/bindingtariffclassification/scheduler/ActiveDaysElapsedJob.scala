@@ -100,9 +100,11 @@ class ActiveDaysElapsedJob @Inject()(
       .filterNot(weekend)
       .map(toInstant)
 
+    val caseStatusChangeEventTypes = Set(EventType.CASE_STATUS_CHANGE, EventType.CASE_REFERRAL, EventType.CASE_COMPLETED, EventType.CASE_CANCELLATION)
+
     for {
       // Get the Status Change events for that case
-      events <- eventService.search(EventSearch(Some(Set(c.reference)), Some(Set(EventType.CASE_STATUS_CHANGE))), Pagination(1, Integer.MAX_VALUE))
+      events <- eventService.search(EventSearch(Some(Set(c.reference)), Some(caseStatusChangeEventTypes)), Pagination(1, Integer.MAX_VALUE))
 
       // Generate a timeline of the Case Status over time
       statusTimeline: StatusTimeline = StatusTimeline.from(events.results)
@@ -118,10 +120,19 @@ class ActiveDaysElapsedJob @Inject()(
       totalDaysElapsed = trackedDaysElapsed + untrackedDaysElapsed
 
       // Update the case
-      _ <- caseService.update(c.copy(daysElapsed = totalDaysElapsed), upsert = false)
-
-      _ = Logger.info(s"DaysElapsedJob: Updated Days Elapsed of Case [${c.reference}] from [${c.daysElapsed}] to [$totalDaysElapsed]")
+      updatedCase <- caseService.update(c.copy(daysElapsed = totalDaysElapsed), upsert = false)
+      _ = logResult(c, updatedCase)
     } yield ()
   }
 
+  private def logResult(original: Case, updated: Option[Case]): Unit = {
+    updated match {
+      case Some(c) if original.daysElapsed != c.daysElapsed =>
+        Logger.info(s"$name: Updated Days Elapsed of Case [${original.reference}] from [${original.daysElapsed}] to [${c.daysElapsed}]")
+      case None =>
+        Logger.warn(s"$name: Failed to update Days Elapsed of Case [${original.reference}]")
+      case _ =>
+        ()
+    }
+  }
 }

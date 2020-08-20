@@ -79,6 +79,40 @@ class ReferredDaysElapsedSpec extends BaseFeatureSpec with MockitoSugar {
       referredDaysElapsedForCase("ref-20190201") shouldBe 1
       referredDaysElapsedForCase("completed") shouldBe -1 // Unchanged
     }
+
+    scenario("Calculates elapsed days for SUSPENDED cases") {
+      Given("There are cases with mixed statuses in the database")
+
+      givenThereIs(aCaseWith(reference = "s-ref-20181220", status = SUSPENDED, createdDate = "2018-12-20"))
+      givenThereIs(aStatusChangeWith("s-ref-20181220", CaseStatus.SUSPENDED, "2018-12-20"))
+
+      givenThereIs(aCaseWith(reference = "s-ref-20181230", status = SUSPENDED, createdDate = "2018-12-30"))
+      givenThereIs(aStatusChangeWith("s-ref-20181230", CaseStatus.SUSPENDED, "2018-12-30"))
+
+      givenThereIs(aCaseWith(reference = "s-ref-20190110", status = SUSPENDED, createdDate = "2019-01-10"))
+      givenThereIs(aStatusChangeWith("s-ref-20190110", CaseStatus.SUSPENDED, "2019-01-10"))
+
+      givenThereIs(aCaseWith(reference = "s-ref-20190203", status = SUSPENDED, createdDate = "2019-02-03"))
+      givenThereIs(aStatusChangeWith("s-ref-20190203", CaseStatus.SUSPENDED, "2019-02-03"))
+
+      givenThereIs(aCaseWith(reference = "s-ref-20190201", status = SUSPENDED, createdDate = "2019-02-01"))
+      givenThereIs(aStatusChangeWith("s-ref-20190201", CaseStatus.SUSPENDED, "2019-02-01"))
+
+      givenThereIs(aCaseWith(reference = "s-completed", status = COMPLETED, createdDate = "2019-02-01"))
+      givenThereIs(aStatusChangeWith("s-completed", CaseStatus.SUSPENDED, "2019-02-01"))
+
+
+      When("The job runs")
+      result(job.execute(), timeout)
+
+      Then("The Referred Days Elapsed should be correct")
+      referredDaysElapsedForCase("s-ref-20181220") shouldBe 29
+      referredDaysElapsedForCase("s-ref-20181230") shouldBe 24
+      referredDaysElapsedForCase("s-ref-20190110") shouldBe 17
+      referredDaysElapsedForCase("s-ref-20190203") shouldBe 0
+      referredDaysElapsedForCase("s-ref-20190201") shouldBe 1
+      referredDaysElapsedForCase("s-completed") shouldBe -1 // Unchanged
+    }
   }
 
 

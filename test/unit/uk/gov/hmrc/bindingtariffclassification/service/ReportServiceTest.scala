@@ -28,6 +28,7 @@ import uk.gov.hmrc.bindingtariffclassification.model.CaseStatus.CaseStatus
 import uk.gov.hmrc.bindingtariffclassification.model._
 import uk.gov.hmrc.bindingtariffclassification.model.reporting._
 import uk.gov.hmrc.bindingtariffclassification.repository.{CaseRepository, EventRepository}
+import util.EventData.createCaseStatusChangeEventDetails
 
 import scala.concurrent.Future
 
@@ -78,7 +79,7 @@ class ReportServiceTest extends BaseSpec with BeforeAndAfterEach {
       await(service.generate(report)) shouldBe Seq.empty
 
       theEventSearch shouldBe EventSearch(
-        `type` = Some(Set(EventType.CASE_STATUS_CHANGE)),
+        `type` = Some(Set(EventType.CASE_STATUS_CHANGE, EventType.CASE_REFERRAL, EventType.CASE_COMPLETED, EventType.CASE_CANCELLATION)),
         timestampMin = Some(Instant.MIN),
         timestampMax = Some(Instant.MAX)
       )
@@ -110,7 +111,7 @@ class ReportServiceTest extends BaseSpec with BeforeAndAfterEach {
       await(service.generate(report)) shouldBe Seq.empty
 
       theEventSearch shouldBe EventSearch(
-        `type` = Some(Set(EventType.CASE_STATUS_CHANGE)),
+        `type` = Some(Set(EventType.CASE_STATUS_CHANGE, EventType.CASE_REFERRAL, EventType.CASE_COMPLETED, EventType.CASE_CANCELLATION)),
         timestampMin = Some(Instant.MIN),
         timestampMax = Some(Instant.MAX)
       )
@@ -142,7 +143,7 @@ class ReportServiceTest extends BaseSpec with BeforeAndAfterEach {
       await(service.generate(report)) shouldBe Seq.empty
 
       theEventSearch shouldBe EventSearch(
-        `type` = Some(Set(EventType.CASE_STATUS_CHANGE)),
+        `type` = Some(Set(EventType.CASE_STATUS_CHANGE, EventType.CASE_REFERRAL, EventType.CASE_COMPLETED, EventType.CASE_CANCELLATION)),
         timestampMin = Some(Instant.MIN),
         timestampMax = Some(Instant.MAX)
       )
@@ -156,10 +157,7 @@ class ReportServiceTest extends BaseSpec with BeforeAndAfterEach {
   }
 
   def statusChange(reference: String, from: CaseStatus, to: CaseStatus): Event = Event(
-    details = CaseStatusChange(
-      from = from,
-      to = to
-    ),
+    details = createCaseStatusChangeEventDetails(from, to),
     operator = mock[Operator],
     caseReference = reference,
     timestamp = Instant.EPOCH
