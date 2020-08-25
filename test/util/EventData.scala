@@ -43,14 +43,6 @@ object EventData {
     )
   }
 
-  def createCaseCreatedEvent(caseReference: String, date: Instant = Instant.now()): Event = {
-    createEvent(
-      caseRef = caseReference,
-      details = CaseCreated("Liability case created"),
-      date = date
-    )
-  }
-
   def createCaseStatusChangeEvent(caseReference: String, from: CaseStatus = DRAFT, to : CaseStatus = NEW, date: Instant = Instant.now()): Event = {
     createEvent(
       caseRef = caseReference,
