@@ -34,7 +34,8 @@ case class CaseFilter
   minDecisionEnd: Option[Instant] = None,
   commodityCode: Option[String] = None,
   decisionDetails: Option[String] = None,
-  keywords: Option[Set[String]] = None
+  keywords: Option[Set[String]] = None,
+  migrated: Option[Boolean] = None
 )
 
 object CaseFilter {
@@ -50,8 +51,13 @@ object CaseFilter {
   private val commodityCodeKey = "commodity_code"
   private val decisionDetailsKey = "decision_details"
   private val keywordKey = "keyword"
+  private val migratedKey = "migrated"
 
-  implicit def bindable(implicit stringBinder: QueryStringBindable[String]): QueryStringBindable[CaseFilter] = new QueryStringBindable[CaseFilter] {
+  implicit def bindable(
+    implicit
+    stringBinder: QueryStringBindable[String],
+    boolBinder: QueryStringBindable[Boolean]
+  ): QueryStringBindable[CaseFilter] = new QueryStringBindable[CaseFilter] {
 
     override def bind(key: String, requestParams: Map[String, Seq[String]]): Option[Either[String, CaseFilter]] = {
       import uk.gov.hmrc.bindingtariffclassification.model.utils.BinderUtil._
@@ -70,7 +76,8 @@ object CaseFilter {
             minDecisionEnd = param(minDecisionEndKey).flatMap(bindInstant),
             commodityCode = param(commodityCodeKey),
             decisionDetails = param(decisionDetailsKey),
-            keywords = params(keywordKey).map(_.map(_.toUpperCase))
+            keywords = params(keywordKey).map(_.map(_.toUpperCase)),
+            migrated = boolBinder.bind(migratedKey, requestParams).flatMap(_.toOption)
           )
         )
       )
@@ -88,7 +95,8 @@ object CaseFilter {
         filter.minDecisionEnd.map(i => stringBinder.unbind(minDecisionEndKey, i.toString)),
         filter.commodityCode.map(stringBinder.unbind(commodityCodeKey, _)),
         filter.decisionDetails.map(stringBinder.unbind(decisionDetailsKey, _)),
-        filter.keywords.map(_.map(s => stringBinder.unbind(keywordKey, s.toString)).mkString("&"))
+        filter.keywords.map(_.map(s => stringBinder.unbind(keywordKey, s.toString)).mkString("&")),
+        filter.migrated.map(boolBinder.unbind(migratedKey, _))
       ).filter(_.isDefined).map(_.get).mkString("&")
     }
   }

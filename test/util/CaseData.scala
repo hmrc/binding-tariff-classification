@@ -164,7 +164,8 @@ object CaseData {
                  queue: Option[String] = None,
                  assignee: Option[Operator] = None,
                  attachments: Seq[Attachment] = Seq.empty,
-                 keywords: Set[String] = Set.empty): Case = {
+                 keywords: Set[String] = Set.empty,
+                 dateOfExtract: Option[Instant] = None): Case = {
     Case(
       reference = r,
       status = status,
@@ -173,7 +174,8 @@ object CaseData {
       application = app,
       decision = decision,
       attachments = attachments,
-      keywords = keywords
+      keywords = keywords,
+      dateOfExtract = dateOfExtract
     )
   }
 

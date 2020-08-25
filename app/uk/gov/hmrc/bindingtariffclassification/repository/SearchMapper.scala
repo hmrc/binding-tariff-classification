@@ -66,7 +66,8 @@ class SearchMapper @Inject()(appConfig: AppConfig) {
         "application.agent.eoriDetails.eori" -> JsString(e)
       )),
       filter.keywords.map("keywords" -> containsAll(_)),
-      filter.statuses.map(filteringByStatus)
+      filter.statuses.map(filteringByStatus),
+      filter.migrated.map(showMigrated => if (showMigrated) exists("dateOfExtract") else notExists("dateOfExtract"))
     ).filter(_.isDefined).map(_.get)
 
     val query: Map[String, JsValue] = params.groupBy(_._1) // Group by Key
@@ -89,6 +90,14 @@ class SearchMapper @Inject()(appConfig: AppConfig) {
     either(objects)
   }
 
+  private def notExists(field: String): (String, JsValue) = {
+    field -> JsNull
+  }
+
+  private def exists(field: String): (String, JsObject) = {
+    field -> Json.obj("$exists" -> JsTrue)
+  }
+
   private def containsAll(s: Set[String]): JsObject = Json.obj(
     "$all" -> s
   )
@@ -104,7 +113,6 @@ class SearchMapper @Inject()(appConfig: AppConfig) {
   private def inArray[T](values: TraversableOnce[T])(implicit writes: Writes[T]): JsObject = JsObject(Map(
     "$in" -> JsArray(values.toSeq.map(writes.writes)))
   )
-
 
   private def mappingNoneOrSome: String => JsValue = {
     case "none" => JsNull

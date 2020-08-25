@@ -605,6 +605,27 @@ class CaseRepositorySpec extends BaseMongoIndexSpec
     }
   }
 
+  "get by migration status" should {
+    val case1Migrated = case1.copy(dateOfExtract = Some(Instant.now()))
+    val liabCase1Migrated = liabCase1.copy(dateOfExtract = Some(Instant.now()))
+
+    "return only migrated cases when specified in search" in {
+      store(case1Migrated, case2, liabCase1Migrated)
+      val search = CaseSearch(CaseFilter(migrated = Some(true)))
+      await(repository.get(search, Pagination())).results shouldBe Seq(case1Migrated, liabCase1Migrated)
+    }
+    "return only cases that were not migrated when specified in search" in {
+      store(case1Migrated, case2, liabCase1Migrated)
+      val search = CaseSearch(CaseFilter(migrated = Some(false)))
+      await(repository.get(search, Pagination())).results shouldBe Seq(case2)
+    }
+    "return all cases when there is no migrated filter" in {
+      store(case1Migrated, case2, liabCase1Migrated)
+      val search = CaseSearch(CaseFilter())
+      await(repository.get(search, Pagination())).results shouldBe Seq(case1Migrated, case2, liabCase1Migrated)
+    }
+  }
+
   "pagination" should {
 
     "return some cases with default Pagination" in {
