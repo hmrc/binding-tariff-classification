@@ -215,8 +215,8 @@ class EventSpec extends BaseFeatureSpec {
       val responseEvent = Json.parse(result.body).as[Event]
       responseEvent.caseReference shouldBe caseRef
 
-      val x = responseEvent.details.asInstanceOf[CaseCreated]
-      x.comment shouldBe "Liability case created"
+      val caseCreatedEvent = responseEvent.details.asInstanceOf[CaseCreated]
+      caseCreatedEvent.comment shouldBe "Liability case created"
     }
   }
 
