@@ -43,7 +43,7 @@ class Crypto @Inject()(crypto: CompositeSymmetricCrypto) {
     c.copy(
       name = f(c.name),
       email = f(c.email),
-      phone = c.phone map f
+      phone = f(c.phone)
     )
   }
 

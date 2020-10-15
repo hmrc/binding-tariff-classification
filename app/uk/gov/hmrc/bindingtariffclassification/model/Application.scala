@@ -92,7 +92,7 @@ case class Contact
 (
   name: String,
   email: String,
-  phone: Option[String]
+  phone: String
 )
 
 object LiabilityStatus extends Enumeration {

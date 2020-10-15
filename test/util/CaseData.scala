@@ -27,7 +27,7 @@ object CaseData {
   private val secondsInAYear = 3600 * 24 * 365
 
   private def createContact: Contact = {
-    Contact("Maurizio", "maurizio@me.com", Some("0123456789"))
+    Contact("Maurizio", "maurizio@me.com", "0123456789")
   }
 
   def createBasicBTIApplication: BTIApplication = {

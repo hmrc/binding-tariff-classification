@@ -32,7 +32,7 @@ class CryptoSpec extends BaseSpec {
 
   private def encEori(k: String) = EORIDetails(k, "John Lewis", k, k, k, k, k)
   private def encAgentEori(k: String) = EORIDetails(k, "Frank Agent-Smith", k, k, k, k, k)
-  private def encContacts(k: String) = Contact(k, k, Some(k))
+  private def encContacts(k: String) = Contact(k, k, k)
 
   private val bti = createBTIApplicationWithAllFields
   private val lo = createLiabilityOrder

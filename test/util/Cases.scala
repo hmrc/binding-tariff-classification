@@ -31,7 +31,7 @@ object Cases {
     "eori", "agent-business-name", "line1", "line2", "line3", "postcode", "country"), Some(Attachment("letter-id", public = true, None, Instant.now()))
   )
   private val contactExample = Contact(
-    "name", "email", Some("phone")
+    "name", "email", "phone"
   )
   private val btiApplicationExample = BTIApplication(
     eoriDetailsExample, contactExample, Some(eoriAgentDetailsExample), offline = false, "Laptop", "Personal Computer", None, None, None, None, None, None
