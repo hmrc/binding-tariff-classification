@@ -47,6 +47,7 @@ object MongoFormatters {
   implicit val formatTraderContactDetails: OFormat[TraderContactDetails] = Json.format[TraderContactDetails]
 
   implicit val formatOperator: OFormat[Operator]                      = Json.format[Operator]
+
   implicit val formatCaseStatus: Format[CaseStatus.Value]             = EnumJson.format(CaseStatus)
   implicit val formatPseudoCaseStatus: Format[PseudoCaseStatus.Value] = EnumJson.format(PseudoCaseStatus)
   implicit val formatAppealStatus: Format[AppealStatus.Value]         = EnumJson.format(AppealStatus)
@@ -82,6 +83,7 @@ object MongoFormatters {
   implicit val formatDecision: OFormat[Decision]         = Json.format[Decision]
   implicit val formatSample: OFormat[Sample]             = Json.format[Sample]
   implicit val formatCase: OFormat[Case]                 = JsonUtil.convertToOFormat(Json.using[Json.WithDefaultValues].format[Case])
+  implicit val formatTeam: OFormat[Team]                              = Json.format[Team]
 
   // `Event` formatters
   implicit val formatCaseStatusChange: OFormat[CaseStatusChange] = Json.format[CaseStatusChange]

@@ -71,6 +71,7 @@ object RESTFormatters {
   implicit val formatSample: OFormat[Sample]             = Json.format[Sample]
 
   implicit val formatCase: OFormat[Case]              = Json.using[Json.WithDefaultValues].format[Case]
+  implicit val formatTeam: OFormat[Team]                 = Json.format[Team]
   implicit val formatNewCase: OFormat[NewCaseRequest] = Json.format[NewCaseRequest]
 
   // `Event` formatters
