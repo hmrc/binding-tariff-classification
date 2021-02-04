@@ -23,8 +23,8 @@ import reactivemongo.play.json.collection.JSONCollection
 import uk.gov.hmrc.bindingtariffclassification.model.MongoFormatters._
 import uk.gov.hmrc.bindingtariffclassification.model._
 import uk.gov.hmrc.mongo.ReactiveRepository
-
 import javax.inject.{Inject, Singleton}
+
 import scala.concurrent.Future
 
 @ImplementedBy(classOf[TeamMongoRepository])
@@ -56,7 +56,7 @@ class TeamMongoRepository @Inject()(mongoDbProvider: MongoDbProvider)
     createSingleFieldAscendingIndex(
       indexFieldKey = "managers",
       isUnique = false
-    ),
+    )
   )
 
   private val defaultSortBy = Json.obj("timestamp" -> -1)

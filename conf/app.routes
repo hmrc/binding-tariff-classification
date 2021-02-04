@@ -15,6 +15,9 @@ POST          /cases/:reference/events          @uk.gov.hmrc.bindingtariffclassi
 # reporting endpoints
 GET           /report                           @uk.gov.hmrc.bindingtariffclassification.controllers.ReportingController.report(report: uk.gov.hmrc.bindingtariffclassification.model.reporting.CaseReport)
 
+#Team endpoints
+POST          /teams                            @uk.gov.hmrc.bindingtariffclassification.controllers.TeamController.create
+
 # admin/test endpoints
 DELETE        /cases                            @uk.gov.hmrc.bindingtariffclassification.controllers.CaseController.deleteAll()
 DELETE        /events                           @uk.gov.hmrc.bindingtariffclassification.controllers.EventController.deleteAll()
