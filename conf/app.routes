@@ -17,6 +17,8 @@ GET           /report                           @uk.gov.hmrc.bindingtariffclassi
 
 #Team endpoints
 POST          /teams                            @uk.gov.hmrc.bindingtariffclassification.controllers.TeamController.create
+GET           /teams/:id                        @uk.gov.hmrc.bindingtariffclassification.controllers.TeamController.getById(id: String)
+POST          /teams/:id                        @uk.gov.hmrc.bindingtariffclassification.controllers.TeamController.update(id: String)
 
 # admin/test endpoints
 DELETE        /cases                            @uk.gov.hmrc.bindingtariffclassification.controllers.CaseController.deleteAll()

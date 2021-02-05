@@ -19,6 +19,6 @@ package uk.gov.hmrc.bindingtariffclassification.model
 import uk.gov.hmrc.bindingtariffclassification.model.ApplicationType.ApplicationType
 
 case class Team(id: String,
-                name: String,
-                caseTypes: List[ApplicationType],
-                managers: List[String])
+                name: String ="",
+                caseTypes: List[ApplicationType] = List.empty,
+                managers: List[String] = List.empty)

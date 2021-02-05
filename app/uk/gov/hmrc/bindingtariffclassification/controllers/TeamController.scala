@@ -30,12 +30,17 @@ import scala.concurrent.Future.successful
 
 
 @Singleton
-class TeamController @Inject() (
-  appConfig: AppConfig,
-  teamService: TeamService,
-  parser: BodyParsers.Default,
-  mcc: MessagesControllerComponents
-) extends CommonController(mcc) {
+class TeamController @Inject()(appConfig: AppConfig,
+                               teamService: TeamService,
+                               parser: BodyParsers.Default,
+                               mcc: MessagesControllerComponents)
+    extends CommonController(mcc) {
+
+  private[controllers] def handleNotFound
+    : PartialFunction[Option[Team], Result] = {
+    case Some(team: Team) => Ok(Json.toJson(team))
+    case _                => NotFound(JsErrorResponse(NOTFOUND, "Team not found"))
+  }
 
   def create: Action[JsValue] = Action.async(parse.json) { implicit request =>
     withJsonBody[NewTeamRequest] { teamRequest: NewTeamRequest =>
@@ -47,4 +52,34 @@ class TeamController @Inject() (
       result
     }
   }
+
+  def getById(id: String): Action[AnyContent] = Action.async {
+    teamService.getById(id) map handleNotFound recover recovery
+  }
+
+  def update(id: String): Action[JsValue] =
+    Action.async(parse.json) { implicit request =>
+      withJsonBody[Team] { team: Team =>
+        if (team.id == id) {
+          teamService.update(team, false) map handleNotFound recover recovery
+        } else {
+          successful(
+            BadRequest(
+              JsErrorResponse(
+                ErrorCode.INVALID_REQUEST_PAYLOAD,
+                "Invalid team id"
+              )
+            )
+          )
+        }
+      } recover recovery
+    }
+
+//  def update(id: String): Action[JsValue] = Action.async(parse.json) { implicit request =>
+//    withJsonBody[Team] { teamUpdate =>
+//      teamService.update(teamUpdate, true)
+//        .map(handleNotFound)
+//    }.recover(recovery)
+//  }
+
 }

@@ -16,8 +16,6 @@
 
 package uk.gov.hmrc.bindingtariffclassification.model
 
-import java.time.Instant
-
 sealed abstract class UpdateType(val name: String)
 object UpdateType {
   case object SetValue extends UpdateType("SET_VALUE")
