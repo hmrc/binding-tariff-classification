@@ -408,18 +408,28 @@ class CaseMongoRepository @Inject() (
   ) = {
     import framework._
 
-    val sortField = report match {
-      case summary: SummaryReport if summary.groupBy.toSeq.contains(report.sortBy) =>
-        s"groupKey.${report.sortBy.fieldName}"
-      case _ =>
-        report.sortBy.fieldName
-    }
+    if (report.sortBy == ReportField.User && report.groupBy.toSeq.contains(ReportField.User)){
+      (report.sortOrder) match {
+        case (SortDirection.ASCENDING) =>
+          Sort(Ascending("username"), Ascending(s"groupKey.${report.sortBy.fieldName}"))
+        case (SortDirection.DESCENDING) =>
+          Sort(Descending("username"), Descending(s"groupKey.${report.sortBy.fieldName}"))
+      }
 
-    report.sortOrder match {
-      case SortDirection.ASCENDING =>
-        Sort(Ascending(sortField))
-      case SortDirection.DESCENDING =>
-        Sort(Descending(sortField))
+    }else {
+      val sortField = report match {
+        case summary: SummaryReport if summary.groupBy.toSeq.contains(report.sortBy) =>
+          s"groupKey.${report.sortBy.fieldName}"
+        case _ =>
+          report.sortBy.fieldName
+      }
+
+      report.sortOrder match {
+        case SortDirection.ASCENDING =>
+          Sort(Ascending(sortField))
+        case SortDirection.DESCENDING =>
+          Sort(Descending(sortField))
+      }
     }
   }
 
@@ -449,7 +459,7 @@ class CaseMongoRepository @Inject() (
     val countField = Seq(ReportField.Count.fieldName -> SumAll)
 
     val casesField = if (report.includeCases) Seq("cases" -> PushField("$ROOT")) else Seq.empty
-
+    val userField = if (report.sortBy == ReportField.User && report.groupBy.toSeq.contains(ReportField.User)) Seq("username" -> PushField("assignee.name")) else Seq.empty
     val maxFields =
       report.maxFields.toList.map {
         case DaysSinceField(fieldName, underlyingField) =>
@@ -458,7 +468,7 @@ class CaseMongoRepository @Inject() (
           field.fieldName -> MaxField(field.underlyingField)
       }
 
-    val groupFields = countField ++ maxFields ++ casesField
+    val groupFields = countField ++ maxFields ++ casesField ++ userField
 
     val groupBy = Json.obj(report.groupBy.map {
       case ChapterField(fieldName, underlyingField) =>
