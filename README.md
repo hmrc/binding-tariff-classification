@@ -1,41 +1,51 @@
-# Binding Tariff Classification
+# binding-tariff-classification
 
-[![Build Status](https://travis-ci.org/hmrc/binding-tariff-classification.svg)](https://travis-ci.org/hmrc/binding-tariff-classification) [ ![Download](https://api.bintray.com/packages/hmrc/releases/binding-tariff-classification/images/download.svg) ](https://bintray.com/hmrc/releases/binding-tariff-classification/_latestVersion)
-
-This is the Back End for the Binding Tariff Suite of applications e.g.
-
-- [BTI Application Form](https://github.com/hmrc/binding-tariff-trader-frontend) on GOV.UK
-- [BTI Operational Service](https://github.com/hmrc/tariff-classification-frontend) the service HMRC uses to assess BTI Applications
+The backend service which manages case data for the Advance Tariff Rulings services.
 
 ### Running
 
-To run this service you will need:
+##### To run this Service you will need:
 
-1) A Local Mongo instance running
-2) The [Bank Holidays](https://github.com/hmrc/bank-holidays) proxy service
+1) [Service Manager](https://github.com/hmrc/service-manager) installed
+2) [SBT](https://www.scala-sbt.org) Version `>=1.x` installed
+3) [MongoDB](https://www.mongodb.com/) version `>=3.6` installed and running on port 27017
+4) [Localstack](https://github.com/localstack/localstack) installed and running on port 4572
+5) Create an S3 bucket in localstack by using `awslocal s3 mb s3://digital-tariffs-local` within the localstack container
 
-    `sm --start BANK_HOLIDAYS -r`
+The easiest way to run MongoDB and Localstack for local development is to use [Docker](https://docs.docker.com/get-docker/).
 
-##### Running with SBT
+##### To run MongoDB
 
-1) Run `sbt run` to run on port `9000` or instead run `sbt 'run 9580'` to run on a different port e.g. `9580`
+```
+> docker run --restart unless-stopped -d -p 27017-27019:27017-27019 --name mongodb mongo:3.6.13
+```
 
-Try `GET http://localhost:{port}/cases`
+##### To run Localstack and create the S3 bucket
 
-##### Running With Service Manager
+```
+> docker run -d --restart unless-stopped --name localstack -e SERVICES=s3 -p4572:4566 -p8080:8080 localstack/localstack
+> docker exec -it localstack bash
+> awslocal s3 mb s3://digital-tariffs-local
+> exit
+```
 
-This application runs on port 9580
+#### Starting the application:
+ 
+1) Launch dependencies using `sm --start DIGITAL_TARIFF_DEPS -r`
+2) Start the filestore service [binding-tariff-filestore](https://github.com/hmrc/binding-tariff-filestore) using `sm --start BINDING_TARIFF_FILESTORE -r`
 
-1) Run `sm --start BINDING_TARIF_CLASSIFICATION`
+Use `sbt run` to boot the app or run it with Service Manager using `sm --start BINDING_TARIFF_CLASSIFICATION -r`.
 
-Try `GET http://localhost:9580/cases`
+This application runs on port 9580.
+
+You can also run the `DIGITAL_TARIFFS` profile using `sm --start DIGITAL_TARIFFS -r` and then stop the Service Manager instance of this service using `sm --stop BINDING_TARIFF_CLASSIFICATION` before running with sbt.
 
 ### Testing
 
-Run `./run_all_tests.sh`
+Run `./run_all_tests.sh`. This also runs Scalastyle and does coverage testing.
 
-or `sbt test it:test`
+or `sbt test it:test` to run the tests only.
 
 ### License
 
-This code is open source software licensed under the [Apache 2.0 License]("http://www.apache.org/licenses/LICENSE-2.0.html")
+This code is open source software licensed under the [Apache 2.0 License]("http://www.apache.org/licenses/LICENSE-2.0.html").
