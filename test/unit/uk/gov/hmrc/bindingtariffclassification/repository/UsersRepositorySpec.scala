@@ -18,6 +18,7 @@ package uk.gov.hmrc.bindingtariffclassification.repository
 
 import org.scalatest.concurrent.Eventually
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
+import play.api.test.Helpers. _
 import reactivemongo.api.{DB, ReadConcern}
 import reactivemongo.bson._
 import reactivemongo.core.errors.DatabaseException

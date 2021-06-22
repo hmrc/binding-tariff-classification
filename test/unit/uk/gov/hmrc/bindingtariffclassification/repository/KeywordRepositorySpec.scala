@@ -18,6 +18,7 @@ package uk.gov.hmrc.bindingtariffclassification.repository
 
 import org.scalatest.concurrent.Eventually
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
+import play.api.test.Helpers. _
 import reactivemongo.api.{DB, ReadConcern}
 import reactivemongo.bson.{BSONDocument, _}
 import reactivemongo.core.errors.DatabaseException
@@ -39,9 +40,6 @@ class KeywordRepositorySpec
 
   private def selectorByName(name: String) =
     BSONDocument("name" -> name)
-
-  private def store(keywords: Keyword*): Unit =
-    keywords.foreach { keyword: Keyword => await(repository.insert(keyword)) }
 
   private val keyword  = Keyword("keyword name", approved = true)
   private val keyword2 = Keyword(name                     = "lentil", approved = true)
@@ -131,7 +129,7 @@ class KeywordRepositorySpec
 
       val size = collectionSize
 
-      val updatedKeyword = keyword.copy(name = "word", false)
+      val updatedKeyword = keyword.copy(name = "word", approved = false)
       await(repository.update(updatedKeyword, upsert = false)) shouldBe Some(
         updatedKeyword
       )

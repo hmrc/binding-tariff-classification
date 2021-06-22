@@ -17,8 +17,8 @@
 package uk.gov.hmrc.bindingtariffclassification.controllers
 
 import org.mockito.Mockito.when
-import play.api.http.Status._
 import play.api.test.FakeRequest
+import play.api.test.Helpers._
 import uk.gov.hmrc.bindingtariffclassification.base.BaseSpec
 import uk.gov.hmrc.bindingtariffclassification.migrations.{AmendDateOfExtractMigrationJob, MigrationRunner}
 import uk.gov.hmrc.http.HttpVerbs
@@ -38,17 +38,17 @@ class MigrationControllerSpec extends BaseSpec {
     "return 204 when the runner executes successfully" in {
       when(runner.trigger(classOf[AmendDateOfExtractMigrationJob])).thenReturn(successful(()))
 
-      val result = await(controller.amendDateOfExtract()(fakeRequest))
-      status(result) shouldEqual NO_CONTENT
+      val result = controller.amendDateOfExtract()(fakeRequest).futureValue
+      result.header.status shouldBe NO_CONTENT
     }
 
     "return 500 when an error occurred" in {
       when(runner.trigger(classOf[AmendDateOfExtractMigrationJob])).thenReturn(failed(new RuntimeException))
 
-      val result = await(controller.amendDateOfExtract()(fakeRequest))
+      val result = controller.amendDateOfExtract()(fakeRequest)
 
-      status(result) shouldEqual INTERNAL_SERVER_ERROR
-      jsonBodyOf(result).toString() shouldEqual """{"code":"UNKNOWN_ERROR","message":"An unexpected error occurred"}"""
+      status(result) shouldBe INTERNAL_SERVER_ERROR
+      contentAsJson(result).toString() shouldBe """{"code":"UNKNOWN_ERROR","message":"An unexpected error occurred"}"""
     }
 
   }

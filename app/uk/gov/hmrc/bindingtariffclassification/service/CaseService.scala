@@ -16,16 +16,14 @@
 
 package uk.gov.hmrc.bindingtariffclassification.service
 
-import java.time.Instant
-import java.util.UUID
-import javax.inject._
-
 import akka.stream.Materializer
-import akka.stream.scaladsl.Sink
 import uk.gov.hmrc.bindingtariffclassification.config.AppConfig
 import uk.gov.hmrc.bindingtariffclassification.model._
 import uk.gov.hmrc.bindingtariffclassification.repository.{CaseAttachmentAggregation, CaseRepository, MigrationLockRepository, SequenceRepository}
 
+import java.time.Instant
+import java.util.UUID
+import javax.inject._
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton

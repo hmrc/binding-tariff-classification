@@ -16,17 +16,14 @@
 
 package uk.gov.hmrc.bindingtariffclassification.controllers
 
-import java.time.Instant
-import java.util.UUID
-
 import org.mockito.ArgumentMatchers.refEq
 import org.mockito.Mockito.{verifyNoMoreInteractions, when}
 import org.mockito.{ArgumentMatchers, Mockito}
 import org.scalatest.BeforeAndAfterEach
-import play.api.http.Status._
 import play.api.libs.json.Json.toJson
 import play.api.mvc.Result
 import play.api.test.FakeRequest
+import play.api.test.Helpers._
 import uk.gov.hmrc.bindingtariffclassification.base.BaseSpec
 import uk.gov.hmrc.bindingtariffclassification.config.AppConfig
 import uk.gov.hmrc.bindingtariffclassification.model.RESTFormatters._
@@ -35,6 +32,8 @@ import uk.gov.hmrc.bindingtariffclassification.service.{CaseService, EventServic
 import uk.gov.hmrc.http.HttpVerbs
 import util.EventData
 
+import java.time.Instant
+import java.util.UUID
 import scala.concurrent.Future._
 
 class EventControllerSpec extends BaseSpec with BeforeAndAfterEach {
@@ -63,20 +62,20 @@ class EventControllerSpec extends BaseSpec with BeforeAndAfterEach {
 
     "return 403 if the test mode is disabled" in {
       when(appConfig.isTestMode).thenReturn(false)
-      val result = await(controller.deleteAll()(req))
+      val result = controller.deleteAll()(req)
 
-      status(result) shouldEqual FORBIDDEN
-      jsonBodyOf(result)
-        .toString() shouldEqual s"""{"code":"FORBIDDEN","message":"You are not allowed to call ${req.method} ${req.path}"}"""
+      status(result) shouldBe FORBIDDEN
+      contentAsJson(result)
+        .toString() shouldBe s"""{"code":"FORBIDDEN","message":"You are not allowed to call ${req.method} ${req.path}"}"""
     }
 
     "return 204 if the test mode is enabled" in {
       when(appConfig.isTestMode).thenReturn(true)
       when(eventService.deleteAll()).thenReturn(successful(()))
 
-      val result = await(controller.deleteAll()(req))
+      val result = controller.deleteAll()(req).futureValue
 
-      status(result) shouldEqual NO_CONTENT
+      result.header.status shouldBe NO_CONTENT
     }
 
     "return 500 when an error occurred" in {
@@ -85,10 +84,10 @@ class EventControllerSpec extends BaseSpec with BeforeAndAfterEach {
       when(appConfig.isTestMode).thenReturn(true)
       when(eventService.deleteAll()).thenReturn(failed(error))
 
-      val result = await(controller.deleteAll()(req))
+      val result = controller.deleteAll()(req)
 
-      status(result) shouldEqual INTERNAL_SERVER_ERROR
-      jsonBodyOf(result).toString() shouldEqual """{"code":"UNKNOWN_ERROR","message":"An unexpected error occurred"}"""
+      status(result) shouldBe INTERNAL_SERVER_ERROR
+      contentAsJson(result).toString() shouldBe """{"code":"UNKNOWN_ERROR","message":"An unexpected error occurred"}"""
     }
 
   }
@@ -99,20 +98,20 @@ class EventControllerSpec extends BaseSpec with BeforeAndAfterEach {
 
     "return 403 if the test mode is disabled" in {
       when(appConfig.isTestMode).thenReturn(false)
-      val result = await(controller.deleteCaseEvents("ref")(req))
+      val result = controller.deleteCaseEvents("ref")(req)
 
-      status(result) shouldEqual FORBIDDEN
-      jsonBodyOf(result)
-        .toString() shouldEqual s"""{"code":"FORBIDDEN","message":"You are not allowed to call ${req.method} ${req.path}"}"""
+      status(result) shouldBe FORBIDDEN
+      contentAsJson(result)
+        .toString() shouldBe s"""{"code":"FORBIDDEN","message":"You are not allowed to call ${req.method} ${req.path}"}"""
     }
 
     "return 204 if the test mode is enabled" in {
       when(appConfig.isTestMode).thenReturn(true)
       when(eventService.deleteCaseEvents(refEq("ref"))).thenReturn(successful(()))
 
-      val result = await(controller.deleteCaseEvents("ref")(req))
+      val result = controller.deleteCaseEvents("ref")(req).futureValue
 
-      status(result) shouldEqual NO_CONTENT
+      result.header.status shouldBe NO_CONTENT
     }
 
     "return 500 when an error occurred" in {
@@ -121,10 +120,10 @@ class EventControllerSpec extends BaseSpec with BeforeAndAfterEach {
       when(appConfig.isTestMode).thenReturn(true)
       when(eventService.deleteCaseEvents(refEq("ref"))).thenReturn(failed(error))
 
-      val result = await(controller.deleteCaseEvents("ref")(req))
+      val result = controller.deleteCaseEvents("ref")(req)
 
-      status(result) shouldEqual INTERNAL_SERVER_ERROR
-      jsonBodyOf(result).toString() shouldEqual """{"code":"UNKNOWN_ERROR","message":"An unexpected error occurred"}"""
+      status(result) shouldBe INTERNAL_SERVER_ERROR
+      contentAsJson(result).toString() shouldBe """{"code":"UNKNOWN_ERROR","message":"An unexpected error occurred"}"""
     }
 
   }
@@ -135,20 +134,20 @@ class EventControllerSpec extends BaseSpec with BeforeAndAfterEach {
       when(eventService.search(EventSearch(Some(Set(caseReference))), Pagination()))
         .thenReturn(successful(Paged(Seq(e1, e2))))
 
-      val result = await(controller.getByCaseReference(caseReference, Pagination())(fakeRequest))
+      val result = controller.getByCaseReference(caseReference, Pagination())(fakeRequest)
 
-      status(result) shouldEqual OK
-      jsonBodyOf(result) shouldEqual toJson(Paged(Seq(e1, e2)))
+      status(result) shouldBe OK
+      contentAsJson(result) shouldBe toJson(Paged(Seq(e1, e2)))
     }
 
     "return 200 with an empty sequence when there are no events for a specific case" in {
       when(eventService.search(EventSearch(Some(Set(caseReference))), Pagination()))
         .thenReturn(successful(Paged.empty[Event]))
 
-      val result = await(controller.getByCaseReference(caseReference, Pagination())(fakeRequest))
+      val result = controller.getByCaseReference(caseReference, Pagination())(fakeRequest)
 
-      status(result) shouldEqual OK
-      jsonBodyOf(result) shouldEqual toJson(Paged.empty[Event])
+      status(result) shouldBe OK
+      contentAsJson(result) shouldBe toJson(Paged.empty[Event])
     }
 
     "return 500 when an error occurred" in {
@@ -156,10 +155,10 @@ class EventControllerSpec extends BaseSpec with BeforeAndAfterEach {
 
       when(eventService.search(EventSearch(Some(Set(caseReference))), Pagination())).thenReturn(failed(error))
 
-      val result = await(controller.getByCaseReference(caseReference, Pagination())(fakeRequest))
+      val result = controller.getByCaseReference(caseReference, Pagination())(fakeRequest)
 
-      status(result) shouldEqual INTERNAL_SERVER_ERROR
-      jsonBodyOf(result).toString() shouldEqual """{"code":"UNKNOWN_ERROR","message":"An unexpected error occurred"}"""
+      status(result) shouldBe INTERNAL_SERVER_ERROR
+      contentAsJson(result).toString() shouldBe """{"code":"UNKNOWN_ERROR","message":"An unexpected error occurred"}"""
     }
   }
 
@@ -168,10 +167,10 @@ class EventControllerSpec extends BaseSpec with BeforeAndAfterEach {
     "return 200 with the expected events" in {
       when(eventService.search(EventSearch(), Pagination())).thenReturn(successful(Paged(Seq(e1, e2))))
 
-      val result = await(controller.search(EventSearch(), Pagination())(fakeRequest))
+      val result = controller.search(EventSearch(), Pagination())(fakeRequest)
 
-      status(result) shouldEqual OK
-      jsonBodyOf(result) shouldEqual toJson(Paged(Seq(e1, e2)))
+      status(result) shouldBe OK
+      contentAsJson(result) shouldBe toJson(Paged(Seq(e1, e2)))
     }
 
     "return 500 when an error occurred" in {
@@ -179,10 +178,10 @@ class EventControllerSpec extends BaseSpec with BeforeAndAfterEach {
 
       when(eventService.search(EventSearch(), Pagination())).thenReturn(failed(error))
 
-      val result = await(controller.search(EventSearch(), Pagination())(fakeRequest))
+      val result = controller.search(EventSearch(), Pagination())(fakeRequest)
 
-      status(result) shouldEqual INTERNAL_SERVER_ERROR
-      jsonBodyOf(result).toString() shouldEqual """{"code":"UNKNOWN_ERROR","message":"An unexpected error occurred"}"""
+      status(result) shouldBe INTERNAL_SERVER_ERROR
+      contentAsJson(result).toString() shouldBe """{"code":"UNKNOWN_ERROR","message":"An unexpected error occurred"}"""
     }
   }
 
@@ -206,21 +205,21 @@ class EventControllerSpec extends BaseSpec with BeforeAndAfterEach {
       when(eventService.insert(ArgumentMatchers.any[Event])).thenReturn(successful(event))
 
       val request        = fakeRequest.withBody(toJson(newEvent))
-      val result: Result = await(controller.create(caseReference)(request))
+      val result = controller.create(caseReference)(request)
 
-      status(result) shouldEqual CREATED
-      jsonBodyOf(result) shouldEqual toJson(event)
+      status(result) shouldBe CREATED
+      contentAsJson(result) shouldBe toJson(event)
     }
 
     "return 404 Not Found for invalid Reference" in {
       when(casesService.getByReference(caseReference)).thenReturn(successful(None))
 
       val request        = fakeRequest.withBody(toJson(newEvent))
-      val result: Result = await(controller.create(caseReference)(request))
+      val result = controller.create(caseReference)(request)
 
       verifyNoMoreInteractions(eventService)
-      status(result) shouldEqual NOT_FOUND
-      jsonBodyOf(result).toString() shouldEqual "{\"code\":\"NOT_FOUND\",\"message\":\"Case not found\"}"
+      status(result) shouldBe NOT_FOUND
+      contentAsJson(result).toString() shouldBe "{\"code\":\"NOT_FOUND\",\"message\":\"Case not found\"}"
     }
   }
 

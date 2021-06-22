@@ -19,14 +19,15 @@ package uk.gov.hmrc.bindingtariffclassification.service
 import org.mockito.ArgumentMatchers.{any, refEq}
 import org.mockito.Mockito._
 import org.scalatest.BeforeAndAfterEach
+import play.api.test.Helpers. _
 import uk.gov.hmrc.bindingtariffclassification.base.BaseSpec
 import uk.gov.hmrc.bindingtariffclassification.config.AppConfig
 import uk.gov.hmrc.bindingtariffclassification.model._
 import uk.gov.hmrc.bindingtariffclassification.repository.{CaseAttachmentAggregation, CaseRepository, MigrationLockRepository, SequenceRepository}
 
 import scala.concurrent.Future.successful
-import uk.gov.hmrc.bindingtariffclassification.repository.CaseAttachmentAggregation
 
+// scalastyle:off magic.number
 class CaseServiceSpec extends BaseSpec with BeforeAndAfterEach {
 
   private val c1      = mock[Case]

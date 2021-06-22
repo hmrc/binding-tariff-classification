@@ -34,13 +34,13 @@ class KeywordController @Inject() (
   mcc: MessagesControllerComponents
 ) extends CommonController(mcc) {
 
-  def addKeyword: Action[JsValue] = Action.async(parse.json) { implicit request =>
+  def addKeyword(): Action[JsValue] = Action.async(parse.json) { implicit request =>
     withJsonBody[NewKeywordRequest] { keywordRequest: NewKeywordRequest =>
       for {
         k <- keywordService.addKeyword(keywordRequest.keyword)
       } yield Created(Json.toJson(k)(RESTFormatters.formatKeyword))
     } recover recovery map { result =>
-      logger.debug(s"Keyword added with result : $result");
+      logger.debug(s"Keyword added with result : $result")
       result
     }
   }
@@ -72,14 +72,14 @@ class KeywordController @Inject() (
     }
 
   def getAllKeywords(pagination: Pagination): Action[AnyContent] =
-    Action.async { implicit request =>
+    Action.async {
       keywordService.findAll(pagination).map { allKeywords =>
         Ok(Json.toJson(allKeywords))
       } recover recovery
     }
 
-  def fetchCaseKeywords(pagination: Pagination) =
-    Action.async { implicit request =>
+  def fetchCaseKeywords(pagination: Pagination): Action[AnyContent] =
+    Action.async {
       keywordService.fetchCaseKeywords(pagination).map { keywords =>
         Ok(Json.toJson(keywords))
       } recover recovery

@@ -16,12 +16,12 @@
 
 package uk.gov.hmrc.bindingtariffclassification.model.reporting
 
+import uk.gov.hmrc.bindingtariffclassification.base.BaseSpec
+
 import java.net.URLDecoder
 import java.time.Instant
 
-import uk.gov.hmrc.play.test.UnitSpec
-
-class InstantRangeTest extends UnitSpec {
+class InstantRangeTest extends BaseSpec {
 
   private val range = InstantRange(
     min = Instant.EPOCH,

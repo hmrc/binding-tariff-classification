@@ -17,9 +17,9 @@
 package uk.gov.hmrc.bindingtariffclassification.model
 
 import play.api.libs.json.{JsObject, Json}
-import uk.gov.hmrc.play.test.UnitSpec
+import uk.gov.hmrc.bindingtariffclassification.base.BaseSpec
 
-class PagedTest extends UnitSpec {
+class PagedTest extends BaseSpec {
 
   "Paged" should {
     "map" in {

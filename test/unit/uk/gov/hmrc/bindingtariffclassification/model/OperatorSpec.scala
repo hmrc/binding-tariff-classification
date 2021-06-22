@@ -17,10 +17,10 @@
 package uk.gov.hmrc.bindingtariffclassification.model
 
 import org.scalatestplus.mockito.MockitoSugar
-import uk.gov.hmrc.play.test.UnitSpec
+import uk.gov.hmrc.bindingtariffclassification.base.BaseSpec
 import util.CaseData
 
-class OperatorSpec extends UnitSpec with MockitoSugar {
+class OperatorSpec extends BaseSpec with MockitoSugar {
 
   "manager" should {
 

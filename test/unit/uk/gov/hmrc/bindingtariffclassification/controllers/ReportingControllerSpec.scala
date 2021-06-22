@@ -47,9 +47,9 @@ class ReportingControllerSpec extends BaseSpec with BeforeAndAfterEach {
 
       given(reportService.summaryReport(report, Pagination())) willReturn Future.successful(Paged.empty[ResultGroup])
 
-      val result = await(controller.summaryReport(report, Pagination())(fakeRequest))
+      val result = controller.summaryReport(report, Pagination())(fakeRequest).futureValue
 
-      status(result) shouldBe OK
+      result.header.status shouldBe OK
     }
   }
 
@@ -59,9 +59,9 @@ class ReportingControllerSpec extends BaseSpec with BeforeAndAfterEach {
 
       given(reportService.caseReport(report, Pagination())) willReturn Future.successful(Paged.empty[Map[String, ReportResultField[_]]])
 
-      val result = await(controller.caseReport(report, Pagination())(fakeRequest))
+      val result = controller.caseReport(report, Pagination())(fakeRequest).futureValue
 
-      status(result) shouldBe OK
+      result.header.status shouldBe OK
     }
   }
 
@@ -71,9 +71,9 @@ class ReportingControllerSpec extends BaseSpec with BeforeAndAfterEach {
 
       given(reportService.queueReport(report, Pagination())) willReturn Future.successful(Paged.empty[QueueResultGroup])
 
-      val result = await(controller.queueReport(report, Pagination())(fakeRequest))
+      val result = controller.queueReport(report, Pagination())(fakeRequest).futureValue
 
-      status(result) shouldBe OK
+      result.header.status shouldBe OK
     }
   }
 }

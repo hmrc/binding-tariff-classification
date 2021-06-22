@@ -20,6 +20,7 @@ import org.mockito.ArgumentMatchers._
 import org.mockito.BDDMockito._
 import org.mockito.Mockito._
 import org.scalatest.BeforeAndAfterEach
+import play.api.test.Helpers. _
 import uk.gov.hmrc.bindingtariffclassification.base.BaseSpec
 import uk.gov.hmrc.bindingtariffclassification.model._
 import uk.gov.hmrc.bindingtariffclassification.service.KeywordService
@@ -28,7 +29,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 class AddKeywordsMigrationJobSpec extends BaseSpec with BeforeAndAfterEach {
-  val keywordService = mock[KeywordService]
+  val keywordService: KeywordService = mock[KeywordService]
 
   override protected def beforeEach(): Unit = {
     super.beforeEach()
@@ -39,7 +40,7 @@ class AddKeywordsMigrationJobSpec extends BaseSpec with BeforeAndAfterEach {
     val addKeywordsJob = new AddKeywordsMigrationJob(keywordService)
 
     "not add keywords if any already exist" in {
-      given(keywordService.findAll(any[Pagination])) willReturn Paged(Seq(Keyword("FOR STORAGE OF GOODS", approved = true)))
+      given(keywordService.findAll(any[Pagination])) willReturn Future.successful(Paged(Seq(Keyword("FOR STORAGE OF GOODS", approved = true))))
 
       await(addKeywordsJob.execute())
 
@@ -47,13 +48,14 @@ class AddKeywordsMigrationJobSpec extends BaseSpec with BeforeAndAfterEach {
     }
 
     "add keywords if they are missing" in {
+      val noOfInvocations: Int = 10752
       given(keywordService.findAll(any[Pagination])) willReturn Future.successful(Paged.empty[Keyword])
       given(keywordService.addKeyword(any[Keyword])) willReturn Future.successful(Keyword("foo"))
 
       await(addKeywordsJob.execute())
 
       // The number of keywords in keywords.txt
-      verify(keywordService, times(10752)).addKeyword(any[Keyword])
+      verify(keywordService, times(noOfInvocations)).addKeyword(any[Keyword])
     }
   }
 }

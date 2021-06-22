@@ -16,11 +16,11 @@
 
 package uk.gov.hmrc.bindingtariffclassification.model
 
+import uk.gov.hmrc.bindingtariffclassification.base.BaseSpec
+
 import java.net.URLDecoder
 
-import uk.gov.hmrc.play.test.UnitSpec
-
-class UserSearchTest extends UnitSpec {
+class UserSearchTest extends BaseSpec {
 
   private val search =
     UserSearch(role = Some(Set(Role.CLASSIFICATION_MANAGER)), team = Some("1"))

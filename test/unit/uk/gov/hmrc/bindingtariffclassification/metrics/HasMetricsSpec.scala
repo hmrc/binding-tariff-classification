@@ -18,16 +18,17 @@ package uk.gov.hmrc.bindingtariffclassification.metrics
 
 import com.codahale.metrics.Timer
 import com.kenshoo.play.metrics.Metrics
+import org.mockito.ArgumentMatchers._
 import org.mockito.Mockito
 import org.mockito.Mockito._
-import org.mockito.ArgumentMatchers._
-import org.scalatest.{AsyncWordSpecLike, BeforeAndAfterAll, Matchers, OptionValues}
 import org.scalatest.compatible.Assertion
+import org.scalatest.{AsyncWordSpecLike, BeforeAndAfterAll, Matchers, OptionValues}
 import org.scalatestplus.mockito.MockitoSugar
 import play.api.mvc.Results
 import play.api.test.{FakeRequest, Helpers}
+import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
+
 import scala.concurrent.Future
-import uk.gov.hmrc.play.bootstrap.controller.BackendController
 
 class HasMetricsSpec
     extends AsyncWordSpecLike
@@ -37,8 +38,8 @@ class HasMetricsSpec
     with BeforeAndAfterAll {
 
   trait MockHasMetrics { self: HasMetrics =>
-    val timer                               = mock[Timer.Context]
-    val metrics                             = mock[Metrics]
+    val timer: Timer.Context = mock[Timer.Context]
+    val metrics: Metrics = mock[Metrics]
     override val localMetrics: LocalMetrics = mock[LocalMetrics]
     when(localMetrics.startTimer(anyString())) thenReturn timer
   }
@@ -196,10 +197,8 @@ class HasMetricsSpec
           .withMetricsTimerResult(TestMetric) {
             Future.failed(new Exception)
           }
-          .transformWith {
-            case _ =>
-              verifyCompletedWithFailure(TestMetric, metrics)
-          }
+          .transformWith(_ =>
+            verifyCompletedWithFailure(TestMetric, metrics))
       }
 
       "increment failure counter when the user throws an exception constructing their code block" in withTestMetrics {

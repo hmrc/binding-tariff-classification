@@ -20,10 +20,9 @@ import org.mockito.ArgumentMatchers.{any, refEq}
 import org.mockito.Mockito.{verify, when}
 import org.mockito.{ArgumentCaptor, Mockito}
 import org.scalatest.BeforeAndAfterEach
-import java.time.Instant
-import play.api.http.Status._
 import play.api.libs.json.Json.toJson
 import play.api.test.FakeRequest
+import play.api.test.Helpers._
 import reactivemongo.bson.BSONDocument
 import reactivemongo.core.errors.DatabaseException
 import uk.gov.hmrc.bindingtariffclassification.base.BaseSpec
@@ -35,12 +34,14 @@ import uk.gov.hmrc.bindingtariffclassification.sort.{CaseSortField, SortDirectio
 import uk.gov.hmrc.http.HttpVerbs
 import util.CaseData
 
+import java.time.Instant
 import scala.concurrent.Future
 import scala.concurrent.Future._
 
+// scalastyle:off magic.number
 class CaseControllerSpec extends BaseSpec with BeforeAndAfterEach {
 
-  override protected def beforeEach() =
+  override protected def beforeEach(): Unit =
     Mockito.reset(caseService)
 
   private val newCase: NewCaseRequest = CaseData.createNewCase()
@@ -60,20 +61,20 @@ class CaseControllerSpec extends BaseSpec with BeforeAndAfterEach {
 
     "return 403 if the test mode is disabled" in {
       when(appConfig.isTestMode).thenReturn(false)
-      val result = await(controller.deleteAll()(req))
+      val result = controller.deleteAll()(req)
 
-      status(result) shouldEqual FORBIDDEN
-      jsonBodyOf(result)
-        .toString() shouldEqual s"""{"code":"FORBIDDEN","message":"You are not allowed to call ${req.method} ${req.path}"}"""
+      status(result) shouldBe FORBIDDEN
+      contentAsJson(result)
+        .toString() shouldBe s"""{"code":"FORBIDDEN","message":"You are not allowed to call ${req.method} ${req.path}"}"""
     }
 
     "return 204 if the test mode is enabled" in {
       when(appConfig.isTestMode).thenReturn(true)
       when(caseService.deleteAll()).thenReturn(successful(()))
 
-      val result = await(controller.deleteAll()(req))
+      val result = controller.deleteAll()(req).futureValue
 
-      status(result) shouldEqual NO_CONTENT
+      result.header.status shouldBe NO_CONTENT
     }
 
     "return 500 when an error occurred" in {
@@ -82,10 +83,10 @@ class CaseControllerSpec extends BaseSpec with BeforeAndAfterEach {
       when(appConfig.isTestMode).thenReturn(true)
       when(caseService.deleteAll()).thenReturn(failed(error))
 
-      val result = await(controller.deleteAll()(req))
+      val result = controller.deleteAll()(req)
 
-      status(result) shouldEqual INTERNAL_SERVER_ERROR
-      jsonBodyOf(result).toString() shouldEqual """{"code":"UNKNOWN_ERROR","message":"An unexpected error occurred"}"""
+      status(result) shouldBe INTERNAL_SERVER_ERROR
+      contentAsJson(result).toString() shouldBe """{"code":"UNKNOWN_ERROR","message":"An unexpected error occurred"}"""
     }
 
   }
@@ -96,20 +97,20 @@ class CaseControllerSpec extends BaseSpec with BeforeAndAfterEach {
 
     "return 403 if the test mode is disabled" in {
       when(appConfig.isTestMode).thenReturn(false)
-      val result = await(controller.delete("ref")(req))
+      val result = controller.delete("ref")(req)
 
-      status(result) shouldEqual FORBIDDEN
-      jsonBodyOf(result)
-        .toString() shouldEqual s"""{"code":"FORBIDDEN","message":"You are not allowed to call ${req.method} ${req.path}"}"""
+      status(result) shouldBe FORBIDDEN
+      contentAsJson(result)
+        .toString() shouldBe s"""{"code":"FORBIDDEN","message":"You are not allowed to call ${req.method} ${req.path}"}"""
     }
 
     "return 204 if the test mode is enabled" in {
       when(appConfig.isTestMode).thenReturn(true)
       when(caseService.delete(refEq("ref"))).thenReturn(successful(()))
 
-      val result = await(controller.delete("ref")(req))
+      val result = controller.delete("ref")(req).futureValue
 
-      status(result) shouldEqual NO_CONTENT
+      result.header.status shouldBe NO_CONTENT
     }
 
     "return 500 when an error occurred" in {
@@ -118,10 +119,10 @@ class CaseControllerSpec extends BaseSpec with BeforeAndAfterEach {
       when(appConfig.isTestMode).thenReturn(true)
       when(caseService.delete(refEq("ref"))).thenReturn(failed(error))
 
-      val result = await(controller.delete("ref")(req))
+      val result = controller.delete("ref")(req)
 
-      status(result) shouldEqual INTERNAL_SERVER_ERROR
-      jsonBodyOf(result).toString() shouldEqual """{"code":"UNKNOWN_ERROR","message":"An unexpected error occurred"}"""
+      status(result) shouldBe INTERNAL_SERVER_ERROR
+      contentAsJson(result).toString() shouldBe """{"code":"UNKNOWN_ERROR","message":"An unexpected error occurred"}"""
     }
 
   }
@@ -133,17 +134,17 @@ class CaseControllerSpec extends BaseSpec with BeforeAndAfterEach {
       when(caseService.insert(any[Case])).thenReturn(successful(c1))
       when(caseService.addInitialSampleStatusIfExists(any[Case])).thenReturn(Future.successful((): Unit))
 
-      val result = await(controller.create()(fakeRequest.withBody(toJson(newCase))))
+      val result = controller.create()(fakeRequest.withBody(toJson(newCase)))
 
-      status(result) shouldEqual CREATED
-      jsonBodyOf(result) shouldEqual toJson(c1)
+      status(result) shouldBe CREATED
+      contentAsJson(result) shouldBe toJson(c1)
     }
 
     "return 400 when the JSON request payload is not a Case" in {
       val body   = """{"a":"b"}"""
-      val result = await(controller.create()(fakeRequest.withBody(toJson(body))))
+      val result = controller.create()(fakeRequest.withBody(toJson(body))).futureValue
 
-      status(result) shouldEqual BAD_REQUEST
+      result.header.status shouldBe BAD_REQUEST
     }
 
     "return 500 when an error occurred" in {
@@ -156,10 +157,10 @@ class CaseControllerSpec extends BaseSpec with BeforeAndAfterEach {
       when(caseService.nextCaseReference(ApplicationType.BTI)).thenReturn(successful("1"))
       when(caseService.insert(any[Case])).thenReturn(failed(error))
 
-      val result = await(controller.create()(fakeRequest.withBody(toJson(newCase))))
+      val result = controller.create()(fakeRequest.withBody(toJson(newCase)))
 
-      status(result) shouldEqual INTERNAL_SERVER_ERROR
-      jsonBodyOf(result).toString() shouldEqual """{"code":"UNKNOWN_ERROR","message":"An unexpected error occurred"}"""
+      status(result) shouldBe INTERNAL_SERVER_ERROR
+      contentAsJson(result).toString() shouldBe """{"code":"UNKNOWN_ERROR","message":"An unexpected error occurred"}"""
     }
 
   }
@@ -169,10 +170,10 @@ class CaseControllerSpec extends BaseSpec with BeforeAndAfterEach {
     "return 200 when the case has been updated successfully" in {
       when(caseService.update(c1, upsert = false)).thenReturn(successful(Some(c1)))
 
-      val result = await(controller.put(c1.reference)(fakeRequest.withBody(toJson(c1))))
+      val result = controller.put(c1.reference)(fakeRequest.withBody(toJson(c1)))
 
-      status(result) shouldEqual OK
-      jsonBodyOf(result) shouldEqual toJson(c1)
+      status(result) shouldBe OK
+      contentAsJson(result) shouldBe toJson(c1)
     }
 
     "return 200 when the case has been updated successfully - with upsert allowed" in {
@@ -180,10 +181,10 @@ class CaseControllerSpec extends BaseSpec with BeforeAndAfterEach {
       when(caseService.update(c1, upsert = true)).thenReturn(successful(Some(c1)))
 
       val result =
-        await(controller.put(c1.reference)(fakeRequest.withBody(toJson(c1)).withHeaders("User-Agent" -> "agent")))
+        controller.put(c1.reference)(fakeRequest.withBody(toJson(c1)).withHeaders("User-Agent" -> "agent"))
 
-      status(result) shouldEqual OK
-      jsonBodyOf(result) shouldEqual toJson(c1)
+      status(result) shouldBe OK
+      contentAsJson(result) shouldBe toJson(c1)
     }
 
     "return 200 when the case has been updated successfully with new fields from migration" in {
@@ -196,37 +197,37 @@ class CaseControllerSpec extends BaseSpec with BeforeAndAfterEach {
       val captor      = ArgumentCaptor.forClass(classOf[Case])
 
       val result =
-        await(controller.put(c1.reference)(fakeRequest.withBody(newCaseJson).withHeaders("User-Agent" -> "agent")))
+        controller.put(c1.reference)(fakeRequest.withBody(newCaseJson).withHeaders("User-Agent" -> "agent")).futureValue
 
       verify(caseService).update(captor.capture(), upsert = any[Boolean])
       val createdCase: Case = captor.getValue
 
       createdCase.migratedDaysElapsed shouldBe Some(5)
-      status(result) shouldEqual OK
+      result.header.status shouldBe OK
     }
 
     "return 400 when the JSON request payload is not a case" in {
       val body   = """{"a":"b"}"""
-      val result = await(controller.put("")(fakeRequest.withBody(toJson(body))))
+      val result = controller.put("")(fakeRequest.withBody(toJson(body))).futureValue
 
-      status(result) shouldEqual BAD_REQUEST
+      result.header.status shouldBe BAD_REQUEST
     }
 
     "return 400 when the case reference path parameter does not match the JSON request payload" in {
-      val result = await(controller.put("ABC")(fakeRequest.withBody(toJson(c1))))
+      val result = controller.put("ABC")(fakeRequest.withBody(toJson(c1)))
 
-      status(result) shouldEqual BAD_REQUEST
-      jsonBodyOf(result)
-        .toString() shouldEqual """{"code":"INVALID_REQUEST_PAYLOAD","message":"Invalid case reference"}"""
+      status(result) shouldBe BAD_REQUEST
+      contentAsJson(result)
+        .toString() shouldBe """{"code":"INVALID_REQUEST_PAYLOAD","message":"Invalid case reference"}"""
     }
 
     "return 404 when there are no cases with the provided reference" in {
       when(caseService.update(c1, upsert = false)).thenReturn(successful(None))
 
-      val result = await(controller.put(c1.reference)(fakeRequest.withBody(toJson(c1))))
+      val result = controller.put(c1.reference)(fakeRequest.withBody(toJson(c1)))
 
-      status(result) shouldEqual NOT_FOUND
-      jsonBodyOf(result).toString() shouldEqual """{"code":"NOT_FOUND","message":"Case not found"}"""
+      status(result) shouldBe NOT_FOUND
+      contentAsJson(result).toString() shouldBe """{"code":"NOT_FOUND","message":"Case not found"}"""
     }
 
     "return 500 when an error occurred" in {
@@ -234,10 +235,10 @@ class CaseControllerSpec extends BaseSpec with BeforeAndAfterEach {
 
       when(caseService.update(c1, upsert = false)).thenReturn(failed(error))
 
-      val result = await(controller.put(c1.reference)(fakeRequest.withBody(toJson(c1))))
+      val result = controller.put(c1.reference)(fakeRequest.withBody(toJson(c1)))
 
-      status(result) shouldEqual INTERNAL_SERVER_ERROR
-      jsonBodyOf(result).toString() shouldEqual """{"code":"UNKNOWN_ERROR","message":"An unexpected error occurred"}"""
+      status(result) shouldBe INTERNAL_SERVER_ERROR
+      contentAsJson(result).toString() shouldBe """{"code":"UNKNOWN_ERROR","message":"An unexpected error occurred"}"""
     }
 
   }
@@ -245,31 +246,31 @@ class CaseControllerSpec extends BaseSpec with BeforeAndAfterEach {
   "update()" should {
 
     "return 200 when the case has been updated successfully" in {
-      val applicationPdf = Some(Attachment("id", true, None, Instant.now, None, false))
+      val applicationPdf = Some(Attachment("id", public = true, None, Instant.now, None))
       val caseUpdate = CaseUpdate(application = Some(BTIUpdate(applicationPdf = SetValue(applicationPdf))))
       when(caseService.update(c1.reference, caseUpdate)).thenReturn(successful(Some(c1)))
 
-      val result = await(controller.update(c1.reference)(fakeRequest.withBody(toJson(caseUpdate))))
+      val result = controller.update(c1.reference)(fakeRequest.withBody(toJson(caseUpdate)))
 
-      status(result) shouldEqual OK
-      jsonBodyOf(result) shouldEqual toJson(c1)
+      status(result) shouldBe OK
+      contentAsJson(result) shouldBe toJson(c1)
     }
 
     "return 400 when the JSON request payload is not a case" in {
       val body   = """{"a":"b"}"""
-      val result = await(controller.update("")(fakeRequest.withBody(toJson(body))))
+      val result = controller.update("")(fakeRequest.withBody(toJson(body))).futureValue
 
-      status(result) shouldEqual BAD_REQUEST
+      result.header.status shouldBe BAD_REQUEST
     }
 
     "return 404 when there are no cases with the provided reference" in {
       val caseUpdate = CaseUpdate()
       when(caseService.update(c1.reference, caseUpdate)).thenReturn(successful(None))
 
-      val result = await(controller.update(c1.reference)(fakeRequest.withBody(toJson(caseUpdate))))
+      val result = controller.update(c1.reference)(fakeRequest.withBody(toJson(caseUpdate)))
 
-      status(result) shouldEqual NOT_FOUND
-      jsonBodyOf(result).toString() shouldEqual """{"code":"NOT_FOUND","message":"Case not found"}"""
+      status(result) shouldBe NOT_FOUND
+      contentAsJson(result).toString() shouldBe """{"code":"NOT_FOUND","message":"Case not found"}"""
     }
 
     "return 500 when an error occurred" in {
@@ -277,10 +278,10 @@ class CaseControllerSpec extends BaseSpec with BeforeAndAfterEach {
       val caseUpdate = CaseUpdate()
       when(caseService.update(c1.reference, caseUpdate)).thenReturn(failed(error))
 
-      val result = await(controller.update(c1.reference)(fakeRequest.withBody(toJson(caseUpdate))))
+      val result = controller.update(c1.reference)(fakeRequest.withBody(toJson(caseUpdate)))
 
-      status(result) shouldEqual INTERNAL_SERVER_ERROR
-      jsonBodyOf(result).toString() shouldEqual """{"code":"UNKNOWN_ERROR","message":"An unexpected error occurred"}"""
+      status(result) shouldBe INTERNAL_SERVER_ERROR
+      contentAsJson(result).toString() shouldBe """{"code":"UNKNOWN_ERROR","message":"An unexpected error occurred"}"""
     }
 
   }
@@ -306,19 +307,19 @@ class CaseControllerSpec extends BaseSpec with BeforeAndAfterEach {
     "return 200 with the expected cases" in {
       when(caseService.get(refEq(search), refEq(pagination))).thenReturn(successful(Paged(Seq(c1, c2))))
 
-      val result = await(controller.get(search, pagination)(fakeRequest))
+      val result = controller.get(search, pagination)(fakeRequest)
 
-      status(result) shouldEqual OK
-      jsonBodyOf(result) shouldEqual toJson(Paged(Seq(c1, c2)))
+      status(result) shouldBe OK
+      contentAsJson(result) shouldBe toJson(Paged(Seq(c1, c2)))
     }
 
     "return 200 with an empty sequence if there are no cases" in {
       when(caseService.get(search, pagination)).thenReturn(successful(Paged.empty[Case]))
 
-      val result = await(controller.get(search, pagination)(fakeRequest))
+      val result = controller.get(search, pagination)(fakeRequest)
 
-      status(result) shouldEqual OK
-      jsonBodyOf(result) shouldEqual toJson(Paged.empty[Case])
+      status(result) shouldBe OK
+      contentAsJson(result) shouldBe toJson(Paged.empty[Case])
     }
 
     "return 500 when an error occurred" in {
@@ -327,10 +328,10 @@ class CaseControllerSpec extends BaseSpec with BeforeAndAfterEach {
 
       when(caseService.get(refEq(search), refEq(pagination))).thenReturn(failed(error))
 
-      val result = await(controller.get(search, pagination)(fakeRequest))
+      val result = controller.get(search, pagination)(fakeRequest)
 
-      status(result) shouldEqual INTERNAL_SERVER_ERROR
-      jsonBodyOf(result).toString() shouldEqual """{"code":"UNKNOWN_ERROR","message":"An unexpected error occurred"}"""
+      status(result) shouldBe INTERNAL_SERVER_ERROR
+      contentAsJson(result).toString() shouldBe """{"code":"UNKNOWN_ERROR","message":"An unexpected error occurred"}"""
     }
 
   }
@@ -340,19 +341,19 @@ class CaseControllerSpec extends BaseSpec with BeforeAndAfterEach {
     "return 200 with the expected case" in {
       when(caseService.getByReference(c1.reference)).thenReturn(successful(Some(c1)))
 
-      val result = await(controller.getByReference(c1.reference)(fakeRequest))
+      val result = controller.getByReference(c1.reference)(fakeRequest)
 
-      status(result) shouldEqual OK
-      jsonBodyOf(result) shouldEqual toJson(c1)
+      status(result) shouldBe OK
+      contentAsJson(result) shouldBe toJson(c1)
     }
 
     "return 404 if there are no cases for the specific reference" in {
       when(caseService.getByReference(c1.reference)).thenReturn(successful(None))
 
-      val result = await(controller.getByReference(c1.reference)(fakeRequest))
+      val result = controller.getByReference(c1.reference)(fakeRequest)
 
-      status(result) shouldEqual NOT_FOUND
-      jsonBodyOf(result).toString() shouldEqual """{"code":"NOT_FOUND","message":"Case not found"}"""
+      status(result) shouldBe NOT_FOUND
+      contentAsJson(result).toString() shouldBe """{"code":"NOT_FOUND","message":"Case not found"}"""
     }
 
     "return 500 when an error occurred" in {
@@ -360,10 +361,10 @@ class CaseControllerSpec extends BaseSpec with BeforeAndAfterEach {
 
       when(caseService.getByReference(c1.reference)).thenReturn(failed(error))
 
-      val result = await(controller.getByReference(c1.reference)(fakeRequest))
+      val result = controller.getByReference(c1.reference)(fakeRequest)
 
-      status(result) shouldEqual INTERNAL_SERVER_ERROR
-      jsonBodyOf(result).toString() shouldEqual """{"code":"UNKNOWN_ERROR","message":"An unexpected error occurred"}"""
+      status(result) shouldBe INTERNAL_SERVER_ERROR
+      contentAsJson(result).toString() shouldBe """{"code":"UNKNOWN_ERROR","message":"An unexpected error occurred"}"""
     }
 
   }

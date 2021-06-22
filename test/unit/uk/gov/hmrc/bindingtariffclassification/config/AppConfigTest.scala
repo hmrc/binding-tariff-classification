@@ -16,11 +16,10 @@
 
 package uk.gov.hmrc.bindingtariffclassification.config
 
-import java.time.ZoneOffset
-
-import org.quartz.CronExpression
 import play.api.Configuration
 import uk.gov.hmrc.bindingtariffclassification.base.BaseSpec
+
+import java.time.ZoneOffset
 
 class AppConfigTest extends BaseSpec {
 

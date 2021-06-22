@@ -18,6 +18,7 @@ package uk.gov.hmrc.bindingtariffclassification.service
 
 import org.mockito.ArgumentMatchers.refEq
 import org.mockito.Mockito.{times, verify, when}
+import play.api.test.Helpers. _
 import uk.gov.hmrc.bindingtariffclassification.base.BaseSpec
 import uk.gov.hmrc.bindingtariffclassification.model.{Event, EventSearch, Paged, Pagination}
 import uk.gov.hmrc.bindingtariffclassification.repository.EventRepository

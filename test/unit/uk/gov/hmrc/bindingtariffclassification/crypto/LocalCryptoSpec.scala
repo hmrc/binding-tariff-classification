@@ -29,14 +29,14 @@ class LocalCryptoSpec extends BaseSpec {
 
     "enable encrypt local" in {
       Mockito.when(config.mongoEncryption).thenReturn(MongoEncryption(enabled = true, Some("YjQ+NiViNGY4V2l2cSxnCg==")))
-      (new LocalCrypto(config)).encrypt(PlainText("hello")).toString shouldBe "Crypted(gUfxIXsmMDAbdTgm36BmEg==)"
+      new LocalCrypto(config).encrypt(PlainText("hello")).toString shouldBe "Crypted(gUfxIXsmMDAbdTgm36BmEg==)"
     }
 
     "error on missing config" in {
       Mockito.when(config.mongoEncryption).thenReturn(MongoEncryption(enabled = true, None))
 
       val caught = intercept[RuntimeException] {
-        await(new LocalCrypto(config)).encrypt(PlainText("hello"))
+        new LocalCrypto(config).encrypt(PlainText("hello"))
       }
       caught.getMessage shouldBe "Missing config: 'mongodb.encryption.enabled'"
     }

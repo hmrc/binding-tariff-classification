@@ -16,13 +16,12 @@
 
 package uk.gov.hmrc.bindingtariffclassification.scheduler
 
-import java.time.{Duration, LocalTime}
 import org.quartz.{CronExpression, Job, JobExecutionContext}
 import uk.gov.hmrc.bindingtariffclassification.config.JobConfig
 import uk.gov.hmrc.lock.LockKeeper
 
-import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.concurrent.duration.{Duration => ScalaDuration}
+import scala.concurrent.{Await, ExecutionContext, Future}
 
 abstract class ScheduledJob(implicit ec: ExecutionContext) extends Job with LockKeeper {
   def jobConfig: JobConfig

@@ -18,16 +18,16 @@ package uk.gov.hmrc.bindingtariffclassification.config
 
 import java.time.Clock
 import javax.inject._
-
 import org.quartz.CronExpression
 import play.api.{Configuration, Logger}
+import uk.gov.hmrc.bindingtariffclassification.common.Logging
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 @Singleton
 class AppConfig @Inject() (
   val configuration: Configuration,
   config: ServicesConfig
-) {
+) extends Logging {
 
   private def configNotFoundError(key: String): Nothing =
     throw new RuntimeException(s"Could not find config key '$key'")
@@ -71,8 +71,8 @@ class AppConfig @Inject() (
   def getString(key: String): String =
     configuration.getOptional[String](key).getOrElse(configNotFoundError(key))
 
-  lazy val mongodbUri = configuration.get[String]("mongodb.uri")
-  lazy val appName    = configuration.get[String]("appName")
+  lazy val mongodbUri: String = configuration.get[String]("mongodb.uri")
+  lazy val appName: String = configuration.get[String]("appName")
 
   lazy val mongoEncryption: MongoEncryption = {
     val encryptionEnabled = getBooleanConfig("mongodb.encryption.enabled")
@@ -81,8 +81,8 @@ class AppConfig @Inject() (
       else None
     }
 
-    if (encryptionEnabled && encryptionKey.isDefined) Logger.info("Mongo encryption enabled")
-    else Logger.info("Mongo encryption disabled")
+    if (encryptionEnabled && encryptionKey.isDefined) logger.info("Mongo encryption enabled")
+    else logger.info("Mongo encryption disabled")
 
     MongoEncryption(encryptionEnabled, encryptionKey)
   }

@@ -18,6 +18,7 @@ package uk.gov.hmrc.bindingtariffclassification.model
 
 import play.api.libs.json._
 
+import scala.language.postfixOps
 import scala.util.Try
 
 case class Paged[T](results: Seq[T], pageIndex: Int, pageSize: Int, resultCount: Int) {

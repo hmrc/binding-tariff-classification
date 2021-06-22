@@ -16,12 +16,12 @@
 
 package uk.gov.hmrc.bindingtariffclassification.model
 
+import uk.gov.hmrc.bindingtariffclassification.base.BaseSpec
+
 import java.net.URLDecoder
 import java.time.Instant
 
-import uk.gov.hmrc.play.test.UnitSpec
-
-class EventSearchTest extends UnitSpec {
+class EventSearchTest extends BaseSpec {
 
   private val search = EventSearch(
     caseReference = Some(Set("ref1", "ref2")),

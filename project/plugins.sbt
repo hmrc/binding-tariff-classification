@@ -2,7 +2,7 @@ resolvers += "HMRC-open-artefacts-maven" at "https://open.artefacts.tax.service.
 resolvers += Resolver.url("HMRC-open-artefacts-ivy", url("https://open.artefacts.tax.service.gov.uk/ivy2"))(Resolver.ivyStylePatterns)
 resolvers += Resolver.typesafeRepo("releases")
 
-addSbtPlugin("com.typesafe.play"         % "sbt-plugin"             % "2.6.25")
+addSbtPlugin("com.typesafe.play"         % "sbt-plugin"             % "2.7.9")
 addSbtPlugin("net.virtual-void"          % "sbt-dependency-graph"   % "0.10.0-RC1")
 addSbtPlugin("org.irundaia.sbt"          % "sbt-sassify"            % "1.4.11")
 addSbtPlugin("org.scalastyle"            %% "scalastyle-sbt-plugin" % "1.0.0")

@@ -16,14 +16,13 @@
 
 package uk.gov.hmrc.bindingtariffclassification.repository
 
-import java.time._
-
 import cats.data.NonEmptySeq
 import cats.syntax.all._
 import org.mockito.BDDMockito.given
 import org.scalatest.concurrent.Eventually
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
 import play.api.libs.json.{JsObject, Json}
+import play.api.test.Helpers. _
 import reactivemongo.api.indexes.Index
 import reactivemongo.api.indexes.IndexType.Ascending
 import reactivemongo.api.{Cursor, DB, ReadConcern}
@@ -31,14 +30,15 @@ import reactivemongo.bson._
 import reactivemongo.core.errors.DatabaseException
 import reactivemongo.play.json.ImplicitBSONHandlers._
 import uk.gov.hmrc.bindingtariffclassification.config.AppConfig
+import uk.gov.hmrc.bindingtariffclassification.model.MongoFormatters.formatCase
 import uk.gov.hmrc.bindingtariffclassification.model._
 import uk.gov.hmrc.bindingtariffclassification.model.reporting._
-import uk.gov.hmrc.bindingtariffclassification.model.MongoFormatters.formatCase
 import uk.gov.hmrc.bindingtariffclassification.sort.{CaseSortField, SortDirection}
 import uk.gov.hmrc.mongo.MongoSpecSupport
 import util.CaseData._
 import util.Cases._
 
+import java.time._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
@@ -177,7 +177,7 @@ class CaseRepositorySpec
       await(repository.insert(case1)) shouldBe case1
       val size = collectionSize
 
-      val applicationPdf = Some(Attachment("id", true, None, now, None, false))
+      val applicationPdf = Some(Attachment("id", public = true, None, now, None))
       val atarCaseUpdate = CaseUpdate(application = Some(BTIUpdate(applicationPdf = SetValue(applicationPdf))))
       val updated: Case =
         case1.copy(application = case1.application.asInstanceOf[BTIApplication].copy(applicationPdf = applicationPdf))

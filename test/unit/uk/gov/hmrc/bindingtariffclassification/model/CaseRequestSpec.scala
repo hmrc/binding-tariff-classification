@@ -16,15 +16,15 @@
 
 package uk.gov.hmrc.bindingtariffclassification.model
 
-import java.time.Instant
-
 import org.mockito.Mockito.when
 import org.scalatestplus.mockito.MockitoSugar
-import uk.gov.hmrc.play.test.UnitSpec
+import uk.gov.hmrc.bindingtariffclassification.base.BaseSpec
 import util.CaseData
 import util.Matchers.roughlyBe
 
-class CaseRequestSpec extends UnitSpec with MockitoSugar {
+import java.time.Instant
+
+class CaseRequestSpec extends BaseSpec with MockitoSugar {
 
   private val application = mock[Application]
   private val attachments = mock[Seq[Attachment]]

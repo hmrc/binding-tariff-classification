@@ -30,9 +30,11 @@ import uk.gov.hmrc.bindingtariffclassification.http.ProxyHttpClient
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.audit.http.HttpAuditing
 import util.TestMetrics
+import play.api.test.Helpers._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
+// scalastyle:off magic.number
 class BankHolidaysConnectorTest extends BaseSpec with WiremockTestServer with BeforeAndAfterAll {
 
   private val config = mock[AppConfig]

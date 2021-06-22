@@ -16,9 +16,10 @@
 
 package uk.gov.hmrc.bindingtariffclassification.model
 
-import uk.gov.hmrc.play.test.UnitSpec
+import uk.gov.hmrc.bindingtariffclassification.base.BaseSpec
 
-class PaginationTest extends UnitSpec {
+// scalastyle:off magic.number
+class PaginationTest extends BaseSpec {
 
   private val pagination = Pagination(
     page     = 2,

@@ -18,6 +18,7 @@ package uk.gov.hmrc.bindingtariffclassification.repository
 
 import org.scalatest.concurrent.Eventually
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
+import play.api.test.Helpers. _
 import reactivemongo.api.indexes.Index
 import reactivemongo.api.indexes.IndexType.Ascending
 import reactivemongo.api.{DB, ReadConcern}
@@ -29,6 +30,7 @@ import uk.gov.hmrc.bindingtariffclassification.model._
 import uk.gov.hmrc.mongo.MongoSpecSupport
 
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.duration.DurationInt
 
 class SequenceRepositorySpec
     extends BaseMongoIndexSpec
@@ -64,8 +66,8 @@ class SequenceRepositorySpec
         .count(selector = None, limit = Some(0), skip = 0, hint = None, readConcern = ReadConcern.Local)
     ).toInt
 
-  private def selectorByName(name: String): BSONDocument =
-    BSONDocument("name" -> name)
+  private def selectorByName(): BSONDocument =
+    BSONDocument("name" -> "name")
 
   "insert" should {
     val sequence = Sequence("name", 0)
@@ -74,30 +76,32 @@ class SequenceRepositorySpec
       await(repository.insert(sequence)) shouldBe sequence
       collectionSize                     shouldBe 1
 
-      await(repository.collection.find(selectorByName("name")).one[Sequence]) shouldBe Some(sequence)
+      await(repository.collection.find(selectorByName()).one[Sequence]) shouldBe Some(sequence)
     }
 
     "fail to insert a duplicate sequence name" in {
       await(repository.insert(sequence)) shouldBe sequence
       collectionSize                     shouldBe 1
 
-      await(repository.collection.find(selectorByName("name")).one[Sequence]) shouldBe Some(sequence)
+      await(repository.collection.find(selectorByName()).one[Sequence]) shouldBe Some(sequence)
 
       val updated: Sequence = sequence.copy(value = 2)
+      val errorCode: Int = 11000
 
       intercept[DatabaseException] {
         await(repository.insert(updated))
-      }.code shouldBe Some(11000)
+      }.code shouldBe Some(errorCode)
 
       collectionSize                                                          shouldBe 1
-      await(repository.collection.find(selectorByName("name")).one[Sequence]) shouldBe Some(sequence)
+      await(repository.collection.find(selectorByName()).one[Sequence]) shouldBe Some(sequence)
     }
   }
 
   "get by name" should {
 
     "return existing sequence" in {
-      val sequence = Sequence("name", 10)
+      val value: Int = 10
+      val sequence = Sequence("name", value)
       await(repository.insert(sequence))
       await(repository.getByName("name")) shouldBe sequence
     }
@@ -131,8 +135,6 @@ class SequenceRepositorySpec
 
       val repo = createMongoRepo
       await(repo.ensureIndexes)
-
-      import scala.concurrent.duration._
 
       eventually(timeout(5.seconds), interval(100.milliseconds)) {
         assertIndexes(expectedIndexes.sorted, getIndexes(repo.collection).sorted)

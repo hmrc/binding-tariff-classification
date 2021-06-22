@@ -16,10 +16,9 @@
 
 package uk.gov.hmrc.bindingtariffclassification.repository
 
-import java.time.{Instant, LocalDate, ZoneId}
-
 import org.scalatest.concurrent.Eventually
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
+import play.api.test.Helpers. _
 import reactivemongo.api.indexes.Index
 import reactivemongo.api.indexes.IndexType.Ascending
 import reactivemongo.api.{DB, ReadConcern}
@@ -29,9 +28,8 @@ import uk.gov.hmrc.bindingtariffclassification.model.MongoFormatters.formatJobRu
 import uk.gov.hmrc.bindingtariffclassification.model._
 import uk.gov.hmrc.mongo.MongoSpecSupport
 
+import java.time.{LocalDate, ZoneOffset, ZonedDateTime}
 import scala.concurrent.ExecutionContext.Implicits.global
-import java.time.ZonedDateTime
-import java.time.ZoneOffset
 
 class MigrationLockRepositorySpec
     extends BaseMongoIndexSpec
@@ -67,8 +65,8 @@ class MigrationLockRepositorySpec
         .count(selector = None, limit = Some(0), skip = 0, hint = None, readConcern = ReadConcern.Local)
     ).toInt
 
-  private def selectorByName(name: String): BSONDocument =
-    BSONDocument("name" -> name)
+  private def selectorByName(): BSONDocument =
+    BSONDocument("name" -> "name")
 
   private def date(date: String): ZonedDateTime =
     LocalDate.parse(date).atStartOfDay(ZoneOffset.UTC)
@@ -80,7 +78,7 @@ class MigrationLockRepositorySpec
       await(repository.lock(event)) shouldBe true
       collectionSize                shouldBe 1
 
-      await(repository.collection.find(selectorByName("name")).one[JobRunEvent]) shouldBe Some(event)
+      await(repository.collection.find(selectorByName()).one[JobRunEvent]) shouldBe Some(event)
     }
 
     "fail to insert a duplicate event name" in {

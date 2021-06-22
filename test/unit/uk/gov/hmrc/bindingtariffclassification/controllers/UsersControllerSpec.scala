@@ -20,9 +20,9 @@ import org.mockito.ArgumentMatchers.{any, refEq}
 import org.mockito.Mockito
 import org.mockito.Mockito.when
 import org.scalatest.BeforeAndAfterEach
-import play.api.http.Status._
 import play.api.libs.json.Json.toJson
 import play.api.test.FakeRequest
+import play.api.test.Helpers._
 import reactivemongo.bson.BSONDocument
 import reactivemongo.core.errors.DatabaseException
 import uk.gov.hmrc.bindingtariffclassification.base.BaseSpec
@@ -36,7 +36,7 @@ import scala.concurrent.Future._
 
 class UsersControllerSpec extends BaseSpec with BeforeAndAfterEach {
 
-  override protected def beforeEach() =
+  override protected def beforeEach(): Unit =
     Mockito.reset(usersService)
 
   private val newUser: NewUserRequest = CaseData.createNewUser()
@@ -56,20 +56,20 @@ class UsersControllerSpec extends BaseSpec with BeforeAndAfterEach {
       when(usersService.getUserById(user1.id))
         .thenReturn(successful(Some(user1)))
 
-      val result = await(controller.fetchUserDetails(user1.id)(fakeRequest))
+      val result = controller.fetchUserDetails(user1.id)(fakeRequest)
 
-      status(result) shouldEqual OK
-      jsonBodyOf(result) shouldEqual toJson(user1)
+      status(result) shouldBe OK
+      contentAsJson(result) shouldBe toJson(user1)
     }
 
     "return 404 if there are no users for the specific reference" in {
       when(usersService.getUserById(user1.id)).thenReturn(successful(None))
 
-      val result = await(controller.fetchUserDetails(user1.id)(fakeRequest))
+      val result = controller.fetchUserDetails(user1.id)(fakeRequest)
 
-      status(result) shouldEqual NOT_FOUND
-      jsonBodyOf(result)
-        .toString() shouldEqual """{"code":"NOT_FOUND","message":"User not found"}"""
+      status(result) shouldBe NOT_FOUND
+      contentAsJson(result)
+        .toString() shouldBe """{"code":"NOT_FOUND","message":"User not found"}"""
     }
 
     "return 500 when an error occurred" in {
@@ -77,11 +77,11 @@ class UsersControllerSpec extends BaseSpec with BeforeAndAfterEach {
 
       when(usersService.getUserById(user1.id)).thenReturn(failed(error))
 
-      val result = await(controller.fetchUserDetails(user1.id)(fakeRequest))
+      val result = controller.fetchUserDetails(user1.id)(fakeRequest)
 
-      status(result) shouldEqual INTERNAL_SERVER_ERROR
-      jsonBodyOf(result)
-        .toString() shouldEqual """{"code":"UNKNOWN_ERROR","message":"An unexpected error occurred"}"""
+      status(result) shouldBe INTERNAL_SERVER_ERROR
+      contentAsJson(result)
+        .toString() shouldBe """{"code":"UNKNOWN_ERROR","message":"An unexpected error occurred"}"""
     }
   }
 
@@ -90,35 +90,33 @@ class UsersControllerSpec extends BaseSpec with BeforeAndAfterEach {
     "return 201 when the user has been created successfully" in {
       when(usersService.insertUser(any[Operator])).thenReturn(successful(user1))
 
-      val result =
-        await(controller.createUser()(fakeRequest.withBody(toJson(newUser))))
+      val result = controller.createUser()(fakeRequest.withBody(toJson(newUser)))
 
-      status(result) shouldEqual CREATED
-      jsonBodyOf(result) shouldEqual toJson(user1)
+      status(result) shouldBe CREATED
+      contentAsJson(result) shouldBe toJson(user1)
     }
 
     "return 400 when the JSON request payload is not a User" in {
       val body = """{"a":"b"}"""
-      val result =
-        await(controller.createUser()(fakeRequest.withBody(toJson(body))))
+      val result = controller.createUser()(fakeRequest.withBody(toJson(body)))
 
-      status(result) shouldEqual BAD_REQUEST
+      status(result) shouldBe BAD_REQUEST
     }
 
     "return 500 when an error occurred" in {
+      val errorCode: Int = 11000
       val error = new DatabaseException {
         override def originalDocument: Option[BSONDocument] = None
-        override def code: Option[Int] = Some(11000)
+        override def code: Option[Int] = Some(errorCode)
         override def message: String = "duplicate value for db index"
       }
       when(usersService.insertUser(any[Operator])).thenReturn(failed(error))
 
-      val result =
-        await(controller.createUser()(fakeRequest.withBody(toJson(newUser))))
+      val result = controller.createUser()(fakeRequest.withBody(toJson(newUser)))
 
-      status(result) shouldEqual INTERNAL_SERVER_ERROR
-      jsonBodyOf(result)
-        .toString() shouldEqual """{"code":"UNKNOWN_ERROR","message":"An unexpected error occurred"}"""
+      status(result) shouldBe INTERNAL_SERVER_ERROR
+      contentAsJson(result)
+        .toString() shouldBe """{"code":"UNKNOWN_ERROR","message":"An unexpected error occurred"}"""
     }
 
   }
@@ -129,12 +127,11 @@ class UsersControllerSpec extends BaseSpec with BeforeAndAfterEach {
       when(usersService.updateUser(user1, upsert = false))
         .thenReturn(successful(Some(user1)))
 
-      val result = await(
-        controller.updateUser(user1.id)(fakeRequest.withBody(toJson(user1)))
+      val result = controller.updateUser(user1.id)(fakeRequest.withBody(toJson(user1))
       )
 
-      status(result) shouldEqual OK
-      jsonBodyOf(result) shouldEqual toJson(user1)
+      status(result) shouldBe OK
+      contentAsJson(result) shouldBe toJson(user1)
     }
 
     "return 200 when the user has been updated successfully - with upsert allowed" in {
@@ -143,46 +140,41 @@ class UsersControllerSpec extends BaseSpec with BeforeAndAfterEach {
         .thenReturn(successful(Some(user1)))
 
       val result =
-        await(
-          controller.updateUser(user1.id)(
+         controller.updateUser(user1.id)(
             fakeRequest
               .withBody(toJson(user1))
               .withHeaders("User-Agent" -> "agent")
-          )
         )
 
-      status(result) shouldEqual OK
-      jsonBodyOf(result) shouldEqual toJson(user1)
+      status(result) shouldBe OK
+      contentAsJson(result) shouldBe toJson(user1)
     }
 
     "return 400 when the JSON request payload is not a user" in {
       val body = """{"a":"b"}"""
-      val result =
-        await(controller.updateUser("")(fakeRequest.withBody(toJson(body))))
+      val result = controller.updateUser("")(fakeRequest.withBody(toJson(body))).futureValue
 
-      status(result) shouldEqual BAD_REQUEST
+      result.header.status shouldBe BAD_REQUEST
     }
 
     "return 400 when the user id path parameter does not match the JSON request payload" in {
-      val result =
-        await(controller.updateUser("ABC")(fakeRequest.withBody(toJson(user1))))
+      val result = controller.updateUser("ABC")(fakeRequest.withBody(toJson(user1)))
 
-      status(result) shouldEqual BAD_REQUEST
-      jsonBodyOf(result)
-        .toString() shouldEqual """{"code":"INVALID_REQUEST_PAYLOAD","message":"Invalid user id"}"""
+      status(result) shouldBe BAD_REQUEST
+      contentAsJson(result)
+        .toString() shouldBe """{"code":"INVALID_REQUEST_PAYLOAD","message":"Invalid user id"}"""
     }
 
     "return 404 when there are no users with the provided reference" in {
       when(usersService.updateUser(user1, upsert = false))
         .thenReturn(successful(None))
 
-      val result = await(
-        controller.updateUser(user1.id)(fakeRequest.withBody(toJson(user1)))
+      val result = controller.updateUser(user1.id)(fakeRequest.withBody(toJson(user1))
       )
 
-      status(result) shouldEqual NOT_FOUND
-      jsonBodyOf(result)
-        .toString() shouldEqual """{"code":"NOT_FOUND","message":"User not found"}"""
+      status(result) shouldBe NOT_FOUND
+      contentAsJson(result)
+        .toString() shouldBe """{"code":"NOT_FOUND","message":"User not found"}"""
     }
 
     "return 500 when an error occurred" in {
@@ -191,13 +183,12 @@ class UsersControllerSpec extends BaseSpec with BeforeAndAfterEach {
       when(usersService.updateUser(user1, upsert = false))
         .thenReturn(failed(error))
 
-      val result = await(
-        controller.updateUser(user1.id)(fakeRequest.withBody(toJson(user1)))
+      val result = controller.updateUser(user1.id)(fakeRequest.withBody(toJson(user1))
       )
 
-      status(result) shouldEqual INTERNAL_SERVER_ERROR
-      jsonBodyOf(result)
-        .toString() shouldEqual """{"code":"UNKNOWN_ERROR","message":"An unexpected error occurred"}"""
+      status(result) shouldBe INTERNAL_SERVER_ERROR
+      contentAsJson(result)
+        .toString() shouldBe """{"code":"UNKNOWN_ERROR","message":"An unexpected error occurred"}"""
     }
 
   }
@@ -207,15 +198,14 @@ class UsersControllerSpec extends BaseSpec with BeforeAndAfterEach {
 
     "return 200 when the user has been marked deleted successfully" in {
 
-      when(usersService.updateUser(userDeleted, false))
+      when(usersService.updateUser(userDeleted, upsert = false))
         .thenReturn(successful(Some(userDeleted)))
 
-      val result = await(
-        controller.markDeleted(user1.id)(fakeRequest.withBody(toJson(user1)))
+      val result = controller.markDeleted(user1.id)(fakeRequest.withBody(toJson(user1))
       )
 
-      status(result) shouldEqual OK
-      jsonBodyOf(result) shouldEqual toJson(userDeleted)
+      status(result) shouldBe OK
+      contentAsJson(result) shouldBe toJson(userDeleted)
     }
 
     "return 200 when the user has been marked deleted successfully - with upsert allowed" in {
@@ -225,48 +215,41 @@ class UsersControllerSpec extends BaseSpec with BeforeAndAfterEach {
         .thenReturn(successful(Some(userDeleted)))
 
       val result =
-        await(
           controller.markDeleted(user1.id)(
             fakeRequest
               .withBody(toJson(user1))
               .withHeaders("User-Agent" -> "agent")
-          )
         )
 
-      status(result) shouldEqual OK
-      jsonBodyOf(result) shouldEqual toJson(userDeleted)
+      status(result) shouldBe OK
+      contentAsJson(result) shouldBe toJson(userDeleted)
     }
 
     "return 400 when the JSON request payload is not a user" in {
       val body = """{"a":"b"}"""
-      val result =
-        await(controller.markDeleted("")(fakeRequest.withBody(toJson(body))))
+      val result = controller.markDeleted("")(fakeRequest.withBody(toJson(body))).futureValue
 
-      status(result) shouldEqual BAD_REQUEST
+      result.header.status shouldBe BAD_REQUEST
     }
 
     "return 400 when the user id path parameter does not match the JSON request payload" in {
-      val result =
-        await(
-          controller.markDeleted("ABC")(fakeRequest.withBody(toJson(user1)))
-        )
+      val result =  controller.markDeleted("ABC")(fakeRequest.withBody(toJson(user1)))
 
-      status(result) shouldEqual BAD_REQUEST
-      jsonBodyOf(result)
-        .toString() shouldEqual """{"code":"INVALID_REQUEST_PAYLOAD","message":"Invalid user id"}"""
+      status(result) shouldBe BAD_REQUEST
+      contentAsJson(result)
+        .toString() shouldBe """{"code":"INVALID_REQUEST_PAYLOAD","message":"Invalid user id"}"""
     }
 
     "return 404 when there are no users with the provided reference" in {
       when(usersService.updateUser(userDeleted, upsert = false))
         .thenReturn(successful(None))
 
-      val result = await(
-        controller.markDeleted(user1.id)(fakeRequest.withBody(toJson(user1)))
+      val result = controller.markDeleted(user1.id)(fakeRequest.withBody(toJson(user1))
       )
 
-      status(result) shouldEqual NOT_FOUND
-      jsonBodyOf(result)
-        .toString() shouldEqual """{"code":"NOT_FOUND","message":"User not found"}"""
+      status(result) shouldBe NOT_FOUND
+      contentAsJson(result)
+        .toString() shouldBe """{"code":"NOT_FOUND","message":"User not found"}"""
     }
 
     "return 500 when an error occurred" in {
@@ -275,13 +258,12 @@ class UsersControllerSpec extends BaseSpec with BeforeAndAfterEach {
       when(usersService.updateUser(userDeleted, upsert = false))
         .thenReturn(failed(error))
 
-      val result = await(
-        controller.markDeleted(user1.id)(fakeRequest.withBody(toJson(user1)))
+      val result = controller.markDeleted(user1.id)(fakeRequest.withBody(toJson(user1))
       )
 
-      status(result) shouldEqual INTERNAL_SERVER_ERROR
-      jsonBodyOf(result)
-        .toString() shouldEqual """{"code":"UNKNOWN_ERROR","message":"An unexpected error occurred"}"""
+      status(result) shouldBe INTERNAL_SERVER_ERROR
+      contentAsJson(result)
+        .toString() shouldBe """{"code":"UNKNOWN_ERROR","message":"An unexpected error occurred"}"""
     }
   }
 
@@ -297,20 +279,20 @@ class UsersControllerSpec extends BaseSpec with BeforeAndAfterEach {
       when(usersService.search(refEq(search), refEq(pagination)))
         .thenReturn(successful(Paged(Seq(user1, user2))))
 
-      val result = await(controller.allUsers(search, pagination)(fakeRequest))
+      val result = controller.allUsers(search, pagination)(fakeRequest)
 
-      status(result) shouldEqual OK
-      jsonBodyOf(result) shouldEqual toJson(Paged(Seq(user1, user2)))
+      status(result) shouldBe OK
+      contentAsJson(result) shouldBe toJson(Paged(Seq(user1, user2)))
     }
 
     "return 200 with an empty sequence if there are no users" in {
       when(usersService.search(search, pagination))
         .thenReturn(successful(Paged.empty[Operator]))
 
-      val result = await(controller.allUsers(search, pagination)(fakeRequest))
+      val result = controller.allUsers(search, pagination)(fakeRequest)
 
-      status(result) shouldEqual OK
-      jsonBodyOf(result) shouldEqual toJson(Paged.empty[Operator])
+      status(result) shouldBe OK
+      contentAsJson(result) shouldBe toJson(Paged.empty[Operator])
     }
 
     "return 500 when an error occurred" in {
@@ -321,11 +303,11 @@ class UsersControllerSpec extends BaseSpec with BeforeAndAfterEach {
       when(usersService.search(refEq(search), refEq(pagination)))
         .thenReturn(failed(error))
 
-      val result = await(controller.allUsers(search, pagination)(fakeRequest))
+      val result = controller.allUsers(search, pagination)(fakeRequest)
 
-      status(result) shouldEqual INTERNAL_SERVER_ERROR
-      jsonBodyOf(result)
-        .toString() shouldEqual """{"code":"UNKNOWN_ERROR","message":"An unexpected error occurred"}"""
+      status(result) shouldBe INTERNAL_SERVER_ERROR
+      contentAsJson(result)
+        .toString() shouldBe """{"code":"UNKNOWN_ERROR","message":"An unexpected error occurred"}"""
     }
   }
 }

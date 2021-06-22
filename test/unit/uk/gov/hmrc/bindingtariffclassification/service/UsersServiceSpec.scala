@@ -18,6 +18,7 @@ package uk.gov.hmrc.bindingtariffclassification.service
 
 import org.mockito.Mockito._
 import org.scalatest.BeforeAndAfterEach
+import play.api.test.Helpers. _
 import uk.gov.hmrc.bindingtariffclassification.base.BaseSpec
 import uk.gov.hmrc.bindingtariffclassification.config.AppConfig
 import uk.gov.hmrc.bindingtariffclassification.model._
@@ -34,7 +35,7 @@ class UsersServiceSpec extends BaseSpec with BeforeAndAfterEach {
   private val usersRepository = mock[UsersRepository]
 
   private val service =
-    new UsersService(appConfig, usersRepository)
+    new UsersService(usersRepository)
 
   private final val emulatedFailure = new RuntimeException("Emulated failure.")
 

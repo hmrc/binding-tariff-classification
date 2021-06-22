@@ -33,7 +33,7 @@ class MigrationController @Inject() (
   migrationRunner.trigger(classOf[AddKeywordsMigrationJob])
 
   def amendDateOfExtract(): Action[AnyContent] =
-    Action.async { implicit request =>
+    Action.async {
       migrationRunner.trigger(classOf[AmendDateOfExtractMigrationJob]) map (_ => NoContent) recover recovery
     }
 }

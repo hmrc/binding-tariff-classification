@@ -16,14 +16,13 @@
 
 package uk.gov.hmrc.bindingtariffclassification.scheduler
 
-import java.time._
-
 import org.mockito.ArgumentCaptor
 import org.mockito.ArgumentMatchers.{any, refEq}
 import org.mockito.BDDMockito.given
 import org.mockito.Mockito._
 import org.quartz.CronExpression
 import org.scalatest.BeforeAndAfterEach
+import play.api.test.Helpers. _
 import uk.gov.hmrc.bindingtariffclassification.base.BaseSpec
 import uk.gov.hmrc.bindingtariffclassification.config.{AppConfig, JobConfig}
 import uk.gov.hmrc.bindingtariffclassification.connector.FileStoreConnector
@@ -34,9 +33,11 @@ import uk.gov.hmrc.bindingtariffclassification.service.CaseService
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.lock.LockRepository
 
-import scala.concurrent.Future.{failed, successful}
+import java.time._
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future.{failed, successful}
 
+// scalastyle:off magic.number
 class FileStoreCleanupJobTest extends BaseSpec with BeforeAndAfterEach {
 
   private val fixedDate          = ZonedDateTime.of(2021, 2, 15, 12, 0, 0, 0, ZoneOffset.UTC)
@@ -139,8 +140,8 @@ class FileStoreCleanupJobTest extends BaseSpec with BeforeAndAfterEach {
     new FileStoreCleanupJob(caseService, fileStoreConnector, lockRepoProvider, appConfig)
 
   private def givenNoUploadedFiles(): Unit =
-    given(fileStoreConnector.find(refEq(fileSearch), refEq(Pagination(page = 1)))(any[HeaderCarrier]))
-      .willReturn(successful(Paged(Seq.empty[FileMetadata], Pagination(page = 1), 0)))
+    given(fileStoreConnector.find(refEq(fileSearch), refEq(Pagination()))(any[HeaderCarrier]))
+      .willReturn(successful(Paged(Seq.empty[FileMetadata], Pagination(), 0)))
 
   private def givenUploadedFiles(ids: Set[String], pageSize: Int = pageSize): Unit =
     ids.grouped(pageSize).zipWithIndex.foreach {
@@ -172,7 +173,7 @@ class FileStoreCleanupJobTest extends BaseSpec with BeforeAndAfterEach {
     }
 
   private def givenCaseFiles(ids: Set[String]): Unit =
-    ids.map(id => given(caseService.attachmentExists(refEq(id))).willReturn(true))
+    ids.map(id => given(caseService.attachmentExists(refEq(id))).willReturn(successful(true)))
 
   private def givenFilesDeleteSuccessfully(ids: Set[String]): Unit =
     ids.map(id => given(fileStoreConnector.delete(refEq(id))(any[HeaderCarrier])).willReturn(successful(())))

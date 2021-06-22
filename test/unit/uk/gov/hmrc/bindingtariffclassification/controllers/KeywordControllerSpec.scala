@@ -20,9 +20,9 @@ import org.mockito.ArgumentMatchers.{any, refEq}
 import org.mockito.Mockito
 import org.mockito.Mockito.when
 import org.scalatest.BeforeAndAfterEach
-import play.api.http.Status._
 import play.api.libs.json.Json.toJson
 import play.api.test.FakeRequest
+import play.api.test.Helpers._
 import reactivemongo.bson.BSONDocument
 import reactivemongo.core.errors.DatabaseException
 import uk.gov.hmrc.bindingtariffclassification.base.BaseSpec
@@ -74,9 +74,9 @@ class KeywordControllerSpec extends BaseSpec with BeforeAndAfterEach {
     "return 204 idf the test mode is enabled" in {
       when(keywordService.deleteKeyword(refEq("name"))).thenReturn(successful(()))
 
-      val result = await(controller.deleteKeyword("name")(req))
+      val result = controller.deleteKeyword("name")(req).futureValue
 
-      status(result) shouldEqual NO_CONTENT
+      result.header.status shouldBe NO_CONTENT
     }
 
     "return 500 when an error occurred" in {
@@ -84,10 +84,10 @@ class KeywordControllerSpec extends BaseSpec with BeforeAndAfterEach {
 
       when(keywordService.deleteKeyword(refEq("name"))).thenReturn(failed(error))
 
-      val result = await(controller.deleteKeyword("name")(req))
+      val result = controller.deleteKeyword("name")(req)
 
-      status(result) shouldEqual INTERNAL_SERVER_ERROR
-      jsonBodyOf(result).toString() shouldEqual """{"code":"UNKNOWN_ERROR","message":"An unexpected error occurred"}"""
+      status(result) shouldBe INTERNAL_SERVER_ERROR
+      contentAsJson(result).toString() shouldBe """{"code":"UNKNOWN_ERROR","message":"An unexpected error occurred"}"""
     }
 
   }
@@ -97,34 +97,35 @@ class KeywordControllerSpec extends BaseSpec with BeforeAndAfterEach {
     "return 201 when the keyword has been created successfully" in {
       when(keywordService.addKeyword(any[Keyword])).thenReturn(successful(keyword1))
 
-      val result = await(controller.addKeyword()(fakeRequest.withBody(toJson(newKeywordRequest))))
+      val result = controller.addKeyword()(fakeRequest.withBody(toJson(newKeywordRequest)))
 
-      status(result) shouldEqual CREATED
-      jsonBodyOf(result) shouldEqual toJson(keyword1)
+      status(result) shouldBe CREATED
+      contentAsJson(result) shouldBe toJson(keyword1)
     }
 
     "return 400 when the JSON request payload is not a Keyword" in {
       val body   = """{"a":"b"}"""
-      val result = await(controller.addKeyword()(fakeRequest.withBody(toJson(body))))
+      val result = controller.addKeyword()(fakeRequest.withBody(toJson(body))).futureValue
 
-      status(result) shouldEqual BAD_REQUEST
+      result.header.status shouldBe BAD_REQUEST
     }
 
     "return 500 when an error occurred" in {
+      val errorCode: Int = 11000
       val error = new DatabaseException {
         override def originalDocument: Option[BSONDocument] = None
 
-        override def code: Option[Int] = Some(11000)
+        override def code: Option[Int] = Some(errorCode)
 
         override def message: String = "duplicate value for db index"
       }
 
       when(keywordService.addKeyword(any[Keyword])).thenReturn(failed(error))
 
-      val result = await(controller.addKeyword()(fakeRequest.withBody(toJson(newKeywordRequest))))
+      val result = controller.addKeyword()(fakeRequest.withBody(toJson(newKeywordRequest)))
 
-      status(result) shouldEqual INTERNAL_SERVER_ERROR
-      jsonBodyOf(result).toString() shouldEqual """{"code":"UNKNOWN_ERROR","message":"An unexpected error occurred"}"""
+      status(result) shouldBe INTERNAL_SERVER_ERROR
+      contentAsJson(result).toString() shouldBe """{"code":"UNKNOWN_ERROR","message":"An unexpected error occurred"}"""
     }
 
   }
@@ -134,27 +135,27 @@ class KeywordControllerSpec extends BaseSpec with BeforeAndAfterEach {
     "return 200 when the keyword has been updated/approved successfully" in {
       when(keywordService.approveKeyword(keyword1, upsert = false)).thenReturn(successful(Some(keyword1)))
 
-      val result = await(controller.approveKeyword(keyword1.name)(fakeRequest.withBody(toJson(keyword1))))
+      val result = controller.approveKeyword(keyword1.name)(fakeRequest.withBody(toJson(keyword1)))
 
-      status(result) shouldEqual OK
-      jsonBodyOf(result) shouldEqual toJson(keyword1)
+      status(result) shouldBe OK
+      contentAsJson(result) shouldBe toJson(keyword1)
     }
 
     "return 400 when the JSON request payload is invalid" in {
       val body   = """{"a":"b"}"""
-      val result = await(controller.approveKeyword("")(fakeRequest.withBody(toJson(body))))
+      val result = controller.approveKeyword("")(fakeRequest.withBody(toJson(body))).futureValue
 
-      status(result) shouldEqual BAD_REQUEST
+      result.header.status shouldBe BAD_REQUEST
     }
 
     "return 404 when there are no keywords with the provided name" in {
       val keyword3 = Keyword("not in the list")
       when(keywordService.approveKeyword(keyword3, upsert = false)).thenReturn(successful(None))
 
-      val result = await(controller.approveKeyword(keyword3.name)(fakeRequest.withBody(toJson(keyword3))))
+      val result = controller.approveKeyword(keyword3.name)(fakeRequest.withBody(toJson(keyword3)))
 
-      status(result) shouldEqual NOT_FOUND
-      jsonBodyOf(result).toString() shouldEqual """{"code":"NOT_FOUND","message":"Keyword not found"}"""
+      status(result) shouldBe NOT_FOUND
+      contentAsJson(result).toString() shouldBe """{"code":"NOT_FOUND","message":"Keyword not found"}"""
     }
 
     "return 500 when an error occurred" in {
@@ -163,10 +164,10 @@ class KeywordControllerSpec extends BaseSpec with BeforeAndAfterEach {
 
       when(keywordService.approveKeyword(keyword3, upsert = false)).thenReturn(failed(error))
 
-      val result = await(controller.approveKeyword(keyword3.name)(fakeRequest.withBody(toJson(keyword3))))
+      val result = controller.approveKeyword(keyword3.name)(fakeRequest.withBody(toJson(keyword3)))
 
-      status(result) shouldEqual INTERNAL_SERVER_ERROR
-      jsonBodyOf(result).toString() shouldEqual """{"code":"UNKNOWN_ERROR","message":"An unexpected error occurred"}"""
+      status(result) shouldBe INTERNAL_SERVER_ERROR
+      contentAsJson(result).toString() shouldBe """{"code":"UNKNOWN_ERROR","message":"An unexpected error occurred"}"""
     }
   }
 
@@ -175,20 +176,20 @@ class KeywordControllerSpec extends BaseSpec with BeforeAndAfterEach {
       when(keywordService.findAll(refEq(pagination)))
         .thenReturn(successful(Paged(Seq(keyword1, keyword2))))
 
-      val result = await(controller.getAllKeywords(pagination)(fakeRequest))
+      val result = controller.getAllKeywords(pagination)(fakeRequest)
 
-      status(result) shouldEqual OK
-      jsonBodyOf(result) shouldEqual toJson(Paged(Seq(keyword1, keyword2)))
+      status(result) shouldBe OK
+      contentAsJson(result) shouldBe toJson(Paged(Seq(keyword1, keyword2)))
     }
 
     "return 200 with an empty sequence if there are no keywords" in {
       when(keywordService.findAll(refEq(pagination)))
         .thenReturn(successful(Paged.empty[Keyword]))
 
-      val result = await(controller.getAllKeywords(pagination)(fakeRequest))
+      val result = controller.getAllKeywords(pagination)(fakeRequest)
 
-      status(result) shouldEqual OK
-      jsonBodyOf(result) shouldEqual toJson(Paged.empty[Keyword])
+      status(result) shouldBe OK
+      contentAsJson(result) shouldBe toJson(Paged.empty[Keyword])
     }
 
     "return 500 when an error occurred" in {
@@ -197,11 +198,11 @@ class KeywordControllerSpec extends BaseSpec with BeforeAndAfterEach {
       when(keywordService.findAll(refEq(pagination)))
         .thenReturn(failed(error))
 
-      val result = await(controller.getAllKeywords(pagination)(fakeRequest))
+      val result = controller.getAllKeywords(pagination)(fakeRequest)
 
-      status(result) shouldEqual INTERNAL_SERVER_ERROR
-      jsonBodyOf(result)
-        .toString() shouldEqual """{"code":"UNKNOWN_ERROR","message":"An unexpected error occurred"}"""
+      status(result) shouldBe INTERNAL_SERVER_ERROR
+      contentAsJson(result)
+        .toString() shouldBe """{"code":"UNKNOWN_ERROR","message":"An unexpected error occurred"}"""
     }
   }
 
@@ -210,20 +211,20 @@ class KeywordControllerSpec extends BaseSpec with BeforeAndAfterEach {
       when(keywordService.fetchCaseKeywords(refEq(pagination)))
         .thenReturn(successful(Paged(Seq(caseKeyword, caseKeyword2))))
 
-      val result = await(controller.fetchCaseKeywords(pagination)(fakeRequest))
+      val result = controller.fetchCaseKeywords(pagination)(fakeRequest)
 
-      status(result) shouldEqual OK
-      jsonBodyOf(result) shouldEqual toJson(Paged(Seq(caseKeyword, caseKeyword2)))
+      status(result) shouldBe OK
+      contentAsJson(result) shouldBe toJson(Paged(Seq(caseKeyword, caseKeyword2)))
     }
 
     "return 200 with an empty sequence if there are no cases containing keywords" in {
       when(keywordService.fetchCaseKeywords(refEq(pagination)))
         .thenReturn(successful(Paged.empty[CaseKeyword]))
 
-      val result = await(controller.fetchCaseKeywords(pagination)(fakeRequest))
+      val result = controller.fetchCaseKeywords(pagination)(fakeRequest)
 
-      status(result) shouldEqual OK
-      jsonBodyOf(result) shouldEqual toJson(Paged.empty[CaseKeyword])
+      status(result) shouldBe OK
+      contentAsJson(result) shouldBe toJson(Paged.empty[CaseKeyword])
     }
 
     "return 500 when an error occurred" in {
@@ -232,11 +233,11 @@ class KeywordControllerSpec extends BaseSpec with BeforeAndAfterEach {
       when(keywordService.fetchCaseKeywords(refEq(pagination)))
         .thenReturn(failed(error))
 
-      val result = await(controller.fetchCaseKeywords(pagination)(fakeRequest))
+      val result = controller.fetchCaseKeywords(pagination)(fakeRequest)
 
-      status(result) shouldEqual INTERNAL_SERVER_ERROR
-      jsonBodyOf(result)
-        .toString() shouldEqual """{"code":"UNKNOWN_ERROR","message":"An unexpected error occurred"}"""
+      status(result) shouldBe INTERNAL_SERVER_ERROR
+      contentAsJson(result)
+        .toString() shouldBe """{"code":"UNKNOWN_ERROR","message":"An unexpected error occurred"}"""
     }
   }
 }

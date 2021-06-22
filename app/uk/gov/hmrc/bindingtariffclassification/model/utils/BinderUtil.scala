@@ -16,9 +16,6 @@
 
 package uk.gov.hmrc.bindingtariffclassification.model.utils
 
-import java.time.Instant
-
-import cats.data.NonEmptySeq
 import uk.gov.hmrc.bindingtariffclassification.model.ApplicationType.ApplicationType
 import uk.gov.hmrc.bindingtariffclassification.model.LiabilityStatus.LiabilityStatus
 import uk.gov.hmrc.bindingtariffclassification.model.PseudoCaseStatus.PseudoCaseStatus
@@ -27,6 +24,7 @@ import uk.gov.hmrc.bindingtariffclassification.sort.CaseSortField.CaseSortField
 import uk.gov.hmrc.bindingtariffclassification.sort.SortDirection.SortDirection
 import uk.gov.hmrc.bindingtariffclassification.sort.{CaseSortField, SortDirection}
 
+import java.time.Instant
 import scala.util.Try
 
 object BinderUtil {

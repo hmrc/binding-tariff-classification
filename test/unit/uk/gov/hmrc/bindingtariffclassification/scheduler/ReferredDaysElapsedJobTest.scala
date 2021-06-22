@@ -16,16 +16,14 @@
 
 package uk.gov.hmrc.bindingtariffclassification.scheduler
 
-import java.time._
-
 import org.mockito.ArgumentCaptor
 import org.mockito.ArgumentMatchers._
 import org.mockito.BDDMockito.given
-import org.mockito.Mockito._
+import org.mockito.Mockito.{verify, when, _}
 import org.mockito.invocation.InvocationOnMock
-import org.mockito.stubbing.Answer
 import org.quartz.CronExpression
 import org.scalatest.BeforeAndAfterEach
+import play.api.test.Helpers. _
 import uk.gov.hmrc.bindingtariffclassification.base.BaseSpec
 import uk.gov.hmrc.bindingtariffclassification.config.{AppConfig, JobConfig}
 import uk.gov.hmrc.bindingtariffclassification.connector.BankHolidaysConnector
@@ -39,9 +37,12 @@ import uk.gov.hmrc.lock.LockRepository
 import util.CaseData
 import util.EventData.createCaseStatusChangeEventDetails
 
-import scala.concurrent.Future
+import java.time._
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
+import scala.concurrent.Future.successful
 
+// scalastyle:off magic.number
 class ReferredDaysElapsedJobTest extends BaseSpec with BeforeAndAfterEach {
 
   private val caseService           = mock[CaseService]
@@ -374,10 +375,10 @@ class ReferredDaysElapsedJobTest extends BaseSpec with BeforeAndAfterEach {
     new ReferredDaysElapsedJob(caseService, eventService, bankHolidaysConnector, lockRepoProvider, appConfig)
 
   private def givenABankHolidayOn(date: String*): Unit =
-    when(bankHolidaysConnector.get()(any[HeaderCarrier])).thenReturn(date.map(LocalDate.parse).toSet)
+    when(bankHolidaysConnector.get()(any[HeaderCarrier])).thenReturn(successful(date.map(LocalDate.parse).toSet))
 
   private def givenNoBankHolidays(): Unit =
-    when(bankHolidaysConnector.get()(any[HeaderCarrier])).thenReturn(Set.empty[LocalDate])
+    when(bankHolidaysConnector.get()(any[HeaderCarrier])).thenReturn(successful(Set.empty[LocalDate]))
 
   private def givenTodaysDateIs(date: String): Unit = {
     val zone: ZoneId = ZoneOffset.UTC
@@ -386,9 +387,7 @@ class ReferredDaysElapsedJobTest extends BaseSpec with BeforeAndAfterEach {
   }
 
   private def givenUpdatingACaseReturnsItself(): Unit =
-    given(caseService.update(any[Case], any[Boolean])).will(new Answer[Future[Option[Case]]] {
-      override def answer(invocation: InvocationOnMock): Future[Option[Case]] =
-        Future.successful(Option(invocation.getArgument[Case](0)))
-    })
+    given(caseService.update(any[Case], any[Boolean])).will((invocation: InvocationOnMock) =>
+      Future.successful(Option(invocation.getArgument[Case](0))))
 
 }

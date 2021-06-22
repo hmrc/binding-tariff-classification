@@ -22,14 +22,13 @@ import play.api.Application
 import play.api.inject.bind
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.PlayRunners
-import uk.gov.hmrc.bindingtariffclassification.migrations.{AmendDateOfExtractMigrationJob, MigrationJobs}
+import uk.gov.hmrc.bindingtariffclassification.base.BaseSpec
+import uk.gov.hmrc.bindingtariffclassification.migrations.{AddKeywordsMigrationJob, AmendDateOfExtractMigrationJob, MigrationJobs}
 import uk.gov.hmrc.bindingtariffclassification.repository.{CaseMongoRepository, CaseRepository, EncryptedCaseMongoRepository}
 import uk.gov.hmrc.bindingtariffclassification.scheduler.{ActiveDaysElapsedJob, FileStoreCleanupJob, ReferredDaysElapsedJob, ScheduledJobs}
-import uk.gov.hmrc.play.test.UnitSpec
-import uk.gov.hmrc.bindingtariffclassification.migrations.AddKeywordsMigrationJob
 import util.TestMetrics
 
-class ModuleTest extends UnitSpec with BeforeAndAfterEach with PlayRunners {
+class ModuleTest extends BaseSpec with BeforeAndAfterEach with PlayRunners {
 
   private def app(conf: (String, Any)*): Application =
     new GuiceApplicationBuilder()

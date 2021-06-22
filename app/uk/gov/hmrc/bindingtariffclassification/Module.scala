@@ -19,8 +19,9 @@ package uk.gov.hmrc.bindingtariffclassification
 import javax.inject.{Inject, Provider}
 import play.api.inject.Binding
 import play.api.{Configuration, Environment}
+import uk.gov.hmrc.bindingtariffclassification.controllers.MigrationController
 import uk.gov.hmrc.bindingtariffclassification.crypto.LocalCrypto
-import uk.gov.hmrc.bindingtariffclassification.migrations.{AmendDateOfExtractMigrationJob, AddKeywordsMigrationJob, MigrationJobs}
+import uk.gov.hmrc.bindingtariffclassification.migrations.{AddKeywordsMigrationJob, AmendDateOfExtractMigrationJob, MigrationJobs}
 import uk.gov.hmrc.bindingtariffclassification.repository.{CaseMongoRepository, CaseRepository, EncryptedCaseMongoRepository}
 import uk.gov.hmrc.bindingtariffclassification.scheduler._
 import uk.gov.hmrc.crypto.CompositeSymmetricCrypto
@@ -42,7 +43,8 @@ class Module extends play.api.inject.Module {
       bind[ScheduledJobs].toProvider[ScheduledJobProvider],
       bind[MigrationJobs].toProvider[MigrationJobProvider],
       bind[Scheduler].toSelf.eagerly(),
-      repositoryBinding
+      repositoryBinding,
+      bind[MigrationController].toSelf.eagerly()
     )
   }
 

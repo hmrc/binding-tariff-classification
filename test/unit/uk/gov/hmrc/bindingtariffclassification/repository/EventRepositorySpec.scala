@@ -16,10 +16,9 @@
 
 package uk.gov.hmrc.bindingtariffclassification.repository
 
-import java.time.{Instant, LocalDate, ZoneOffset}
-
 import org.scalatest.concurrent.Eventually
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
+import play.api.test.Helpers. _
 import reactivemongo.api.indexes.Index
 import reactivemongo.api.indexes.IndexType.Ascending
 import reactivemongo.api.{DB, ReadConcern}
@@ -32,8 +31,10 @@ import uk.gov.hmrc.bindingtariffclassification.utils.RandomGenerator
 import uk.gov.hmrc.mongo.MongoSpecSupport
 import util.EventData._
 
+import java.time.{Instant, LocalDate, ZoneOffset}
 import scala.concurrent.ExecutionContext.Implicits.global
 
+// scalastyle:off magic.number
 class EventRepositorySpec
     extends BaseMongoIndexSpec
     with BeforeAndAfterAll

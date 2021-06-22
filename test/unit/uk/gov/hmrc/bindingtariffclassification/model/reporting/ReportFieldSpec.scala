@@ -20,13 +20,14 @@ package reporting
 import java.time.{LocalDateTime, ZoneOffset}
 import uk.gov.hmrc.bindingtariffclassification.base.BaseSpec
 
+// scalastyle:off magic.number
 class ReportFieldSpec extends BaseSpec {
   "ReportField" should {
     "produce ReportResultField using withValue" in {
       for (field <- ReportField.fields.values) field match {
         case field @ CaseTypeField(fieldName, underlyingField) =>
           field.withValue(Some(ApplicationType.BTI)) shouldBe CaseTypeResultField(fieldName, Some(ApplicationType.BTI))
-        case field @ ChapterField(fieldName, underlyingField) =>
+        case field @ ChapterField(fieldName, underlyingField: String) =>
           field.withValue(Some("87")) shouldBe StringResultField(fieldName, Some("87"))
         case field @ DateField(fieldName, underlyingField) =>
           val dateTime = Some(LocalDateTime.of(2021, 2, 19, 18, 20, 0).toInstant(ZoneOffset.UTC))

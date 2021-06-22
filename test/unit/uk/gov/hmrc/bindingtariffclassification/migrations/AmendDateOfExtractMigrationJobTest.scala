@@ -16,23 +16,23 @@
 
 package uk.gov.hmrc.bindingtariffclassification.migrations
 
-import java.time.{LocalDate, ZoneOffset}
-
 import org.mockito.ArgumentCaptor
 import org.mockito.ArgumentMatchers.{any, refEq}
 import org.mockito.BDDMockito.`given`
 import org.mockito.Mockito.{never, reset, times, verify}
 import org.mockito.invocation.InvocationOnMock
-import org.mockito.stubbing.Answer
 import org.scalatest.BeforeAndAfterEach
+import play.api.test.Helpers. _
 import uk.gov.hmrc.bindingtariffclassification.base.BaseSpec
 import uk.gov.hmrc.bindingtariffclassification.model._
 import uk.gov.hmrc.bindingtariffclassification.service.CaseService
 import uk.gov.hmrc.bindingtariffclassification.sort.CaseSortField
 import util.CaseData
 
+import java.time.{LocalDate, ZoneOffset}
 import scala.concurrent.Future
 
+// scalastyle:off magic.number
 class AmendDateOfExtractMigrationJobTest extends BaseSpec with BeforeAndAfterEach {
 
   private val caseService = mock[CaseService]
@@ -186,8 +186,6 @@ class AmendDateOfExtractMigrationJobTest extends BaseSpec with BeforeAndAfterEac
       )
 
   private def givenUpdatingACaseReturnsItself(): Unit =
-    given(caseService.update(any[Case], any[Boolean])).will(new Answer[Future[Option[Case]]] {
-      override def answer(invocation: InvocationOnMock): Future[Option[Case]] =
-        Future.successful(Option(invocation.getArgument[Case](0)))
-    })
+    given(caseService.update(any[Case], any[Boolean])).will((invocation: InvocationOnMock) =>
+      Future.successful(Option(invocation.getArgument[Case](0))))
 }

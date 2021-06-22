@@ -16,13 +16,13 @@
 
 package uk.gov.hmrc.bindingtariffclassification.model
 
+import uk.gov.hmrc.bindingtariffclassification.base.BaseSpec
+import uk.gov.hmrc.bindingtariffclassification.sort.{CaseSortField, SortDirection}
+
 import java.net.URLDecoder
 import java.time.Instant
 
-import uk.gov.hmrc.bindingtariffclassification.sort.{CaseSortField, SortDirection}
-import uk.gov.hmrc.play.test.UnitSpec
-
-class CaseSearchTest extends UnitSpec {
+class CaseSearchTest extends BaseSpec {
 
   private val sort = CaseSort(
     field     = Set(CaseSortField.DAYS_ELAPSED),
