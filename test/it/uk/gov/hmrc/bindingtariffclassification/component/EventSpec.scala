@@ -30,7 +30,6 @@ import util.EventData._
 
 class EventSpec extends BaseFeatureSpec {
 
-  override lazy val port   = 14682
   protected val serviceUrl = s"http://localhost:$port"
 
   private val caseRef = UUID.randomUUID().toString

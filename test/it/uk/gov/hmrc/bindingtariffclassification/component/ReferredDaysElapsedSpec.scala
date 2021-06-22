@@ -17,9 +17,9 @@
 package uk.gov.hmrc.bindingtariffclassification.component
 
 import java.time._
-
 import com.kenshoo.play.metrics.Metrics
 import org.scalatestplus.mockito.MockitoSugar
+import play.api.Application
 import play.api.inject.bind
 import play.api.inject.guice.GuiceApplicationBuilder
 import uk.gov.hmrc.bindingtariffclassification.component.utils.AppConfigWithAFixedDate
@@ -34,10 +34,9 @@ import scala.concurrent.Await.result
 
 class ReferredDaysElapsedSpec extends BaseFeatureSpec with MockitoSugar {
 
-  override lazy val port   = 14683
   protected val serviceUrl = s"http://localhost:$port"
 
-  override lazy val app = new GuiceApplicationBuilder()
+  override lazy val app: Application = new GuiceApplicationBuilder()
     .bindings(bind[AppConfig].to[AppConfigWithAFixedDate])
     .disable[com.kenshoo.play.metrics.PlayModule]
     .configure("metrics.enabled" -> false)

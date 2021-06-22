@@ -31,6 +31,7 @@ import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import util.TestMetrics
 
+import scala.concurrent.Future
 import scala.language.implicitConversions
 
 abstract class BaseSpec extends WordSpecLike with GuiceOneAppPerSuite with MockitoSugar with ResourceFiles with Matchers with ScalaFutures {
@@ -48,6 +49,7 @@ abstract class BaseSpec extends WordSpecLike with GuiceOneAppPerSuite with Mocki
 
   implicit val mat: Materializer = fakeApplication.materializer
   implicit val hc: HeaderCarrier = HeaderCarrier()
+  implicit def liftFuture[A](v: A): Future[A] = Future.successful(v)
 
   lazy val serviceConfig: ServicesConfig     = fakeApplication.injector.instanceOf[ServicesConfig]
   lazy val parser: BodyParsers.Default       = fakeApplication.injector.instanceOf[BodyParsers.Default]

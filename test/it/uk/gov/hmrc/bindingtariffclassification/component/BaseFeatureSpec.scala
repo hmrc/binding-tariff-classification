@@ -19,6 +19,7 @@ package uk.gov.hmrc.bindingtariffclassification.component
 import com.kenshoo.play.metrics.Metrics
 import org.scalatest._
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
+import play.api.Application
 import play.api.inject.bind
 import play.api.inject.guice.GuiceApplicationBuilder
 import uk.gov.hmrc.bindingtariffclassification.config.AppConfig
@@ -41,7 +42,7 @@ abstract class BaseFeatureSpec
     with BeforeAndAfterEach
     with BeforeAndAfterAll {
 
-  override lazy val app = GuiceApplicationBuilder()
+  override lazy val app: Application = GuiceApplicationBuilder()
     .configure("mongodb.uri" -> "mongodb://localhost:27017/test-ClassificationMongoRepositoryTest")
     .overrides(bind[Metrics].toInstance(new TestMetrics))
     .build()

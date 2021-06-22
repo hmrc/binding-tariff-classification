@@ -32,7 +32,6 @@ import util.Matchers.roughlyBe
 
 class CaseSpec extends BaseFeatureSpec {
 
-  override lazy val port   = 14681
   protected val serviceUrl = s"http://localhost:$port"
 
   private val clock      = Clock.systemUTC()

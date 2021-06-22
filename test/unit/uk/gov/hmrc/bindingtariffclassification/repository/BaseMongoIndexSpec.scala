@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.bindingtariffclassification.repository
 
-import org.scalatest.OptionValues
 import play.api.test.Helpers._
 import reactivemongo.api.indexes.Index
 import reactivemongo.play.json.collection.JSONCollection

@@ -21,7 +21,7 @@ import play.api.mvc.{MessagesControllerComponents, Request, Result}
 import uk.gov.hmrc.bindingtariffclassification.common.Logging
 import uk.gov.hmrc.bindingtariffclassification.model.ErrorCode._
 import uk.gov.hmrc.bindingtariffclassification.model.JsErrorResponse
-import uk.gov.hmrc.play.bootstrap.controller.BackendController
+import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
 import scala.concurrent.Future
 import scala.concurrent.Future.successful
@@ -37,10 +37,9 @@ class CommonController(
   )(implicit request: Request[JsValue], m: Manifest[T], reads: Reads[T]): Future[Result] =
     Try(request.body.validate[T]) match {
       case Success(JsSuccess(payload, _)) => f(payload)
-      case Success(JsError(errs)) => {
+      case Success(JsError(errs)) =>
         logger.debug(s"JSON deserialisation failure : ${JsError.toJson(errs)}")
         successful(BadRequest(JsErrorResponse(INVALID_REQUEST_PAYLOAD, JsError.toJson(errs))))
-      }
       case Failure(e) => successful(BadRequest(JsErrorResponse(UNKNOWN_ERROR, e.getMessage)))
     }
 
