@@ -16,12 +16,13 @@
 
 package uk.gov.hmrc.bindingtariffclassification.config
 
-import java.time.Clock
-import javax.inject._
 import org.quartz.CronExpression
-import play.api.{Configuration, Logger}
+import play.api.Configuration
 import uk.gov.hmrc.bindingtariffclassification.common.Logging
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
+
+import java.time.Clock
+import javax.inject._
 
 @Singleton
 class AppConfig @Inject() (

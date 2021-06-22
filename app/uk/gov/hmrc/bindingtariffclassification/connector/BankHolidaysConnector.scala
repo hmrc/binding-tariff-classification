@@ -16,9 +16,6 @@
 
 package uk.gov.hmrc.bindingtariffclassification.connector
 
-import java.time.LocalDate
-import javax.inject.{Inject, Singleton}
-
 import com.kenshoo.play.metrics.Metrics
 import play.api.libs.json.Json
 import uk.gov.hmrc.bindingtariffclassification.common.Logging
@@ -29,6 +26,8 @@ import uk.gov.hmrc.bindingtariffclassification.model.BankHolidaysResponse
 import uk.gov.hmrc.bindingtariffclassification.model.RESTFormatters.formatBankHolidaysResponse
 import uk.gov.hmrc.http.HeaderCarrier
 
+import java.time.LocalDate
+import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 import scala.io.Source
 
