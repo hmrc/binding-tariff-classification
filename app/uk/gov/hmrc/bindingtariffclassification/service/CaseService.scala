@@ -39,12 +39,12 @@ class CaseService @Inject() (
   implicit val ec: ExecutionContext = mat.executionContext
 
   def insert(c: Case): Future[Case] =
-    caseRepository.insert(c)
+    caseRepository.insertOne(c)
 
   def addInitialSampleStatusIfExists(c: Case): Future[Unit] = {
     if (c.sample.status.nonEmpty) {
       val details = SampleStatusChange(None, c.sample.status, None)
-      eventService.insert(
+      eventService.insertEvent(
         Event(
           UUID.randomUUID().toString,
           details,
@@ -69,31 +69,31 @@ class CaseService @Inject() (
   }
 
   private def getNextInSequence(sequenceName: String, offset: Long): Future[Long] =
-    sequenceRepository.incrementAndGetByName(sequenceName).map {
+    sequenceRepository.findSequenceAndIncrement(sequenceName).map {
       _.value + offset
     }
 
   def update(c: Case, upsert: Boolean): Future[Option[Case]] =
-    caseRepository.update(c, upsert)
+    caseRepository.updateCase(c, upsert)
 
   def update(reference: String, caseUpdate: CaseUpdate): Future[Option[Case]] =
-    caseRepository.update(reference, caseUpdate)
+    caseRepository.updateCase(reference, caseUpdate)
 
   def getByReference(reference: String): Future[Option[Case]] =
-    caseRepository.getByReference(reference)
+    caseRepository.getCase(reference)
 
   def get(search: CaseSearch, pagination: Pagination): Future[Paged[Case]] =
-    caseRepository.get(search, pagination)
+    caseRepository.getCases(search, pagination)
 
   def deleteAll(): Future[Unit] = {
-    caseRepository.deleteAll()
-    sequenceRepository.deleteSequenceByName("ATaR Case Reference")
-    sequenceRepository.deleteSequenceByName("Other Case Reference")
-    migrationRepository.deleteAll()
+    caseRepository.deleteAll
+    sequenceRepository.deleteSequence("ATaR Case Reference")
+    sequenceRepository.deleteSequence("Other Case Reference")
+    migrationRepository.deleteAll
   }
 
   def delete(reference: String): Future[Unit] =
-    caseRepository.delete(reference)
+    caseRepository.deleteCase(reference)
 
   def attachmentExists(attachmentId: String): Future[Boolean] =
     caseAttachmentAggregation.find(attachmentId).map(_.isDefined)

@@ -16,6 +16,8 @@
 
 package uk.gov.hmrc.bindingtariffclassification.repository
 
+import org.mongodb.scala.bson.BsonDocument
+
 import javax.inject.{Inject, Singleton}
 import uk.gov.hmrc.bindingtariffclassification.model.{ApplicationUpdate, CaseUpdate}
 import play.api.libs.json._
@@ -25,19 +27,19 @@ import uk.gov.hmrc.bindingtariffclassification.model.MongoFormatters._
 
 @Singleton
 class UpdateMapper @Inject() () extends Mapper {
-  def updateApplication(update: ApplicationUpdate): Seq[(String, JsValueWrapper)] =
+  def updateApplication(update: ApplicationUpdate) = {
     update match {
-      case BTIUpdate(applicationPdf) =>
-        applicationPdf.map(att => field("application.applicationPdf", att)).getOrElse(Seq.empty)
-      case LiabilityUpdate(traderName) =>
-        traderName.map(name => field("application.traderName", name)).getOrElse(Seq.empty)
+      case BTIUpdate(applicationPdf) => applicationPdf.map(_.fold(Seq.empty[BsonDocument]) { attachment =>
+        Seq(BsonDocument("application.applicationPdf" -> Json.toJson(attachment).toString()))}).getOrElse(Seq.empty)
+      case LiabilityUpdate(traderName) => traderName.map { attachment =>
+        Seq(BsonDocument("application.traderName" -> Json.toJson(attachment).toString()))}.getOrElse(Seq.empty)
     }
+  }
 
-  def updateCase(update: CaseUpdate): JsObject = {
+  def updateCase(update: CaseUpdate): BsonDocument = {
     val applicationFields = update.application
       .map(updateApplication)
       .getOrElse(Seq.empty)
-
-    updateFields(applicationFields: _*)
+    updateFields(applicationFields)
   }
 }

@@ -16,90 +16,66 @@
 
 package uk.gov.hmrc.bindingtariffclassification.repository
 
-import com.google.inject.ImplementedBy
-import javax.inject.{Inject, Singleton}
+import org.mongodb.scala.MongoCollection
+import org.mongodb.scala.bson.{BsonArray, BsonDocument, BsonString}
+import org.mongodb.scala.model.Filters._
+import org.mongodb.scala.model.Sorts.ascending
+import org.mongodb.scala.model.{IndexModel, IndexOptions}
 import play.api.libs.json._
-import reactivemongo.bson.BSONObjectID
-import reactivemongo.play.json.collection.JSONCollection
 import uk.gov.hmrc.bindingtariffclassification.model.MongoFormatters._
 import uk.gov.hmrc.bindingtariffclassification.model._
-import uk.gov.hmrc.mongo.ReactiveRepository
+import uk.gov.hmrc.mongo.MongoComponent
+import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
 
-import scala.concurrent.Future
-
-@ImplementedBy(classOf[UsersMongoRepository])
-trait UsersRepository {
-
-  def insert(user: Operator): Future[Operator]
-
-  def update(user: Operator, upsert: Boolean): Future[Option[Operator]]
-
-  def getById(id: String): Future[Option[Operator]]
-
-  def search(search: UserSearch,
-             pagination: Pagination): Future[Paged[Operator]]
-}
+import javax.inject.{Inject, Singleton}
+import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class UsersMongoRepository @Inject()(mongoDbProvider: MongoDbProvider)
-    extends ReactiveRepository[Operator, BSONObjectID](
+class UsersRepository @Inject()(mongoComponent: MongoComponent)(implicit ec: ExecutionContext)
+    extends PlayMongoRepository[Operator](
       collectionName = "users",
-      mongo = mongoDbProvider.mongo,
-      domainFormat = MongoFormatters.formatOperator
-    )
-    with UsersRepository
-    with MongoCrudHelper[Operator] {
-
-  override protected val mongoCollection: JSONCollection = collection
-
-  override def indexes = Seq(
-    createSingleFieldAscendingIndex(indexFieldKey = "id", isUnique = true),
-    createSingleFieldAscendingIndex(indexFieldKey = "role", isUnique = false),
-    createSingleFieldAscendingIndex(
-      indexFieldKey = "memberOfTeams",
-      isUnique = false
-    )
-  )
-
-  override def getById(id: String): Future[Option[Operator]] = {
-    getOne(byId(id))
-  }
-
-  override def search(search: UserSearch,
-                      pagination: Pagination): Future[Paged[Operator]] = {
-    getMany(selector(search), Json.obj(), pagination)
-  }
-
-  override def insert(user: Operator): Future[Operator] = createOne(user)
-
-  override def update(user: Operator,
-                      upsert: Boolean): Future[Option[Operator]] = {
-    updateDocument(selector = byId(user.id), update = user, upsert = upsert)
-  }
-
-  private def byId(id: String): JsObject =
-    Json.obj("id" -> id)
-
-  private def selector(search: UserSearch): JsObject = {
-    val queries = Seq[JsObject](Json.obj("deleted" -> false))
-      .++(search.role.map(r => Json.obj("role" -> in(r))))
-      .++(
-        search.team.map(t => Json.obj("memberOfTeams" -> mappingNoneOrSome(t)))
+      mongoComponent = mongoComponent,
+      domainFormat = MongoFormatters.formatOperator,
+      indexes = Seq(
+        IndexModel(ascending("id"),IndexOptions().unique(true)),
+        IndexModel(ascending("role"),IndexOptions().unique(false)),
+        IndexModel(ascending("memberOfTeams"),IndexOptions().unique(false))
       )
+    ) with MongoCrudHelper[Operator] {
 
+  override protected val mongoCollection: MongoCollection[Operator] = collection
+
+  def findOperator(id: String): Future[Option[Operator]] = {
+    findOne(equal("id", id))
+  }
+
+  def findOperators(search: UserSearch,
+                      pagination: Pagination): Future[Paged[Operator]] = {
+    findMany(filterBy = selector(search),pagination = pagination)
+  }
+
+  def updateOperator(user: Operator,
+                      upsert: Boolean): Future[Option[Operator]] = {
+    updateOne(equal("id", user.id), user, upsert)
+  }
+
+  private def selector(search: UserSearch): BsonDocument = {
+    val queries = Seq[BsonDocument](BsonDocument("deleted" -> false))
+      .++(search.role.map(r => BsonDocument("role" -> in(r))))
+      .++(search.team.map(t => BsonDocument("memberOfTeams" -> mappingNoneOrSome(t))))
     queries match {
-      case Nil           => Json.obj()
+      case Nil           => BsonDocument()
       case single :: Nil => single
-      case many          => JsObject(Seq("$and" -> JsArray(many)))
+      case many          => BsonDocument("$and" -> BsonArray.fromIterable(many))
     }
   }
 
-  private def in[T](set: Set[T])(implicit fmt: Format[T]): JsValue =
-    Json.obj("$in" -> JsArray(set.map(elm => Json.toJson(elm)).toSeq))
+  private def in[T](set: Set[T])(implicit fmt: Format[T]): BsonDocument =
+    BsonDocument("$in" -> BsonArray.fromIterable(set.map(elm => BsonString(Json.toJson(elm).toString())).toSeq))
 
-  private def mappingNoneOrSome: String => JsValue = {
-    case "none" => Json.obj("$eq" -> JsArray.empty)
-    case "some" => Json.obj("$gt" -> JsArray.empty)
+  private def mappingNoneOrSome: String => BsonDocument = {
+    case "none" => BsonDocument("$eq" -> BsonArray())
+    case "some" => BsonDocument("$gt" -> BsonArray())
     case v      => in(Set(v))
   }
 }

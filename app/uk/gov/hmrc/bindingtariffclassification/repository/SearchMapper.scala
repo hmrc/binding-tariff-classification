@@ -16,9 +16,10 @@
 
 package uk.gov.hmrc.bindingtariffclassification.repository
 
+import org.mongodb.scala.bson.{BsonArray, BsonDocument}
+
 import java.time.Instant
 import javax.inject.{Inject, Singleton}
-
 import play.api.libs.json.Json.JsValueWrapper
 import play.api.libs.json.{Json, _}
 import uk.gov.hmrc.bindingtariffclassification.config.AppConfig
@@ -27,14 +28,19 @@ import uk.gov.hmrc.bindingtariffclassification.model.MongoFormatters.formatInsta
 import uk.gov.hmrc.bindingtariffclassification.model.PseudoCaseStatus.PseudoCaseStatus
 import uk.gov.hmrc.bindingtariffclassification.model.{CaseFilter, CaseSort, CaseStatus, PseudoCaseStatus}
 import uk.gov.hmrc.bindingtariffclassification.sort.CaseSortField._
+import org.mongodb.scala.model.Filters._
+import org.mongodb.scala.model.Projections._
+import org.mongodb.scala.model.Sorts._
 
 @Singleton
 class SearchMapper @Inject() (appConfig: AppConfig) extends Mapper {
 
-  def sortBy(sort: CaseSort): JsObject =
-    JsObject(
-      sort.field.toSeq.map(field => (toMongoField(field), Json.toJson(toMongoDirection(field, sort.direction.id))))
-    )
+  def sortBy(sort: CaseSort): BsonDocument = {
+    val fields = sort.field.toSeq.map { field =>
+      (toMongoField(field) -> Json.toJson(toMongoDirection(field, sort.direction.id)).toString())
+    }.map(values => BsonDocument(values._1 -> values._2))
+    BsonDocument("$and" -> (BsonArray.fromIterable(fields)))
+  }
 
   def filterBy(filter: CaseFilter): JsObject = {
     val params = Seq[Option[(String, JsValue)]](

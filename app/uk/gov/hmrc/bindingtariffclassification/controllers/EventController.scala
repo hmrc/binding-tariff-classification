@@ -39,7 +39,7 @@ class EventController @Inject() (
   lazy private val testModeFilter = TestMode.actionFilter(appConfig, parser)
 
   def deleteAll(): Action[AnyContent] = testModeFilter.async {
-    eventService.deleteAll() map (_ => NoContent) recover recovery
+    eventService.deleteAllEvents() map (_ => NoContent) recover recovery
   }
 
   def deleteCaseEvents(caseReference: String): Action[AnyContent] = testModeFilter.async {
@@ -47,13 +47,13 @@ class EventController @Inject() (
   }
 
   def search(search: EventSearch, pagination: Pagination): Action[AnyContent] = Action.async {
-    eventService.search(search, pagination) map { events: Paged[Event] =>
+    eventService.searchEvents(search, pagination) map { events: Paged[Event] =>
       Ok(Json.toJson(events))
     } recover recovery
   }
 
   def getByCaseReference(caseRef: String, pagination: Pagination): Action[AnyContent] = Action.async {
-    eventService.search(EventSearch(Some(Set(caseRef))), pagination) map { events: Paged[Event] =>
+    eventService.searchEvents(EventSearch(Some(Set(caseRef))), pagination) map { events: Paged[Event] =>
       Ok(Json.toJson(events))
     } recover recovery
   }
@@ -61,7 +61,7 @@ class EventController @Inject() (
   def create(caseRef: String): Action[JsValue] = Action.async(parse.json) { implicit request =>
     withJsonBody[NewEventRequest] { request =>
       caseService.getByReference(caseRef) flatMap {
-        case Some(c: Case) => eventService.insert(request.toEvent(c.reference)).map(e => Created(Json.toJson(e)))
+        case Some(c: Case) => eventService.insertEvent(request.toEvent(c.reference)).map(e => Created(Json.toJson(e)))
         case _             => Future.successful(NotFound(JsErrorResponse(ErrorCode.NOTFOUND, "Case not found")))
       }
     }

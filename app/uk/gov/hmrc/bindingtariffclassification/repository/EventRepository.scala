@@ -16,84 +16,58 @@
 
 package uk.gov.hmrc.bindingtariffclassification.repository
 
-import com.google.inject.ImplementedBy
-import javax.inject.{Inject, Singleton}
+import org.mongodb.scala.MongoCollection
+import org.mongodb.scala.bson.{BsonArray, BsonDateTime, BsonDocument, BsonString}
+import org.mongodb.scala.model.{IndexModel, IndexOptions}
 import play.api.libs.json._
-import reactivemongo.bson.BSONObjectID
-import reactivemongo.play.json.ImplicitBSONHandlers._
-import reactivemongo.play.json.collection.JSONCollection
 import uk.gov.hmrc.bindingtariffclassification.model.MongoFormatters._
 import uk.gov.hmrc.bindingtariffclassification.model._
-import uk.gov.hmrc.mongo.ReactiveRepository
+import uk.gov.hmrc.mongo.MongoComponent
+import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
+import org.mongodb.scala.model.Filters._
+import org.mongodb.scala.model.Projections._
+import org.mongodb.scala.model.Sorts._
 
+import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-@ImplementedBy(classOf[EventMongoRepository])
-trait EventRepository {
-
-  def insert(e: Event): Future[Event]
-
-  def search(search: EventSearch, pagination: Pagination): Future[Paged[Event]]
-
-  def deleteAll(): Future[Unit]
-
-  def delete(search: EventSearch): Future[Unit]
-}
-
 @Singleton
-class EventMongoRepository @Inject() (mongoDbProvider: MongoDbProvider)
-    extends ReactiveRepository[Event, BSONObjectID](
+class EventRepository @Inject() (mongoComponent: MongoComponent)
+    extends PlayMongoRepository[Event](
       collectionName = "events",
-      mongo          = mongoDbProvider.mongo,
-      domainFormat   = MongoFormatters.formatEvent
-    )
-    with EventRepository
-    with MongoCrudHelper[Event] {
+      mongoComponent = mongoComponent,
+      domainFormat = MongoFormatters.formatEvent,
+      indexes = Seq(
+        IndexModel(ascending("id"),IndexOptions().unique(true)),
+        IndexModel(ascending("caseReference"),IndexOptions().unique(false)),
+        IndexModel(ascending("type"),IndexOptions().unique(false))
+      )
+    ) with MongoCrudHelper[Event] {
 
-  override val mongoCollection: JSONCollection = collection
+  override protected val mongoCollection: MongoCollection[Event] = collection
 
-  override def indexes = Seq(
-    // TODO: We need to create an index (composed by a single or multiple fields) considering all possible searches needed by the UI.
-    createSingleFieldAscendingIndex(indexFieldKey = "id", isUnique            = true),
-    createSingleFieldAscendingIndex(indexFieldKey = "caseReference", isUnique = false),
-    createSingleFieldAscendingIndex(indexFieldKey = "type", isUnique          = false)
-  )
+  private val defaultSortBy = BsonDocument("timestamp" -> -1)
 
-  override def insert(e: Event): Future[Event] =
-    createOne(e)
+  def findEvents(search: EventSearch, pagination: Pagination): Future[Paged[Event]] =
+    findMany(selector(search), defaultSortBy, pagination)
 
-  private val defaultSortBy = Json.obj("timestamp" -> -1)
+  def deleteEvents(search: EventSearch): Future[Unit] = deleteMany(selector(search))
 
-  private def in[T](set: Set[T])(implicit fmt: Format[T]): JsValue =
-    Json.obj("$in" -> JsArray(set.map(elm => Json.toJson(elm)).toSeq))
-
-  override def search(search: EventSearch, pagination: Pagination): Future[Paged[Event]] =
-    getMany(selector(search), defaultSortBy, pagination)
-
-  override def deleteAll(): Future[Unit] =
-    removeAll().map(_ => ())
-
-  override def delete(search: EventSearch): Future[Unit] = {
-    val delete = collection.delete()
-    for {
-      elems <- delete.element(q = selector(search), limit = None)
-      _     <- delete.many(Seq(elems))
-    } yield ()
-  }
-
-  private def selector(search: EventSearch): JsObject = {
-    val queries = Seq[JsObject]()
-      .++(search.caseReference.map(r => Json.obj("caseReference" -> in(r))))
-      .++(search.`type`.map(t => Json.obj("details.type" -> in(t))))
-      .++(search.timestampMin.map(t => Json.obj("timestamp" -> Json.obj("$gte" -> t))))
-      .++(search.timestampMax.map(t => Json.obj("timestamp" -> Json.obj("$lte" -> t))))
+  private def selector(search: EventSearch): BsonDocument = {
+    val queries = Seq[BsonDocument]()
+      .++(search.caseReference.map(r => BsonDocument("caseReference" -> in(r))))
+      .++(search.`type`.map(t => BsonDocument("details.type" -> in(t))))
+      .++(search.timestampMin.map(t => BsonDocument("timestamp" -> BsonDocument("$gte" -> BsonDateTime(t.toEpochMilli)))))
+      .++(search.timestampMax.map(t => BsonDocument("timestamp" -> BsonDocument("$lte" -> BsonDateTime(t.toEpochMilli)))))
 
     queries match {
-      case Nil           => Json.obj()
+      case Nil           => BsonDocument()
       case single :: Nil => single
-      case many          => JsObject(Seq("$and" -> JsArray(many)))
+      case many          => BsonDocument("$and" -> BsonArray.fromIterable(many))
     }
   }
 
+  private def in[T](set: Set[T])(implicit fmt: Format[T]): BsonDocument =
+    BsonDocument("$in" -> BsonArray.fromIterable(set.map(elm => BsonString(Json.toJson(elm).toString()))))
 }

@@ -16,51 +16,38 @@
 
 package uk.gov.hmrc.bindingtariffclassification.repository
 
-import javax.inject.{Inject, Singleton}
-
-import com.google.inject.ImplementedBy
-import reactivemongo.bson.BSONObjectID
+import org.mongodb.scala.MongoCollection
+import org.mongodb.scala.model.Filters._
+import org.mongodb.scala.model.Sorts.ascending
+import org.mongodb.scala.model.{IndexModel, IndexOptions}
+import play.api.Logging
 import reactivemongo.core.errors.DatabaseException
-import reactivemongo.play.json.collection.JSONCollection
-import uk.gov.hmrc.bindingtariffclassification.model.MongoFormatters.formatJobRunEvent
 import uk.gov.hmrc.bindingtariffclassification.model.{JobRunEvent, MongoFormatters}
-import uk.gov.hmrc.mongo.ReactiveRepository
+import uk.gov.hmrc.mongo.MongoComponent
+import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
 
+import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
-import scala.util.control.NonFatal
-
-@ImplementedBy(classOf[MigrationLockMongoRepository])
-trait MigrationLockRepository {
-
-  def lock(e: JobRunEvent): Future[Boolean]
-
-  def rollback(e: JobRunEvent): Future[Unit]
-
-  def deleteAll(): Future[Unit]
-
-}
 
 @Singleton
-class MigrationLockMongoRepository @Inject() (mongoDbProvider: MongoDbProvider)
-    extends ReactiveRepository[JobRunEvent, BSONObjectID](
-      collectionName = "migrations",
-      mongo          = mongoDbProvider.mongo,
-      domainFormat   = MongoFormatters.formatJobRunEvent
+class MigrationLockRepository @Inject() (mongoComponent: MongoComponent)
+  extends PlayMongoRepository[JobRunEvent](
+    collectionName = "migrations",
+    mongoComponent          = mongoComponent,
+    domainFormat   = MongoFormatters.formatJobRunEvent,
+    indexes = Seq(
+      IndexModel(ascending("name"),IndexOptions().unique(true))
     )
-    with MigrationLockRepository
-    with MongoCrudHelper[JobRunEvent] {
-
-  override val mongoCollection: JSONCollection = collection
-
-  val mongoDuplicateKeyErrorCode: Int = 11000
-
-  override def indexes = Seq(
-    createSingleFieldAscendingIndex("name", isUnique = true)
   )
+    with MongoCrudHelper[JobRunEvent] with Logging {
 
-  override def lock(e: JobRunEvent): Future[Boolean] =
-    createOne(e) map { _ =>
+  override protected val mongoCollection: MongoCollection[JobRunEvent] = collection
+
+  private val mongoDuplicateKeyErrorCode: Int = 11000
+
+  def lock(e: JobRunEvent): Future[Boolean] =
+    insertOne(e) map { _ =>
       logger.debug(s"Took Lock for [${e.name}]")
       true
     } recover {
@@ -72,17 +59,14 @@ class MigrationLockMongoRepository @Inject() (mongoDbProvider: MongoDbProvider)
       case error: DatabaseException if error.code.contains(mongoDuplicateKeyErrorCode) =>
         logger.debug(s"Lock already exists for [${e.name}]", error)
         false
-      case NonFatal(error) =>
+      case error: Exception =>
         logger.error(s"Unable to take Lock for [${e.name}]", error)
         false
     }
 
-  override def rollback(e: JobRunEvent): Future[Unit] =
-    remove("name" -> e.name).map { _ =>
+  def rollback(e: JobRunEvent): Future[Unit] =
+    deleteOne(equal("name", e.name)).map { _ =>
       logger.debug(s"Removed Lock for [${e.name}]")
       ()
     }
-
-  override def deleteAll(): Future[Unit] =
-    removeAll().map(_ => ())
 }

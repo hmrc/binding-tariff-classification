@@ -16,61 +16,60 @@
 
 package uk.gov.hmrc.bindingtariffclassification.repository
 
-import play.api.libs.json._
-import reactivemongo.api.{Cursor, QueryOpts, ReadConcern}
-import reactivemongo.play.json.ImplicitBSONHandlers._
-import reactivemongo.play.json.collection.JSONCollection
+import org.mongodb.scala.MongoCollection
+import org.mongodb.scala.bson.BsonDocument
+import org.mongodb.scala.bson.conversions.Bson
+import org.mongodb.scala.model.{CountOptions, FindOneAndUpdateOptions}
 import uk.gov.hmrc.bindingtariffclassification.model.{Paged, Pagination}
+import org.mongodb.scala.model.Filters._
+import org.mongodb.scala.model.Projections._
+import org.mongodb.scala.model.Sorts._
+import play.api.libs.json.{Json, OFormat}
+import uk.gov.hmrc.bindingtariffclassification.model.MongoFormatters._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
+import scala.reflect.ClassTag
 
 trait MongoCrudHelper[T] extends MongoIndexCreator {
 
-  protected val mongoCollection: JSONCollection
+  val mongoCollection: MongoCollection[T]
 
-  protected def getOne(selector: JsObject)(implicit r: OFormat[T]): Future[Option[T]] =
-    mongoCollection.find[JsObject, T](selector).one[T]
+  def findOne(selector: Bson)(implicit c: ClassTag[T]): Future[Option[T]] =
+    mongoCollection.find(selector).headOption()
 
-  protected def getMany(filterBy: JsObject, sortBy: JsObject, pagination: Pagination = Pagination())(
-    implicit r: OFormat[T]
-  ): Future[Paged[T]] =
+  def findMany(filterBy: Bson = BsonDocument(), sortBy: Bson = BsonDocument(),
+               pagination: Pagination = Pagination())(implicit c: ClassTag[T]): Future[Paged[T]] =
     for {
       results <- mongoCollection
-                  .find[JsObject, T](filterBy)
-                  .sort(sortBy)
-                  .options(
-                    QueryOpts(skipN = (pagination.page - 1) * pagination.pageSize, batchSizeN = pagination.pageSize)
-                  )
-                  .cursor[T]()
-                  .collect[List](pagination.pageSize, Cursor.FailOnError[List[T]]())
+        .find(filterBy)
+        .sort(sortBy)
+        .skip((pagination.page - 1) * pagination.pageSize)
+        .batchSize(pagination.pageSize)
+        .toFuture()
       count <- mongoCollection
-                .count(Some(filterBy), limit = Some(0), skip = 0, hint = None, readConcern = ReadConcern.Local)
+        .countDocuments(filterBy,CountOptions().skip(0).hint(BsonDocument())).toFuture()
     } yield Paged(results, pagination.page, pagination.pageSize, count.toInt)
 
-  protected def createOne(document: T)(implicit w: OWrites[T]): Future[T] =
-    mongoCollection.insert(document).map(_ => document)
+  def insertOne(document: T): Future[T] =
+    mongoCollection.insertOne(document).toFuture().map(_ => document)
 
-  protected def updateDocument(selector: JsObject, update: T, fetchNew: Boolean = true, upsert: Boolean = false)(
-    implicit returnFormat: OFormat[T]
-  ): Future[Option[T]] =
-    updateInternal(selector, Json.toJson(update).as[JsObject], fetchNew, upsert)
+  def insertMany(document: Seq[T]): Future[Seq[T]] =
+    mongoCollection.insertMany(document).toFuture().map(_ => document)
 
-  protected def update(selector: JsObject, update: JsObject, fetchNew: Boolean, upsert: Boolean = false)(
-    implicit returnFormat: OFormat[T]
-  ): Future[Option[T]] =
-    updateInternal(selector, update, fetchNew, upsert)
+  def updateOne(selector: Bson, update: BsonDocument, upsert: Boolean = false): Future[Option[T]] =
+    mongoCollection.findOneAndUpdate(selector,update, FindOneAndUpdateOptions().upsert(upsert)).toFutureOption()
 
-  private def updateInternal(selector: JsObject, update: JsObject, fetchNew: Boolean, upsert: Boolean)(
-    implicit returnFormat: OFormat[T]
-  ): Future[Option[T]] =
-    mongoCollection
-      .findAndUpdate(
-        selector       = selector,
-        update         = update,
-        fetchNewObject = fetchNew,
-        upsert         = upsert
-      )
-      .map(_.value.map(_.as[T]))
+  def updateOne(selector: Bson, update: T, upsert: Boolean = false)(implicit format: OFormat[T]): Future[Option[T]] =
+    mongoCollection.findOneAndUpdate(selector,BsonDocument(Json.toJson(update).toString()),
+      FindOneAndUpdateOptions().upsert(upsert)).toFutureOption()
 
+  def deleteOne(selector: Bson): Future[Unit] =
+    mongoCollection.deleteOne(selector).toFuture().map { _ => ()}
+
+  def deleteMany(selector: Bson): Future[Unit] =
+    mongoCollection.deleteMany(selector).toFuture().map { _ => ()}
+
+  def deleteAll: Future[Unit] =
+    mongoCollection.deleteMany(BsonDocument()).toFuture().map { _ => ()}
 }

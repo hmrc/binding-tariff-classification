@@ -16,25 +16,36 @@
 
 package uk.gov.hmrc.bindingtariffclassification.service
 
-import javax.inject._
+import org.mongodb.scala.bson.{BsonArray, BsonDateTime, BsonDocument, BsonString, BsonValue}
 import uk.gov.hmrc.bindingtariffclassification.model.{Event, EventSearch, Paged, Pagination}
 import uk.gov.hmrc.bindingtariffclassification.repository.EventRepository
 
+import javax.inject._
 import scala.concurrent.Future
-
 @Singleton
 class EventService @Inject() (repository: EventRepository) {
 
-  def insert(e: Event): Future[Event] =
-    repository.insert(e)
+  def insertEvent(e: Event): Future[Event] =
+    repository.insertOne(e)
 
-  def search(search: EventSearch, pagination: Pagination): Future[Paged[Event]] =
-    repository.search(search, pagination)
+  def searchEvents(search: EventSearch, pagination: Pagination): Future[Paged[Event]] =
+    repository.findEvents(search, pagination)
 
-  def deleteAll(): Future[Unit] =
-    repository.deleteAll()
+  def deleteAllEvents(): Future[Unit] =
+    repository.deleteAll
 
   def deleteCaseEvents(caseReference: String): Future[Unit] =
-    repository.delete(EventSearch(caseReference = Some(Set(caseReference))))
+    repository.deleteMany(eventSearchToBson(EventSearch(caseReference = Some(Set(caseReference)))))
 
+  private def eventSearchToBson(search: EventSearch): BsonDocument = {
+    val caseReference = search.caseReference.fold(Seq.empty[(String,BsonValue)]){ reference =>
+      Seq("caseReference" -> BsonArray.fromIterable(reference.map(value => BsonString(value))))}
+    val `type` = search.`type`.fold(Seq.empty[(String,BsonValue)]){ event =>
+      Seq("type" -> BsonArray.fromIterable(event.map(value => BsonString(value.toString))))}
+    val min = search.timestampMin.fold(Seq.empty[(String,BsonValue)]){ timestamp =>
+      Seq("timestampMin" -> BsonDateTime(timestamp.toEpochMilli))}
+    val max = search.timestampMin.fold(Seq.empty[(String,BsonValue)]){ timestamp =>
+      Seq("timestampMax" -> BsonDateTime(timestamp.toEpochMilli))}
+    BsonDocument(caseReference ++ `type` ++ min ++ max)
+  }
 }

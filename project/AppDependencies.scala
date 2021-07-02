@@ -8,7 +8,7 @@ object AppDependencies {
     "uk.gov.hmrc"          %% "bootstrap-backend-play-27"     % "5.3.0",
     "uk.gov.hmrc"          %% "crypto"                        % "6.0.0",
     "uk.gov.hmrc"          %% "play-json-union-formatter"     % "1.11.0",
-    "uk.gov.hmrc"          %% "simple-reactivemongo"          % "7.31.0-play-27",
+    "uk.gov.hmrc.mongo"    %% "hmrc-mongo-play-27"            % "0.50.0",
     "uk.gov.hmrc"          %% "mongo-lock"                    % "7.0.0-play-27",
     "org.reactivemongo"    %% "reactivemongo-akkastream"      % "0.18.8",
     "com.typesafe.play"    %% "play-json"                     % "2.9.2",
@@ -33,7 +33,7 @@ object AppDependencies {
     "org.scalacheck"         %% "scalacheck"               % "1.15.4"         % scope,
     "uk.gov.hmrc"            %% "http-verbs-test"          % "1.8.0-play-27"  % scope,
     "uk.gov.hmrc"            %% "service-integration-test" % "1.1.0-play-27"  % scope,
-    "uk.gov.hmrc"            %% "reactivemongo-test"       % "4.22.0-play-27" % scope,
+    "uk.gov.hmrc.mongo"      %% "hmrc-mongo-test-play-27"  % "0.50.0" % scope,
     "org.scalaj"             %% "scalaj-http"              % "2.4.2"          % scope,
     //Need to peg this version for wiremock - try removing this on next lib upgrade
     "org.eclipse.jetty" % "jetty-server"  % jettyVersion % scope,

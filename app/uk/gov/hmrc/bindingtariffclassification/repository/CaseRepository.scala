@@ -21,6 +21,10 @@ import cats.data.NonEmptySeq
 import java.time.Instant
 import javax.inject.{Inject, Singleton}
 import cats.syntax.all._
+import org.mongodb.scala.MongoCollection
+import org.mongodb.scala.bson.BsonDocument
+import org.mongodb.scala.model.{IndexModel, IndexOptions}
+import org.mongodb.scala.model.Sorts.ascending
 import play.api.libs.json._
 import play.api.libs.json.Json.JsValueWrapper
 import reactivemongo.api.indexes.Index
@@ -32,43 +36,26 @@ import uk.gov.hmrc.bindingtariffclassification.crypto.Crypto
 import uk.gov.hmrc.bindingtariffclassification.model.MongoFormatters._
 import uk.gov.hmrc.bindingtariffclassification.model._
 import uk.gov.hmrc.bindingtariffclassification.model.reporting._
+import uk.gov.hmrc.bindingtariffclassification.repository.CaseMongoRepository.caseIndexes
+import uk.gov.hmrc.bindingtariffclassification.repository.CaseRepository.caseIndexes
 import uk.gov.hmrc.bindingtariffclassification.sort.SortDirection
-import uk.gov.hmrc.mongo.ReactiveRepository
+import uk.gov.hmrc.mongo.MongoComponent
+import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
+import org.mongodb.scala.model.Filters._
+import org.mongodb.scala.model.Projections._
+import org.mongodb.scala.model.Sorts._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-trait CaseRepository {
-
-  def insert(c: Case): Future[Case]
-
-  def update(c: Case, upsert: Boolean): Future[Option[Case]]
-
-  def update(reference: String, caseUpdate: CaseUpdate): Future[Option[Case]]
-
-  def getByReference(reference: String): Future[Option[Case]]
-
-  def get(search: CaseSearch, pagination: Pagination): Future[Paged[Case]]
-
-  def deleteAll(): Future[Unit]
-
-  def delete(reference: String): Future[Unit]
-
-  def summaryReport(report: SummaryReport, pagination: Pagination): Future[Paged[ResultGroup]]
-
-  def caseReport(report: CaseReport, pagination: Pagination): Future[Paged[Map[String, ReportResultField[_]]]]
-
-  def queueReport(report: QueueReport, pagination: Pagination): Future[Paged[QueueResultGroup]]
-}
-
 @Singleton
-class EncryptedCaseMongoRepository @Inject() (repository: CaseMongoRepository, crypto: Crypto) extends CaseRepository {
+class EncryptedCaseMongoRepository @Inject() (repository: CaseRepository, crypto: Crypto) {
 
   private def encrypt: Case => Case = crypto.encrypt
 
   private def decrypt: Case => Case = crypto.decrypt
 
-  override def insert(c: Case): Future[Case] = repository.insert(encrypt(c)).map(decrypt)
+  def insert(c: Case): Future[Case] = repository.insertOne(encrypt(c)).map(decrypt)
 
   override def update(c: Case, upsert: Boolean): Future[Option[Case]] =
     repository.update(encrypt(c), upsert).map(_.map(decrypt))
@@ -95,36 +82,22 @@ class EncryptedCaseMongoRepository @Inject() (repository: CaseMongoRepository, c
     repository.summaryReport(report, pagination)
 
   override def caseReport(
-    report: CaseReport,
-    pagination: Pagination
-  ): Future[Paged[Map[String, ReportResultField[_]]]] =
+                           report: CaseReport,
+                           pagination: Pagination
+                         ): Future[Paged[Map[String, ReportResultField[_]]]] =
     repository.caseReport(report, pagination)
 
   override def queueReport(
-    report: QueueReport,
-    pagination: Pagination
-  ): Future[Paged[QueueResultGroup]] =
+                            report: QueueReport,
+                            pagination: Pagination
+                          ): Future[Paged[QueueResultGroup]] =
     repository.queueReport(report, pagination)
 }
 
-@Singleton
-class CaseMongoRepository @Inject() (
-  appConfig: AppConfig,
-  mongoDbProvider: MongoDbProvider,
-  mapper: SearchMapper,
-  updateMapper: UpdateMapper
-) extends ReactiveRepository[Case, BSONObjectID](
-      collectionName = "cases",
-      mongo          = mongoDbProvider.mongo,
-      domainFormat   = MongoFormatters.formatCase
-    )
-    with CaseRepository
-    with MongoCrudHelper[Case] {
-
-  override val mongoCollection: JSONCollection = collection
-
-  lazy private val uniqueSingleFieldIndexes = Seq("reference")
-  lazy private val nonUniqueSingleFieldIndexes = Seq(
+object CaseRepository {
+  // TODO: We need to add relevant indexes for each possible search
+  // TODO: We should add compound indexes for searches involving multiple fields
+  lazy private val caseIndexes = Seq(
     "assignee.id",
     "queueId",
     "status",
@@ -134,48 +107,41 @@ class CaseMongoRepository @Inject() (
     "decision.bindingCommodityCode",
     "daysElapsed",
     "keywords"
-  )
+  ).map(name => IndexModel(ascending(name),IndexOptions().unique(false)))
+    .+:( IndexModel(ascending("reference"),IndexOptions().unique(true)))
+}
 
-  override def indexes: Seq[Index] =
-    // TODO: We need to add relevant indexes for each possible search
-    // TODO: We should add compound indexes for searches involving multiple fields
-    uniqueSingleFieldIndexes.map(createSingleFieldAscendingIndex(_, isUnique      = true)) ++
-      nonUniqueSingleFieldIndexes.map(createSingleFieldAscendingIndex(_, isUnique = false))
+@Singleton
+class CaseRepository @Inject() (appConfig: AppConfig, mongoComponent: MongoComponent, mapper: SearchMapper,
+                                     updateMapper: UpdateMapper) extends PlayMongoRepository[Case](
+  collectionName = "cases",
+  mongoComponent = mongoComponent,
+  domainFormat   = MongoFormatters.formatCase,
+  indexes = caseIndexes)
+  with MongoCrudHelper[Case] {
 
-  override def insert(c: Case): Future[Case] =
-    createOne(c)
+  override protected val mongoCollection: MongoCollection[Case] = collection
 
-  override def update(c: Case, upsert: Boolean): Future[Option[Case]] =
-    updateDocument(
-      selector = mapper.reference(c.reference),
-      update   = c,
-      upsert   = upsert
-    )
+  def updateCase(`case`: Case, upsert: Boolean): Future[Option[Case]] = {
+    updateOne(equal("reference", `case`.reference), `case`, upsert)
+  }
 
-  override def update(reference: String, caseUpdate: CaseUpdate): Future[Option[Case]] =
-    collection
-      .findAndUpdate(
-        selector       = mapper.reference(reference),
-        update         = updateMapper.updateCase(caseUpdate),
-        fetchNewObject = true
-      )
-      .map(_.value.map(_.as[Case]))
+  def updateCase(reference: String, caseUpdate: CaseUpdate): Future[Option[Case]] = {
+    updateOne(equal("reference", reference), updateMapper.updateCase(caseUpdate))
+  }
 
-  override def getByReference(reference: String): Future[Option[Case]] =
-    getOne(selector = mapper.reference(reference))
+  def getCase(reference: String): Future[Option[Case]] =
+    findOne(selector = equal("reference", reference))
 
-  override def get(search: CaseSearch, pagination: Pagination): Future[Paged[Case]] =
-    getMany(
-      filterBy = mapper.filterBy(search.filter),
-      sortBy   = search.sort.map(mapper.sortBy).getOrElse(Json.obj()),
+  def getCases(search: CaseSearch, pagination: Pagination): Future[Paged[Case]] = {
+    findMany(
+      filterBy = BsonDocument(mapper.filterBy(search.filter).toString()),
+      sortBy   = search.sort.map(mapper.sortBy).getOrElse(BsonDocument()),
       pagination
     )
+  }
 
-  override def deleteAll(): Future[Unit] =
-    removeAll().map(_ => ())
-
-  override def delete(reference: String): Future[Unit] =
-    remove("reference" -> reference).map(_ => ())
+  def deleteCase(reference: String): Future[Unit] = deleteOne(equal("reference", reference))
 
   private def greaterThan(json: JsValueWrapper): JsObject =
     Json.obj("$gte" -> json)
@@ -403,9 +369,9 @@ class CaseMongoRepository @Inject() (
   }
 
   private def summarySortStage(
-    framework: collection.AggregationFramework,
-    report: SummaryReport
-  ) = {
+                                framework: collection.AggregationFramework,
+                                report: SummaryReport
+                              ) = {
     import framework._
 
     val sortField = report match {
@@ -424,10 +390,10 @@ class CaseMongoRepository @Inject() (
   }
 
   private def sortStage(
-    framework: collection.AggregationFramework,
-    sortBy: ReportField[_],
-    sortOrder: SortDirection.Value
-  ) = {
+                         framework: collection.AggregationFramework,
+                         sortBy: ReportField[_],
+                         sortOrder: SortDirection.Value
+                       ) = {
     import framework._
 
     // If not sorting by reference, add it as a secondary sort field to ensure stable sorting
@@ -563,9 +529,9 @@ class CaseMongoRepository @Inject() (
   }
 
   override def caseReport(
-    report: CaseReport,
-    pagination: Pagination
-  ): Future[Paged[Map[String, ReportResultField[_]]]] = {
+                           report: CaseReport,
+                           pagination: Pagination
+                         ): Future[Paged[Map[String, ReportResultField[_]]]] = {
     logger.info(s"Running report: $report with pagination $pagination")
 
     val countField = "resultCount"
@@ -662,9 +628,9 @@ class CaseMongoRepository @Inject() (
   }
 
   override def queueReport(
-    report: QueueReport,
-    pagination: Pagination
-  ): Future[Paged[QueueResultGroup]] = {
+                            report: QueueReport,
+                            pagination: Pagination
+                          ): Future[Paged[QueueResultGroup]] = {
     logger.info(s"Running report: $report with pagination $pagination")
 
     val countField = "resultCount"

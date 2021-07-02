@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.bindingtariffclassification.repository
 
+import org.mongodb.scala.bson.{BsonArray, BsonDocument}
 import play.api.libs.json._
 import play.api.libs.json.Json.JsValueWrapper
 
@@ -32,6 +33,6 @@ trait Mapper {
   def updateField[A: Writes](fieldName: String, fieldValue: A): JsObject =
     Json.obj("$set" -> Json.obj(field(fieldName, fieldValue): _*))
 
-  def updateFields(fields: (String, JsValueWrapper)*): JsObject =
-    Json.obj("$set" -> Json.obj(fields: _*))
+  def updateFields(fields: Seq[BsonDocument]): BsonDocument =
+    BsonDocument("$set" -> BsonArray.fromIterable(fields))
 }

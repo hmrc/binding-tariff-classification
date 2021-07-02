@@ -17,57 +17,45 @@
 package uk.gov.hmrc.bindingtariffclassification.repository
 
 import com.google.inject.ImplementedBy
+import org.mongodb.scala.MongoCollection
+import org.mongodb.scala.bson.BsonDocument
+import org.mongodb.scala.model.Sorts.ascending
+import org.mongodb.scala.model.{IndexModel, IndexOptions}
+
 import javax.inject.{Inject, Singleton}
 import play.api.libs.json._
-import reactivemongo.bson.BSONObjectID
+import reactivemongo.bson.{BSONObjectID, BSONString}
 import reactivemongo.play.json.collection.JSONCollection
 import uk.gov.hmrc.bindingtariffclassification.model.MongoFormatters._
 import uk.gov.hmrc.bindingtariffclassification.model.{Keyword, MongoFormatters, Paged, Pagination}
-import uk.gov.hmrc.mongo.ReactiveRepository
+import uk.gov.hmrc.mongo.MongoComponent
+import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
-@ImplementedBy(classOf[KeywordsMongoRepository])
-trait KeywordsRepository {
-
-  def insert(keyword: Keyword): Future[Keyword]
-
-  def update(keyword: Keyword, upsert: Boolean): Future[Option[Keyword]]
-
-  def delete(name: String): Future[Unit]
-
-  def findAll(pagination: Pagination): Future[Paged[Keyword]]
-
-}
+import org.mongodb.scala.model.Filters._
+import org.mongodb.scala.model.Projections._
+import org.mongodb.scala.model.Sorts._
 
 @Singleton
-class KeywordsMongoRepository @Inject() (mongoDbProvider: MongoDbProvider)
-    extends ReactiveRepository[Keyword, BSONObjectID](
-      collectionName = "keywords",
-      mongo          = mongoDbProvider.mongo,
-      domainFormat   = MongoFormatters.formatKeywords
+class KeywordsRepository @Inject() (mongoComponent: MongoComponent)
+  extends PlayMongoRepository[Keyword](
+    collectionName = "keywords",
+    mongoComponent = mongoComponent,
+    domainFormat = MongoFormatters.formatKeywords,
+    indexes = Seq(
+      IndexModel(ascending("name"),IndexOptions().unique(true))
     )
-    with KeywordsRepository
-    with MongoCrudHelper[Keyword] {
+  ) with MongoCrudHelper[Keyword] {
 
-  override protected val mongoCollection: JSONCollection = collection
+  override protected val mongoCollection: MongoCollection[Keyword] = collection
 
-  override def indexes = Seq(
-    createSingleFieldAscendingIndex(indexFieldKey = "name", isUnique = true)
-  )
+  def insertKeyword(keyword: Keyword): Future[Keyword] = insertOne(keyword)
 
-  override def insert(keyword: Keyword): Future[Keyword] = createOne(keyword)
+  def updateKeyword(keyword: Keyword, upsert: Boolean): Future[Option[Keyword]] =
+    updateOne(equal("name", keyword.name), BsonDocument(Json.toJson(keyword).toString()), upsert)
 
-  override def update(keyword: Keyword, upsert: Boolean): Future[Option[Keyword]] =
-    updateDocument(selector = byName(keyword.name), update = keyword, upsert = upsert)
+  def findKeywords(pagination: Pagination): Future[Paged[Keyword]] = findMany(pagination = pagination)
 
-  override def findAll(pagination: Pagination): Future[Paged[Keyword]] =
-    getMany(Json.obj(), Json.obj(), pagination)
-
-  private def byName(name: String): JsObject =
-    Json.obj("name" -> name)
-
-  override def delete(name: String): Future[Unit] =
-    remove("name" -> name).map(_ => ())
-
+  def deleteKeywords(keyword: String): Future[Unit] = deleteMany(equal("name", keyword))
 }
