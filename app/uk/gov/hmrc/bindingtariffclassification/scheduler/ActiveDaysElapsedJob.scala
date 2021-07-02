@@ -114,7 +114,7 @@ class ActiveDaysElapsedJob @Inject() (
 
     for {
       // Get the Status Change events for that case
-      events <- eventService.search(
+      events <- eventService.searchEvents(
                  EventSearch(Some(Set(c.reference)), Some(caseStatusChangeEventTypes)),
                  Pagination(1, Integer.MAX_VALUE)
                )

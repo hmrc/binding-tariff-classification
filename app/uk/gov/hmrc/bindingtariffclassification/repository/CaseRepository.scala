@@ -36,7 +36,6 @@ import uk.gov.hmrc.bindingtariffclassification.crypto.Crypto
 import uk.gov.hmrc.bindingtariffclassification.model.MongoFormatters._
 import uk.gov.hmrc.bindingtariffclassification.model._
 import uk.gov.hmrc.bindingtariffclassification.model.reporting._
-import uk.gov.hmrc.bindingtariffclassification.repository.CaseMongoRepository.caseIndexes
 import uk.gov.hmrc.bindingtariffclassification.repository.CaseRepository.caseIndexes
 import uk.gov.hmrc.bindingtariffclassification.sort.SortDirection
 import uk.gov.hmrc.mongo.MongoComponent
@@ -44,6 +43,7 @@ import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
 import org.mongodb.scala.model.Filters._
 import org.mongodb.scala.model.Projections._
 import org.mongodb.scala.model.Sorts._
+import reactivemongo.core.commands.{Ascending, Descending, Match, Max, Sort}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -55,39 +55,37 @@ class EncryptedCaseMongoRepository @Inject() (repository: CaseRepository, crypto
 
   private def decrypt: Case => Case = crypto.decrypt
 
-  def insert(c: Case): Future[Case] = repository.insertOne(encrypt(c)).map(decrypt)
+  def insertCase(c: Case): Future[Case] = repository.insertOne(encrypt(c)).map(decrypt)
 
-  override def update(c: Case, upsert: Boolean): Future[Option[Case]] =
-    repository.update(encrypt(c), upsert).map(_.map(decrypt))
+  def updateCase(c: Case, upsert: Boolean): Future[Option[Case]] =
+    repository.updateCase(encrypt(c), upsert).map(_.map(decrypt))
 
-  override def update(reference: String, caseUpdate: CaseUpdate): Future[Option[Case]] =
-    repository.update(reference, caseUpdate).map(_.map(decrypt))
+  def updateCase(reference: String, caseUpdate: CaseUpdate): Future[Option[Case]] =
+    repository.updateCase(reference, caseUpdate).map(_.map(decrypt))
 
-  override def getByReference(reference: String): Future[Option[Case]] =
-    repository.getByReference(reference).map(_.map(decrypt))
+  def getCase(reference: String): Future[Option[Case]] =
+    repository.findOne(equal("reference", reference)).map(_.map(decrypt))
 
-  override def get(search: CaseSearch, pagination: Pagination): Future[Paged[Case]] =
-    repository.get(enryptSearch(search), pagination).map(_.map(decrypt))
+  def getCases(search: CaseSearch, pagination: Pagination): Future[Paged[Case]] =
+    repository.getCases(enryptSearch(search), pagination).map(_.map(decrypt))
 
-  override def deleteAll(): Future[Unit] = repository.deleteAll()
-
-  override def delete(reference: String): Future[Unit] = repository.delete(reference)
+  def delete(reference: String): Future[Unit] = repository.deleteCase(reference)
 
   private def enryptSearch(search: CaseSearch) = {
     val eoriEnc: Option[String] = search.filter.eori.map(crypto.encryptString)
     search.copy(filter = search.filter.copy(eori = eoriEnc))
   }
 
-  override def summaryReport(report: SummaryReport, pagination: Pagination): Future[Paged[ResultGroup]] =
+  def summaryReport(report: SummaryReport, pagination: Pagination): Future[Paged[ResultGroup]] =
     repository.summaryReport(report, pagination)
 
-  override def caseReport(
+  def caseReport(
                            report: CaseReport,
                            pagination: Pagination
                          ): Future[Paged[Map[String, ReportResultField[_]]]] =
     repository.caseReport(report, pagination)
 
-  override def queueReport(
+  def queueReport(
                             report: QueueReport,
                             pagination: Pagination
                           ): Future[Paged[QueueResultGroup]] =
@@ -257,8 +255,7 @@ class CaseRepository @Inject() (appConfig: AppConfig, mongoComponent: MongoCompo
       case (field, expr) => Json.obj("$ifNull" -> Json.arr("$" + field, expr))
     }
 
-  private def matchStage(framework: collection.AggregationFramework, report: Report) = {
-    import framework._
+  private def matchStage(report: Report) = {
 
     val GatewayTeamId = "1"
 
@@ -368,11 +365,7 @@ class CaseRepository @Inject() (appConfig: AppConfig, mongoComponent: MongoCompo
     Match(caseTypeFilter ++ statusFilter ++ teamFilter ++ dateFilter ++ assigneeFilter ++ liabilityStatusesFilter)
   }
 
-  private def summarySortStage(
-                                framework: collection.AggregationFramework,
-                                report: SummaryReport
-                              ) = {
-    import framework._
+  private def summarySortStage(report: SummaryReport) = {
 
     val sortField = report match {
       case summary: SummaryReport if summary.groupBy.toSeq.contains(report.sortBy) =>
@@ -390,11 +383,9 @@ class CaseRepository @Inject() (appConfig: AppConfig, mongoComponent: MongoCompo
   }
 
   private def sortStage(
-                         framework: collection.AggregationFramework,
                          sortBy: ReportField[_],
                          sortOrder: SortDirection.Value
                        ) = {
-    import framework._
 
     // If not sorting by reference, add it as a secondary sort field to ensure stable sorting
     (sortOrder, sortBy) match {
@@ -403,14 +394,13 @@ class CaseRepository @Inject() (appConfig: AppConfig, mongoComponent: MongoCompo
       case (SortDirection.DESCENDING, ReportField.Reference) =>
         Sort(Descending(sortBy.underlyingField))
       case (SortDirection.ASCENDING, _) =>
-        Sort(Ascending(sortBy.underlyingField), Ascending(ReportField.Reference.underlyingField))
+        Sort(Seq(Ascending(sortBy.underlyingField), Ascending(ReportField.Reference.underlyingField)))
       case (SortDirection.DESCENDING, _) =>
-        Sort(Descending(sortBy.underlyingField), Descending(ReportField.Reference.underlyingField))
+        Sort(Seq(Descending(sortBy.underlyingField), Descending(ReportField.Reference.underlyingField)))
     }
   }
 
-  private def groupStage(framework: collection.AggregationFramework, report: SummaryReport) = {
-    import framework._
+  private def groupStage(report: SummaryReport) = {
 
     val countField = Seq(ReportField.Count.fieldName -> SumAll)
 
