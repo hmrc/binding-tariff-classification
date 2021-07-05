@@ -43,7 +43,7 @@ import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
 import org.mongodb.scala.model.Filters._
 import org.mongodb.scala.model.Projections._
 import org.mongodb.scala.model.Sorts._
-import reactivemongo.core.commands.{Ascending, Descending, Match, Max, Sort}
+import reactivemongo.core.commands.{Ascending, Descending, GroupMulti, Match, Max, Sort}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -376,9 +376,9 @@ class CaseRepository @Inject() (appConfig: AppConfig, mongoComponent: MongoCompo
 
     report.sortOrder match {
       case SortDirection.ASCENDING =>
-        Sort(Ascending(sortField))
+        Sort(Seq(Ascending(sortField)))
       case SortDirection.DESCENDING =>
-        Sort(Descending(sortField))
+        Sort(Seq(Descending(sortField)))
     }
   }
 
@@ -390,9 +390,9 @@ class CaseRepository @Inject() (appConfig: AppConfig, mongoComponent: MongoCompo
     // If not sorting by reference, add it as a secondary sort field to ensure stable sorting
     (sortOrder, sortBy) match {
       case (SortDirection.ASCENDING, ReportField.Reference) =>
-        Sort(Ascending(sortBy.underlyingField))
+        Sort(Seq(Ascending(sortBy.underlyingField)))
       case (SortDirection.DESCENDING, ReportField.Reference) =>
-        Sort(Descending(sortBy.underlyingField))
+        Sort(Seq(Descending(sortBy.underlyingField)))
       case (SortDirection.ASCENDING, _) =>
         Sort(Seq(Ascending(sortBy.underlyingField), Ascending(ReportField.Reference.underlyingField)))
       case (SortDirection.DESCENDING, _) =>
@@ -586,16 +586,14 @@ class CaseRepository @Inject() (appConfig: AppConfig, mongoComponent: MongoCompo
     }
   }
 
-  private def queueGroupStage(framework: collection.AggregationFramework, report: QueueReport) = {
-    import framework._
+  private def queueGroupStage(report: QueueReport) = {
     GroupMulti(
       ReportField.Team.fieldName     -> ReportField.Team.underlyingField,
       ReportField.CaseType.fieldName -> ReportField.CaseType.underlyingField
     )(ReportField.Count.fieldName -> SumAll)
   }
 
-  private def queueSortStage(framework: collection.AggregationFramework, report: QueueReport) = {
-    import framework._
+  private def queueSortStage(report: QueueReport) = {
 
     val sortDirection = (field: String) =>
       if (report.sortOrder == SortDirection.ASCENDING) Ascending(field) else Descending(field)
@@ -626,8 +624,7 @@ class CaseRepository @Inject() (appConfig: AppConfig, mongoComponent: MongoCompo
     val countField = "resultCount"
 
     val runCount = collection
-      .aggregateWith[JsObject](allowDiskUse = true) { framework =>
-        import framework._
+      .aggregate()[JsObject](allowDiskUse = true) { framework =>
 
         val first = matchStage(framework, report)
 

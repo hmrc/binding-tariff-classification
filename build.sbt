@@ -61,7 +61,7 @@ lazy val microservice = (project in file("."))
     addTestReportOption(IntegrationTest, "int-test-reports"),
     parallelExecution in IntegrationTest := false
   )
-  .settings(resolvers += Resolver.jcenterRepo)
+  .settings(resolvers ++= Seq(Resolver.jcenterRepo, "HMRC-open-artefacts-maven2" at "https://open.artefacts.tax.service.gov.uk/maven2"))
 
 lazy val allPhases   = "tt->test;test->test;test->compile;compile->compile"
 lazy val allItPhases = "tit->it;it->it;it->compile;compile->compile"
