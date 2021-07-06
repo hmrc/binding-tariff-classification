@@ -27,10 +27,6 @@ import org.mongodb.scala.model.{IndexModel, IndexOptions}
 import org.mongodb.scala.model.Sorts.ascending
 import play.api.libs.json._
 import play.api.libs.json.Json.JsValueWrapper
-import reactivemongo.api.indexes.Index
-import reactivemongo.bson.BSONObjectID
-import reactivemongo.play.json.ImplicitBSONHandlers._
-import reactivemongo.play.json.collection.JSONCollection
 import uk.gov.hmrc.bindingtariffclassification.config.AppConfig
 import uk.gov.hmrc.bindingtariffclassification.crypto.Crypto
 import uk.gov.hmrc.bindingtariffclassification.model.MongoFormatters._
@@ -43,8 +39,8 @@ import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
 import org.mongodb.scala.model.Filters._
 import org.mongodb.scala.model.Projections._
 import org.mongodb.scala.model.Sorts._
-import reactivemongo.core.commands.{Ascending, Descending, GroupMulti, Match, Max, Sort}
-
+import org.mongodb.scala.model.Accumulators._
+import org.mongodb.scala.model.Aggregates._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
@@ -402,7 +398,7 @@ class CaseRepository @Inject() (appConfig: AppConfig, mongoComponent: MongoCompo
 
   private def groupStage(report: SummaryReport) = {
 
-    val countField = Seq(ReportField.Count.fieldName -> SumAll)
+    val countField = Seq(sum(ReportField.Count.fieldName))
 
     val casesField = if (report.includeCases) Seq("cases" -> PushField("$ROOT")) else Seq.empty
 
