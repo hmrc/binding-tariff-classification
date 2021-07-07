@@ -9,7 +9,6 @@ object AppDependencies {
     "uk.gov.hmrc"          %% "crypto"                        % "6.0.0",
     "uk.gov.hmrc"          %% "play-json-union-formatter"     % "1.11.0",
     "uk.gov.hmrc.mongo"    %% "hmrc-mongo-play-27"            % "0.50.0",
-    "uk.gov.hmrc"          %% "mongo-lock"                    % "7.0.0-play-27",
     "org.reactivemongo"    %% "reactivemongo-akkastream"      % "0.18.8",
     "com.typesafe.play"    %% "play-json"                     % "2.9.2",
     "org.typelevel"        %% "cats-core"                     % "2.6.1",

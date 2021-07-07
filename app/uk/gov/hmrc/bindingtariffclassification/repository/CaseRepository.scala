@@ -22,11 +22,10 @@ import java.time.Instant
 import javax.inject.{Inject, Singleton}
 import cats.syntax.all._
 import org.mongodb.scala.MongoCollection
-import org.mongodb.scala.bson.BsonDocument
+import org.mongodb.scala.bson.{BsonArray, BsonDocument, BsonNumber, BsonString}
 import org.mongodb.scala.model.{IndexModel, IndexOptions}
 import org.mongodb.scala.model.Sorts.ascending
 import play.api.libs.json._
-import play.api.libs.json.Json.JsValueWrapper
 import uk.gov.hmrc.bindingtariffclassification.config.AppConfig
 import uk.gov.hmrc.bindingtariffclassification.crypto.Crypto
 import uk.gov.hmrc.bindingtariffclassification.model.MongoFormatters._
@@ -41,6 +40,8 @@ import org.mongodb.scala.model.Projections._
 import org.mongodb.scala.model.Sorts._
 import org.mongodb.scala.model.Accumulators._
 import org.mongodb.scala.model.Aggregates._
+import play.api.Logging
+
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
@@ -112,7 +113,7 @@ class CaseRepository @Inject() (appConfig: AppConfig, mongoComponent: MongoCompo
   mongoComponent = mongoComponent,
   domainFormat   = MongoFormatters.formatCase,
   indexes = caseIndexes)
-  with MongoCrudHelper[Case] {
+  with MongoCrudHelper[Case] with Logging {
 
   override protected val mongoCollection: MongoCollection[Case] = collection
 
@@ -137,69 +138,69 @@ class CaseRepository @Inject() (appConfig: AppConfig, mongoComponent: MongoCompo
 
   def deleteCase(reference: String): Future[Unit] = deleteOne(equal("reference", reference))
 
-  private def greaterThan(json: JsValueWrapper): JsObject =
-    Json.obj("$gte" -> json)
+  private def greaterThan(field: String) =
+    BsonDocument("$gte" -> field)
 
-  private def lessThan(json: JsValueWrapper): JsObject =
-    Json.obj("$lte" -> json)
+  private def lessThan(field: String): BsonDocument =
+    BsonDocument("$lte" -> field)
 
-  private def trunc(json: JsValueWrapper): JsObject =
-    Json.obj("$trunc" -> json)
+  private def trunc(field: BsonDocument): BsonDocument =
+    BsonDocument("$trunc" -> field)
 
-  private def divide(dividend: JsValueWrapper, divisor: JsValueWrapper): JsObject =
-    Json.obj("$divide" -> Json.arr(dividend, divisor))
+  private def divide(dividend: BsonDocument, divisor: Int): BsonDocument =
+    BsonDocument("$divide" -> BsonArray.fromIterable(Seq(dividend, BsonNumber(divisor))))
 
-  private def subtract(minuend: JsValueWrapper, subtrahend: JsValueWrapper): JsObject =
-    Json.obj("$subtract" -> Json.arr(minuend, subtrahend))
+  private def subtract(minuend: String, subtrahend: String): BsonDocument =
+    BsonDocument("$subtract" -> BsonArray.fromIterable(Seq(BsonString(minuend), BsonString(subtrahend))))
 
-  private def substrBytes(operand: JsValueWrapper, offset: JsValueWrapper, length: JsValueWrapper): JsObject =
-    Json.obj("$substrBytes" -> Json.arr(operand, offset, length))
+  private def substrBytes(operand: String, offset: String, length: String): BsonDocument =
+    BsonDocument("$substrBytes" -> BsonArray.fromIterable(Seq(BsonString(operand), BsonString(offset), BsonString(length))))
 
-  private def and(operands: JsValueWrapper*): JsObject =
-    Json.obj("$and" -> Json.arr(operands: _*))
+  private def and(operands: String*): BsonDocument =
+    BsonDocument("$and" -> BsonArray.fromIterable(operands.map(BsonString(_))))
 
-  private def eq(lExpr: JsValueWrapper, rExpr: JsValueWrapper): JsObject =
-    Json.obj("$eq" -> Json.arr(lExpr, rExpr))
+  private def eq(lExpr: String, rExpr: String): BsonDocument =
+    BsonDocument("$eq" -> BsonArray.fromIterable(Seq(BsonString(lExpr), BsonString(rExpr))))
 
-  private def in(expr: JsValueWrapper, arrayExpr: JsValueWrapper): JsObject =
-    Json.obj("$in" -> Json.arr(expr, arrayExpr))
+  private def in(expr: String, arrayExpr: String): BsonDocument =
+    BsonDocument("$in" -> BsonArray.fromIterable(Seq(BsonString(expr), BsonString(arrayExpr))))
 
-  private def in(arrayExpr: JsValueWrapper): JsObject =
-    Json.obj("$in" -> arrayExpr)
+  private def in(arrayExpr: String): BsonDocument =
+    BsonDocument("$in" -> arrayExpr)
 
-  private def not(operand: JsValueWrapper): JsObject =
-    Json.obj("$not" -> operand)
+  private def not(operand: String): BsonDocument =
+    BsonDocument("$not" -> operand)
 
-  private def elemMatch(conditions: JsValueWrapper): JsObject =
-    Json.obj("$elemMatch" -> conditions)
+  private def elemMatch(conditions: String): BsonDocument =
+    BsonDocument("$elemMatch" -> conditions)
 
-  private def notEmpty(operand: JsValueWrapper): JsObject =
-    Json.obj("$gt" -> Json.arr(Json.obj("$size" -> operand), 0))
+  private def notEmpty(operand: String): BsonDocument =
+    BsonDocument("$gt" -> BsonArray.fromIterable(Seq(BsonDocument("$size" -> operand), BsonNumber(0))))
 
-  private def filter(input: JsValueWrapper, cond: JsValueWrapper): JsObject =
-    Json.obj("$filter" -> Json.obj("input" -> input, "cond" -> cond))
+  private def filter(input: String, cond: String): BsonDocument =
+    BsonDocument("$filter" -> BsonDocument("input" -> input, "cond" -> cond))
 
-  private def daysSince(operand: JsValueWrapper): JsValue =
+  private def daysSince(operand: String): BsonDocument =
     trunc(
       divide(
-        subtract(Json.toJson(appConfig.clock.instant()), operand),
+        subtract(appConfig.clock.instant().toString, operand),
         86400000
       )
     )
 
-  private def notNull(operandExpr: JsValueWrapper): JsValue =
-    Json.obj("$gt" -> Json.arr(operandExpr, JsNull))
+  private def notNull(operandExpr: String): BsonDocument =
+    BsonDocument("$gt" -> BsonArray.fromIterable(Seq(operandExpr, JsNull)))
 
-  private def cond(ifExpr: JsValueWrapper, thenExpr: JsValueWrapper, elseExpr: JsValueWrapper): JsValue =
-    Json.obj(
-      "$cond" -> Json.obj(
+  private def cond(ifExpr: String, thenExpr: String, elseExpr: String): BsonDocument =
+    BsonDocument(
+      "$cond" -> BsonDocument(
         "if"   -> ifExpr,
         "then" -> thenExpr,
         "else" -> elseExpr
       )
     )
 
-  private def pseudoStatus(): JsValue = {
+  private def pseudoStatus(): BsonDocument = {
     val time        = Json.toJson(appConfig.clock.instant())
     val statusField = s"$$${ReportField.Status.underlyingField}"
 
@@ -228,7 +229,7 @@ class CaseRepository @Inject() (appConfig: AppConfig, mongoComponent: MongoCompo
     val isExpired = and(
       eq(s"$$${ReportField.Status.underlyingField}", CaseStatus.COMPLETED.toString),
       notNull(s"$$${ReportField.DateExpired.underlyingField}"),
-      greaterThan(Json.arr(time, s"$$${ReportField.DateExpired.underlyingField}"))
+      greaterThan(BsonArray.fromIterable(Seq(time, s"$$${ReportField.DateExpired.underlyingField}")))
     )
 
     cond(
@@ -246,9 +247,9 @@ class CaseRepository @Inject() (appConfig: AppConfig, mongoComponent: MongoCompo
     )
   }
 
-  private def coalesce(fieldChoices: NonEmptySeq[String]): JsValue =
-    fieldChoices.init.foldRight(JsString("$" + fieldChoices.last): JsValue) {
-      case (field, expr) => Json.obj("$ifNull" -> Json.arr("$" + field, expr))
+  private def coalesce(fieldChoices: NonEmptySeq[String]): BsonDocument =
+    fieldChoices.init.foldRight(JsString("$" + fieldChoices.last): BsonDocument) {
+      case (field, expr) => BsonDocument("$ifNull" -> BsonArray.fromIterable(Seq("$" + field, expr)))
     }
 
   private def matchStage(report: Report) = {
@@ -257,104 +258,104 @@ class CaseRepository @Inject() (appConfig: AppConfig, mongoComponent: MongoCompo
 
     val caseTypeFilter =
       if (report.caseTypes.isEmpty)
-        Json.obj()
+        BsonDocument()
       else
-        Json.obj(ReportField.CaseType.underlyingField -> Json.obj("$in" -> report.caseTypes.map(Json.toJson(_))))
+        BsonDocument(ReportField.CaseType.underlyingField -> BsonDocument("$in" -> BsonArray.fromIterable(report.caseTypes.map(i => BsonString(Json.toJson(i).toString())))))
 
     val statusFilter =
       if (report.statuses.isEmpty)
-        Json.obj()
+        BsonDocument()
       else {
         val (concreteStatuses, pseudoStatuses) = report.statuses.partition(p => CaseStatus.fromPseudoStatus(p).nonEmpty)
 
-        val concreteFilter = Json.arr(
-          Json.obj(ReportField.Status.underlyingField -> Json.obj("$in" -> concreteStatuses.map(Json.toJson(_))))
-        )
+        val concreteFilter = BsonArray.fromIterable(Seq(
+          BsonDocument(ReportField.Status.underlyingField -> BsonDocument("$in" -> BsonArray.fromIterable(concreteStatuses.map(i => BsonString(Json.toJson(i).toString())))))
+        ))
 
-        val pseudoFilters = Json.arr(
+        val pseudoFilters = BsonArray.fromIterable(
           pseudoStatuses.collect {
             case PseudoCaseStatus.EXPIRED =>
-              Json.obj(
+              BsonDocument(
                 ReportField.Status.underlyingField      -> Json.toJson(PseudoCaseStatus.COMPLETED),
                 ReportField.DateExpired.underlyingField -> lessThan(appConfig.clock.instant()),
-                "decision.appeal"                       -> Json.obj("$size" -> 0)
-              ): JsValueWrapper
+                "decision.appeal"                       -> BsonDocument("$size" -> 0)
+              ): String
             case PseudoCaseStatus.UNDER_APPEAL =>
-              Json.obj(
+              BsonDocument(
                 ReportField.Status.underlyingField -> Json.toJson(PseudoCaseStatus.COMPLETED),
                 "decision.appeal" -> elemMatch(
-                  Json.obj("type" -> in(AppealType.appealTypes.map(Json.toJson(_))))
+                  BsonDocument("type" -> in(AppealType.appealTypes.map(Json.toJson(_))))
                 )
-              ): JsValueWrapper
+              ): String
             case PseudoCaseStatus.UNDER_REVIEW =>
-              Json.obj(ReportField.Status.underlyingField -> Json.toJson(PseudoCaseStatus.COMPLETED)) ++ and(
-                Json.obj(
+              BsonDocument(ReportField.Status.underlyingField -> Json.toJson(PseudoCaseStatus.COMPLETED)) ++ and(
+                BsonDocument(
                   "decision.appeal" -> not(
                     elemMatch(
-                      Json.obj("type" -> in(AppealType.appealTypes.map(Json.toJson(_))))
+                      BsonDocument("type" -> in(AppealType.appealTypes.map(Json.toJson(_))))
                     )
                   )
                 ),
-                Json.obj(
+                BsonDocument(
                   "decision.appeal" -> elemMatch(
-                    Json.obj(
+                    BsonDocument(
                       "type" -> in(AppealType.reviewTypes.map(Json.toJson(_)))
                     )
                   )
                 )
-              ): JsValueWrapper
+              ): String
           }.toSeq: _*
         )
 
-        Json.obj("$or" -> (concreteFilter ++ pseudoFilters))
+        BsonDocument("$or" -> (concreteFilter ++ pseudoFilters))
       }
 
     val liabilityStatusesFilter =
       if (report.liabilityStatuses.isEmpty)
-        Json.obj()
+        BsonDocument()
       else {
-        Json.obj(
-          ReportField.LiabilityStatus.underlyingField -> Json.obj("$in" -> report.liabilityStatuses.map(Json.toJson(_)))
+        BsonDocument(
+          ReportField.LiabilityStatus.underlyingField -> BsonDocument("$in" -> report.liabilityStatuses.map(Json.toJson(_)))
         )
       }
 
     val teamFilter =
       if (report.teams.isEmpty)
-        Json.obj()
+        BsonDocument()
       else if (report.teams.exists(_ == GatewayTeamId))
-        Json.obj(
+        BsonDocument(
           ReportField.Team.underlyingField -> Json
             .obj("$in" -> JsArray(JsNull :: report.teams.toList.filterNot(_ == GatewayTeamId).map(Json.toJson(_))))
         )
       else
-        Json.obj(ReportField.Team.underlyingField -> Json.obj("$in" -> report.teams))
+        BsonDocument(ReportField.Team.underlyingField -> BsonDocument("$in" -> report.teams))
 
     val minDateFilter =
       if (report.dateRange.min == Instant.MIN)
-        Json.obj()
+        BsonDocument()
       else
-        Json.obj("$gte" -> Json.toJson(report.dateRange.min))
+        BsonDocument("$gte" -> Json.toJson(report.dateRange.min))
 
     val maxDateFilter =
       if (report.dateRange.max == Instant.MAX)
-        Json.obj()
+        BsonDocument()
       else
-        Json.obj("$lte" -> Json.toJson(report.dateRange.max))
+        BsonDocument("$lte" -> Json.toJson(report.dateRange.max))
 
     val dateFilter =
       if (report.dateRange == InstantRange.allTime)
-        Json.obj()
+        BsonDocument()
       else
-        Json.obj(ReportField.DateCreated.underlyingField -> (minDateFilter ++ maxDateFilter))
+        BsonDocument(ReportField.DateCreated.underlyingField -> (minDateFilter ++ maxDateFilter))
 
     val assigneeFilter = report match {
       case _: CaseReport =>
-        Json.obj()
+        BsonDocument()
       case _: SummaryReport =>
-        Json.obj()
+        BsonDocument()
       case queue: QueueReport =>
-        queue.assignee.map(assignee => Json.obj(ReportField.User.underlyingField -> assignee)).getOrElse {
-          Json.obj(ReportField.User.underlyingField -> JsNull)
+        queue.assignee.map(assignee => BsonDocument(ReportField.User.underlyingField -> assignee)).getOrElse {
+          BsonDocument(ReportField.User.underlyingField -> JsNull)
         }
     }
 
@@ -382,53 +383,56 @@ class CaseRepository @Inject() (appConfig: AppConfig, mongoComponent: MongoCompo
                          sortBy: ReportField[_],
                          sortOrder: SortDirection.Value
                        ) = {
-
     // If not sorting by reference, add it as a secondary sort field to ensure stable sorting
     (sortOrder, sortBy) match {
       case (SortDirection.ASCENDING, ReportField.Reference) =>
-        Sort(Seq(Ascending(sortBy.underlyingField)))
+        BsonDocument("$sort" -> BsonDocument(sortBy.underlyingField -> 1))
       case (SortDirection.DESCENDING, ReportField.Reference) =>
-        Sort(Seq(Descending(sortBy.underlyingField)))
+        BsonDocument("$sort" -> BsonDocument(sortBy.underlyingField -> -11))
       case (SortDirection.ASCENDING, _) =>
-        Sort(Seq(Ascending(sortBy.underlyingField), Ascending(ReportField.Reference.underlyingField)))
+        BsonDocument("$sort" -> BsonArray.fromIterable(Seq(
+          BsonDocument(sortBy.underlyingField -> 1),
+          BsonDocument(ReportField.Reference.underlyingField -> 1))))
       case (SortDirection.DESCENDING, _) =>
-        Sort(Seq(Descending(sortBy.underlyingField), Descending(ReportField.Reference.underlyingField)))
+        BsonDocument("$sort" -> BsonArray.fromIterable(Seq(
+          BsonDocument(sortBy.underlyingField -> -1),
+          BsonDocument(ReportField.Reference.underlyingField -> -1))))
     }
   }
 
   private def groupStage(report: SummaryReport) = {
 
-    val countField = Seq(sum(ReportField.Count.fieldName))
+    val countField = Seq(BsonDocument("$count" -> ReportField.Count.fieldName))
 
-    val casesField = if (report.includeCases) Seq("cases" -> PushField("$ROOT")) else Seq.empty
+    val casesField = if (report.includeCases) Seq(BsonDocument("$push" -> BsonDocument("cases" -> "$ROOT"))) else Seq.empty
 
     val maxFields =
       report.maxFields.toList.map {
         case DaysSinceField(fieldName, underlyingField) =>
-          fieldName -> Max(daysSince(s"$$$underlyingField"))
+          BsonDocument(fieldName -> BsonDocument("$max" -> daysSince(s"$$$underlyingField")))
         case field =>
           field.fieldName -> MaxField(field.underlyingField)
       }
 
     val groupFields = countField ++ maxFields ++ casesField
 
-    val groupBy = Json.obj(report.groupBy.map {
+    val groupBy = BsonDocument(report.groupBy.map {
       case ChapterField(fieldName, underlyingField) =>
-        fieldName -> (substrBytes(s"$$$underlyingField", 0, 2): JsValueWrapper)
+        fieldName -> (substrBytes(s"$$$underlyingField", 0, 2): String)
       case DaysSinceField(fieldName, underlyingField) =>
-        fieldName -> (daysSince(s"$$$underlyingField"): JsValueWrapper)
+        fieldName -> (daysSince(s"$$$underlyingField"): String)
       case StatusField(fieldName, _) =>
-        fieldName -> (pseudoStatus(): JsValueWrapper)
+        fieldName -> (pseudoStatus(): String)
       case CoalesceField(fieldName, fieldChoices) =>
-        fieldName -> (coalesce(fieldChoices): JsValueWrapper)
+        fieldName -> (coalesce(fieldChoices): String)
       case field =>
-        field.fieldName -> (JsString(s"$$${field.underlyingField}"): JsValueWrapper)
+        field.fieldName -> (JsString(s"$$${field.underlyingField}"): String)
     }.toSeq: _*)
 
     Group(groupBy)(groupFields: _*)
   }
 
-  private def getFieldValue(field: ReportField[_], json: Option[JsValue]): ReportResultField[_] = field match {
+  private def getFieldValue(field: ReportField[_], json: Option[BsonDocument]): ReportResultField[_] = field match {
     case field @ CaseTypeField(_, _)        => field.withValue(json.flatMap(_.asOpt[ApplicationType.Value]))
     case field @ ChapterField(_, _)         => field.withValue(json.flatMap(_.asOpt[String].filterNot(_.isEmpty)))
     case field @ DateField(_, _)            => field.withValue(json.flatMap(_.asOpt[Instant]))
@@ -440,7 +444,7 @@ class CaseRepository @Inject() (appConfig: AppConfig, mongoComponent: MongoCompo
     case field @ CoalesceField(_, _)        => field.withValue(json.flatMap(_.asOpt[String].filterNot(_.isEmpty)))
   }
 
-  private def getNumberFieldValue(field: ReportField[Long], json: Option[JsValue]): NumberResultField = field match {
+  private def getNumberFieldValue(field: ReportField[Long], json: Option[BsonDocument]): NumberResultField = field match {
     case field @ DaysSinceField(_, _) => field.withValue(json.flatMap(_.asOpt[Long]))
     case field @ NumberField(_, _)    => field.withValue(json.flatMap(_.asOpt[Long]))
   }
@@ -451,7 +455,7 @@ class CaseRepository @Inject() (appConfig: AppConfig, mongoComponent: MongoCompo
     val countField = "resultCount"
 
     val runCount = collection
-      .aggregateWith[JsObject](allowDiskUse = true) { framework =>
+      .aggregateWith[BsonDocument](allowDiskUse = true) { framework =>
         import framework._
 
         val first = matchStage(framework, report)
@@ -467,7 +471,7 @@ class CaseRepository @Inject() (appConfig: AppConfig, mongoComponent: MongoCompo
       .headOption
 
     val runAggregation = collection
-      .aggregateWith[JsObject](allowDiskUse = true) { framework =>
+      .aggregateWith[BsonDocument](allowDiskUse = true) { framework =>
         import framework._
 
         val first = matchStage(framework, report)
@@ -475,8 +479,8 @@ class CaseRepository @Inject() (appConfig: AppConfig, mongoComponent: MongoCompo
         val rest = List(
           sortStage(framework, ReportField.Reference, SortDirection.ASCENDING),
           groupStage(framework, report),
-          AddFields(Json.obj("groupKey" -> "$_id")),
-          Project(Json.obj("_id"        -> 0)),
+          AddFields(BsonDocument("groupKey" -> "$_id")),
+          Project(BsonDocument("_id"        -> 0)),
           summarySortStage(framework, report),
           Skip((pagination.page - 1) * pagination.pageSize),
           Limit(pagination.pageSize)
@@ -523,7 +527,7 @@ class CaseRepository @Inject() (appConfig: AppConfig, mongoComponent: MongoCompo
     val countField = "resultCount"
 
     val runCount = collection
-      .aggregateWith[JsObject](allowDiskUse = true) { framework =>
+      .aggregateWith[BsonDocument](allowDiskUse = true) { framework =>
         import framework._
 
         val first = matchStage(framework, report)
@@ -536,21 +540,21 @@ class CaseRepository @Inject() (appConfig: AppConfig, mongoComponent: MongoCompo
       .headOption
 
     val runAggregation = collection
-      .aggregateWith[JsObject](allowDiskUse = true) { framework =>
+      .aggregateWith[BsonDocument](allowDiskUse = true) { framework =>
         import framework._
 
-        val fields = Json.obj(
+        val fields = BsonDocument(
           report.fields.toList.map {
             case ChapterField(fieldName, underlyingField) =>
-              fieldName -> (substrBytes(s"$$$underlyingField", 0, 2): JsValueWrapper)
+              fieldName -> (substrBytes(s"$$$underlyingField", 0, 2): String)
             case DaysSinceField(fieldName, underlyingField) =>
-              fieldName -> (daysSince(s"$$$underlyingField"): JsValueWrapper)
+              fieldName -> (daysSince(s"$$$underlyingField"): String)
             case StatusField(fieldName, _) =>
-              fieldName -> (pseudoStatus(): JsValueWrapper)
+              fieldName -> (pseudoStatus(): String)
             case CoalesceField(fieldName, fieldChoices) =>
-              fieldName -> (coalesce(fieldChoices): JsValueWrapper)
+              fieldName -> (coalesce(fieldChoices): String)
             case field =>
-              field.fieldName -> (s"$$${field.underlyingField}": JsValueWrapper)
+              field.fieldName -> (s"$$${field.underlyingField}": String)
           }: _*
         )
 
@@ -559,7 +563,7 @@ class CaseRepository @Inject() (appConfig: AppConfig, mongoComponent: MongoCompo
         val rest = List(
           sortStage(framework, report.sortBy, report.sortOrder),
           AddFields(fields),
-          Project(Json.obj("_id" -> JsNumber(0))),
+          Project(BsonDocument("_id" -> JsNumber(0))),
           Skip((pagination.page - 1) * pagination.pageSize),
           Limit(pagination.pageSize)
         )
@@ -583,16 +587,26 @@ class CaseRepository @Inject() (appConfig: AppConfig, mongoComponent: MongoCompo
   }
 
   private def queueGroupStage(report: QueueReport) = {
-    GroupMulti(
-      ReportField.Team.fieldName     -> ReportField.Team.underlyingField,
-      ReportField.CaseType.fieldName -> ReportField.CaseType.underlyingField
-    )(ReportField.Count.fieldName -> SumAll)
+    BsonDocument(
+      "$aggregate" -> BsonDocument(
+        "$group" ->
+          BsonArray.fromIterable(Seq(
+            BsonDocument(ReportField.Team.fieldName -> ReportField.Team.underlyingField),
+            BsonDocument(ReportField.CaseType.fieldName -> ReportField.CaseType.underlyingField)
+        )),
+        "$sum" -> BsonString(ReportField.Count.fieldName)
+      )
+    )
+//    GroupMulti(
+//      BsonDocument(ReportField.Team.fieldName -> ReportField.Team.underlyingField),
+//      BsonDocument(ReportField.CaseType.fieldName -> ReportField.CaseType.underlyingField)
+//    )(BsonDocument("$sum" -> BsonString(ReportField.Count.fieldName)))
   }
 
   private def queueSortStage(report: QueueReport) = {
 
     val sortDirection = (field: String) =>
-      if (report.sortOrder == SortDirection.ASCENDING) Ascending(field) else Descending(field)
+      BsonDocument("$sort" -> BsonDocument(field -> (if (report.sortOrder == SortDirection.ASCENDING) 1 else -1)))
 
     def teamThenCaseType =
       Seq(sortDirection(s"_id.${ReportField.Team.fieldName}"), sortDirection(s"_id.${ReportField.CaseType.fieldName}"))
@@ -605,9 +619,9 @@ class CaseRepository @Inject() (appConfig: AppConfig, mongoComponent: MongoCompo
 
     // Ideally we want to sort by both parts of the grouping key to improve sort stability
     report.sortBy match {
-      case ReportField.Count    => Sort(countThenTeamThenCaseType: _*)
-      case ReportField.CaseType => Sort(caseTypeThenTeam: _*)
-      case ReportField.Team     => Sort(teamThenCaseType: _*)
+      case ReportField.Count    => countThenTeamThenCaseType
+      case ReportField.CaseType => caseTypeThenTeam
+      case ReportField.Team     => teamThenCaseType
     }
   }
 
@@ -620,7 +634,7 @@ class CaseRepository @Inject() (appConfig: AppConfig, mongoComponent: MongoCompo
     val countField = "resultCount"
 
     val runCount = collection
-      .aggregate()[JsObject](allowDiskUse = true) { framework =>
+      .aggregate()[BsonDocument](allowDiskUse = true) { framework =>
 
         val first = matchStage(framework, report)
 
@@ -635,7 +649,7 @@ class CaseRepository @Inject() (appConfig: AppConfig, mongoComponent: MongoCompo
       .headOption
 
     val runAggregation = collection
-      .aggregateWith[JsObject](allowDiskUse = true) { framework =>
+      .aggregateWith[BsonDocument](allowDiskUse = true) { framework =>
         import framework._
 
         val first = matchStage(framework, report)
@@ -655,8 +669,8 @@ class CaseRepository @Inject() (appConfig: AppConfig, mongoComponent: MongoCompo
           rows ++ Seq(
             QueueResultGroup(
               count    = json(ReportField.Count.fieldName).as[Int],
-              team     = json("_id").as[JsObject].value.get(ReportField.Team.fieldName).flatMap(_.asOpt[String]),
-              caseType = json("_id").as[JsObject].apply(ReportField.CaseType.fieldName).as[ApplicationType.Value]
+              team     = json("_id").as[BsonDocument].value.get(ReportField.Team.fieldName).flatMap(_.asOpt[String]),
+              caseType = json("_id").as[BsonDocument].apply(ReportField.CaseType.fieldName).as[ApplicationType.Value]
             )
           )
       }
