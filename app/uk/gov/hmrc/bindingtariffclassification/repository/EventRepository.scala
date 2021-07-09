@@ -18,15 +18,13 @@ package uk.gov.hmrc.bindingtariffclassification.repository
 
 import org.mongodb.scala.MongoCollection
 import org.mongodb.scala.bson.{BsonArray, BsonDateTime, BsonDocument, BsonString}
+import org.mongodb.scala.model.Sorts._
 import org.mongodb.scala.model.{IndexModel, IndexOptions}
 import play.api.libs.json._
 import uk.gov.hmrc.bindingtariffclassification.model.MongoFormatters._
 import uk.gov.hmrc.bindingtariffclassification.model._
 import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
-import org.mongodb.scala.model.Filters._
-import org.mongodb.scala.model.Projections._
-import org.mongodb.scala.model.Sorts._
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext.Implicits.global
