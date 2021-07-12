@@ -419,26 +419,27 @@ class CaseRepository @Inject() (appConfig: AppConfig, mongoComponent: MongoCompo
     val maxFields =
       report.maxFields.toList.map {
         case DaysSinceField(fieldName, underlyingField) =>
-          BsonDocument(fieldName -> BsonDocument("$max" -> daysSince(s"$$$underlyingField")))
+          BsonDocument("$max" -> BsonDocument(fieldName -> daysSince(s"$$$underlyingField")))
         case field => max(field.fieldName, BsonString(field.underlyingField))
+          BsonDocument("$max" -> BsonDocument(field.fieldName -> daysSince(s"$$${field.underlyingField}")))
       }
 
     val groupFields = countField ++ maxFields ++ casesField
 
-    val groupBy = BsonDocument(report.groupBy.map {
+    val groupBy = BsonArray.fromIterable(report.groupBy.map {
       case ChapterField(fieldName, underlyingField) =>
-        fieldName -> (substrBytes(s"$$$underlyingField", 0, 2))
+        BsonDocument(fieldName -> (substrBytes(s"$$$underlyingField", 0, 2)))
       case DaysSinceField(fieldName, underlyingField) =>
-        fieldName -> (daysSince(s"$$$underlyingField"))
+        BsonDocument(fieldName -> (daysSince(s"$$$underlyingField")))
       case StatusField(fieldName, _) =>
-        fieldName -> (pseudoStatus())
+        BsonDocument(fieldName -> (pseudoStatus()))
       case CoalesceField(fieldName, fieldChoices) =>
-        fieldName -> (coalesce(fieldChoices))
+        BsonDocument(fieldName -> (coalesce(fieldChoices)))
       case field =>
-        field.fieldName -> (JsString(s"$$${field.underlyingField}"))
-    }.toSeq)
+        BsonDocument(field.fieldName -> s"$$${field.underlyingField}")
+      }.toSeq)
 
-    group(groupBy)(groupFields: _*)
+    group(groupBy, groupFields)
   }
 
   private def getFieldValue(field: ReportField[_], json: Option[BsonDocument]): ReportResultField[_] = field match {
@@ -467,11 +468,11 @@ class CaseRepository @Inject() (appConfig: AppConfig, mongoComponent: MongoCompo
       .aggregateWith[BsonDocument](allowDiskUse = true) { framework =>
 
 
-        val first = matchStage(framework, report)
+        val first = matchStage(report)
 
         val rest = List(
-          groupStage(framework, report),
-          Count(countField)
+          groupStage(report),
+          count(countField)
         )
 
         (first, rest)
@@ -483,16 +484,16 @@ class CaseRepository @Inject() (appConfig: AppConfig, mongoComponent: MongoCompo
       .aggregateWith[BsonDocument](allowDiskUse = true) { framework =>
 
 
-        val first = matchStage(framework, report)
+        val first = matchStage(report)
 
         val rest = List(
-          sortStage(framework, ReportField.Reference, SortDirection.ASCENDING),
-          groupStage(framework, report),
-          AddFields(BsonDocument("groupKey" -> "$_id")),
-          Project(BsonDocument("_id"        -> 0)),
-          summarySortStage(framework, report),
-          Skip((pagination.page - 1) * pagination.pageSize),
-          Limit(pagination.pageSize)
+          sortStage(ReportField.Reference, SortDirection.ASCENDING),
+          groupStage(report),
+          BsonDocument("$addFields" -> BsonDocument("groupKey" -> "$_id")),
+          project(BsonDocument("_id" -> 0)),
+          summarySortStage(report),
+          skip((pagination.page - 1) * pagination.pageSize),
+          limit(pagination.pageSize)
         )
 
         (first, rest)
@@ -535,45 +536,30 @@ class CaseRepository @Inject() (appConfig: AppConfig, mongoComponent: MongoCompo
 
     val countField = "resultCount"
 
-    val runCount = collection
-      .aggregateWith[BsonDocument](allowDiskUse = true) { framework =>
+    val runCount = collection.aggregate(Seq(matchStage(report), count(countField)))
 
-
-        val first = matchStage(framework, report)
-
-        val rest = List(Count(countField))
-
-        (first, rest)
-
-      }
-      .headOption
-
-    val runAggregation = collection
-
-        val fields = report.fields.toList.map {
+        val fields = BsonDocument("$addFields" -> BsonArray.fromIterable(report.fields.toList.map {
             case ChapterField(fieldName, underlyingField) =>
-              Field(fieldName, (substrBytes(s"$$$underlyingField", 0, 2)))
+              BsonDocument(fieldName -> (substrBytes(s"$$$underlyingField", 0, 2)))
             case DaysSinceField(fieldName, underlyingField) =>
-              Field(fieldName, (daysSince(s"$$$underlyingField")))
+              BsonDocument(fieldName -> (daysSince(s"$$$underlyingField")))
             case StatusField(fieldName, _) =>
-              Field(fieldName, (pseudoStatus()))
+              BsonDocument(fieldName -> (pseudoStatus()))
             case CoalesceField(fieldName, fieldChoices) =>
-              Field(fieldName, (coalesce(fieldChoices)))
+              BsonDocument(fieldName -> (coalesce(fieldChoices)))
             case field =>
-              Field(field.fieldName, (s"$$${field.underlyingField}"))
-          }
-
-    val f = Aggregates.addFields()
+              BsonDocument(field.fieldName -> (s"$$${field.underlyingField}"))
+          }))
 
         val rest = List(
           sortStage(report.sortBy, report.sortOrder),
-          f,
+          fields,
           project(BsonDocument("_id" -> 0)),
           skip((pagination.page - 1) * pagination.pageSize),
           limit(pagination.pageSize)
         )
 
-        (first, rest)
+        (first(countField, runCount), rest)
 
       .fold[Seq[Map[String, ReportResultField[_]]]](Seq.empty, pagination.pageSize) {
         case (rows, json) =>
