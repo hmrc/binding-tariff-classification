@@ -24,7 +24,7 @@ import org.mongodb.scala.model.Accumulators._
 import org.mongodb.scala.model.Aggregates._
 import org.mongodb.scala.model.Filters._
 import org.mongodb.scala.model.Sorts.{ascending, _}
-import org.mongodb.scala.model.{IndexModel, IndexOptions}
+import org.mongodb.scala.model.{Aggregates, Field, IndexModel, IndexOptions}
 import play.api.Logging
 import play.api.libs.json._
 import uk.gov.hmrc.bindingtariffclassification.config.AppConfig
@@ -38,6 +38,7 @@ import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
 
 import java.time.Instant
+import java.util
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -549,26 +550,25 @@ class CaseRepository @Inject() (appConfig: AppConfig, mongoComponent: MongoCompo
 
     val runAggregation = collection
 
-        val fields =
-          report.fields.toList.map {
+        val fields = report.fields.toList.map {
             case ChapterField(fieldName, underlyingField) =>
-              BsonDocument(fieldName -> (substrBytes(s"$$$underlyingField", 0, 2)))
+              Field(fieldName, (substrBytes(s"$$$underlyingField", 0, 2)))
             case DaysSinceField(fieldName, underlyingField) =>
-              BsonDocument(fieldName -> (daysSince(s"$$$underlyingField")))
+              Field(fieldName, (daysSince(s"$$$underlyingField")))
             case StatusField(fieldName, _) =>
-              BsonDocument(fieldName -> (pseudoStatus()))
+              Field(fieldName, (pseudoStatus()))
             case CoalesceField(fieldName, fieldChoices) =>
-              BsonDocument(fieldName -> (coalesce(fieldChoices)))
+              Field(fieldName, (coalesce(fieldChoices)))
             case field =>
-              BsonDocument(field.fieldName -> (s"$$${field.underlyingField}"))
+              Field(field.fieldName, (s"$$${field.underlyingField}"))
           }
 
-        val first = matchStage(report)
+    val f = Aggregates.addFields()
 
         val rest = List(
           sortStage(report.sortBy, report.sortOrder),
-          addFields(fields),
-          project(BsonDocument("_id" -> BsonNumber(0))),
+          f,
+          project(BsonDocument("_id" -> 0)),
           skip((pagination.page - 1) * pagination.pageSize),
           limit(pagination.pageSize)
         )
@@ -656,13 +656,13 @@ class CaseRepository @Inject() (appConfig: AppConfig, mongoComponent: MongoCompo
       .aggregateWith[BsonDocument](allowDiskUse = true) { framework =>
 
 
-        val first = matchStage(framework, report)
+        val first = matchStage(report)
 
         val rest = List(
-          queueGroupStage(framework, report),
-          queueSortStage(framework, report),
-          Skip((pagination.page - 1) * pagination.pageSize),
-          Limit(pagination.pageSize)
+          queueGroupStage(report),
+          queueSortStage(report),
+          skip((pagination.page - 1) * pagination.pageSize),
+          limit(pagination.pageSize)
         )
 
         (first, rest)
