@@ -44,11 +44,38 @@ class AuthActionSpec extends BaseSpec with BeforeAndAfterEach {
     val block: BtaRequest[AnyContent] => Future[Result] = { _ => Future.successful(Ok)}
     val atarEnrolment = Enrolments(Set(Enrolment("HMRC-ATAR-ORG", Seq(EnrolmentIdentifier("EORINumber", "GB12345678")), "state")))
     val atarEnrolmentNoEori = Enrolments(Set(Enrolment("HMRC-ATAR-ORG", Seq.empty, "state")))
+    val atarEnrolmentInvalidEori = Enrolments(Set(Enrolment("HMRC-ATAR-ORG", Seq(EnrolmentIdentifier("SomethingElse", "GB12345678")), "state")))
     val invalidEnrolment = Enrolments(Set(Enrolment("HMRC-ATAR-BORG", Seq.empty, "state")))
     val noEnrolments = Enrolments(Set.empty)
 
     "return 200 given a valid enrolment and identifier" in {
       when(authConnector.authorise(any[Predicate], ArgumentMatchers.eq(Retrievals.authorisedEnrolments))(any[HeaderCarrier], any[ExecutionContext]))
+        .thenReturn(Future.successful(atarEnrolment))
+
+      val fakeRequest = FakeRequest().withHeaders(("Authorization", "Bearer Token"))
+
+      whenReady(action.invokeBlock(fakeRequest, block)) { res =>
+        res.header.status shouldBe OK
+      }
+    }
+
+    "return 200 given an invalid enrolment for AuthorisedEnrolments, but a valid enrolment within AllEnrolments" in {
+      when(authConnector.authorise(any[Predicate], ArgumentMatchers.eq(Retrievals.authorisedEnrolments))(any[HeaderCarrier], any[ExecutionContext]))
+        .thenReturn(Future.successful(atarEnrolmentNoEori))
+      when(authConnector.authorise(any[Predicate], ArgumentMatchers.eq(Retrievals.allEnrolments))(any[HeaderCarrier], any[ExecutionContext]))
+        .thenReturn(Future.successful(atarEnrolment))
+
+      val fakeRequest = FakeRequest().withHeaders(("Authorization", "Bearer Token"))
+
+      whenReady(action.invokeBlock(fakeRequest, block)) { res =>
+        res.header.status shouldBe OK
+      }
+    }
+
+    "return 200 given an invalid eori for AuthorisedEnrolments, but a valid eori within AllEnrolments" in {
+      when(authConnector.authorise(any[Predicate], ArgumentMatchers.eq(Retrievals.authorisedEnrolments))(any[HeaderCarrier], any[ExecutionContext]))
+        .thenReturn(Future.successful(atarEnrolmentInvalidEori))
+      when(authConnector.authorise(any[Predicate], ArgumentMatchers.eq(Retrievals.allEnrolments))(any[HeaderCarrier], any[ExecutionContext]))
         .thenReturn(Future.successful(atarEnrolment))
 
       val fakeRequest = FakeRequest().withHeaders(("Authorization", "Bearer Token"))
@@ -69,6 +96,21 @@ class AuthActionSpec extends BaseSpec with BeforeAndAfterEach {
     "return 403 given a valid enrolment but no identifier" in {
       when(authConnector.authorise(any[Predicate], ArgumentMatchers.eq(Retrievals.authorisedEnrolments))(any[HeaderCarrier], any[ExecutionContext]))
         .thenReturn(Future.successful(atarEnrolmentNoEori))
+      when(authConnector.authorise(any[Predicate], ArgumentMatchers.eq(Retrievals.allEnrolments))(any[HeaderCarrier], any[ExecutionContext]))
+        .thenReturn(Future.successful(atarEnrolmentNoEori))
+
+      val fakeRequest = FakeRequest().withHeaders(("Authorization", "Bearer Token"))
+
+      whenReady(action.invokeBlock(fakeRequest, block)) { res =>
+        res.header.status shouldBe FORBIDDEN
+      }
+    }
+
+    "return 403 given an invalid eori" in {
+      when(authConnector.authorise(any[Predicate], ArgumentMatchers.eq(Retrievals.authorisedEnrolments))(any[HeaderCarrier], any[ExecutionContext]))
+        .thenReturn(Future.successful(atarEnrolmentInvalidEori))
+      when(authConnector.authorise(any[Predicate], ArgumentMatchers.eq(Retrievals.allEnrolments))(any[HeaderCarrier], any[ExecutionContext]))
+        .thenReturn(Future.successful(atarEnrolmentInvalidEori))
 
       val fakeRequest = FakeRequest().withHeaders(("Authorization", "Bearer Token"))
 
@@ -79,6 +121,8 @@ class AuthActionSpec extends BaseSpec with BeforeAndAfterEach {
 
     "return 403 given an invalid enrolment" in {
       when(authConnector.authorise(any[Predicate], ArgumentMatchers.eq(Retrievals.authorisedEnrolments))(any[HeaderCarrier], any[ExecutionContext]))
+        .thenReturn(Future.successful(invalidEnrolment))
+      when(authConnector.authorise(any[Predicate], ArgumentMatchers.eq(Retrievals.allEnrolments))(any[HeaderCarrier], any[ExecutionContext]))
         .thenReturn(Future.successful(invalidEnrolment))
 
       val fakeRequest = FakeRequest().withHeaders(("Authorization", "Bearer Token"))
@@ -91,6 +135,8 @@ class AuthActionSpec extends BaseSpec with BeforeAndAfterEach {
     "return 403 given no enrolments" in {
       when(authConnector.authorise(any[Predicate], ArgumentMatchers.eq(Retrievals.authorisedEnrolments))(any[HeaderCarrier], any[ExecutionContext]))
         .thenReturn(Future.successful(noEnrolments))
+      when(authConnector.authorise(any[Predicate], ArgumentMatchers.eq(Retrievals.allEnrolments))(any[HeaderCarrier], any[ExecutionContext]))
+        .thenReturn(Future.successful(noEnrolments))
 
       val fakeRequest = FakeRequest().withHeaders(("Authorization", "Bearer Token"))
 
@@ -101,6 +147,8 @@ class AuthActionSpec extends BaseSpec with BeforeAndAfterEach {
 
     "return 403 given any other Auth failure" in {
       when(authConnector.authorise(any[Predicate], ArgumentMatchers.eq(Retrievals.authorisedEnrolments))(any[HeaderCarrier], any[ExecutionContext]))
+        .thenReturn(Future.failed(UpstreamErrorResponse("error", INTERNAL_SERVER_ERROR)))
+      when(authConnector.authorise(any[Predicate], ArgumentMatchers.eq(Retrievals.allEnrolments))(any[HeaderCarrier], any[ExecutionContext]))
         .thenReturn(Future.failed(UpstreamErrorResponse("error", INTERNAL_SERVER_ERROR)))
 
       val fakeRequest = FakeRequest().withHeaders(("Authorization", "Bearer Token"))
