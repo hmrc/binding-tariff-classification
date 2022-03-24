@@ -29,7 +29,10 @@ class BtaCardController @Inject()(btaCardService: BtaCardService, authAction: Au
                                   mcc: MessagesControllerComponents)(implicit ec: ExecutionContext) extends CommonController(mcc) {
 
   def getBtaCard: Action[AnyContent] = authAction.async { implicit request =>
-    btaCardService.generateBtaCard(request.eori).map(card => Ok(Json.toJson(card))).recover {
+    btaCardService.generateBtaCard(request.eori).map { card =>
+      logger.info(s"[BtaCardController][getBtaCard] Card generated: ${Json.toJson(card).toString()}")
+      Ok(Json.toJson(card))
+    }.recover {
       case ex: Exception => logger.error(s"[BtaCardController][getBtaCard] Failure generating BTA Card counts: ${ex.getMessage}")
         InternalServerError
     }
