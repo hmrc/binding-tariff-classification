@@ -21,6 +21,7 @@ import play.api.Logging
 import play.api.mvc.Results._
 import play.api.mvc._
 import uk.gov.hmrc.auth.core._
+import uk.gov.hmrc.auth.core.retrieve.Retrieval
 import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals
 import uk.gov.hmrc.bindingtariffclassification.model.bta.BtaRequest
 import uk.gov.hmrc.http.{Authorization, HeaderCarrier, HeaderNames}
@@ -47,18 +48,38 @@ class AuthAction @Inject()(override val authConnector: AuthConnector,
     }
   }
 
-  private def retrievalData[A](request: Request[A], block: BtaRequest[A] => Future[Result])
-                              (implicit hc: HeaderCarrier): Future[Result] =
-    authorised().retrieve(Retrievals.authorisedEnrolments){ enrolments =>
-      val maybeEori = enrolments.getEnrolment(ATAR_ENROLMENT_KEY).flatMap(_.getIdentifier(EORI_IDENTIFIER).map(_.value))
-      maybeEori match {
-        case Some(eori) => block(BtaRequest(request, eori))
-        case None => logger.warn(s"[AuthAction][retrievalData] An error occurred during auth action: Missing Enrolment/Identifier")
-          Future.successful(Forbidden)
+  private def retrievalData[A](request: Request[A], block: BtaRequest[A] => Future[Result])(implicit hc: HeaderCarrier): Future[Result] = {
+    getEnrolmentsAndEori().flatMap {
+      case Right(eori) => block(BtaRequest(request, eori))
+      case Left(_) => Future.successful(Forbidden)
+    }
+  }
+
+  private def getEnrolmentsAndEori(retrieval: Retrieval[Enrolments] = Retrievals.authorisedEnrolments)
+                                  (implicit hc: HeaderCarrier): Future[Either[Boolean, String]] = {
+    def retry = {
+      if(retrieval == Retrievals.allEnrolments){
+        logger.warn(s"[AuthAction][retrievalData] An error occurred during auth action: Fallback to All Enrolments failed")
+        Future.successful(Left(true))
+      } else {
+        logger.warn(s"[AuthAction][retrievalData] An error occurred during auth action: Falling back to All Enrolments")
+        getEnrolmentsAndEori(Retrievals.allEnrolments)
       }
-    }.recover {
-    case e => logger.error(s"[AuthAction][retrievalData] An error occurred during auth action: ${e.getMessage}", e)
-      Forbidden
+    }
+    authorised().retrieve(retrieval) { enrolments =>
+      val maybeEnrolment = enrolments.getEnrolment(ATAR_ENROLMENT_KEY)
+      val maybeEori = maybeEnrolment.flatMap(_.getIdentifier(EORI_IDENTIFIER).map(_.value))
+      (maybeEnrolment, maybeEori) match {
+        case (Some(_), Some(eori)) => Future.successful(Right(eori))
+        case (Some(_), None) => logger.warn(s"[AuthAction][retrievalData] An error occurred during auth action: Missing Identifier")
+          retry
+        case _ => logger.warn(s"[AuthAction][retrievalData] An error occurred during auth action: Missing Enrolment")
+          retry
+      }
+    }.recoverWith {
+      case e => logger.error(s"[AuthAction][retrievalData] An exception occurred during auth action: ${e.getMessage}", e)
+        retry
+    }
   }
 
 }
