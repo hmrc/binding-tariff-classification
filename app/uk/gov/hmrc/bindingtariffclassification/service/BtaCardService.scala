@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.bindingtariffclassification.service
 
+import uk.gov.hmrc.bindingtariffclassification.common.Logging
 import uk.gov.hmrc.bindingtariffclassification.model.Case
 import uk.gov.hmrc.bindingtariffclassification.model.CaseStatus._
 import uk.gov.hmrc.bindingtariffclassification.model.bta.{BtaApplications, BtaCard, BtaRulings}
@@ -26,7 +27,7 @@ import javax.inject._
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class BtaCardService @Inject()(caseRepository: CaseRepository)(implicit ec: ExecutionContext) {
+class BtaCardService @Inject()(caseRepository: CaseRepository)(implicit ec: ExecutionContext) extends Logging {
 
   private final lazy val applicationStatuses = List(NEW, OPEN, REFERRED)
   private final lazy val ignoredStatuses = List(DRAFT, REJECTED, CANCELLED, ANNULLED, REVOKED)
@@ -34,6 +35,7 @@ class BtaCardService @Inject()(caseRepository: CaseRepository)(implicit ec: Exec
   private case class RulingTotals(total: Int, expiring: Int)
 
   def generateBtaCard(eori: String): Future[BtaCard] = caseRepository.getAllByEori(eori).map { cases =>
+    logger.info(s"[BtaCardService][generateBtaCard] Found records linked to EORI: ${cases.size}")
     val data = cases.filterNot(ignoredStatuses.contains).groupBy(_.status)
     val totalRulings = calculateRulingTotals(data.getOrElse(COMPLETED, List.empty))
     val totalApplications = data.filter { case (caseStatus, _) => applicationStatuses.contains(caseStatus) }

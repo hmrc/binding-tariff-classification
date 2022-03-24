@@ -59,10 +59,10 @@ class AuthAction @Inject()(override val authConnector: AuthConnector,
                                   (implicit hc: HeaderCarrier): Future[Either[Boolean, String]] = {
     def retry = {
       if(retrieval == Retrievals.allEnrolments){
-        logger.warn(s"[AuthAction][retrievalData] An error occurred during auth action: Fallback to All Enrolments failed")
+        logger.warn(s"[AuthAction][getEnrolmentsAndEori] An error occurred during auth action: Fallback to All Enrolments failed")
         Future.successful(Left(true))
       } else {
-        logger.warn(s"[AuthAction][retrievalData] An error occurred during auth action: Falling back to All Enrolments")
+        logger.warn(s"[AuthAction][getEnrolmentsAndEori] An error occurred during auth action: Falling back to All Enrolments")
         getEnrolmentsAndEori(Retrievals.allEnrolments)
       }
     }
@@ -71,13 +71,13 @@ class AuthAction @Inject()(override val authConnector: AuthConnector,
       val maybeEori = maybeEnrolment.flatMap(_.getIdentifier(EORI_IDENTIFIER).map(_.value))
       (maybeEnrolment, maybeEori) match {
         case (Some(_), Some(eori)) => Future.successful(Right(eori))
-        case (Some(_), None) => logger.warn(s"[AuthAction][retrievalData] An error occurred during auth action: Missing Identifier")
+        case (Some(_), None) => logger.warn(s"[AuthAction][getEnrolmentsAndEori] An error occurred during auth action: Missing Identifier")
           retry
-        case _ => logger.warn(s"[AuthAction][retrievalData] An error occurred during auth action: Missing Enrolment")
+        case _ => logger.warn(s"[AuthAction][getEnrolmentsAndEori] An error occurred during auth action: Missing Enrolment")
           retry
       }
     }.recoverWith {
-      case e => logger.error(s"[AuthAction][retrievalData] An exception occurred during auth action: ${e.getMessage}", e)
+      case e => logger.error(s"[AuthAction][getEnrolmentsAndEori] An exception occurred during auth action: ${e.getMessage}", e)
         retry
     }
   }
