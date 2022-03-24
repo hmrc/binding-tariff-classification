@@ -85,7 +85,7 @@ class EncryptedCaseMongoRepository @Inject() (repository: CaseMongoRepository, c
     repository.get(enryptSearch(search), pagination).map(_.map(decrypt))
 
   override def getAllByEori(eori: String): Future[List[Case]] = {
-    repository.getAllByEori(eori).map(cases => cases.map(decrypt))
+    repository.getAllByEori(crypto.encryptString.apply(eori)).map(_.map(decrypt))
   }
 
   override def deleteAll(): Future[Unit] = repository.deleteAll()
