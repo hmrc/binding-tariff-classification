@@ -27,6 +27,7 @@ import reactivemongo.api.indexes.Index
 import reactivemongo.bson.BSONObjectID
 import reactivemongo.play.json.ImplicitBSONHandlers._
 import reactivemongo.play.json.collection.JSONCollection
+import uk.gov.hmrc.bindingtariffclassification.common.Logging
 import uk.gov.hmrc.bindingtariffclassification.config.AppConfig
 import uk.gov.hmrc.bindingtariffclassification.crypto.Crypto
 import uk.gov.hmrc.bindingtariffclassification.model.MongoFormatters._
@@ -64,7 +65,7 @@ trait CaseRepository {
 }
 
 @Singleton
-class EncryptedCaseMongoRepository @Inject() (repository: CaseMongoRepository, crypto: Crypto) extends CaseRepository {
+class EncryptedCaseMongoRepository @Inject() (repository: CaseMongoRepository, crypto: Crypto) extends CaseRepository with Logging {
 
   private def encrypt: Case => Case = crypto.encrypt
 
@@ -85,6 +86,8 @@ class EncryptedCaseMongoRepository @Inject() (repository: CaseMongoRepository, c
     repository.get(enryptSearch(search), pagination).map(_.map(decrypt))
 
   override def getAllByEori(eori: String): Future[List[Case]] = {
+    val encEori = crypto.encryptString.apply(eori)
+    logger.info(s"[EncryptedCaseMongoRepository][getAllByEori] Encrypted EORI: ${encEori}")
     repository.getAllByEori(crypto.encryptString.apply(eori)).map(_.map(decrypt))
   }
 
