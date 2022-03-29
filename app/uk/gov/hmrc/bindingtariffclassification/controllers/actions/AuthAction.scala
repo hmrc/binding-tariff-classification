@@ -52,35 +52,26 @@ class AuthAction @Inject()(override val authConnector: AuthConnector,
     getEnrolmentsAndEori().flatMap {
       case Right(eori) => logger.info(s"[AuthAction][retrievalData] EORI retrieved: $eori")
         block(BtaRequest(request, eori))
-      case Left(_) => logger.warn(s"[AuthAction][retrievalData] EORI retrieval failed")
-        Future.successful(Forbidden)
+      case Left(status) => logger.warn(s"[AuthAction][retrievalData] EORI retrieval failed")
+        Future.successful(status)
     }
   }
 
-  private def getEnrolmentsAndEori(retrieval: Retrieval[Enrolments] = Retrievals.authorisedEnrolments)
-                                  (implicit hc: HeaderCarrier): Future[Either[Boolean, String]] = {
-    def retry = {
-      if(retrieval == Retrievals.allEnrolments){
-        logger.warn(s"[AuthAction][getEnrolmentsAndEori] An error occurred during auth action: Fallback to All Enrolments failed")
-        Future.successful(Left(true))
-      } else {
-        logger.warn(s"[AuthAction][getEnrolmentsAndEori] An error occurred during auth action: Falling back to All Enrolments")
-        getEnrolmentsAndEori(Retrievals.allEnrolments)
-      }
-    }
+  private def getEnrolmentsAndEori(retrieval: Retrieval[Enrolments] = Retrievals.allEnrolments)
+                                  (implicit hc: HeaderCarrier): Future[Either[Status, String]] = {
     authorised().retrieve(retrieval) { enrolments =>
       val maybeEnrolment = enrolments.getEnrolment(ATAR_ENROLMENT_KEY)
       val maybeEori = maybeEnrolment.flatMap(_.getIdentifier(EORI_IDENTIFIER).map(_.value))
       (maybeEnrolment, maybeEori) match {
         case (Some(_), Some(eori)) => Future.successful(Right(eori))
         case (Some(_), None) => logger.warn(s"[AuthAction][getEnrolmentsAndEori] An error occurred during auth action: Missing Identifier")
-          retry
+          Future.successful(Left(Forbidden))
         case _ => logger.warn(s"[AuthAction][getEnrolmentsAndEori] An error occurred during auth action: Missing Enrolment")
-          retry
+          Future.successful(Left(Forbidden))
       }
-    }.recoverWith {
+    }.recover {
       case e => logger.error(s"[AuthAction][getEnrolmentsAndEori] An exception occurred during auth action: ${e.getMessage}", e)
-        retry
+        Left(Forbidden)
     }
   }
 

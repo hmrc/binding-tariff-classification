@@ -26,15 +26,15 @@ object AuthStub extends WireMockMethods {
   private val authoriseUri = "/auth/authorise"
   implicit val identifierFormat: OFormat[EnrolmentIdentifier] = Json.format[EnrolmentIdentifier]
   implicit val enrolmentFormat: OFormat[Enrolment] = Json.format[Enrolment]
-  case class AuthorisedEnrolments(authorisedEnrolments: Set[Enrolment])
-  implicit val enrolmentsFormat: OFormat[AuthorisedEnrolments] = Json.format[AuthorisedEnrolments]
+  case class AllEnrolments(allEnrolments: Set[Enrolment])
+  implicit val enrolmentsFormat: OFormat[AllEnrolments] = Json.format[AllEnrolments]
 
 
   def authorised(): StubMapping =
     when(method = POST, uri = authoriseUri)
       .thenReturn(
         status = OK,
-        body = AuthorisedEnrolments(Set(Enrolment("HMRC-ATAR-ORG", Seq(EnrolmentIdentifier("EORINumber", "GB123")), "active")))
+        body = AllEnrolments(Set(Enrolment("HMRC-ATAR-ORG", Seq(EnrolmentIdentifier("EORINumber", "GB123")), "active")))
       )
 
   def unauthorised(): StubMapping =

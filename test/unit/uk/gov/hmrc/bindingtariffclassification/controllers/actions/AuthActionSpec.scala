@@ -49,32 +49,6 @@ class AuthActionSpec extends BaseSpec with BeforeAndAfterEach {
     val noEnrolments = Enrolments(Set.empty)
 
     "return 200 given a valid enrolment and identifier" in {
-      when(authConnector.authorise(any[Predicate], ArgumentMatchers.eq(Retrievals.authorisedEnrolments))(any[HeaderCarrier], any[ExecutionContext]))
-        .thenReturn(Future.successful(atarEnrolment))
-
-      val fakeRequest = FakeRequest().withHeaders(("Authorization", "Bearer Token"))
-
-      whenReady(action.invokeBlock(fakeRequest, block)) { res =>
-        res.header.status shouldBe OK
-      }
-    }
-
-    "return 200 given an invalid enrolment for AuthorisedEnrolments, but a valid enrolment within AllEnrolments" in {
-      when(authConnector.authorise(any[Predicate], ArgumentMatchers.eq(Retrievals.authorisedEnrolments))(any[HeaderCarrier], any[ExecutionContext]))
-        .thenReturn(Future.successful(atarEnrolmentNoEori))
-      when(authConnector.authorise(any[Predicate], ArgumentMatchers.eq(Retrievals.allEnrolments))(any[HeaderCarrier], any[ExecutionContext]))
-        .thenReturn(Future.successful(atarEnrolment))
-
-      val fakeRequest = FakeRequest().withHeaders(("Authorization", "Bearer Token"))
-
-      whenReady(action.invokeBlock(fakeRequest, block)) { res =>
-        res.header.status shouldBe OK
-      }
-    }
-
-    "return 200 given an invalid eori for AuthorisedEnrolments, but a valid eori within AllEnrolments" in {
-      when(authConnector.authorise(any[Predicate], ArgumentMatchers.eq(Retrievals.authorisedEnrolments))(any[HeaderCarrier], any[ExecutionContext]))
-        .thenReturn(Future.successful(atarEnrolmentInvalidEori))
       when(authConnector.authorise(any[Predicate], ArgumentMatchers.eq(Retrievals.allEnrolments))(any[HeaderCarrier], any[ExecutionContext]))
         .thenReturn(Future.successful(atarEnrolment))
 
@@ -94,8 +68,6 @@ class AuthActionSpec extends BaseSpec with BeforeAndAfterEach {
     }
 
     "return 403 given a valid enrolment but no identifier" in {
-      when(authConnector.authorise(any[Predicate], ArgumentMatchers.eq(Retrievals.authorisedEnrolments))(any[HeaderCarrier], any[ExecutionContext]))
-        .thenReturn(Future.successful(atarEnrolmentNoEori))
       when(authConnector.authorise(any[Predicate], ArgumentMatchers.eq(Retrievals.allEnrolments))(any[HeaderCarrier], any[ExecutionContext]))
         .thenReturn(Future.successful(atarEnrolmentNoEori))
 
@@ -107,8 +79,6 @@ class AuthActionSpec extends BaseSpec with BeforeAndAfterEach {
     }
 
     "return 403 given an invalid eori" in {
-      when(authConnector.authorise(any[Predicate], ArgumentMatchers.eq(Retrievals.authorisedEnrolments))(any[HeaderCarrier], any[ExecutionContext]))
-        .thenReturn(Future.successful(atarEnrolmentInvalidEori))
       when(authConnector.authorise(any[Predicate], ArgumentMatchers.eq(Retrievals.allEnrolments))(any[HeaderCarrier], any[ExecutionContext]))
         .thenReturn(Future.successful(atarEnrolmentInvalidEori))
 
@@ -120,8 +90,6 @@ class AuthActionSpec extends BaseSpec with BeforeAndAfterEach {
     }
 
     "return 403 given an invalid enrolment" in {
-      when(authConnector.authorise(any[Predicate], ArgumentMatchers.eq(Retrievals.authorisedEnrolments))(any[HeaderCarrier], any[ExecutionContext]))
-        .thenReturn(Future.successful(invalidEnrolment))
       when(authConnector.authorise(any[Predicate], ArgumentMatchers.eq(Retrievals.allEnrolments))(any[HeaderCarrier], any[ExecutionContext]))
         .thenReturn(Future.successful(invalidEnrolment))
 
@@ -133,8 +101,6 @@ class AuthActionSpec extends BaseSpec with BeforeAndAfterEach {
     }
 
     "return 403 given no enrolments" in {
-      when(authConnector.authorise(any[Predicate], ArgumentMatchers.eq(Retrievals.authorisedEnrolments))(any[HeaderCarrier], any[ExecutionContext]))
-        .thenReturn(Future.successful(noEnrolments))
       when(authConnector.authorise(any[Predicate], ArgumentMatchers.eq(Retrievals.allEnrolments))(any[HeaderCarrier], any[ExecutionContext]))
         .thenReturn(Future.successful(noEnrolments))
 
@@ -146,8 +112,6 @@ class AuthActionSpec extends BaseSpec with BeforeAndAfterEach {
     }
 
     "return 403 given any other Auth failure" in {
-      when(authConnector.authorise(any[Predicate], ArgumentMatchers.eq(Retrievals.authorisedEnrolments))(any[HeaderCarrier], any[ExecutionContext]))
-        .thenReturn(Future.failed(UpstreamErrorResponse("error", INTERNAL_SERVER_ERROR)))
       when(authConnector.authorise(any[Predicate], ArgumentMatchers.eq(Retrievals.allEnrolments))(any[HeaderCarrier], any[ExecutionContext]))
         .thenReturn(Future.failed(UpstreamErrorResponse("error", INTERNAL_SERVER_ERROR)))
 
