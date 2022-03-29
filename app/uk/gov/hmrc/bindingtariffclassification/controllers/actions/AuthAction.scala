@@ -52,8 +52,7 @@ class AuthAction @Inject()(override val authConnector: AuthConnector,
     getEnrolmentsAndEori().flatMap {
       case Right(eori) => logger.info(s"[AuthAction][retrievalData] EORI retrieved: $eori")
         block(BtaRequest(request, eori))
-      case Left(status) => logger.warn(s"[AuthAction][retrievalData] EORI retrieval failed")
-        Future.successful(status)
+      case Left(status) => Future.successful(status)
     }
   }
 
