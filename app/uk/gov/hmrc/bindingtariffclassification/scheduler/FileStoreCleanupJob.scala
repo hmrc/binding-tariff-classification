@@ -34,20 +34,20 @@ import scala.concurrent.{ExecutionContext, Future, duration}
 import scala.util.control.NonFatal
 
 @Singleton
-class FileStoreCleanupJob @Inject()(
-                                     caseService: CaseService,
-                                     fileStoreConnector: FileStoreConnector,
-                                     mongoLockRepository: LockRepository,
-                                     implicit val appConfig: AppConfig
-                                   )(implicit ec: ExecutionContext, mat: Materializer)
-  extends ScheduledJob
+class FileStoreCleanupJob @Inject() (
+  caseService: CaseService,
+  fileStoreConnector: FileStoreConnector,
+  mongoLockRepository: LockRepository,
+  implicit val appConfig: AppConfig
+)(implicit ec: ExecutionContext, mat: Materializer)
+    extends ScheduledJob
     with Logging {
 
   override val jobConfig = appConfig.fileStoreCleanup
 
   override val lockRepository: LockRepository = mongoLockRepository
-  override val lockId: String = "filestore_cleanup"
-  override val ttl: duration.Duration = 5.minutes
+  override val lockId: String                 = "filestore_cleanup"
+  override val ttl: duration.Duration         = 5.minutes
 
   private implicit val carrier: HeaderCarrier = HeaderCarrier()
   private lazy val criteria = FileSearch(
@@ -66,14 +66,14 @@ class FileStoreCleanupJob @Inject()(
       processFiles(pagedFiles.results).map(_ => pagedFiles)
     } flatMap {
       case pagedFiles if pagedFiles.pageIndex > 1 => processPage(page - 1)
-      case _ => successful(())
+      case _                                      => successful(())
     }
 
   private def processFiles(files: Seq[FileMetadata]): Future[Unit] =
     Source(files.toList)
       .mapAsync(1) { file =>
         caseService.attachmentExists(file.id).map {
-          case true => successful(())
+          case true  => successful(())
           case false => deleteFile(file)
         }
       }

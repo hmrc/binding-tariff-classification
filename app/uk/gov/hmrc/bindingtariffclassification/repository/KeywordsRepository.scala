@@ -44,15 +44,15 @@ trait KeywordsRepository {
 }
 
 @Singleton
-class KeywordsMongoRepository @Inject()(mongoComponent: MongoComponent)
-  extends PlayMongoRepository[Keyword](
-    collectionName = "keywords",
-    mongoComponent = mongoComponent,
-    domainFormat = formatKeywords,
-    indexes = Seq(
-      IndexModel(ascending("name"), IndexOptions().unique(true).name("name_Index"))
+class KeywordsMongoRepository @Inject() (mongoComponent: MongoComponent)
+    extends PlayMongoRepository[Keyword](
+      collectionName = "keywords",
+      mongoComponent = mongoComponent,
+      domainFormat   = formatKeywords,
+      indexes = Seq(
+        IndexModel(ascending("name"), IndexOptions().unique(true).name("name_Index"))
+      )
     )
-  )
     with KeywordsRepository
     with BaseMongoOperations[Keyword] {
 

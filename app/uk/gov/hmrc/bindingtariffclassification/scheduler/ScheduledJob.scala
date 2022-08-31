@@ -34,8 +34,7 @@ abstract class ScheduledJob(implicit ec: ExecutionContext) extends Job with Lock
 
   def schedule: CronExpression = jobConfig.schedule
 
-  def execute(context: JobExecutionContext): Unit = {
+  def execute(context: JobExecutionContext): Unit =
     // Quartz gives us no choice but to block here
     Await.result(withLock(execute()), ScalaDuration.Inf)
-  }
 }

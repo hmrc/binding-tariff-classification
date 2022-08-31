@@ -29,49 +29,60 @@ import uk.gov.hmrc.play.http.HeaderCarrierConverter
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class AuthAction @Inject()(override val authConnector: AuthConnector,
-                           val parser: BodyParsers.Default)(implicit val executionContext: ExecutionContext)
-  extends ActionBuilder[BtaRequest, AnyContent] with ActionFunction[Request, BtaRequest] with AuthorisedFunctions with Logging {
+class AuthAction @Inject() (override val authConnector: AuthConnector, val parser: BodyParsers.Default)(
+  implicit val executionContext: ExecutionContext
+) extends ActionBuilder[BtaRequest, AnyContent]
+    with ActionFunction[Request, BtaRequest]
+    with AuthorisedFunctions
+    with Logging {
 
   private lazy final val ATAR_ENROLMENT_KEY = "HMRC-ATAR-ORG"
-  private lazy final val EORI_IDENTIFIER = "EORINumber"
+  private lazy final val EORI_IDENTIFIER    = "EORINumber"
 
-  override def invokeBlock[A](request: Request[A], block: BtaRequest[A] => Future[Result]): Future[Result] = {
+  override def invokeBlock[A](request: Request[A], block: BtaRequest[A] => Future[Result]): Future[Result] =
     request.headers.get(HeaderNames.authorisation) match {
       case Some(authHeader) =>
-        implicit val hc: HeaderCarrier = HeaderCarrierConverter.fromRequestAndSession(request, request.session)
+        implicit val hc: HeaderCarrier = HeaderCarrierConverter
+          .fromRequestAndSession(request, request.session)
           .copy(authorization = Some(Authorization(authHeader)))
         retrievalData(request, block)
       case _ =>
         logger.warn(s"[AuthAction][invokeBlock] An error occurred during auth action: No Authorization header provided")
         Future.successful(Forbidden)
     }
-  }
 
-  private def retrievalData[A](request: Request[A], block: BtaRequest[A] => Future[Result])(implicit hc: HeaderCarrier): Future[Result] = {
+  private def retrievalData[A](request: Request[A], block: BtaRequest[A] => Future[Result])(
+    implicit hc: HeaderCarrier
+  ): Future[Result] =
     getEnrolmentsAndEori().flatMap {
-      case Right(eori) => logger.info(s"[AuthAction][retrievalData] EORI retrieved: $eori")
+      case Right(eori) =>
+        logger.info(s"[AuthAction][retrievalData] EORI retrieved: $eori")
         block(BtaRequest(request, eori))
       case Left(status) => Future.successful(status)
     }
-  }
 
-  private def getEnrolmentsAndEori(retrieval: Retrieval[Enrolments] = Retrievals.allEnrolments)
-                                  (implicit hc: HeaderCarrier): Future[Either[Status, String]] = {
-    authorised().retrieve(retrieval) { enrolments =>
-      val maybeEnrolment = enrolments.getEnrolment(ATAR_ENROLMENT_KEY)
-      val maybeEori = maybeEnrolment.flatMap(_.getIdentifier(EORI_IDENTIFIER).map(_.value))
-      (maybeEnrolment, maybeEori) match {
-        case (Some(_), Some(eori)) => Future.successful(Right(eori))
-        case (Some(_), None) => logger.warn(s"[AuthAction][getEnrolmentsAndEori] An error occurred during auth action: Missing Identifier")
-          Future.successful(Left(Forbidden))
-        case _ => logger.warn(s"[AuthAction][getEnrolmentsAndEori] An error occurred during auth action: Missing Enrolment")
-          Future.successful(Left(Forbidden))
+  private def getEnrolmentsAndEori(
+    retrieval: Retrieval[Enrolments] = Retrievals.allEnrolments
+  )(implicit hc: HeaderCarrier): Future[Either[Status, String]] =
+    authorised()
+      .retrieve(retrieval) { enrolments =>
+        val maybeEnrolment = enrolments.getEnrolment(ATAR_ENROLMENT_KEY)
+        val maybeEori      = maybeEnrolment.flatMap(_.getIdentifier(EORI_IDENTIFIER).map(_.value))
+        (maybeEnrolment, maybeEori) match {
+          case (Some(_), Some(eori)) => Future.successful(Right(eori))
+          case (Some(_), None) =>
+            logger.warn(s"[AuthAction][getEnrolmentsAndEori] An error occurred during auth action: Missing Identifier")
+            Future.successful(Left(Forbidden))
+          case _ =>
+            logger.warn(s"[AuthAction][getEnrolmentsAndEori] An error occurred during auth action: Missing Enrolment")
+            Future.successful(Left(Forbidden))
+        }
       }
-    }.recover {
-      case e => logger.error(s"[AuthAction][getEnrolmentsAndEori] An exception occurred during auth action: ${e.getMessage}", e)
-        Left(Forbidden)
-    }
-  }
+      .recover {
+        case e =>
+          logger
+            .error(s"[AuthAction][getEnrolmentsAndEori] An exception occurred during auth action: ${e.getMessage}", e)
+          Left(Forbidden)
+      }
 
 }

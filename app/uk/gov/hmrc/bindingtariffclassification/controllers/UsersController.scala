@@ -29,9 +29,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future.successful
 
 @Singleton
-class UsersController @Inject()(appConfig: AppConfig,
-                                usersService: UsersService,
-                                mcc: MessagesControllerComponents)
+class UsersController @Inject() (appConfig: AppConfig, usersService: UsersService, mcc: MessagesControllerComponents)
     extends CommonController(mcc) {
 
   def fetchUserDetails(id: String): Action[AnyContent] = Action.async {
@@ -45,16 +43,15 @@ class UsersController @Inject()(appConfig: AppConfig,
       } recover recovery
     }
 
-  def createUser: Action[JsValue] = Action.async(parse.json) {
-    implicit request =>
-      withJsonBody[NewUserRequest] { userRequest: NewUserRequest =>
-        for {
-          c <- usersService.insertUser(userRequest.operator)
-        } yield Created(Json.toJson(c)(RESTFormatters.formatOperator))
-      } recover recovery map { result =>
-        logger.debug(s"User creation Result : $result");
-        result
-      }
+  def createUser: Action[JsValue] = Action.async(parse.json) { implicit request =>
+    withJsonBody[NewUserRequest] { userRequest: NewUserRequest =>
+      for {
+        c <- usersService.insertUser(userRequest.operator)
+      } yield Created(Json.toJson(c)(RESTFormatters.formatOperator))
+    } recover recovery map { result =>
+      logger.debug(s"User creation Result : $result");
+      result
+    }
   }
 
   def updateUser(id: String): Action[JsValue] =
@@ -100,8 +97,7 @@ class UsersController @Inject()(appConfig: AppConfig,
       } recover recovery
     }
 
-  private[controllers] def handleNotFound
-    : PartialFunction[Option[Operator], Result] = {
+  private[controllers] def handleNotFound: PartialFunction[Option[Operator], Result] = {
     case Some(user: Operator) => Ok(Json.toJson(user))
     case _                    => NotFound(JsErrorResponse(NOTFOUND, "User not found"))
   }

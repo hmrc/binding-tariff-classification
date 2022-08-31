@@ -18,7 +18,7 @@ package uk.gov.hmrc.bindingtariffclassification.service
 
 import org.mockito.Mockito._
 import org.scalatest.BeforeAndAfterEach
-import play.api.test.Helpers. _
+import play.api.test.Helpers._
 import uk.gov.hmrc.bindingtariffclassification.base.BaseSpec
 import uk.gov.hmrc.bindingtariffclassification.config.AppConfig
 import uk.gov.hmrc.bindingtariffclassification.model._
@@ -28,10 +28,10 @@ import scala.concurrent.Future.successful
 
 class UsersServiceSpec extends BaseSpec with BeforeAndAfterEach {
 
-  private val user = mock[Operator]
+  private val user      = mock[Operator]
   private val userSaved = mock[Operator]
 
-  private val appConfig = mock[AppConfig]
+  private val appConfig       = mock[AppConfig]
   private val usersRepository = mock[UsersRepository]
 
   private val service =
@@ -121,7 +121,7 @@ class UsersServiceSpec extends BaseSpec with BeforeAndAfterEach {
 
   "search" should {
 
-    val searchBy = mock[UserSearch]
+    val searchBy   = mock[UserSearch]
     val pagination = mock[Pagination]
 
     "return the expected users" in {

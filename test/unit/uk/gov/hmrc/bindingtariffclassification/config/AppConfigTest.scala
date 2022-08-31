@@ -43,7 +43,7 @@ class AppConfigTest extends BaseSpec {
         "scheduler.active-days-elapsed.schedule" -> "0 0 3 * * ?"
       ).activeDaysElapsed
 
-      config.enabled  shouldBe true
+      config.enabled                    shouldBe true
       config.schedule.getCronExpression shouldBe "0 0 3 * * ?"
     }
 
@@ -52,7 +52,7 @@ class AppConfigTest extends BaseSpec {
         "scheduler.referred-days-elapsed.enabled"  -> "true",
         "scheduler.referred-days-elapsed.schedule" -> "0 0 2 * * ?"
       ).referredDaysElapsed
-      config.enabled  shouldBe true
+      config.enabled                    shouldBe true
       config.schedule.getCronExpression shouldBe "0 0 2 * * ?"
     }
 
@@ -61,7 +61,7 @@ class AppConfigTest extends BaseSpec {
         "scheduler.filestore-cleanup.enabled"  -> "true",
         "scheduler.filestore-cleanup.schedule" -> "0 0 1 ? * 1"
       ).fileStoreCleanup
-      config.enabled  shouldBe true
+      config.enabled                    shouldBe true
       config.schedule.getCronExpression shouldBe "0 0 1 ? * 1"
     }
 

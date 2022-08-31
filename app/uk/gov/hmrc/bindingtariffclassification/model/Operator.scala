@@ -18,13 +18,15 @@ package uk.gov.hmrc.bindingtariffclassification.model
 
 import uk.gov.hmrc.bindingtariffclassification.model.Role.Role
 
-case class Operator(id: String,
-                    name: Option[String] = None,
-                    email: Option[String] = None,
-                    role: Role = Role.CLASSIFICATION_OFFICER,
-                    memberOfTeams: List[String] = List.empty,
-                    managerOfTeams: List[String] = List.empty,
-                    deleted: Boolean = false) {
+case class Operator(
+  id: String,
+  name: Option[String]         = None,
+  email: Option[String]        = None,
+  role: Role                   = Role.CLASSIFICATION_OFFICER,
+  memberOfTeams: List[String]  = List.empty,
+  managerOfTeams: List[String] = List.empty,
+  deleted: Boolean             = false
+) {
 
   def manager: Boolean = role == Role.CLASSIFICATION_MANAGER
 }

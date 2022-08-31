@@ -36,90 +36,102 @@ import scala.concurrent.{ExecutionContext, Future}
 class AuthActionSpec extends BaseSpec with BeforeAndAfterEach {
 
   private val authConnector = mock[AuthConnector]
-  private val bodyParser   = mock[BodyParsers.Default]
+  private val bodyParser    = mock[BodyParsers.Default]
 
   "AuthAction" should {
 
-    val action = new AuthAction(authConnector, bodyParser)
-    val block: BtaRequest[AnyContent] => Future[Result] = { _ => Future.successful(Ok)}
-    val atarEnrolment = Enrolments(Set(Enrolment("HMRC-ATAR-ORG", Seq(EnrolmentIdentifier("EORINumber", "GB12345678")), "state")))
+    val action                                          = new AuthAction(authConnector, bodyParser)
+    val block: BtaRequest[AnyContent] => Future[Result] = { _ => Future.successful(Ok) }
+    val atarEnrolment =
+      Enrolments(Set(Enrolment("HMRC-ATAR-ORG", Seq(EnrolmentIdentifier("EORINumber", "GB12345678")), "state")))
     val atarEnrolmentNoEori = Enrolments(Set(Enrolment("HMRC-ATAR-ORG", Seq.empty, "state")))
-    val atarEnrolmentInvalidEori = Enrolments(Set(Enrolment("HMRC-ATAR-ORG", Seq(EnrolmentIdentifier("SomethingElse", "GB12345678")), "state")))
+    val atarEnrolmentInvalidEori =
+      Enrolments(Set(Enrolment("HMRC-ATAR-ORG", Seq(EnrolmentIdentifier("SomethingElse", "GB12345678")), "state")))
     val invalidEnrolment = Enrolments(Set(Enrolment("HMRC-ATAR-BORG", Seq.empty, "state")))
-    val noEnrolments = Enrolments(Set.empty)
+    val noEnrolments     = Enrolments(Set.empty)
 
     "return 200 given a valid enrolment and identifier" in {
-      when(authConnector.authorise(any[Predicate], ArgumentMatchers.eq(Retrievals.allEnrolments))(any[HeaderCarrier], any[ExecutionContext]))
-        .thenReturn(Future.successful(atarEnrolment))
+      when(
+        authConnector.authorise(any[Predicate], ArgumentMatchers.eq(Retrievals.allEnrolments))(
+          any[HeaderCarrier],
+          any[ExecutionContext]
+        )
+      ).thenReturn(Future.successful(atarEnrolment))
 
       val fakeRequest = FakeRequest().withHeaders(("Authorization", "Bearer Token"))
 
-      whenReady(action.invokeBlock(fakeRequest, block)) { res =>
-        res.header.status shouldBe OK
-      }
+      whenReady(action.invokeBlock(fakeRequest, block))(res => res.header.status shouldBe OK)
     }
 
     "return 403 given a missing Authorization Header" in {
       val fakeRequest = FakeRequest()
 
-      whenReady(action.invokeBlock(fakeRequest, block)) { res =>
-        res.header.status shouldBe FORBIDDEN
-      }
+      whenReady(action.invokeBlock(fakeRequest, block))(res => res.header.status shouldBe FORBIDDEN)
     }
 
     "return 403 given a valid enrolment but no identifier" in {
-      when(authConnector.authorise(any[Predicate], ArgumentMatchers.eq(Retrievals.allEnrolments))(any[HeaderCarrier], any[ExecutionContext]))
-        .thenReturn(Future.successful(atarEnrolmentNoEori))
+      when(
+        authConnector.authorise(any[Predicate], ArgumentMatchers.eq(Retrievals.allEnrolments))(
+          any[HeaderCarrier],
+          any[ExecutionContext]
+        )
+      ).thenReturn(Future.successful(atarEnrolmentNoEori))
 
       val fakeRequest = FakeRequest().withHeaders(("Authorization", "Bearer Token"))
 
-      whenReady(action.invokeBlock(fakeRequest, block)) { res =>
-        res.header.status shouldBe FORBIDDEN
-      }
+      whenReady(action.invokeBlock(fakeRequest, block))(res => res.header.status shouldBe FORBIDDEN)
     }
 
     "return 403 given an invalid eori" in {
-      when(authConnector.authorise(any[Predicate], ArgumentMatchers.eq(Retrievals.allEnrolments))(any[HeaderCarrier], any[ExecutionContext]))
-        .thenReturn(Future.successful(atarEnrolmentInvalidEori))
+      when(
+        authConnector.authorise(any[Predicate], ArgumentMatchers.eq(Retrievals.allEnrolments))(
+          any[HeaderCarrier],
+          any[ExecutionContext]
+        )
+      ).thenReturn(Future.successful(atarEnrolmentInvalidEori))
 
       val fakeRequest = FakeRequest().withHeaders(("Authorization", "Bearer Token"))
 
-      whenReady(action.invokeBlock(fakeRequest, block)) { res =>
-        res.header.status shouldBe FORBIDDEN
-      }
+      whenReady(action.invokeBlock(fakeRequest, block))(res => res.header.status shouldBe FORBIDDEN)
     }
 
     "return 403 given an invalid enrolment" in {
-      when(authConnector.authorise(any[Predicate], ArgumentMatchers.eq(Retrievals.allEnrolments))(any[HeaderCarrier], any[ExecutionContext]))
-        .thenReturn(Future.successful(invalidEnrolment))
+      when(
+        authConnector.authorise(any[Predicate], ArgumentMatchers.eq(Retrievals.allEnrolments))(
+          any[HeaderCarrier],
+          any[ExecutionContext]
+        )
+      ).thenReturn(Future.successful(invalidEnrolment))
 
       val fakeRequest = FakeRequest().withHeaders(("Authorization", "Bearer Token"))
 
-      whenReady(action.invokeBlock(fakeRequest, block)) { res =>
-        res.header.status shouldBe FORBIDDEN
-      }
+      whenReady(action.invokeBlock(fakeRequest, block))(res => res.header.status shouldBe FORBIDDEN)
     }
 
     "return 403 given no enrolments" in {
-      when(authConnector.authorise(any[Predicate], ArgumentMatchers.eq(Retrievals.allEnrolments))(any[HeaderCarrier], any[ExecutionContext]))
-        .thenReturn(Future.successful(noEnrolments))
+      when(
+        authConnector.authorise(any[Predicate], ArgumentMatchers.eq(Retrievals.allEnrolments))(
+          any[HeaderCarrier],
+          any[ExecutionContext]
+        )
+      ).thenReturn(Future.successful(noEnrolments))
 
       val fakeRequest = FakeRequest().withHeaders(("Authorization", "Bearer Token"))
 
-      whenReady(action.invokeBlock(fakeRequest, block)) { res =>
-        res.header.status shouldBe FORBIDDEN
-      }
+      whenReady(action.invokeBlock(fakeRequest, block))(res => res.header.status shouldBe FORBIDDEN)
     }
 
     "return 403 given any other Auth failure" in {
-      when(authConnector.authorise(any[Predicate], ArgumentMatchers.eq(Retrievals.allEnrolments))(any[HeaderCarrier], any[ExecutionContext]))
-        .thenReturn(Future.failed(UpstreamErrorResponse("error", INTERNAL_SERVER_ERROR)))
+      when(
+        authConnector.authorise(any[Predicate], ArgumentMatchers.eq(Retrievals.allEnrolments))(
+          any[HeaderCarrier],
+          any[ExecutionContext]
+        )
+      ).thenReturn(Future.failed(UpstreamErrorResponse("error", INTERNAL_SERVER_ERROR)))
 
       val fakeRequest = FakeRequest().withHeaders(("Authorization", "Bearer Token"))
 
-      whenReady(action.invokeBlock(fakeRequest, block)) { res =>
-        res.header.status shouldBe FORBIDDEN
-      }
+      whenReady(action.invokeBlock(fakeRequest, block))(res => res.header.status shouldBe FORBIDDEN)
     }
   }
 

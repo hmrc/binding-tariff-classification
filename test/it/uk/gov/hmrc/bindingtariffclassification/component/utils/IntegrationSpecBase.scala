@@ -23,12 +23,13 @@ import org.scalatestplus.play.guice.GuiceOneServerPerSuite
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.{Application, Environment, Mode}
 
-trait IntegrationSpecBase extends TestSuite
-  with WiremockHelper
-  with GuiceOneServerPerSuite
-  with BeforeAndAfterEach
-  with BeforeAndAfterAll
-  with Eventually {
+trait IntegrationSpecBase
+    extends TestSuite
+    with WiremockHelper
+    with GuiceOneServerPerSuite
+    with BeforeAndAfterEach
+    with BeforeAndAfterAll
+    with Eventually {
 
   override implicit lazy val app: Application = new GuiceApplicationBuilder()
     .in(Environment.simple(mode = Mode.Dev))
@@ -36,24 +37,23 @@ trait IntegrationSpecBase extends TestSuite
     .build
   val mockHost = WiremockHelper.wiremockHost
   val mockPort = WiremockHelper.wiremockPort.toString
-  val mockUrl = s"http://$mockHost:$mockPort"
+  val mockUrl  = s"http://$mockHost:$mockPort"
 
   def config: Map[String, Any] = Map(
-    "application.router" -> "testOnlyDoNotUseInAppConf.Routes",
-    "microservice.services.auth.host" -> mockHost,
-    "microservice.services.auth.port" -> mockPort,
-    "microservice.services.des.host" -> mockHost,
-    "microservice.services.des.port" -> mockPort,
-    "microservice.services.nrs.host" -> mockHost,
-    "microservice.services.nrs.port" -> mockPort,
+    "application.router"                -> "testOnlyDoNotUseInAppConf.Routes",
+    "microservice.services.auth.host"   -> mockHost,
+    "microservice.services.auth.port"   -> mockPort,
+    "microservice.services.des.host"    -> mockHost,
+    "microservice.services.des.port"    -> mockPort,
+    "microservice.services.nrs.host"    -> mockHost,
+    "microservice.services.nrs.port"    -> mockPort,
     "microservice.services.nrs.enabled" -> true,
-    "microservice.services.nrs.apikey" -> "test",
-    "internalServiceHostPatterns" -> Nil
+    "microservice.services.nrs.apikey"  -> "test",
+    "internalServiceHostPatterns"       -> Nil
   )
 
-  override def beforeEach(): Unit = {
+  override def beforeEach(): Unit =
     resetWiremock()
-  }
 
   override def beforeAll(): Unit = {
     super.beforeAll()

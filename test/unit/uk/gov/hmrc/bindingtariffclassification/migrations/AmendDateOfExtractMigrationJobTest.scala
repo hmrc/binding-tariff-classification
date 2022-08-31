@@ -22,7 +22,7 @@ import org.mockito.BDDMockito.`given`
 import org.mockito.Mockito.{never, reset, times, verify}
 import org.mockito.invocation.InvocationOnMock
 import org.scalatest.BeforeAndAfterEach
-import play.api.test.Helpers. _
+import play.api.test.Helpers._
 import uk.gov.hmrc.bindingtariffclassification.base.BaseSpec
 import uk.gov.hmrc.bindingtariffclassification.model._
 import uk.gov.hmrc.bindingtariffclassification.service.CaseService
@@ -187,5 +187,6 @@ class AmendDateOfExtractMigrationJobTest extends BaseSpec with BeforeAndAfterEac
 
   private def givenUpdatingACaseReturnsItself(): Unit =
     given(caseService.update(any[Case], any[Boolean])).will((invocation: InvocationOnMock) =>
-      Future.successful(Option(invocation.getArgument[Case](0))))
+      Future.successful(Option(invocation.getArgument[Case](0)))
+    )
 }

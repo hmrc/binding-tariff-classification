@@ -19,7 +19,7 @@ package uk.gov.hmrc.bindingtariffclassification.service
 import org.mockito.ArgumentMatchers.refEq
 import org.mockito.Mockito._
 import org.scalatest.BeforeAndAfterEach
-import play.api.test.Helpers. _
+import play.api.test.Helpers._
 import uk.gov.hmrc.bindingtariffclassification.base.BaseSpec
 import uk.gov.hmrc.bindingtariffclassification.model.Role.CLASSIFICATION_OFFICER
 import uk.gov.hmrc.bindingtariffclassification.model._

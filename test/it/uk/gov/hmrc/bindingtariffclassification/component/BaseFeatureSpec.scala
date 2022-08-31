@@ -38,7 +38,7 @@ import scala.concurrent.Future
 import scala.concurrent.duration._
 
 abstract class BaseFeatureSpec
-  extends AnyFeatureSpec
+    extends AnyFeatureSpec
     with Matchers
     with GivenWhenThen
     with GuiceOneServerPerSuite
@@ -56,9 +56,9 @@ abstract class BaseFeatureSpec
 
   protected lazy val apiTokenKey = "X-Api-Token"
 
-  private lazy val caseStore: CaseMongoRepository = app.injector.instanceOf[CaseMongoRepository]
-  private lazy val eventStore: EventMongoRepository = app.injector.instanceOf[EventMongoRepository]
-  private lazy val sequenceStore: SequenceMongoRepository = app.injector.instanceOf[SequenceMongoRepository]
+  private lazy val caseStore: CaseMongoRepository           = app.injector.instanceOf[CaseMongoRepository]
+  private lazy val eventStore: EventMongoRepository         = app.injector.instanceOf[EventMongoRepository]
+  private lazy val sequenceStore: SequenceMongoRepository   = app.injector.instanceOf[SequenceMongoRepository]
   private lazy val mongoLockRepository: MongoLockRepository = app.injector.instanceOf[MongoLockRepository]
   private lazy val scheduledJobStores: Iterable[LockRepository] =
     app.injector.instanceOf[ScheduledJobs].jobs.map(_.lockRepository)
@@ -68,7 +68,10 @@ abstract class BaseFeatureSpec
     result(eventStore.collection.withWriteConcern(WriteConcern.JOURNALED).drop().toFuture(), timeout)
     result(sequenceStore.collection.withWriteConcern(WriteConcern.JOURNALED).drop().toFuture(), timeout)
     result(mongoLockRepository.collection.withWriteConcern(WriteConcern.JOURNALED).drop().toFuture(), timeout)
-    result(Future.traverse(scheduledJobStores)(_.asInstanceOf[MongoLockRepository].collection.drop().toFuture()), timeout)
+    result(
+      Future.traverse(scheduledJobStores)(_.asInstanceOf[MongoLockRepository].collection.drop().toFuture()),
+      timeout
+    )
   }
 
   override protected def beforeEach(): Unit = {
@@ -95,7 +98,7 @@ abstract class BaseFeatureSpec
     result(eventStore.collection.countDocuments().toFuture(), timeout)
 
   protected def getCase(ref: String): Option[Case] =
-  // for simplicity decryption is not tested here (because disabled in application.conf)
+    // for simplicity decryption is not tested here (because disabled in application.conf)
     result(caseStore.getByReference(ref), timeout)
 
 }

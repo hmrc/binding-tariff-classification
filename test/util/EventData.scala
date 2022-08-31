@@ -57,7 +57,7 @@ object EventData {
     to match {
       case CaseStatus.COMPLETED => CompletedCaseStatusChange(from, Some("comment"), None)
       case CaseStatus.REFERRED  => ReferralCaseStatusChange(from, Some("comment"), None, "referredTo", Nil)
-      case CaseStatus.REJECTED  =>
+      case CaseStatus.REJECTED =>
         RejectCaseStatusChange(from, to, Some("comment"), None, RejectReason.NO_INFO_FROM_TRADER)
       case CaseStatus.CANCELLED =>
         CancellationCaseStatusChange(from, Some("comment"), None, CancelReason.INVALIDATED_OTHER)

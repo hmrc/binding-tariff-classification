@@ -37,11 +37,15 @@ class ReportFieldSpec extends BaseSpec {
         case field @ NumberField(fieldName, underlyingField) =>
           field.withValue(Some(3L)) shouldBe NumberResultField(fieldName, Some(3L))
         case field @ StatusField(fieldName, underlyingField) =>
-          field.withValue(Some(PseudoCaseStatus.OPEN)) shouldBe StatusResultField(fieldName, Some(PseudoCaseStatus.OPEN))
+          field
+            .withValue(Some(PseudoCaseStatus.OPEN)) shouldBe StatusResultField(fieldName, Some(PseudoCaseStatus.OPEN))
         case field @ StringField(fieldName, underlyingField) =>
           field.withValue(Some("Chipotle Paste")) shouldBe StringResultField(fieldName, Some("Chipotle Paste"))
         case field @ LiabilityStatusField(fieldName, underlyingField) =>
-          field.withValue(Some(LiabilityStatus.LIVE)) shouldBe LiabilityStatusResultField(fieldName, Some(LiabilityStatus.LIVE))
+          field.withValue(Some(LiabilityStatus.LIVE)) shouldBe LiabilityStatusResultField(
+            fieldName,
+            Some(LiabilityStatus.LIVE)
+          )
         case field @ CoalesceField(fieldName, fieldChoices) =>
           field.withValue(Some("Port Officer")) shouldBe StringResultField(fieldName, Some("Port Officer"))
       }

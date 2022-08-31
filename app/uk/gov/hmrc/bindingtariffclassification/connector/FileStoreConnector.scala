@@ -30,7 +30,7 @@ import uk.gov.hmrc.bindingtariffclassification.metrics.HasMetrics
 import uk.gov.hmrc.play.bootstrap.http.DefaultHttpClient
 
 @Singleton
-class FileStoreConnector @Inject()(appConfig: AppConfig, http: DefaultHttpClient, val metrics: Metrics)(
+class FileStoreConnector @Inject() (appConfig: AppConfig, http: DefaultHttpClient, val metrics: Metrics)(
   implicit mat: Materializer
 ) extends HasMetrics {
 
@@ -46,7 +46,7 @@ class FileStoreConnector @Inject()(appConfig: AppConfig, http: DefaultHttpClient
 
     hc.headers(Seq(headerName)) match {
       case header @ Seq(_) => header
-      case _      => Seq(headerName -> appConfig.authorization)
+      case _               => Seq(headerName -> appConfig.authorization)
     }
   }
 
@@ -56,7 +56,10 @@ class FileStoreConnector @Inject()(appConfig: AppConfig, http: DefaultHttpClient
         Source(search.ids.get)
           .grouped(BatchSize)
           .mapAsyncUnordered(Runtime.getRuntime.availableProcessors()) { idBatch =>
-            http.GET[Paged[FileMetadata]](findQueryUri(search.copy(ids = Some(idBatch.toSet)), Pagination.max), headers = addHeaders)
+            http.GET[Paged[FileMetadata]](
+              findQueryUri(search.copy(ids = Some(idBatch.toSet)), Pagination.max),
+              headers = addHeaders
+            )
           }
           .runFold(Seq.empty[FileMetadata]) {
             case (acc, next) => acc ++ next.results

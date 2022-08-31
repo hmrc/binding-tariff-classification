@@ -29,13 +29,13 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class Scheduler @Inject()(
-                           lifecycle: ApplicationLifecycle,
-                           jobFactory: ScheduledJobFactory,
-                           scheduledJobs: ScheduledJobs,
-                           val metrics: Metrics
-                         )(implicit ec: ExecutionContext)
-  extends Logging
+class Scheduler @Inject() (
+  lifecycle: ApplicationLifecycle,
+  jobFactory: ScheduledJobFactory,
+  scheduledJobs: ScheduledJobs,
+  val metrics: Metrics
+)(implicit ec: ExecutionContext)
+    extends Logging
     with HasMetrics {
 
   val quartz = StdSchedulerFactory.getDefaultScheduler

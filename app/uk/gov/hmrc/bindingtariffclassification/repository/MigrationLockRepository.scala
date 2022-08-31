@@ -43,15 +43,15 @@ trait MigrationLockRepository {
 }
 
 @Singleton
-class MigrationLockMongoRepository @Inject()(mongoComponent: MongoComponent)
-  extends PlayMongoRepository[JobRunEvent](
-    collectionName = "migrations",
-    mongoComponent = mongoComponent,
-    domainFormat = MongoFormatters.formatJobRunEvent,
-    indexes = Seq(
-      IndexModel(ascending("name"), IndexOptions().unique(true).name("name_Index"))
+class MigrationLockMongoRepository @Inject() (mongoComponent: MongoComponent)
+    extends PlayMongoRepository[JobRunEvent](
+      collectionName = "migrations",
+      mongoComponent = mongoComponent,
+      domainFormat   = MongoFormatters.formatJobRunEvent,
+      indexes = Seq(
+        IndexModel(ascending("name"), IndexOptions().unique(true).name("name_Index"))
+      )
     )
-  )
     with MigrationLockRepository {
 
   val mongoDuplicateKeyErrorCode: Int = 11000
@@ -86,6 +86,6 @@ class MigrationLockMongoRepository @Inject()(mongoComponent: MongoComponent)
   /** Tells if this error is due to a write on a secondary node. */
   def isNotAPrimaryError(code: Int): Boolean = Some(code).exists {
     case 10058 | 10107 | 13435 | 13436 => true
-    case _ => false
+    case _                             => false
   }
 }

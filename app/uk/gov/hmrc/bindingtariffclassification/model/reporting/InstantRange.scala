@@ -41,7 +41,7 @@ object InstantRange {
 
         val minValue: Instant = param(min(key)).flatMap(bindInstant).getOrElse(Instant.MIN)
         val maxValue: Instant = param(max(key)).flatMap(bindInstant).getOrElse(Instant.MAX)
-        val range = InstantRange(minValue, maxValue)
+        val range             = InstantRange(minValue, maxValue)
 
         if (range == InstantRange.allTime)
           None

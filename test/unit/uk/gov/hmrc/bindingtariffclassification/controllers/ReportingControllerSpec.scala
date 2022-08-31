@@ -57,7 +57,9 @@ class ReportingControllerSpec extends BaseSpec with BeforeAndAfterEach {
     "delegate to service" in {
       val report = mock[CaseReport]
 
-      given(reportService.caseReport(report, Pagination())) willReturn Future.successful(Paged.empty[Map[String, ReportResultField[_]]])
+      given(reportService.caseReport(report, Pagination())) willReturn Future.successful(
+        Paged.empty[Map[String, ReportResultField[_]]]
+      )
 
       val result = controller.caseReport(report, Pagination())(fakeRequest).futureValue
 

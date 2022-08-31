@@ -37,24 +37,31 @@ import scala.concurrent.{ExecutionContext, Future}
 // scalastyle:off magic.number
 class BtaCardControllerSpec extends BaseSpec {
 
-  private val eori = "GB123"
-  lazy val injector: Injector = app.injector
+  private val eori                          = "GB123"
+  lazy val injector: Injector               = app.injector
   lazy val bodyParsers: BodyParsers.Default = injector.instanceOf[BodyParsers.Default]
-  private val btaCardService = mock[BtaCardService]
-  def fakeResponse: Enrolments = Enrolments(Set(Enrolment("HMRC-ATAR-ORG", Seq(EnrolmentIdentifier("EORINumber", eori)), "active")))
-  class FakeSuccessAuthConnector[B] @Inject()(response: B) extends AuthConnector {
-    override def authorise[A](predicate: Predicate, retrieval: Retrieval[A])(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[A] =
+  private val btaCardService                = mock[BtaCardService]
+  def fakeResponse: Enrolments =
+    Enrolments(Set(Enrolment("HMRC-ATAR-ORG", Seq(EnrolmentIdentifier("EORINumber", eori)), "active")))
+  class FakeSuccessAuthConnector[B] @Inject() (response: B) extends AuthConnector {
+    override def authorise[A](
+      predicate: Predicate,
+      retrieval: Retrieval[A]
+    )(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[A] =
       Future.successful(response.asInstanceOf[A])
   }
-  class Authorised[B](response: B, bodyParser: BodyParsers.Default) extends AuthAction(new FakeSuccessAuthConnector[B](response), bodyParser)
+  class Authorised[B](response: B, bodyParser: BodyParsers.Default)
+      extends AuthAction(new FakeSuccessAuthConnector[B](response), bodyParser)
   object AuthorisedAction extends Authorised[Enrolments](fakeResponse, bodyParsers)
   private val controller = new BtaCardController(btaCardService, AuthorisedAction, mcc)
-  private val request = FakeRequest(method = HttpVerbs.GET, uri = "/bta-card", headers = Headers(("Authorization", "auth")), body = "")
+  private val request =
+    FakeRequest(method = HttpVerbs.GET, uri = "/bta-card", headers = Headers(("Authorization", "auth")), body = "")
 
   "getBtaCard" should {
 
     "return 200 with a Json body if successful" in {
-      when(btaCardService.generateBtaCard(eori)).thenReturn(Future.successful(BtaCard(eori, Some(BtaApplications(1,1)), Some(BtaRulings(2,2)))))
+      when(btaCardService.generateBtaCard(eori))
+        .thenReturn(Future.successful(BtaCard(eori, Some(BtaApplications(1, 1)), Some(BtaRulings(2, 2)))))
       val result = controller.getBtaCard(request)
 
       status(result) shouldBe OK

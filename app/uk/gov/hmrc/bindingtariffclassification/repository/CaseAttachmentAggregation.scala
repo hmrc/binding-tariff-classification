@@ -30,7 +30,7 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class CaseAttachmentAggregation @Inject()(mongoComponent: MongoComponent)(implicit mat: Materializer) {
+class CaseAttachmentAggregation @Inject() (mongoComponent: MongoComponent)(implicit mat: Materializer) {
 
   implicit val ec: ExecutionContext = mat.executionContext
 
@@ -47,8 +47,12 @@ class CaseAttachmentAggregation @Inject()(mongoComponent: MongoComponent)(implic
   private val allAttachmentFields: Set[String] = attachmentArrayFields ++ attachmentFields
 
   private val unwindNestedAttachmentArrays = attachmentArrayFields.toList.map(name =>
-    unwind("$" + name, UnwindOptions().includeArrayIndex(null)
-      .preserveNullAndEmptyArrays(true))
+    unwind(
+      "$" + name,
+      UnwindOptions()
+        .includeArrayIndex(null)
+        .preserveNullAndEmptyArrays(true)
+    )
   )
   private val projectAttachments = Aggregates.project(
     Projections.fields(
@@ -56,11 +60,15 @@ class CaseAttachmentAggregation @Inject()(mongoComponent: MongoComponent)(implic
     )
   )
   private val unwindAttachments =
-    unwind("$attachment", UnwindOptions().includeArrayIndex(null)
-      .preserveNullAndEmptyArrays(false))
+    unwind(
+      "$attachment",
+      UnwindOptions()
+        .includeArrayIndex(null)
+        .preserveNullAndEmptyArrays(false)
+    )
   private val filterNotNull = `match`(notEqual("attachment", null))
-  private val toRoot = replaceRoot(Codecs.toBson(Json.obj("$mergeObjects" -> List("$attachment"))))
-  private val out = Aggregates.out("attachments")
+  private val toRoot        = replaceRoot(Codecs.toBson(Json.obj("$mergeObjects" -> List("$attachment"))))
+  private val out           = Aggregates.out("attachments")
 
   protected val pipeline: List[Bson] = {
     unwindNestedAttachmentArrays ++ List(

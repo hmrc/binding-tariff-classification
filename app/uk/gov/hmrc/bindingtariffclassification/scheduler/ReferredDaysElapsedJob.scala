@@ -35,32 +35,32 @@ import scala.concurrent.duration.DurationInt
 import scala.concurrent.{ExecutionContext, Future, duration}
 
 @Singleton
-class ReferredDaysElapsedJob @Inject()(
-                                        caseService: CaseService,
-                                        eventService: EventService,
-                                        bankHolidaysConnector: BankHolidaysConnector,
-                                        mongoLockRepository: LockRepository,
-                                        implicit val appConfig: AppConfig
-                                      )(implicit ec: ExecutionContext)
-  extends ScheduledJob
+class ReferredDaysElapsedJob @Inject() (
+  caseService: CaseService,
+  eventService: EventService,
+  bankHolidaysConnector: BankHolidaysConnector,
+  mongoLockRepository: LockRepository,
+  implicit val appConfig: AppConfig
+)(implicit ec: ExecutionContext)
+    extends ScheduledJob
     with Logging {
 
   override val jobConfig = appConfig.referredDaysElapsed
 
   override val lockRepository: LockRepository = mongoLockRepository
-  override val lockId: String = "referred_days_elapsed"
-  override val ttl: duration.Duration = 5.minutes
+  override val lockId: String                 = "referred_days_elapsed"
+  override val ttl: duration.Duration         = 5.minutes
 
   private implicit val carrier: HeaderCarrier = HeaderCarrier()
   private lazy val criteria = CaseSearch(
     filter = CaseFilter(statuses = Some(Set(PseudoCaseStatus.REFERRED, PseudoCaseStatus.SUSPENDED))),
-    sort = Some(CaseSort(Set(CaseSortField.REFERENCE)))
+    sort   = Some(CaseSort(Set(CaseSortField.REFERENCE)))
   )
 
   override def execute(): Future[Unit] =
     for {
       bankHolidays <- bankHolidaysConnector.get()
-      _ <- process(1)(bankHolidays)
+      _            <- process(1)(bankHolidays)
     } yield ()
 
   private def process(page: Int)(implicit bankHolidays: Set[LocalDate]): Future[Unit] =
@@ -68,18 +68,18 @@ class ReferredDaysElapsedJob @Inject()(
       sequence(pager.results.map(refreshReferredDaysElapsed)).map(_ => pager)
     } flatMap {
       case pager if pager.hasNextPage => process(page + 1)
-      case _ => successful(())
+      case _                          => successful(())
     }
 
   private def getReferralStartDate(c: Case): Future[Option[LocalDate]] =
     for {
       eventSearch <- eventService.search(
-        search = EventSearch(
-          Some(Set(c.reference)),
-          Some(Set(EventType.CASE_STATUS_CHANGE, EventType.CASE_REFERRAL))
-        ),
-        pagination = Pagination(1, Integer.MAX_VALUE)
-      )
+                      search = EventSearch(
+                        Some(Set(c.reference)),
+                        Some(Set(EventType.CASE_STATUS_CHANGE, EventType.CASE_REFERRAL))
+                      ),
+                      pagination = Pagination(1, Integer.MAX_VALUE)
+                    )
 
       startTimestamp = eventSearch.results
         .filter(_.details.isInstanceOf[FieldChange[CaseStatus]])

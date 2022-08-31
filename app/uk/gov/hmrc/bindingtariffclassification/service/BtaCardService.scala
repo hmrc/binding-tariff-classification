@@ -27,39 +27,54 @@ import javax.inject._
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class BtaCardService @Inject()(caseRepository: CaseRepository)(implicit ec: ExecutionContext) extends Logging {
+class BtaCardService @Inject() (caseRepository: CaseRepository)(implicit ec: ExecutionContext) extends Logging {
 
-  private final lazy val applicationStatuses = List(NEW, OPEN, REFERRED)
-  private final lazy val ignoredStatuses = List(DRAFT, REJECTED, CANCELLED, ANNULLED, REVOKED)
+  private final lazy val applicationStatuses  = List(NEW, OPEN, REFERRED)
+  private final lazy val ignoredStatuses      = List(DRAFT, REJECTED, CANCELLED, ANNULLED, REVOKED)
   private final lazy val rulingExpiryInMonths = 3L
   private case class RulingTotals(total: Int, expiring: Int)
 
   def generateBtaCard(eori: String): Future[BtaCard] = caseRepository.getAllByEori(eori).map { cases =>
     logger.info(s"[BtaCardService][generateBtaCard] Found records linked to EORI: ${cases.size}")
-    val data = cases.filterNot(ignoredStatuses.contains).groupBy(_.status)
-    val totalRulings = calculateRulingTotals(data.getOrElse(COMPLETED, List.empty))
+    val data              = cases.filterNot(ignoredStatuses.contains).groupBy(_.status)
+    val totalRulings      = calculateRulingTotals(data.getOrElse(COMPLETED, List.empty))
     val totalApplications = data.filter { case (caseStatus, _) => applicationStatuses.contains(caseStatus) }
     BtaCard(
       eori = eori,
-      applications = if (totalApplications.isEmpty) None else {
-        Some(BtaApplications(
-          total = totalApplications.map { case (_, applications) => applications.length }.sum,
-          actionable = totalApplications.getOrElse(REFERRED, List.empty).length))
-      },
-      rulings = if (totalRulings.total == 0) None else {
-        Some(BtaRulings(
-          total = totalRulings.total,
-          expiring = totalRulings.expiring
-        ))
-      }
+      applications =
+        if (totalApplications.isEmpty) None
+        else {
+          Some(
+            BtaApplications(
+              total      = totalApplications.map { case (_, applications) => applications.length }.sum,
+              actionable = totalApplications.getOrElse(REFERRED, List.empty).length
+            )
+          )
+        },
+      rulings =
+        if (totalRulings.total == 0) None
+        else {
+          Some(
+            BtaRulings(
+              total    = totalRulings.total,
+              expiring = totalRulings.expiring
+            )
+          )
+        }
     )
   }
 
   private def calculateRulingTotals(rulings: List[Case]): RulingTotals = {
-    val now = LocalDateTime.now().atOffset(ZoneOffset.UTC).toInstant
+    val now           = LocalDateTime.now().atOffset(ZoneOffset.UTC).toInstant
     val activeRulings = rulings.filter(_.decision.flatMap(_.effectiveEndDate.map(_.isAfter(now))).getOrElse(false))
-    val expiringRulings = activeRulings.count(_.decision.get.effectiveEndDate.get.isBefore(now.atOffset(ZoneOffset.UTC)
-      .plusMonths(rulingExpiryInMonths).toInstant))
+    val expiringRulings = activeRulings.count(
+      _.decision.get.effectiveEndDate.get.isBefore(
+        now
+          .atOffset(ZoneOffset.UTC)
+          .plusMonths(rulingExpiryInMonths)
+          .toInstant
+      )
+    )
     RulingTotals(activeRulings.length, expiringRulings)
   }
 }

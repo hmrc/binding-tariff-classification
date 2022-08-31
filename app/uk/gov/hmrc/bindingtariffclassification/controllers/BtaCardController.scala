@@ -25,17 +25,25 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
 
 @Singleton
-class BtaCardController @Inject()(btaCardService: BtaCardService, authAction: AuthAction,
-                                  mcc: MessagesControllerComponents)(implicit ec: ExecutionContext) extends CommonController(mcc) {
+class BtaCardController @Inject() (
+  btaCardService: BtaCardService,
+  authAction: AuthAction,
+  mcc: MessagesControllerComponents
+)(implicit ec: ExecutionContext)
+    extends CommonController(mcc) {
 
   def getBtaCard: Action[AnyContent] = authAction.async { implicit request =>
     logger.info(s"[BtaCardController][getBtaCard] Count request received")
-    btaCardService.generateBtaCard(request.eori).map { card =>
-      logger.info(s"[BtaCardController][getBtaCard] Card generated: ${Json.toJson(card).toString()}")
-      Ok(Json.toJson(card))
-    }.recover {
-      case ex: Exception => logger.error(s"[BtaCardController][getBtaCard] Failure generating BTA Card counts: ${ex.getMessage}")
-        InternalServerError
-    }
+    btaCardService
+      .generateBtaCard(request.eori)
+      .map { card =>
+        logger.info(s"[BtaCardController][getBtaCard] Card generated: ${Json.toJson(card).toString()}")
+        Ok(Json.toJson(card))
+      }
+      .recover {
+        case ex: Exception =>
+          logger.error(s"[BtaCardController][getBtaCard] Failure generating BTA Card counts: ${ex.getMessage}")
+          InternalServerError
+      }
   }
 }

@@ -23,18 +23,17 @@ import uk.gov.hmrc.auth.core.{Enrolment, EnrolmentIdentifier, Enrolments}
 
 object AuthStub extends WireMockMethods {
 
-  private val authoriseUri = "/auth/authorise"
+  private val authoriseUri                                    = "/auth/authorise"
   implicit val identifierFormat: OFormat[EnrolmentIdentifier] = Json.format[EnrolmentIdentifier]
-  implicit val enrolmentFormat: OFormat[Enrolment] = Json.format[Enrolment]
+  implicit val enrolmentFormat: OFormat[Enrolment]            = Json.format[Enrolment]
   case class AllEnrolments(allEnrolments: Set[Enrolment])
   implicit val enrolmentsFormat: OFormat[AllEnrolments] = Json.format[AllEnrolments]
-
 
   def authorised(): StubMapping =
     when(method = POST, uri = authoriseUri)
       .thenReturn(
         status = OK,
-        body = AllEnrolments(Set(Enrolment("HMRC-ATAR-ORG", Seq(EnrolmentIdentifier("EORINumber", "GB123")), "active")))
+        body   = AllEnrolments(Set(Enrolment("HMRC-ATAR-ORG", Seq(EnrolmentIdentifier("EORINumber", "GB123")), "active")))
       )
 
   def unauthorised(): StubMapping =

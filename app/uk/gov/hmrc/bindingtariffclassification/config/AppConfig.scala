@@ -73,7 +73,7 @@ class AppConfig @Inject() (
     configuration.getOptional[String](key).getOrElse(configNotFoundError(key))
 
   lazy val mongodbUri: String = configuration.get[String]("mongodb.uri")
-  lazy val appName: String = configuration.get[String]("appName")
+  lazy val appName: String    = configuration.get[String]("appName")
 
   lazy val mongoEncryption: MongoEncryption = {
     val encryptionEnabled = getBooleanConfig("mongodb.encryption.enabled")

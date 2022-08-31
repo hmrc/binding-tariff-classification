@@ -22,6 +22,7 @@ import org.bson.BsonDocument
 
 object DatabaseException {
 
-  def exception(code: Int, message: String, bsonDocument: Option[BsonDocument] = None) = new MongoWriteException (new WriteError(code, message, bsonDocument.getOrElse(new BsonDocument())), null)
+  def exception(code: Int, message: String, bsonDocument: Option[BsonDocument] = None) =
+    new MongoWriteException(new WriteError(code, message, bsonDocument.getOrElse(new BsonDocument())), null)
 
 }

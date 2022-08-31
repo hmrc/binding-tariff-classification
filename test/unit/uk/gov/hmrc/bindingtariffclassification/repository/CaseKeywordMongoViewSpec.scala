@@ -71,7 +71,7 @@ class CaseKeywordMongoViewSpec
 
   private val caseKeywordBike = CaseKeyword(Keyword("bike"), List(btiCaseHeader, liabilityCaseHeader))
   private val caseKeywordTool = CaseKeyword(Keyword("tool"), List(liabilityCaseHeader))
-  private val caseKeywordCar = CaseKeyword(Keyword("car"), List(liabilityCaseHeader))
+  private val caseKeywordCar  = CaseKeyword(Keyword("car"), List(liabilityCaseHeader))
 
   private val caseWithKeywordsBTI: Case =
     Case(
@@ -139,7 +139,7 @@ class CaseKeywordMongoViewSpec
 
       val futureCollectionNames = await(result).flatMap(_ => mongoComponent.database.listCollectionNames().toFuture())
 
-      await(futureCollectionNames) mustNot contain (view.caseKeywordsViewName)
+      await(futureCollectionNames) mustNot contain(view.caseKeywordsViewName)
     }
 
     "createView will create the view" in {

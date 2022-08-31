@@ -105,9 +105,8 @@ class FileStoreConnectorTest extends BaseSpec with WiremockTestServer with Befor
           )
       )
 
-      await(
-        connector.find(FileSearch(ids = Some(ids)), Pagination.max)).results shouldBe (1 to numBatches).map(_ =>
-          uploadedFile
+      await(connector.find(FileSearch(ids = Some(ids)), Pagination.max)).results shouldBe (1 to numBatches).map(_ =>
+        uploadedFile
       )
     }
 

@@ -28,8 +28,8 @@ import scala.reflect.ClassTag
 
 trait BaseMongoOperations[T] {
 
-  protected val countField: String = BaseMongoOperations.countField
-  protected val _id = "_id"
+  protected val countField: String  = BaseMongoOperations.countField
+  protected val _id                 = "_id"
   protected val defaultSortBy: Bson = Sorts.orderBy(Sorts.ascending(_id))
 
   protected val collection: MongoCollection[T]
@@ -63,10 +63,10 @@ object BaseMongoOperations {
   val countField = "resultCount"
 
   def pagedResults[A](
-                       futureCount: Future[Option[BsonDocument]],
-                       runAggregation: Future[Seq[A]],
-                       pagination: Pagination
-                     )(implicit ec: ExecutionContext): Future[Paged[A]] =
+    futureCount: Future[Option[BsonDocument]],
+    runAggregation: Future[Seq[A]],
+    pagination: Pagination
+  )(implicit ec: ExecutionContext): Future[Paged[A]] =
     (futureCount, runAggregation).mapN {
       case (count, results) =>
         val totalCount = count.map(field => field.getInt32(countField).getValue).getOrElse(0)

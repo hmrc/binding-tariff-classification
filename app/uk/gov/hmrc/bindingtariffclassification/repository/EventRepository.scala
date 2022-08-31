@@ -41,17 +41,17 @@ trait EventRepository {
 }
 
 @Singleton
-class EventMongoRepository @Inject()(mongoComponent: MongoComponent)
-  extends PlayMongoRepository[Event](
-    collectionName = "events",
-    mongoComponent = mongoComponent,
-    domainFormat = MongoFormatters.formatEvent,
-    indexes = Seq(
-      IndexModel(Indexes.ascending("id"), IndexOptions().unique(true).name("id_Index")),
-      IndexModel(Indexes.ascending("caseReference"), IndexOptions().unique(false).name("caseReference_Index")),
-      IndexModel(Indexes.ascending("type"), IndexOptions().unique(false).name("type_Index"))
+class EventMongoRepository @Inject() (mongoComponent: MongoComponent)
+    extends PlayMongoRepository[Event](
+      collectionName = "events",
+      mongoComponent = mongoComponent,
+      domainFormat   = MongoFormatters.formatEvent,
+      indexes = Seq(
+        IndexModel(Indexes.ascending("id"), IndexOptions().unique(true).name("id_Index")),
+        IndexModel(Indexes.ascending("caseReference"), IndexOptions().unique(false).name("caseReference_Index")),
+        IndexModel(Indexes.ascending("type"), IndexOptions().unique(false).name("type_Index"))
+      )
     )
-  )
     with EventRepository
     with BaseMongoOperations[Event] {
 
@@ -78,9 +78,9 @@ class EventMongoRepository @Inject()(mongoComponent: MongoComponent)
       .++(search.timestampMax.map(t => Filters.lte("timestamp", t)))
 
     queries match {
-      case Nil => empty()
+      case Nil           => empty()
       case single :: Nil => single
-      case many => and(many: _*)
+      case many          => and(many: _*)
     }
   }
 

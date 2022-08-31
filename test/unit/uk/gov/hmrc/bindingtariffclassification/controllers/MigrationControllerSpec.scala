@@ -47,7 +47,7 @@ class MigrationControllerSpec extends BaseSpec {
 
       val result = controller.amendDateOfExtract()(fakeRequest)
 
-      status(result) shouldBe INTERNAL_SERVER_ERROR
+      status(result)                   shouldBe INTERNAL_SERVER_ERROR
       contentAsJson(result).toString() shouldBe """{"code":"UNKNOWN_ERROR","message":"An unexpected error occurred"}"""
     }
 

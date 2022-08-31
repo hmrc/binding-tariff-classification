@@ -21,7 +21,7 @@ lazy val microservice = (project in file("."))
     scalaVersion := "2.12.16",
     targetJvm := "jvm-1.8",
     PlayKeys.playDefaultPort := 9580,
-    libraryDependencies ++= (AppDependencies.compile ++ AppDependencies.test),
+    libraryDependencies ++= AppDependencies(),
     Test / parallelExecution := false,
     Test / fork := true,
     retrieveManaged := true,
@@ -34,11 +34,7 @@ lazy val microservice = (project in file("."))
           "-Ywarn-value-discard"
         )
       )
-    },
-    libraryDependencies ++= Seq(
-      compilerPlugin("com.github.ghik" % "silencer-plugin" % "1.7.9" cross CrossVersion.full),
-      "com.github.ghik" % "silencer-lib" % "1.7.9" % Provided cross CrossVersion.full
-    )
+    }
   )
   .settings(inConfig(TemplateTest)(Defaults.testSettings): _*)
   .settings(

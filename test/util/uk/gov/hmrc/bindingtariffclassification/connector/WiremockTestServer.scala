@@ -24,8 +24,8 @@ import org.scalatest.wordspec.AnyWordSpecLike
 
 trait WiremockTestServer extends AnyWordSpecLike with BeforeAndAfterEach {
 
-  private val wireHost = "localhost"
-  protected val wirePort = 20001
+  private val wireHost       = "localhost"
+  protected val wirePort     = 20001
   private val wireMockServer = new WireMockServer(wirePort)
 
   lazy val wireMockUrl: String = s"http://$wireHost:$wirePort"

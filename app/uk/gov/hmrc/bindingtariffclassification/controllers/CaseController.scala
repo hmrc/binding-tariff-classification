@@ -74,7 +74,8 @@ class CaseController @Inject() (
 
   def update(reference: String): Action[JsValue] = Action.async(parse.json) { implicit request =>
     withJsonBody[CaseUpdate] { caseUpdate =>
-      caseService.update(reference, caseUpdate)
+      caseService
+        .update(reference, caseUpdate)
         .map(handleNotFound)
     }.recover(recovery)
   }

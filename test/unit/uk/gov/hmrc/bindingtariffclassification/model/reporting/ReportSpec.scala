@@ -28,27 +28,26 @@ class ReportSpec extends BaseSpec {
   "CaseReport" should {
     "bind from query string" in {
       val params1 = Map[String, Seq[String]](
-        "sort_by"    -> Seq("count"),
-        "sort_order" -> Seq("desc"),
-        "case_type"  -> Seq("BTI", "CORRESPONDENCE"),
-        "status"     -> Seq("LIVE", "REFERRED"),
+        "sort_by"          -> Seq("count"),
+        "sort_order"       -> Seq("desc"),
+        "case_type"        -> Seq("BTI", "CORRESPONDENCE"),
+        "status"           -> Seq("LIVE", "REFERRED"),
         "liability_status" -> Seq(),
-        "team"       -> Seq("1", "3"),
-        "min_date"   -> Seq("2020-03-21T12:03:15.000Z"),
-        "max_date"   -> Seq("2021-03-21T12:03:15.000Z"),
-        "fields"     -> Seq("reference", "status", "assigned_user", "source")
+        "team"             -> Seq("1", "3"),
+        "min_date"         -> Seq("2020-03-21T12:03:15.000Z"),
+        "max_date"         -> Seq("2021-03-21T12:03:15.000Z"),
+        "fields"           -> Seq("reference", "status", "assigned_user", "source")
       )
 
       CaseReport.caseReportQueryStringBindable.bind("", params1) shouldBe Some(
         Right(
           CaseReport(
-            sortBy    = ReportField.Count,
-            sortOrder = SortDirection.DESCENDING,
-            caseTypes = Set(ApplicationType.BTI, ApplicationType.CORRESPONDENCE),
-            statuses  = Set(PseudoCaseStatus.LIVE, PseudoCaseStatus.REFERRED),
-
+            sortBy            = ReportField.Count,
+            sortOrder         = SortDirection.DESCENDING,
+            caseTypes         = Set(ApplicationType.BTI, ApplicationType.CORRESPONDENCE),
+            statuses          = Set(PseudoCaseStatus.LIVE, PseudoCaseStatus.REFERRED),
             liabilityStatuses = Set(),
-            teams     = Set("1", "3"),
+            teams             = Set("1", "3"),
             dateRange = InstantRange(
               Instant.parse("2020-03-21T12:03:15.000Z"),
               Instant.parse("2021-03-21T12:03:15.000Z")
@@ -59,25 +58,26 @@ class ReportSpec extends BaseSpec {
       )
 
       val params2 = Map[String, Seq[String]](
-        "sort_by"    -> Seq("date_created"),
-        "sort_order" -> Seq("asc"),
-        "case_type"  -> Seq("MISCELLANEOUS", "CORRESPONDENCE"),
-        "status"     -> Seq("COMPLETED", "REJECTED"),
+        "sort_by"          -> Seq("date_created"),
+        "sort_order"       -> Seq("asc"),
+        "case_type"        -> Seq("MISCELLANEOUS", "CORRESPONDENCE"),
+        "status"           -> Seq("COMPLETED", "REJECTED"),
         "liability_status" -> Seq("NON_LIVE"),
-        "team"       -> Seq("4", "5"),
-        "fields"     -> Seq("reference", "status", "elapsed_days", "total_days")
+        "team"             -> Seq("4", "5"),
+        "fields"           -> Seq("reference", "status", "elapsed_days", "total_days")
       )
 
       CaseReport.caseReportQueryStringBindable.bind("", params2) shouldBe Some(
         Right(
           CaseReport(
-            sortBy    = ReportField.DateCreated,
-            sortOrder = SortDirection.ASCENDING,
-            caseTypes = Set(ApplicationType.MISCELLANEOUS, ApplicationType.CORRESPONDENCE),
-            statuses  = Set(PseudoCaseStatus.COMPLETED, PseudoCaseStatus.REJECTED),
+            sortBy            = ReportField.DateCreated,
+            sortOrder         = SortDirection.ASCENDING,
+            caseTypes         = Set(ApplicationType.MISCELLANEOUS, ApplicationType.CORRESPONDENCE),
+            statuses          = Set(PseudoCaseStatus.COMPLETED, PseudoCaseStatus.REJECTED),
             liabilityStatuses = Set(LiabilityStatus.NON_LIVE),
-            teams     = Set("4", "5"),
-            fields    = NonEmptySeq.of(ReportField.Reference, ReportField.Status, ReportField.ElapsedDays, ReportField.TotalDays)
+            teams             = Set("4", "5"),
+            fields =
+              NonEmptySeq.of(ReportField.Reference, ReportField.Status, ReportField.ElapsedDays, ReportField.TotalDays)
           )
         )
       )
@@ -90,7 +90,13 @@ class ReportSpec extends BaseSpec {
         Right(
           CaseReport(
             sortBy = ReportField.Reference,
-            fields = NonEmptySeq.of(ReportField.Reference, ReportField.Status, ReportField.LiabilityStatus, ReportField.ElapsedDays, ReportField.TotalDays)
+            fields = NonEmptySeq.of(
+              ReportField.Reference,
+              ReportField.Status,
+              ReportField.LiabilityStatus,
+              ReportField.ElapsedDays,
+              ReportField.TotalDays
+            )
           )
         )
       )
@@ -101,13 +107,13 @@ class ReportSpec extends BaseSpec {
         CaseReport.caseReportQueryStringBindable.unbind(
           "",
           CaseReport(
-            fields = NonEmptySeq.one(ReportField.Reference),
-            sortBy    = ReportField.Count,
-            sortOrder = SortDirection.DESCENDING,
-            caseTypes = Set(ApplicationType.BTI, ApplicationType.CORRESPONDENCE),
-            statuses  = Set(PseudoCaseStatus.LIVE, PseudoCaseStatus.NEW),
+            fields            = NonEmptySeq.one(ReportField.Reference),
+            sortBy            = ReportField.Count,
+            sortOrder         = SortDirection.DESCENDING,
+            caseTypes         = Set(ApplicationType.BTI, ApplicationType.CORRESPONDENCE),
+            statuses          = Set(PseudoCaseStatus.LIVE, PseudoCaseStatus.NEW),
             liabilityStatuses = Set(LiabilityStatus.NON_LIVE),
-            teams     = Set("1", "3"),
+            teams             = Set("1", "3"),
             dateRange = InstantRange(
               Instant.parse("2020-03-21T12:03:15.000Z"),
               Instant.parse("2021-03-21T12:03:15.000Z")
@@ -131,13 +137,19 @@ class ReportSpec extends BaseSpec {
         CaseReport.caseReportQueryStringBindable.unbind(
           "",
           CaseReport(
-            sortBy    = ReportField.DateCreated,
-            sortOrder = SortDirection.ASCENDING,
-            caseTypes = Set(ApplicationType.MISCELLANEOUS, ApplicationType.CORRESPONDENCE),
-            statuses  = Set(PseudoCaseStatus.COMPLETED, PseudoCaseStatus.REJECTED),
+            sortBy            = ReportField.DateCreated,
+            sortOrder         = SortDirection.ASCENDING,
+            caseTypes         = Set(ApplicationType.MISCELLANEOUS, ApplicationType.CORRESPONDENCE),
+            statuses          = Set(PseudoCaseStatus.COMPLETED, PseudoCaseStatus.REJECTED),
             liabilityStatuses = Set(LiabilityStatus.NON_LIVE),
-            teams     = Set("4", "5"),
-            fields    = NonEmptySeq.of(ReportField.Reference, ReportField.CaseSource, ReportField.Status, ReportField.ElapsedDays, ReportField.TotalDays)
+            teams             = Set("4", "5"),
+            fields = NonEmptySeq.of(
+              ReportField.Reference,
+              ReportField.CaseSource,
+              ReportField.Status,
+              ReportField.ElapsedDays,
+              ReportField.TotalDays
+            )
           )
         ),
         "UTF-8"
@@ -213,7 +225,7 @@ class ReportSpec extends BaseSpec {
 
       val minParams = Map[String, Seq[String]](
         "group_by" -> Seq("assigned_user"),
-        "sort_by" -> Seq("assigned_user")
+        "sort_by"  -> Seq("assigned_user")
       )
 
       SummaryReport.summaryReportQueryStringBindable.bind("", minParams) shouldBe Some(
@@ -231,14 +243,14 @@ class ReportSpec extends BaseSpec {
         SummaryReport.summaryReportQueryStringBindable.unbind(
           "",
           SummaryReport(
-            groupBy   = NonEmptySeq.one(ReportField.Status),
-            sortBy    = ReportField.Count,
-            sortOrder = SortDirection.DESCENDING,
-            caseTypes = Set(ApplicationType.BTI, ApplicationType.CORRESPONDENCE),
-            statuses  = Set(PseudoCaseStatus.LIVE, PseudoCaseStatus.REFERRED),
-            liabilityStatuses  = Set(LiabilityStatus.NON_LIVE),
-            teams     = Set("1", "3"),
-            maxFields = Seq(ReportField.ElapsedDays),
+            groupBy           = NonEmptySeq.one(ReportField.Status),
+            sortBy            = ReportField.Count,
+            sortOrder         = SortDirection.DESCENDING,
+            caseTypes         = Set(ApplicationType.BTI, ApplicationType.CORRESPONDENCE),
+            statuses          = Set(PseudoCaseStatus.LIVE, PseudoCaseStatus.REFERRED),
+            liabilityStatuses = Set(LiabilityStatus.NON_LIVE),
+            teams             = Set("1", "3"),
+            maxFields         = Seq(ReportField.ElapsedDays),
             dateRange = InstantRange(
               Instant.parse("2020-03-21T12:03:15.000Z"),
               Instant.parse("2021-03-21T12:03:15.000Z")
@@ -264,14 +276,14 @@ class ReportSpec extends BaseSpec {
         SummaryReport.summaryReportQueryStringBindable.unbind(
           "",
           SummaryReport(
-            groupBy   = NonEmptySeq.one(ReportField.User),
-            sortBy    = ReportField.DateCreated,
-            sortOrder = SortDirection.ASCENDING,
-            caseTypes = Set(ApplicationType.MISCELLANEOUS, ApplicationType.CORRESPONDENCE),
-            statuses  = Set(PseudoCaseStatus.COMPLETED, PseudoCaseStatus.REJECTED),
-            liabilityStatuses  = Set(LiabilityStatus.NON_LIVE),
-            teams     = Set("4", "5"),
-            maxFields = Seq(ReportField.TotalDays)
+            groupBy           = NonEmptySeq.one(ReportField.User),
+            sortBy            = ReportField.DateCreated,
+            sortOrder         = SortDirection.ASCENDING,
+            caseTypes         = Set(ApplicationType.MISCELLANEOUS, ApplicationType.CORRESPONDENCE),
+            statuses          = Set(PseudoCaseStatus.COMPLETED, PseudoCaseStatus.REJECTED),
+            liabilityStatuses = Set(LiabilityStatus.NON_LIVE),
+            teams             = Set("4", "5"),
+            maxFields         = Seq(ReportField.TotalDays)
           )
         ),
         "UTF-8"
@@ -312,7 +324,7 @@ class ReportSpec extends BaseSpec {
             caseTypes = Set(ApplicationType.BTI, ApplicationType.CORRESPONDENCE),
             statuses  = Set(PseudoCaseStatus.LIVE, PseudoCaseStatus.REFERRED),
             teams     = Set("1", "3"),
-            assignee = Some("1"),
+            assignee  = Some("1"),
             dateRange = InstantRange(
               Instant.parse("2020-03-21T12:03:15.000Z"),
               Instant.parse("2021-03-21T12:03:15.000Z")
@@ -322,23 +334,23 @@ class ReportSpec extends BaseSpec {
       )
 
       val params2 = Map[String, Seq[String]](
-        "sort_by"    -> Seq("date_created"),
-        "sort_order" -> Seq("asc"),
-        "case_type"  -> Seq("MISCELLANEOUS", "CORRESPONDENCE"),
-        "status"     -> Seq("COMPLETED", "REJECTED"),
-        "liability_status"     -> Seq("NON_LIVE"),
-        "team"       -> Seq("4", "5")
+        "sort_by"          -> Seq("date_created"),
+        "sort_order"       -> Seq("asc"),
+        "case_type"        -> Seq("MISCELLANEOUS", "CORRESPONDENCE"),
+        "status"           -> Seq("COMPLETED", "REJECTED"),
+        "liability_status" -> Seq("NON_LIVE"),
+        "team"             -> Seq("4", "5")
       )
 
       QueueReport.queueReportQueryStringBindable.bind("", params2) shouldBe Some(
         Right(
           QueueReport(
-            sortBy    = ReportField.DateCreated,
-            sortOrder = SortDirection.ASCENDING,
-            caseTypes = Set(ApplicationType.MISCELLANEOUS, ApplicationType.CORRESPONDENCE),
-            statuses  = Set(PseudoCaseStatus.COMPLETED, PseudoCaseStatus.REJECTED),
-            liabilityStatuses  = Set(LiabilityStatus.NON_LIVE),
-            teams     = Set("4", "5")
+            sortBy            = ReportField.DateCreated,
+            sortOrder         = SortDirection.ASCENDING,
+            caseTypes         = Set(ApplicationType.MISCELLANEOUS, ApplicationType.CORRESPONDENCE),
+            statuses          = Set(PseudoCaseStatus.COMPLETED, PseudoCaseStatus.REJECTED),
+            liabilityStatuses = Set(LiabilityStatus.NON_LIVE),
+            teams             = Set("4", "5")
           )
         )
       )
@@ -351,12 +363,12 @@ class ReportSpec extends BaseSpec {
         QueueReport.queueReportQueryStringBindable.unbind(
           "",
           QueueReport(
-            sortBy    = ReportField.Count,
-            sortOrder = SortDirection.DESCENDING,
-            caseTypes = Set(ApplicationType.BTI, ApplicationType.CORRESPONDENCE),
-            statuses  = Set(PseudoCaseStatus.LIVE, PseudoCaseStatus.NEW),
-            liabilityStatuses  = Set(LiabilityStatus.NON_LIVE),
-            teams     = Set("1", "3"),
+            sortBy            = ReportField.Count,
+            sortOrder         = SortDirection.DESCENDING,
+            caseTypes         = Set(ApplicationType.BTI, ApplicationType.CORRESPONDENCE),
+            statuses          = Set(PseudoCaseStatus.LIVE, PseudoCaseStatus.NEW),
+            liabilityStatuses = Set(LiabilityStatus.NON_LIVE),
+            teams             = Set("1", "3"),
             dateRange = InstantRange(
               Instant.parse("2020-03-21T12:03:15.000Z"),
               Instant.parse("2021-03-21T12:03:15.000Z")
@@ -379,12 +391,12 @@ class ReportSpec extends BaseSpec {
         QueueReport.queueReportQueryStringBindable.unbind(
           "",
           QueueReport(
-            sortBy    = ReportField.DateCreated,
-            sortOrder = SortDirection.ASCENDING,
-            caseTypes = Set(ApplicationType.MISCELLANEOUS, ApplicationType.CORRESPONDENCE),
-            statuses  = Set(PseudoCaseStatus.COMPLETED, PseudoCaseStatus.REJECTED),
-            liabilityStatuses  = Set(LiabilityStatus.NON_LIVE),
-            teams     = Set("4", "5")
+            sortBy            = ReportField.DateCreated,
+            sortOrder         = SortDirection.ASCENDING,
+            caseTypes         = Set(ApplicationType.MISCELLANEOUS, ApplicationType.CORRESPONDENCE),
+            statuses          = Set(PseudoCaseStatus.COMPLETED, PseudoCaseStatus.REJECTED),
+            liabilityStatuses = Set(LiabilityStatus.NON_LIVE),
+            teams             = Set("4", "5")
           )
         ),
         "UTF-8"

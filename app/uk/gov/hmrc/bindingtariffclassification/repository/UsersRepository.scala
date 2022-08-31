@@ -43,17 +43,17 @@ trait UsersRepository {
 }
 
 @Singleton
-class UsersMongoRepository @Inject()(mongoComponent: MongoComponent)
-  extends PlayMongoRepository[Operator](
-    collectionName = "users",
-    mongoComponent = mongoComponent,
-    domainFormat = formatOperator,
-    indexes = Seq(
-      IndexModel(ascending("id"), IndexOptions().unique(true).name("id_Index")),
-      IndexModel(ascending("role"), IndexOptions().unique(false).name("role_Index")),
-      IndexModel(ascending("memberOfTeams"), IndexOptions().unique(false).name("memberOfTeams_Index"))
+class UsersMongoRepository @Inject() (mongoComponent: MongoComponent)
+    extends PlayMongoRepository[Operator](
+      collectionName = "users",
+      mongoComponent = mongoComponent,
+      domainFormat   = formatOperator,
+      indexes = Seq(
+        IndexModel(ascending("id"), IndexOptions().unique(true).name("id_Index")),
+        IndexModel(ascending("role"), IndexOptions().unique(false).name("role_Index")),
+        IndexModel(ascending("memberOfTeams"), IndexOptions().unique(false).name("memberOfTeams_Index"))
+      )
     )
-  )
     with UsersRepository
     with BaseMongoOperations[Operator] {
 
@@ -82,13 +82,13 @@ class UsersMongoRepository @Inject()(mongoComponent: MongoComponent)
 
     val optionalRoleFilter = search.role.map(r => in("role", r.map(_.toString).toSeq: _*))
     val optionalTeamFilter = search.team.map(t => mappingNoneOrSome("memberOfTeams", t))
-    val filters = List(Some(notDeletedFilter), optionalRoleFilter, optionalTeamFilter).flatten
+    val filters            = List(Some(notDeletedFilter), optionalRoleFilter, optionalTeamFilter).flatten
     Filters.and(filters: _*)
   }
 
   private def mappingNoneOrSome(field: String, value: String): Bson = value match {
     case "none" => equal(field, size(field, 0))
     case "some" => gt(field, size(field, 0))
-    case v => in(field, Seq(v): _*)
+    case v      => in(field, Seq(v): _*)
   }
 }

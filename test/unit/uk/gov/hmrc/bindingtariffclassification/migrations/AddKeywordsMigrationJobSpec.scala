@@ -20,7 +20,7 @@ import org.mockito.ArgumentMatchers._
 import org.mockito.BDDMockito._
 import org.mockito.Mockito._
 import org.scalatest.BeforeAndAfterEach
-import play.api.test.Helpers. _
+import play.api.test.Helpers._
 import uk.gov.hmrc.bindingtariffclassification.base.BaseSpec
 import uk.gov.hmrc.bindingtariffclassification.model._
 import uk.gov.hmrc.bindingtariffclassification.service.KeywordService
@@ -40,7 +40,9 @@ class AddKeywordsMigrationJobSpec extends BaseSpec with BeforeAndAfterEach {
     val addKeywordsJob = new AddKeywordsMigrationJob(keywordService)
 
     "not add keywords if any already exist" in {
-      given(keywordService.findAll(any[Pagination])) willReturn Future.successful(Paged(Seq(Keyword("FOR STORAGE OF GOODS", approved = true))))
+      given(keywordService.findAll(any[Pagination])) willReturn Future.successful(
+        Paged(Seq(Keyword("FOR STORAGE OF GOODS", approved = true)))
+      )
 
       await(addKeywordsJob.execute())
 

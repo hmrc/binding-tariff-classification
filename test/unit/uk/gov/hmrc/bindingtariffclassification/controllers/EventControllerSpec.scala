@@ -86,7 +86,7 @@ class EventControllerSpec extends BaseSpec with BeforeAndAfterEach {
 
       val result = controller.deleteAll()(req)
 
-      status(result) shouldBe INTERNAL_SERVER_ERROR
+      status(result)                   shouldBe INTERNAL_SERVER_ERROR
       contentAsJson(result).toString() shouldBe """{"code":"UNKNOWN_ERROR","message":"An unexpected error occurred"}"""
     }
 
@@ -122,7 +122,7 @@ class EventControllerSpec extends BaseSpec with BeforeAndAfterEach {
 
       val result = controller.deleteCaseEvents("ref")(req)
 
-      status(result) shouldBe INTERNAL_SERVER_ERROR
+      status(result)                   shouldBe INTERNAL_SERVER_ERROR
       contentAsJson(result).toString() shouldBe """{"code":"UNKNOWN_ERROR","message":"An unexpected error occurred"}"""
     }
 
@@ -136,7 +136,7 @@ class EventControllerSpec extends BaseSpec with BeforeAndAfterEach {
 
       val result = controller.getByCaseReference(caseReference, Pagination())(fakeRequest)
 
-      status(result) shouldBe OK
+      status(result)        shouldBe OK
       contentAsJson(result) shouldBe toJson(Paged(Seq(e1, e2)))
     }
 
@@ -146,7 +146,7 @@ class EventControllerSpec extends BaseSpec with BeforeAndAfterEach {
 
       val result = controller.getByCaseReference(caseReference, Pagination())(fakeRequest)
 
-      status(result) shouldBe OK
+      status(result)        shouldBe OK
       contentAsJson(result) shouldBe toJson(Paged.empty[Event])
     }
 
@@ -157,7 +157,7 @@ class EventControllerSpec extends BaseSpec with BeforeAndAfterEach {
 
       val result = controller.getByCaseReference(caseReference, Pagination())(fakeRequest)
 
-      status(result) shouldBe INTERNAL_SERVER_ERROR
+      status(result)                   shouldBe INTERNAL_SERVER_ERROR
       contentAsJson(result).toString() shouldBe """{"code":"UNKNOWN_ERROR","message":"An unexpected error occurred"}"""
     }
   }
@@ -169,7 +169,7 @@ class EventControllerSpec extends BaseSpec with BeforeAndAfterEach {
 
       val result = controller.search(EventSearch(), Pagination())(fakeRequest)
 
-      status(result) shouldBe OK
+      status(result)        shouldBe OK
       contentAsJson(result) shouldBe toJson(Paged(Seq(e1, e2)))
     }
 
@@ -180,7 +180,7 @@ class EventControllerSpec extends BaseSpec with BeforeAndAfterEach {
 
       val result = controller.search(EventSearch(), Pagination())(fakeRequest)
 
-      status(result) shouldBe INTERNAL_SERVER_ERROR
+      status(result)                   shouldBe INTERNAL_SERVER_ERROR
       contentAsJson(result).toString() shouldBe """{"code":"UNKNOWN_ERROR","message":"An unexpected error occurred"}"""
     }
   }
@@ -204,21 +204,21 @@ class EventControllerSpec extends BaseSpec with BeforeAndAfterEach {
       when(casesService.getByReference(caseReference)).thenReturn(successful(Some(aCase)))
       when(eventService.insert(ArgumentMatchers.any[Event])).thenReturn(successful(event))
 
-      val request        = fakeRequest.withBody(toJson(newEvent))
-      val result = controller.create(caseReference)(request)
+      val request = fakeRequest.withBody(toJson(newEvent))
+      val result  = controller.create(caseReference)(request)
 
-      status(result) shouldBe CREATED
+      status(result)        shouldBe CREATED
       contentAsJson(result) shouldBe toJson(event)
     }
 
     "return 404 Not Found for invalid Reference" in {
       when(casesService.getByReference(caseReference)).thenReturn(successful(None))
 
-      val request        = fakeRequest.withBody(toJson(newEvent))
-      val result = controller.create(caseReference)(request)
+      val request = fakeRequest.withBody(toJson(newEvent))
+      val result  = controller.create(caseReference)(request)
 
       verifyNoMoreInteractions(eventService)
-      status(result) shouldBe NOT_FOUND
+      status(result)                   shouldBe NOT_FOUND
       contentAsJson(result).toString() shouldBe "{\"code\":\"NOT_FOUND\",\"message\":\"Case not found\"}"
     }
   }

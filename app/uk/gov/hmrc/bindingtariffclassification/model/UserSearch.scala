@@ -51,11 +51,10 @@ object UserSearch {
         )
       }
 
-      override def unbind(key: String, filter: UserSearch): String = {
+      override def unbind(key: String, filter: UserSearch): String =
         Seq(
-          filter.role.map(_.map(r =>stringBinder.unbind(roleKey, r.toString)).mkString("&")),
+          filter.role.map(_.map(r => stringBinder.unbind(roleKey, r.toString)).mkString("&")),
           filter.team.map(r => stringBinder.unbind(teamKey, r))
         ).filter(_.isDefined).map(_.get).mkString("&")
-      }
     }
 }

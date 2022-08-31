@@ -34,7 +34,8 @@ class MigrationRunner @Inject() (
   migrationLockRepository: MigrationLockRepository,
   migrationJobs: MigrationJobs,
   val metrics: Metrics
-) extends Logging with HasMetrics {
+) extends Logging
+    with HasMetrics {
   def trigger[T](clazz: Class[T]): Future[Unit] =
     Future.sequence(migrationJobs.jobs.filter(clazz.isInstance(_)).map(run)).map(_ => ())
 
@@ -51,14 +52,17 @@ class MigrationRunner @Inject() (
           case t: Throwable =>
             logger.error(s"Migration Job [${job.name}]: Failed", t)
             logger.info(s"Migration Job [${job.name}]: Attempting to rollback")
-            job.rollback().flatMap { _ =>
-              logger.info(s"Migration Job [${job.name}]: Rollback Completed Successfully")
-              migrationLockRepository.rollback(event)
-            }.recover {
-              case t: Throwable =>
-                logger.error(s"Migration Job [${job.name}]: Rollback Failed", t)
-                timer.completeWithFailure()
-            }
+            job
+              .rollback()
+              .flatMap { _ =>
+                logger.info(s"Migration Job [${job.name}]: Rollback Completed Successfully")
+                migrationLockRepository.rollback(event)
+              }
+              .recover {
+                case t: Throwable =>
+                  logger.error(s"Migration Job [${job.name}]: Rollback Failed", t)
+                  timer.completeWithFailure()
+              }
         }
       case false =>
         logger.info(s"Migration Job [${job.name}]: Failed to acquire Lock. It may have been running already.")

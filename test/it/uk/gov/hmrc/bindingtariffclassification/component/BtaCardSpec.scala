@@ -28,7 +28,7 @@ import util.CaseData
 class BtaCardSpec extends BaseFeatureSpec with IntegrationSpecBase {
 
   protected val serviceUrl = s"http://localhost:$port"
-  protected val eori = "GB123"
+  protected val eori       = "GB123"
 
   Feature("Get BTA Card") {
 
@@ -38,7 +38,7 @@ class BtaCardSpec extends BaseFeatureSpec with IntegrationSpecBase {
 
       AuthStub.authorised()
       dropStores()
-      storeCases(CaseData.createBtaCardData(eori ,2,1,6,3): _*)
+      storeCases(CaseData.createBtaCardData(eori, 2, 1, 6, 3): _*)
 
       When("I call the BTA Card endpoint for the counts")
       val result = Http(s"$serviceUrl/bta-card")
@@ -65,7 +65,7 @@ class BtaCardSpec extends BaseFeatureSpec with IntegrationSpecBase {
 
       AuthStub.authorised()
       dropStores()
-      storeCases(CaseData.createBtaCardData(eori ,0,0,2,2): _*)
+      storeCases(CaseData.createBtaCardData(eori, 0, 0, 2, 2): _*)
 
       When("I call the BTA Card endpoint for the counts")
       val result = Http(s"$serviceUrl/bta-card")
@@ -92,7 +92,7 @@ class BtaCardSpec extends BaseFeatureSpec with IntegrationSpecBase {
 
       AuthStub.authorised()
       dropStores()
-      storeCases(CaseData.createBtaCardData(eori ,10,9,0,0): _*)
+      storeCases(CaseData.createBtaCardData(eori, 10, 9, 0, 0): _*)
 
       When("I call the BTA Card endpoint for the counts")
       val result = Http(s"$serviceUrl/bta-card")

@@ -24,7 +24,7 @@ import javax.inject._
 import scala.concurrent.Future
 
 @Singleton
-class UsersService @Inject()(
+class UsersService @Inject() (
   usersRepository: UsersRepository
 )(implicit mat: Materializer) {
 
@@ -37,8 +37,7 @@ class UsersService @Inject()(
   def updateUser(user: Operator, upsert: Boolean): Future[Option[Operator]] =
     usersRepository.update(user, upsert)
 
-  def search(search: UserSearch,
-             pagination: Pagination): Future[Paged[Operator]] =
+  def search(search: UserSearch, pagination: Pagination): Future[Paged[Operator]] =
     usersRepository.search(search, pagination)
 
 }

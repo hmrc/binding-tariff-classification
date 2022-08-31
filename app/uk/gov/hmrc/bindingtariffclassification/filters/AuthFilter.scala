@@ -26,12 +26,11 @@ import scala.concurrent.Future
 class AuthFilter @Inject() (appConfig: AppConfig)(implicit override val mat: Materializer) extends Filter {
 
   private val healthEndpointUri = "/ping/ping"
-  private val btaCardEndpoint = "/bta-card"
-  private val authToken = "X-Api-Token"
+  private val btaCardEndpoint   = "/bta-card"
+  private val authToken         = "X-Api-Token"
 
-  override def apply(f: RequestHeader => Future[Result])(rh: RequestHeader): Future[Result] = {
-    if(isRequestExcludedFromAPIToken(rh)) f(rh) else ensureAuthTokenIsPresent(f, rh)
-  }
+  override def apply(f: RequestHeader => Future[Result])(rh: RequestHeader): Future[Result] =
+    if (isRequestExcludedFromAPIToken(rh)) f(rh) else ensureAuthTokenIsPresent(f, rh)
 
   private def ensureAuthTokenIsPresent(f: RequestHeader => Future[Result], rh: RequestHeader): Future[Result] =
     rh.headers.get(authToken) match {

@@ -34,34 +34,33 @@ import scala.concurrent.duration.DurationInt
 import scala.concurrent.{ExecutionContext, Future, duration}
 
 @Singleton
-class ActiveDaysElapsedJob @Inject()(
-                                      caseService: CaseService,
-                                      eventService: EventService,
-                                      bankHolidaysConnector: BankHolidaysConnector,
-                                      mongoLockRepository: LockRepository,
-                                      implicit val appConfig: AppConfig
-                                    )(implicit ec: ExecutionContext)
-  extends ScheduledJob
+class ActiveDaysElapsedJob @Inject() (
+  caseService: CaseService,
+  eventService: EventService,
+  bankHolidaysConnector: BankHolidaysConnector,
+  mongoLockRepository: LockRepository,
+  implicit val appConfig: AppConfig
+)(implicit ec: ExecutionContext)
+    extends ScheduledJob
     with Logging {
 
   override val jobConfig = appConfig.activeDaysElapsed
 
   override val lockRepository: LockRepository = mongoLockRepository
-  override val lockId: String = "active_days_elapsed"
-  override val ttl: duration.Duration = 5.minutes
-
+  override val lockId: String                 = "active_days_elapsed"
+  override val ttl: duration.Duration         = 5.minutes
 
   private implicit val carrier: HeaderCarrier = HeaderCarrier()
 
   private lazy val criteria = CaseSearch(
     filter = CaseFilter(statuses = Some(Set(PseudoCaseStatus.OPEN, PseudoCaseStatus.NEW))),
-    sort = Some(CaseSort(Set(CaseSortField.REFERENCE)))
+    sort   = Some(CaseSort(Set(CaseSortField.REFERENCE)))
   )
 
   override def execute(): Future[Unit] =
     for {
       bankHolidays <- bankHolidaysConnector.get()
-      _ <- process(1)(bankHolidays)
+      _            <- process(1)(bankHolidays)
     } yield ()
 
   private def process(page: Int)(implicit bankHolidays: Set[LocalDate]): Future[Unit] =
@@ -69,7 +68,7 @@ class ActiveDaysElapsedJob @Inject()(
       sequence(pager.results.map(refreshDaysElapsed)).map(_ => pager)
     } flatMap {
       case pager if pager.hasNextPage => process(page + 1)
-      case _ => successful(())
+      case _                          => successful(())
     }
 
   private def getTrackingStartDate(c: Case): LocalDate =
@@ -92,7 +91,7 @@ class ActiveDaysElapsedJob @Inject()(
 
   private def refreshDaysElapsed(c: Case)(implicit bankHolidays: Set[LocalDate]): Future[Unit] = {
     lazy val trackingStartDate: LocalDate = getTrackingStartDate(c)
-    val daysTracked: Long = ChronoUnit.DAYS.between(trackingStartDate, LocalDate.now(appConfig.clock))
+    val daysTracked: Long                 = ChronoUnit.DAYS.between(trackingStartDate, LocalDate.now(appConfig.clock))
 
     // Working days between when the case was tracked and Now
     val workingDaysTracked: Seq[Instant] = (0L until daysTracked)
@@ -113,9 +112,9 @@ class ActiveDaysElapsedJob @Inject()(
     for {
       // Get the Status Change events for that case
       events <- eventService.search(
-        EventSearch(Some(Set(c.reference)), Some(caseStatusChangeEventTypes)),
-        Pagination(1, Integer.MAX_VALUE)
-      )
+                 EventSearch(Some(Set(c.reference)), Some(caseStatusChangeEventTypes)),
+                 Pagination(1, Integer.MAX_VALUE)
+               )
 
       // Generate a timeline of the Case Status over time
       statusTimeline: StatusTimeline = StatusTimeline.from(events.results)
@@ -125,7 +124,7 @@ class ActiveDaysElapsedJob @Inject()(
         .filterNot(statusTimeline.statusOn(_).contains(CaseStatus.REFERRED))
         .filterNot(statusTimeline.statusOn(_).contains(CaseStatus.SUSPENDED))
 
-      trackedDaysElapsed = trackedActionableDays.length.toLong
+      trackedDaysElapsed   = trackedActionableDays.length.toLong
       untrackedDaysElapsed = c.migratedDaysElapsed.getOrElse(0L)
 
       totalDaysElapsed = trackedDaysElapsed + untrackedDaysElapsed

@@ -33,7 +33,7 @@ import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import scala.concurrent.Future
 
 class HasMetricsSpec
-  extends AsyncWordSpecLike
+    extends AsyncWordSpecLike
     with Matchers
     with OptionValues
     with MockitoSugar
@@ -41,8 +41,8 @@ class HasMetricsSpec
 
   trait MockHasMetrics {
     self: HasMetrics =>
-    val timer: Timer.Context = mock[Timer.Context]
-    val metrics: Metrics = mock[Metrics]
+    val timer: Timer.Context                = mock[Timer.Context]
+    val metrics: Metrics                    = mock[Metrics]
     override val localMetrics: LocalMetrics = mock[LocalMetrics]
     when(localMetrics.startTimer(anyString())) thenReturn timer
   }
@@ -50,7 +50,7 @@ class HasMetricsSpec
   class TestHasMetrics extends HasMetrics with MockHasMetrics
 
   class TestHasActionMetrics
-    extends BackendController(Helpers.stubControllerComponents())
+      extends BackendController(Helpers.stubControllerComponents())
       with HasActionMetrics
       with MockHasMetrics
 
@@ -200,8 +200,7 @@ class HasMetricsSpec
           .withMetricsTimerResult(TestMetric) {
             Future.failed(new Exception)
           }
-          .transformWith(_ =>
-            verifyCompletedWithFailure(TestMetric, metrics))
+          .transformWith(_ => verifyCompletedWithFailure(TestMetric, metrics))
       }
 
       "increment failure counter when the user throws an exception constructing their code block" in withTestMetrics {

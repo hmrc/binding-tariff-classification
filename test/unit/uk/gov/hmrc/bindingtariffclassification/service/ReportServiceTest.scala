@@ -20,7 +20,7 @@ import cats.data.NonEmptySeq
 import org.mockito.BDDMockito._
 import org.mockito.Mockito._
 import org.scalatest.BeforeAndAfterEach
-import play.api.test.Helpers. _
+import play.api.test.Helpers._
 import uk.gov.hmrc.bindingtariffclassification.base.BaseSpec
 import uk.gov.hmrc.bindingtariffclassification.model._
 import uk.gov.hmrc.bindingtariffclassification.model.reporting._
@@ -30,8 +30,8 @@ import scala.concurrent.Future
 
 class ReportServiceTest extends BaseSpec with BeforeAndAfterEach {
 
-  private val caseRepository  = mock[CaseRepository]
-  private val service         = new ReportService(caseRepository)
+  private val caseRepository = mock[CaseRepository]
+  private val service        = new ReportService(caseRepository)
 
   override def afterEach(): Unit = {
     super.afterEach()
@@ -45,7 +45,9 @@ class ReportServiceTest extends BaseSpec with BeforeAndAfterEach {
         fields = NonEmptySeq.of(ReportField.Reference, ReportField.Status)
       )
 
-      given(caseRepository.caseReport(report, Pagination())) willReturn Future.successful(Paged.empty[Map[String, ReportResultField[_]]])
+      given(caseRepository.caseReport(report, Pagination())) willReturn Future.successful(
+        Paged.empty[Map[String, ReportResultField[_]]]
+      )
 
       await(service.caseReport(report, Pagination())) shouldBe Paged.empty
     }
@@ -55,7 +57,7 @@ class ReportServiceTest extends BaseSpec with BeforeAndAfterEach {
     "delegate to case repository" in {
       val report = SummaryReport(
         groupBy = NonEmptySeq.one(ReportField.Status),
-        sortBy = ReportField.Count,
+        sortBy  = ReportField.Count
       )
 
       given(caseRepository.summaryReport(report, Pagination())) willReturn Future.successful(Paged.empty[ResultGroup])
@@ -67,10 +69,12 @@ class ReportServiceTest extends BaseSpec with BeforeAndAfterEach {
   "ReportService.queueReport" should {
     "delegate to case repository" in {
       val report = QueueReport(
-        sortBy = ReportField.Count,
+        sortBy = ReportField.Count
       )
 
-      given(caseRepository.queueReport(report, Pagination())) willReturn Future.successful(Paged.empty[QueueResultGroup])
+      given(caseRepository.queueReport(report, Pagination())) willReturn Future.successful(
+        Paged.empty[QueueResultGroup]
+      )
 
       await(service.queueReport(report, Pagination())) shouldBe Paged.empty
     }

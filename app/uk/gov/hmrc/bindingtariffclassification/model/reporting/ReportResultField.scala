@@ -37,4 +37,4 @@ case class StringResultField(override val fieldName: String, override val data: 
     extends ReportResultField[String](fieldName, data)
 
 case class LiabilityStatusResultField(override val fieldName: String, override val data: Option[LiabilityStatus.Value])
-  extends ReportResultField[LiabilityStatus.Value](fieldName, data)
+    extends ReportResultField[LiabilityStatus.Value](fieldName, data)
