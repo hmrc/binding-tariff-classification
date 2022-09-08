@@ -4,7 +4,7 @@ import play.core.PlayVersion.current
 
 object AppDependencies {
   private lazy val mongoHmrcVersion = "0.71.0"
-  val AkkaVersion                   = "2.6.19"
+  val AkkaVersion                   = "2.6.20"
   private val silencerVersion       = "1.7.9"
   val jettyVersion                  = "9.4.48.v20220622"
 
@@ -20,6 +20,9 @@ object AppDependencies {
     "uk.gov.hmrc.mongo"            %% "hmrc-mongo-play-28"          % mongoHmrcVersion,
     "com.lightbend.akka"           %% "akka-stream-alpakka-mongodb" % "3.0.4",
     "com.typesafe.akka"            %% "akka-stream"                 % AkkaVersion,
+    "com.typesafe.akka"            %% "akka-actor-typed"            % AkkaVersion,
+    "com.typesafe.akka"            %% "akka-slf4j"                  % AkkaVersion,
+    "com.typesafe.akka"            %% "akka-serialization-jackson"  % AkkaVersion,
     "com.typesafe.play"            %% "play-json"                   % "2.9.3",
     "org.typelevel"                %% "cats-core"                   % "2.8.0",
     "com.github.pathikrit"         %% "better-files"                % "3.9.1",
@@ -31,7 +34,7 @@ object AppDependencies {
   val test: Seq[ModuleID] = Seq(
     "com.github.tomakehurst" % "wiremock"                  % "2.33.2",
     "com.typesafe.play"      %% "play-test"                % current,
-    "org.mockito"            % "mockito-core"              % "4.7.0",
+    "org.mockito"            % "mockito-core"              % "4.8.0",
     "org.jsoup"              % "jsoup"                     % "1.15.3",
     "org.scalatest"          %% "scalatest"                % "3.2.13",
     "org.scalatestplus.play" %% "scalatestplus-play"       % "5.1.0",
