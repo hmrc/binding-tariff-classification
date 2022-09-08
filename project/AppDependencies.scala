@@ -6,7 +6,6 @@ object AppDependencies {
   private lazy val mongoHmrcVersion = "0.71.0"
   val AkkaVersion                   = "2.6.20"
   private val silencerVersion       = "1.7.9"
-  val jettyVersion                  = "9.4.48.v20220622"
 
   private val silencerDependencies: Seq[ModuleID] = Seq(
     compilerPlugin("com.github.ghik" % "silencer-plugin" % silencerVersion cross CrossVersion.full),
