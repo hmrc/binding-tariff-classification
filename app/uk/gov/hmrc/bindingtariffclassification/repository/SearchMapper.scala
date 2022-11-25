@@ -209,7 +209,6 @@ class SearchMapper @Inject() (appConfig: AppConfig) extends Mapper {
       case DECISION_START_DATE => "decision.effectiveStartDate"
       case APPLICATION_STATUS  => "application.status"
       case APPLICATION_TYPE    => "application.type"
-      case GOODS_NAME          => "application.goodName"
       case STATUS              => "status"
       case s                   => throw new IllegalArgumentException(s"cannot sort by field: $s")
     }

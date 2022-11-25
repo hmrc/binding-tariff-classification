@@ -22,7 +22,7 @@ import org.mockito.BDDMockito.given
 import org.mongodb.scala.MongoWriteException
 import org.mongodb.scala.bson.conversions.Bson
 import org.mongodb.scala.bson.{BsonDocument, BsonInt32}
-import org.mongodb.scala.model.Indexes.ascending
+import org.mongodb.scala.model.Indexes.{ascending, descending}
 import org.mongodb.scala.model.{Filters, IndexModel, IndexOptions}
 import org.scalatest.concurrent.Eventually
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
@@ -2363,6 +2363,8 @@ class CaseRepositorySpec
         IndexModel(ascending("_id"), IndexOptions().name("_id_")),
         IndexModel(ascending("reference"), IndexOptions().name("reference_Index").unique(true)),
         IndexModel(ascending("queueId"), IndexOptions().name("queueId_Index").unique(false)),
+        IndexModel(ascending("status"), IndexOptions().name("status_Index").unique(false)),
+        IndexModel(descending("createdDate"), IndexOptions().name("createdDate_Index").unique(false)),
         IndexModel(
           ascending("application.holder.eori"),
           IndexOptions().name("application.holder.eori_Index").unique(false)
@@ -2371,8 +2373,11 @@ class CaseRepositorySpec
           ascending("application.agent.eoriDetails.eori"),
           IndexOptions().name("application.agent.eoriDetails.eori_Index").unique(false)
         ),
-        IndexModel(ascending("daysElapsed"), IndexOptions().name("daysElapsed_Index").unique(false)),
         IndexModel(ascending("assignee.id"), IndexOptions().name("assignee.id_Index").unique(false)),
+        IndexModel(
+          ascending("application.type"),
+          IndexOptions().unique(false).name("application.type_Index")
+        ),
         IndexModel(
           ascending("decision.effectiveEndDate"),
           IndexOptions().name("decision.effectiveEndDate_Index").unique(false)
@@ -2381,7 +2386,7 @@ class CaseRepositorySpec
           ascending("decision.bindingCommodityCode"),
           IndexOptions().name("decision.bindingCommodityCode_Index").unique(false)
         ),
-        IndexModel(ascending("status"), IndexOptions().name("status_Index").unique(false)),
+        IndexModel(ascending("daysElapsed"), IndexOptions().name("daysElapsed_Index").unique(false)),
         IndexModel(ascending("keywords"), IndexOptions().name("keywords_Index").unique(false))
       )
 

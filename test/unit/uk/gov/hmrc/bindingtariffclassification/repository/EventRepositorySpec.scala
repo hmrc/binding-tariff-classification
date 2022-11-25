@@ -17,7 +17,7 @@
 package uk.gov.hmrc.bindingtariffclassification.repository
 
 import org.mongodb.scala.MongoWriteException
-import org.mongodb.scala.model.Indexes.ascending
+import org.mongodb.scala.model.Indexes.{ascending, descending}
 import org.mongodb.scala.model.{Filters, IndexModel, IndexOptions}
 import org.scalatest.concurrent.Eventually
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
@@ -286,6 +286,7 @@ class EventRepositorySpec
         IndexModel(ascending("id"), IndexOptions().name("id_Index").unique(true)),
         IndexModel(ascending("caseReference"), IndexOptions().name("caseReference_Index").unique(false)),
         IndexModel(ascending("type"), IndexOptions().name("type_Index").unique(false)),
+        IndexModel(descending("timestamp"), IndexOptions().name("timestamp_Index").unique(false)),
         IndexModel(ascending("_id"), IndexOptions().name("_id_"))
       )
 

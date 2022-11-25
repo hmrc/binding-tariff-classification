@@ -23,7 +23,7 @@ import org.mongodb.scala.bson.{BsonDocument, BsonNull, BsonValue}
 import org.mongodb.scala.model.Accumulators.{max, sum}
 import org.mongodb.scala.model.Aggregates._
 import org.mongodb.scala.model.Filters._
-import org.mongodb.scala.model.Indexes.{ascending => asc}
+import org.mongodb.scala.model.Indexes.{ascending => asc, descending => desc}
 import org.mongodb.scala.model.Sorts.{ascending, descending, orderBy}
 import org.mongodb.scala.model._
 import org.slf4j.{Logger, LoggerFactory}
@@ -136,6 +136,7 @@ class CaseMongoRepository @Inject() (
         IndexModel(asc("assignee.id"), IndexOptions().unique(false).name("assignee.id_Index")),
         IndexModel(asc("queueId"), IndexOptions().unique(false).name("queueId_Index")),
         IndexModel(asc("status"), IndexOptions().unique(false).name("status_Index")),
+        IndexModel(desc("createdDate"), IndexOptions().unique(false).name("createdDate_Index")),
         IndexModel(
           asc("application.holder.eori"),
           IndexOptions().unique(false).name("application.holder.eori_Index")
@@ -143,6 +144,10 @@ class CaseMongoRepository @Inject() (
         IndexModel(
           asc("application.agent.eoriDetails.eori"),
           IndexOptions().unique(false).name("application.agent.eoriDetails.eori_Index")
+        ),
+        IndexModel(
+          asc("application.type"),
+          IndexOptions().unique(false).name("application.type_Index")
         ),
         IndexModel(
           asc("decision.effectiveEndDate"),

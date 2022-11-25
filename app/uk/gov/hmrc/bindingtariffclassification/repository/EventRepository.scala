@@ -49,7 +49,8 @@ class EventMongoRepository @Inject() (mongoComponent: MongoComponent)
       indexes = Seq(
         IndexModel(Indexes.ascending("id"), IndexOptions().unique(true).name("id_Index")),
         IndexModel(Indexes.ascending("caseReference"), IndexOptions().unique(false).name("caseReference_Index")),
-        IndexModel(Indexes.ascending("type"), IndexOptions().unique(false).name("type_Index"))
+        IndexModel(Indexes.ascending("type"), IndexOptions().unique(false).name("type_Index")),
+        IndexModel(Indexes.descending("timestamp"), IndexOptions().unique(false).name("timestamp_Index"))
       )
     )
     with EventRepository

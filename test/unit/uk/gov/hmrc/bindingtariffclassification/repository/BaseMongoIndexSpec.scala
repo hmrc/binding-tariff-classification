@@ -20,7 +20,7 @@ import org.mongodb.scala.MongoCollection
 import org.mongodb.scala.model.{IndexModel, IndexOptions, Indexes}
 import uk.gov.hmrc.bindingtariffclassification.base.BaseSpec
 
-import scala.collection.JavaConverters.asScalaSetConverter
+import scala.collection.JavaConverters.{asScalaIteratorConverter, asScalaSetConverter, collectionAsScalaIterableConverter}
 import scala.concurrent.ExecutionContext.Implicits.global
 
 trait BaseMongoIndexSpec extends BaseSpec {
@@ -36,7 +36,10 @@ trait BaseMongoIndexSpec extends BaseSpec {
           val indexFields = document.get("key").map(_.asDocument().keySet().asScala).getOrElse(Set.empty[String]).toSeq
           val name        = document.getString("name")
           val isUnique    = document.getBoolean("unique", false)
-          IndexModel(Indexes.ascending(indexFields: _*), IndexOptions().name(name).unique(isUnique))
+          val sorting =
+            document.get("key").map(_.asDocument().values().asScala.head.asInt32().getValue.toString).getOrElse("1")
+          val indexes = if (sorting == "1") Indexes.ascending(indexFields: _*) else Indexes.descending(indexFields: _*)
+          IndexModel(indexes, IndexOptions().name(name).unique(isUnique))
         })
     )
 

@@ -345,16 +345,6 @@ class CaseSearchMapperSpec extends BaseMongoIndexSpec {
       jsonMapper.sortBy(sort) shouldBe Json.obj("reference" -> -1)
     }
 
-    "sort by goods name and set direction descending" in {
-
-      val sort = CaseSort(
-        field     = Set(CaseSortField.GOODS_NAME),
-        direction = SortDirection.ASCENDING
-      )
-
-      jsonMapper.sortBy(sort) shouldBe Json.obj("application.goodName" -> 1)
-    }
-
     "sort by case status and set direction ascending" in {
 
       val sort = CaseSort(

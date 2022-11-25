@@ -26,6 +26,5 @@ object CaseSortField extends Enumeration {
   val DECISION_START_DATE = Value("decision-start-date")
   val APPLICATION_STATUS  = Value("application.status")
   val APPLICATION_TYPE    = Value("application.type")
-  val GOODS_NAME          = Value("application.goodName")
   val STATUS              = Value("status")
 }
