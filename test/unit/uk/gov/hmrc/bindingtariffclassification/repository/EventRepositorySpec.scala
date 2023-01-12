@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -166,7 +166,9 @@ class EventRepositorySpec
         Pagination(),
         1
       )
-      await(repository.search(EventSearch(Some(Set("REF_1")), Some(Set(EventType.CASE_STATUS_CHANGE))), Pagination())) shouldBe Paged(
+      await(
+        repository.search(EventSearch(Some(Set("REF_1")), Some(Set(EventType.CASE_STATUS_CHANGE))), Pagination())
+      ) shouldBe Paged(
         Seq(e2),
         Pagination(),
         1

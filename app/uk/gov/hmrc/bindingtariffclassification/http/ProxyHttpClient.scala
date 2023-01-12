@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,7 +26,8 @@ import uk.gov.hmrc.play.http.ws.{WSProxy, WSProxyConfiguration}
 
 @Singleton
 class ProxyHttpClient @Inject() (conf: Configuration, httpAuditing: HttpAuditing, wsClient: WSClient)(
-  implicit actorSystem: ActorSystem
+  implicit
+  actorSystem: ActorSystem
 ) extends DefaultHttpClient(conf, httpAuditing, wsClient, actorSystem)
     with WSProxy {
 

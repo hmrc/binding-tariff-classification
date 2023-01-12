@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,7 +30,8 @@ import uk.gov.hmrc.play.http.HeaderCarrierConverter
 import scala.concurrent.{ExecutionContext, Future}
 
 class AuthAction @Inject() (override val authConnector: AuthConnector, val parser: BodyParsers.Default)(
-  implicit val executionContext: ExecutionContext
+  implicit
+  val executionContext: ExecutionContext
 ) extends ActionBuilder[BtaRequest, AnyContent]
     with ActionFunction[Request, BtaRequest]
     with AuthorisedFunctions
@@ -52,7 +53,8 @@ class AuthAction @Inject() (override val authConnector: AuthConnector, val parse
     }
 
   private def retrievalData[A](request: Request[A], block: BtaRequest[A] => Future[Result])(
-    implicit hc: HeaderCarrier
+    implicit
+    hc: HeaderCarrier
   ): Future[Result] =
     getEnrolmentsAndEori().flatMap {
       case Right(eori) =>

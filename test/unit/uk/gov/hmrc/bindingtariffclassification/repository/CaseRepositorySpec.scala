@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -564,14 +564,18 @@ class CaseRepositorySpec
     "return an empty sequence when there are no matches" in {
       store(case1, caseX)
 
-      await(repository.get(CaseSearch(CaseFilter(caseSource = Some("Alfred"))), Pagination())).results shouldBe Seq.empty
+      await(
+        repository.get(CaseSearch(CaseFilter(caseSource = Some("Alfred"))), Pagination())
+      ).results shouldBe Seq.empty
     }
 
     "return the expected document when there is one match" in {
       store(case1, caseX)
 
       // full name search
-      await(repository.get(CaseSearch(CaseFilter(caseSource = Some("Novak Djokovic"))), Pagination())).results shouldBe Seq(
+      await(
+        repository.get(CaseSearch(CaseFilter(caseSource = Some("Novak Djokovic"))), Pagination())
+      ).results shouldBe Seq(
         caseX
       )
 
@@ -584,7 +588,9 @@ class CaseRepositorySpec
       )
 
       // case-insensitive
-      await(repository.get(CaseSearch(CaseFilter(caseSource = Some("novak djokovic"))), Pagination())).results shouldBe Seq(
+      await(
+        repository.get(CaseSearch(CaseFilter(caseSource = Some("novak djokovic"))), Pagination())
+      ).results shouldBe Seq(
         caseX
       )
     }
@@ -644,19 +650,25 @@ class CaseRepositorySpec
 
     "return an empty sequence when there are no matches" in {
       store(case1, c1, c2, c3)
-      await(repository.get(CaseSearch(CaseFilter(decisionDetails = Some("table"))), Pagination())).results shouldBe Seq.empty
+      await(
+        repository.get(CaseSearch(CaseFilter(decisionDetails = Some("table"))), Pagination())
+      ).results shouldBe Seq.empty
     }
 
     "return the expected document when there is one match" in {
       store(case1, c1, c2, c3)
-      await(repository.get(CaseSearch(CaseFilter(decisionDetails = Some("Football"))), Pagination())).results shouldBe Seq(
+      await(
+        repository.get(CaseSearch(CaseFilter(decisionDetails = Some("Football"))), Pagination())
+      ).results shouldBe Seq(
         c2
       )
     }
 
     "return the expected documents when there are multiple matches" in {
       store(case1, c1, c2, c3)
-      await(repository.get(CaseSearch(CaseFilter(decisionDetails = Some("amazing"))), Pagination())).results shouldBe Seq(
+      await(
+        repository.get(CaseSearch(CaseFilter(decisionDetails = Some("amazing"))), Pagination())
+      ).results shouldBe Seq(
         c1,
         c2,
         c3
@@ -804,9 +816,8 @@ class CaseRepositorySpec
     }
 
     "return 'None' when the 'reference' doesn't match any document in the collection" in {
-      for (_ <- 1 to 3) {
+      for (_ <- 1 to 3)
         await(repository.insert(createCase()))
-      }
       collectionSize shouldBe 3
 
       await(repository.getByReference("WRONG_REFERENCE")) shouldBe None

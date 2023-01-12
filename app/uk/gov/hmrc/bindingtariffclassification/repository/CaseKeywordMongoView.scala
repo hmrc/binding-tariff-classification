@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -87,7 +87,7 @@ class CaseKeywordMongoView @Inject() (mongoComponent: MongoComponent) {
   private val addKeywordField = addFields(Field("keyword.name", "$_id"))
   private val project         = Aggregates.project(Codecs.toBson(Json.obj("_id" -> 0)).asDocument()) // todo fix this
 
-  protected val pipeline: Seq[Bson] = {
+  protected val pipeline: Seq[Bson] =
     Seq(
       addHeaderFields,
       projectCaseHeader,
@@ -96,7 +96,6 @@ class CaseKeywordMongoView @Inject() (mongoComponent: MongoComponent) {
       addKeywordField,
       project
     )
-  }
 
   def fetchKeywordsFromCases(pagination: Pagination): Future[Paged[CaseKeyword]] = {
     val runAggregation = view

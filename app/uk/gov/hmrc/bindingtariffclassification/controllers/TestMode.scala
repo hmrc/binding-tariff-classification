@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,7 +25,8 @@ import scala.concurrent.{ExecutionContext, Future}
 object TestMode {
 
   def actionFilter(appConfig: AppConfig, bodyParser: BodyParsers.Default)(
-    implicit ec: ExecutionContext
+    implicit
+    ec: ExecutionContext
   ): ActionBuilder[Request, AnyContent] with ActionFilter[Request] =
     new ActionBuilder[Request, AnyContent] with ActionFilter[Request] {
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -39,9 +39,8 @@ class EventSearchTest extends BaseSpec {
 
   private val emptyParams: Map[String, Seq[String]] = params.mapValues(_.map(_ => ""))
 
-  /**
-    * When we add fields to Search these tests shouldn't need changing, only the fields above.
-    **/
+  /** When we add fields to Search these tests shouldn't need changing, only the fields above.
+    */
   "Search Binder" should {
 
     "Unbind Unpopulated Search to Query String" in {

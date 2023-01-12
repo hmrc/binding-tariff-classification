@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -41,7 +41,7 @@ class FileStoreConnectorTest extends BaseSpec with WiremockTestServer with Befor
   private implicit val headers: HeaderCarrier   = HeaderCarrier()
   private implicit val actorSystem: ActorSystem = ActorSystem("test")
 
-  private val realConfig = fakeApplication.injector.instanceOf[AppConfig]
+  private val appConfig = fakeApplication.injector.instanceOf[AppConfig]
 
   private val defaultHttpClient: DefaultHttpClient = fakeApplication.injector.instanceOf[DefaultHttpClient]
 
@@ -53,7 +53,7 @@ class FileStoreConnectorTest extends BaseSpec with WiremockTestServer with Befor
     super.beforeAll()
     given(config.fileStoreUrl).willReturn(wireMockUrl)
     given(config.maxUriLength).willReturn(maxUriLength)
-    given(config.authorization).willReturn(realConfig.authorization)
+    given(config.authorization).willReturn(appConfig.authorization)
   }
 
   private val uploadedFile: FileMetadata = FileMetadata(
@@ -87,7 +87,7 @@ class FileStoreConnectorTest extends BaseSpec with WiremockTestServer with Befor
 
       verify(
         getRequestedFor(urlEqualTo("/file?id=id&page=1&page_size=2"))
-          .withHeader("X-Api-Token", equalTo(realConfig.authorization))
+          .withHeader("X-Api-Token", equalTo(appConfig.authorization))
       )
     }
 
@@ -126,7 +126,7 @@ class FileStoreConnectorTest extends BaseSpec with WiremockTestServer with Befor
 
       verify(
         deleteRequestedFor(urlEqualTo("/file/id"))
-          .withHeader("X-Api-Token", equalTo(realConfig.authorization))
+          .withHeader("X-Api-Token", equalTo(appConfig.authorization))
       )
     }
   }

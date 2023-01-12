@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,10 +23,10 @@ import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
-import play.api.Application
 import play.api.inject.bind
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.mvc.{BodyParsers, MessagesControllerComponents}
+import play.api.{Application, Configuration}
 import uk.gov.hmrc.bindingtariffclassification.connector.ResourceFiles
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
@@ -59,6 +59,7 @@ abstract class BaseSpec
   implicit val hc: HeaderCarrier              = HeaderCarrier()
   implicit def liftFuture[A](v: A): Future[A] = Future.successful(v)
 
+  lazy val realConfig: Configuration                             = fakeApplication.injector.instanceOf[Configuration]
   lazy val serviceConfig: ServicesConfig                         = fakeApplication.injector.instanceOf[ServicesConfig]
   lazy val parser: BodyParsers.Default                           = fakeApplication.injector.instanceOf[BodyParsers.Default]
   lazy val mcc: MessagesControllerComponents                     = fakeApplication.injector.instanceOf[MessagesControllerComponents]

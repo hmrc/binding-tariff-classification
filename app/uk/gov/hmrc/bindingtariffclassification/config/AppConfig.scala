@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -38,6 +38,11 @@ class AppConfig @Inject() (
   lazy val atarCaseReferenceOffset: Long  = configuration.get[Long]("atar-case-reference-offset")
   lazy val otherCaseReferenceOffset: Long = configuration.get[Long]("other-case-reference-offset")
 
+  lazy val bankHolidaysUrl: String = {
+    val url = configuration.get[String]("bank-holidays-url")
+    url.dropWhile(_ == '"').takeWhile(_ != '"')
+  }
+
   lazy val clock: Clock = Clock.systemUTC()
 
   lazy val activeDaysElapsed: JobConfig = JobConfig(
@@ -63,8 +68,7 @@ class AppConfig @Inject() (
   private def getBooleanConfig(key: String, default: Boolean = false): Boolean =
     configuration.getOptional[Boolean](key).getOrElse(default)
 
-  lazy val fileStoreUrl: String    = config.baseUrl("binding-tariff-filestore")
-  lazy val bankHolidaysUrl: String = config.baseUrl("bank-holidays")
+  lazy val fileStoreUrl: String = config.baseUrl("binding-tariff-filestore")
 
   lazy val upsertAgents: Seq[String] =
     configuration.get[String]("upsert-permitted-agents").split(",").filter(_.nonEmpty)
@@ -72,18 +76,23 @@ class AppConfig @Inject() (
   def getString(key: String): String =
     configuration.getOptional[String](key).getOrElse(configNotFoundError(key))
 
-  lazy val mongodbUri: String = configuration.get[String]("mongodb.uri")
-  lazy val appName: String    = configuration.get[String]("appName")
+  lazy val appName: String = configuration.get[String]("appName")
 
   lazy val mongoEncryption: MongoEncryption = {
     val encryptionEnabled = getBooleanConfig("mongodb.encryption.enabled")
     val encryptionKey = {
-      if (encryptionEnabled) Some(getString("mongodb.encryption.key"))
-      else None
+      if (encryptionEnabled) {
+        Some(getString("mongodb.encryption.key"))
+      } else {
+        None
+      }
     }
 
-    if (encryptionEnabled && encryptionKey.isDefined) logger.info("Mongo encryption enabled")
-    else logger.info("Mongo encryption disabled")
+    if (encryptionEnabled && encryptionKey.isDefined) {
+      logger.info("Mongo encryption enabled")
+    } else {
+      logger.info("Mongo encryption disabled")
+    }
 
     MongoEncryption(encryptionEnabled, encryptionKey)
   }

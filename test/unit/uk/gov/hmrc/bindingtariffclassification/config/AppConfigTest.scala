@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,8 +23,11 @@ import java.time.ZoneOffset
 
 class AppConfigTest extends BaseSpec {
 
-  private def configWith(pairs: (String, String)*): AppConfig =
-    new AppConfig(Configuration.from(pairs.map(e => e._1 -> e._2).toMap), serviceConfig)
+  private def configWith(pairs: (String, String)*): AppConfig = {
+    val currConfigs  = realConfig.entrySet.map(pair => pair._1 -> pair._2.render()).toMap
+    val finalConfigs = currConfigs ++ pairs.map(e => e._1      -> e._2).toMap
+    new AppConfig(Configuration.from(finalConfigs), serviceConfig)
+  }
 
   "Config" should {
 
@@ -72,7 +75,7 @@ class AppConfigTest extends BaseSpec {
 
     "build 'bankHolidaysUrl'" in {
       //take expected from application.conf
-      configWith().bankHolidaysUrl shouldBe "http://localhost:9587"
+      configWith().bankHolidaysUrl shouldBe "https://www.gov.uk/bank-holidays.json"
     }
 
     "build 'upsert-permitted-agents'" in {
@@ -112,9 +115,7 @@ class AppConfigTest extends BaseSpec {
 
     "build 'mongoEncryption' with value true and without key" in {
       val caught = intercept[RuntimeException] {
-        configWith(
-          "mongodb.encryption.enabled" -> "true"
-        ).mongoEncryption
+        new AppConfig(Configuration.from(Map("mongodb.encryption.enabled" -> "true")), serviceConfig).mongoEncryption
       }
       caught.getMessage shouldBe s"Could not find config key 'mongodb.encryption.key'"
     }

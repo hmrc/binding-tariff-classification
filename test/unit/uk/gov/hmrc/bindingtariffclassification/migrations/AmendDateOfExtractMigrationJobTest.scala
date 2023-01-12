@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -174,7 +174,8 @@ class AmendDateOfExtractMigrationJobTest extends BaseSpec with BeforeAndAfterEac
 
   private def givenPagesOfCases(cases: Seq[Case]): Unit =
     cases.zipWithIndex.foreach {
-      case (cse, index) => givenAPageOfCases(index + 1, 1, cases.size, cse)
+      case (cse, index) =>
+        givenAPageOfCases(index + 1, 1, cases.size, cse)
     }
 
   private def aMigratedCaseWith(reference: String, dateOfExtract: LocalDate): Case =

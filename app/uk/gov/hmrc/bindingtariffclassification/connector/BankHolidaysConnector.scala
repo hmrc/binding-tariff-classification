@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,13 +34,14 @@ import scala.io.Source
 
 @Singleton
 class BankHolidaysConnector @Inject() (appConfig: AppConfig, http: ProxyHttpClient, val metrics: Metrics)(
-  implicit executionContext: ExecutionContext
+  implicit
+  executionContext: ExecutionContext
 ) extends Logging
     with HasMetrics {
   def get()(implicit headerCarrier: HeaderCarrier): Future[Set[LocalDate]] =
     withMetricsTimerAsync("get-bank-holidays") { _ =>
       http
-        .GET[BankHolidaysResponse](s"${appConfig.bankHolidaysUrl}/bank-holidays")
+        .GET[BankHolidaysResponse](appConfig.bankHolidaysUrl)
         .recover(withResourcesFile)
         .map(_.`england-and-wales`.events.map(_.date).toSet)
     }

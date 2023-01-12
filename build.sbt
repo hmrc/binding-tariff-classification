@@ -45,8 +45,7 @@ lazy val microservice = (project in file("."))
     addTestReportOption(Test, "test-reports")
   )
   .configs(IntegrationTest)
-  .settings(inConfig(IntegrationTest)(ScalafmtPlugin.scalafmtConfigSettings))
-  .settings(inConfig(TemplateItTest)(Defaults.itSettings): _*)
+  .settings(integrationTestSettings())
   .settings(
     IntegrationTest / Keys.fork := true,
     IntegrationTest / unmanagedSourceDirectories := Seq(
@@ -56,7 +55,6 @@ lazy val microservice = (project in file("."))
     addTestReportOption(IntegrationTest, "int-test-reports"),
     IntegrationTest / parallelExecution := false
   )
-  .settings(resolvers += Resolver.jcenterRepo)
 
 lazy val allPhases   = "tt->test;test->test;test->compile;compile->compile"
 lazy val allItPhases = "tit->it;it->it;it->compile;compile->compile"

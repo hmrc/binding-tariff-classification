@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -69,7 +69,7 @@ object ReportField {
   val Reference   = StringField("reference", "reference")
   val Description = StringField("description", "application.detailedDescription")
   val CaseSource =
-    CoalesceField("source", NonEmptySeq.of("application.correspondenceStarter", ("application.caseType")))
+    CoalesceField("source", NonEmptySeq.of("application.correspondenceStarter", "application.caseType"))
   val Status    = StatusField("status", "status")
   val CaseType  = CaseTypeField("case_type", "application.type")
   val Chapter   = ChapterField("chapter", "decision.bindingCommodityCode")

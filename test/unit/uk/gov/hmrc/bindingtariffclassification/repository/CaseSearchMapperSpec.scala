@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -98,7 +98,9 @@ class CaseSearchMapperSpec extends BaseMongoIndexSpec {
     }
 
     "filter by 'application type'" in {
-      jsonMapper.filterBy(CaseFilter(applicationType = Some(Set(ApplicationType.BTI, ApplicationType.LIABILITY_ORDER)))) shouldBe Json
+      jsonMapper.filterBy(
+        CaseFilter(applicationType = Some(Set(ApplicationType.BTI, ApplicationType.LIABILITY_ORDER)))
+      ) shouldBe Json
         .obj(
           "application.type" -> Json.obj("$in" -> Json.arr("BTI", "LIABILITY_ORDER"))
         )
@@ -137,7 +139,9 @@ class CaseSearchMapperSpec extends BaseMongoIndexSpec {
     "filter by 'status' - with pseudo statuses only" in {
       given(config.clock) willReturn Clock.fixed(Instant.EPOCH, ZoneOffset.UTC)
 
-      jsonMapper.filterBy(CaseFilter(statuses = Some(Set(PseudoCaseStatus.LIVE, PseudoCaseStatus.EXPIRED)))) shouldBe Json
+      jsonMapper.filterBy(
+        CaseFilter(statuses = Some(Set(PseudoCaseStatus.LIVE, PseudoCaseStatus.EXPIRED)))
+      ) shouldBe Json
         .obj(
           "$or" -> Json.arr(
             Json.obj(

@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,7 +31,8 @@ import uk.gov.hmrc.play.bootstrap.http.DefaultHttpClient
 
 @Singleton
 class FileStoreConnector @Inject() (appConfig: AppConfig, http: DefaultHttpClient, val metrics: Metrics)(
-  implicit mat: Materializer
+  implicit
+  mat: Materializer
 ) extends HasMetrics {
 
   implicit val ec: ExecutionContext = mat.executionContext
@@ -62,7 +63,8 @@ class FileStoreConnector @Inject() (appConfig: AppConfig, http: DefaultHttpClien
             )
           }
           .runFold(Seq.empty[FileMetadata]) {
-            case (acc, next) => acc ++ next.results
+            case (acc, next) =>
+              acc ++ next.results
           }
           .map(results => Paged(results = results, pagination = Pagination.max, resultCount = results.size.toLong))
       } else {

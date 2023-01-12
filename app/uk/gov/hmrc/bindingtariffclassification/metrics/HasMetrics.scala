@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,8 +25,7 @@ import scala.util.control.NonFatal
 
 trait HasActionMetrics extends HasMetrics { self: BaseController =>
 
-  /**
-    * Execute a [[play.api.mvc.Action]] with a metrics timer.
+  /** Execute a [[play.api.mvc.Action]] with a metrics timer.
     * Intended for use in controllers that return HTTP responses.
     *
     * @param metric The id of the metric to be collected
@@ -71,8 +70,7 @@ trait HasMetrics {
       }
   }
 
-  /**
-    * Execute a block of code with a metrics timer.
+  /** Execute a block of code with a metrics timer.
     * Intended for use in controllers that return HTTP responses.
     *
     * @param metric The id of the metric to be collected
@@ -105,8 +103,7 @@ trait HasMetrics {
       }
     }
 
-  /**
-    * Execute a block of code with a metrics timer.
+  /** Execute a block of code with a metrics timer.
     *
     * Intended for use in connectors that call other microservices.
     *

@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -38,7 +38,8 @@ trait BaseMongoOperations[T] {
     collection.countDocuments(filter).toFuture()
 
   protected def countMany(filter: Bson, sort: Bson, pagination: Pagination)(
-    implicit ec: ExecutionContext,
+    implicit
+    ec: ExecutionContext,
     ct: ClassTag[T]
   ): Future[Paged[T]] = {
     val count = countDocument(filter)
@@ -50,7 +51,8 @@ trait BaseMongoOperations[T] {
       .toFuture()
 
     (count, results).mapN {
-      case (resultsSize, events) => Paged(events, pagination, resultsSize)
+      case (resultsSize, events) =>
+        Paged(events, pagination, resultsSize)
     }
   }
 
