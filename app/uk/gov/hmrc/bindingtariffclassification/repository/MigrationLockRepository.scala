@@ -75,7 +75,7 @@ class MigrationLockMongoRepository @Inject() (mongoComponent: MongoComponent)
     }
 
   override def rollback(e: JobRunEvent): Future[Unit] =
-    collection.deleteOne(equal("name", e.name)).toFuture().map { _ =>
+    collection.deleteOne(equal("name", e.name)).toFuture().flatMap { _ =>
       logger.debug(s"Removed Lock for [${e.name}]")
       Future.unit
     }

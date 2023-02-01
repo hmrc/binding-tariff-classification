@@ -117,10 +117,10 @@ class ActiveDaysElapsedJob @Inject() (
                )
 
       // Generate a timeline of the Case Status over time
-      statusTimeline: StatusTimeline = StatusTimeline.from(events.results)
+      statusTimeline @ _ = StatusTimeline.from(events.results)
 
       // Filter down to the days the case was not Referred or Suspended
-      trackedActionableDays: Seq[Instant] = workingDaysTracked
+      trackedActionableDays @ _ = workingDaysTracked
         .filterNot(statusTimeline.statusOn(_).contains(CaseStatus.REFERRED))
         .filterNot(statusTimeline.statusOn(_).contains(CaseStatus.SUSPENDED))
 

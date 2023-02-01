@@ -18,15 +18,15 @@ lazy val microservice = (project in file("."))
   .settings(majorVersion := 0)
   .settings(
     name := appName,
-    scalaVersion := "2.12.16",
+    scalaVersion := "2.13.10",
     targetJvm := "jvm-1.8",
     PlayKeys.playDefaultPort := 9580,
     libraryDependencies ++= AppDependencies(),
+    libraryDependencySchemes ++= Seq("org.scala-lang.modules" %% "scala-xml" % VersionScheme.Always),
     Test / parallelExecution := false,
     Test / fork := true,
     retrieveManaged := true,
-    // Use the silencer plugin to suppress warnings from unused imports in compiled twirl templates
-    scalacOptions += "-P:silencer:pathFilters=views;routes",
+    scalacOptions += "-Wconf:src=routes/.*:s",
     scalacOptions ~= { opts =>
       opts.filterNot(
         Set(
@@ -67,5 +67,5 @@ coverageMinimumStmtTotal := 94
 coverageFailOnMinimum := true
 coverageExcludedPackages := "<empty>;com.kenshoo.play.metrics.*;prod.*;testOnlyDoNotUseInAppConf.*;app.*;uk.gov.hmrc.BuildInfo"
 
-addCommandAlias("scalafmtAll", "all scalafmtSbt scalafmt test:scalafmt")
-addCommandAlias("scalastyleAll", "all scalastyle test:scalastyle")
+addCommandAlias("scalafmtAll", "all scalafmtSbt scalafmt Test/scalafmt")
+addCommandAlias("scalastyleAll", "all scalastyle Test/scalastyle")

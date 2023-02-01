@@ -413,7 +413,7 @@ class CaseMongoRepository @Inject() (
         report.sortBy.fieldName
     }
 
-    report.sortOrder match {
+    (report.sortOrder: @unchecked) match {
       case SortDirection.ASCENDING =>
         sort(ascending(sortField))
       case SortDirection.DESCENDING =>
@@ -426,7 +426,7 @@ class CaseMongoRepository @Inject() (
     sortOrder: SortDirection.Value
   ) =
     // If not sorting by reference, add it as a secondary sort field to ensure stable sorting
-    (sortOrder, sortBy) match {
+    ((sortOrder, sortBy): @unchecked) match {
       case (SortDirection.ASCENDING, ReportField.Reference) =>
         sort(ascending(sortBy.underlyingField))
       case (SortDirection.DESCENDING, ReportField.Reference) =>
@@ -621,7 +621,7 @@ class CaseMongoRepository @Inject() (
       sortDirection(ReportField.Count.fieldName) +: teamThenCaseType
 
     // Ideally we want to sort by both parts of the grouping key to improve sort stability
-    report.sortBy match {
+    (report.sortBy: @unchecked) match {
       case ReportField.Count    => sort(orderBy(countThenTeamThenCaseType: _*))
       case ReportField.CaseType => sort(orderBy(caseTypeThenTeam: _*))
       case ReportField.Team     => sort(orderBy(teamThenCaseType: _*))

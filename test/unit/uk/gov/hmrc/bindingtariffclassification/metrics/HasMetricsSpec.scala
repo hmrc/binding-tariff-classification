@@ -27,6 +27,7 @@ import org.scalatest.wordspec.AsyncWordSpecLike
 import org.scalatest.{BeforeAndAfterAll, OptionValues}
 import org.scalatestplus.mockito.MockitoSugar
 import play.api.mvc.Results
+import play.api.test
 import play.api.test.{FakeRequest, Helpers}
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 

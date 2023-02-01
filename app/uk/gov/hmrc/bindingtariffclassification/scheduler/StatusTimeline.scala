@@ -29,7 +29,7 @@ class StatusTimeline(statusChanges: Seq[(Instant, CaseStatus)]) {
     if (timeline.contains(date)) {
       timeline.get(date)
     } else {
-      timeline.until(date).lastOption.map(_._2)
+      timeline.rangeUntil(date).lastOption.map(_._2)
     }
 }
 

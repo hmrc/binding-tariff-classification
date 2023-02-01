@@ -21,7 +21,7 @@ object RejectReason extends Enumeration {
   val APPLICATION_WITHDRAWN, ATAR_RULING_ALREADY_EXISTS, DUPLICATE_APPLICATION, NO_INFO_FROM_TRADER, OTHER = Value
 
   def format(reason: RejectReason): String =
-    reason match {
+    (reason: @unchecked) match {
       case APPLICATION_WITHDRAWN      => "Application withdrawn"
       case ATAR_RULING_ALREADY_EXISTS => "ATaR ruling already exists"
       case DUPLICATE_APPLICATION      => "Duplicate application"

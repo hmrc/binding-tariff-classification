@@ -19,6 +19,7 @@ package uk.gov.hmrc.bindingtariffclassification.repository
 import java.time.Instant
 import javax.inject.{Inject, Singleton}
 import play.api.libs.json.Json.JsValueWrapper
+import play.api.libs.json.JsValue
 import play.api.libs.json.{Json, _}
 import uk.gov.hmrc.bindingtariffclassification.config.AppConfig
 import uk.gov.hmrc.bindingtariffclassification.model.ApplicationType.ApplicationType
@@ -82,14 +83,16 @@ class SearchMapper @Inject() (appConfig: AppConfig) extends Mapper {
 
     val query: Map[String, JsValue] = params
       .groupBy(_._1) // Group by Key
+      .view
       .mapValues(_.map(_._2)) // Map the values from Seq(key -> value) to Seq(value)
-      .map {
+      .map({
         // If there is only one entry in params with a specific key, map it how we usually would: (key -> value)
         case (key: String, value: Seq[JsValue]) if value.size == 1 => key -> value.head
 
         // If there is multiple entries in params with a specific key, wrap them in an $and
         case (key, value: Seq[JsValue]) => "$and" -> JsArray(value.map(value => Json.obj(key -> value)))
-      }
+      })
+      .toMap
 
     JsObject(query)
   }
@@ -119,17 +122,17 @@ class SearchMapper @Inject() (appConfig: AppConfig) extends Mapper {
     "$lte" -> value
   )
 
-  private def inArray[T](values: TraversableOnce[T])(implicit writes: Writes[T]): JsObject =
-    JsObject(Map("$in" -> JsArray(values.toSeq.map(writes.writes))))
+  private def inArray[T](values: IterableOnce[T])(implicit writes: Writes[T]): JsObject =
+    JsObject(Map("$in" -> JsArray(values.iterator.toSeq.map(writes.writes))))
 
-  private def inArrayOrNone[T](values: TraversableOnce[T])(implicit writes: Writes[T]): JsObject =
+  private def inArrayOrNone[T](values: IterableOnce[T])(implicit writes: Writes[T]): JsObject =
     values match {
-      case _ if values.exists(_ == "some") =>
+      case _ if values.iterator.exists(_ == "some") =>
         Json.obj("$ne" -> JsNull)
-      case _ if values.exists(_ == "none") =>
+      case _ if values.iterator.exists(_ == "none") =>
         JsObject(
           Map(
-            "$in" -> JsArray(JsNull :: values.toList.filterNot(_ == "none").map(writes.writes))
+            "$in" -> JsArray(JsNull :: values.iterator.toList.filterNot(_ == "none").map(writes.writes))
           )
         )
       case _ =>

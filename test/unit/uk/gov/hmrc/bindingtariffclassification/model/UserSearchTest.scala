@@ -29,7 +29,7 @@ class UserSearchTest extends BaseSpec {
     Map("role" -> Seq("CLASSIFICATION_MANAGER"), "member_of_teams" -> Seq("1"))
 
   private val emptyParams: Map[String, Seq[String]] =
-    params.mapValues(_.map(_ => ""))
+    params.mapValues(_.map(_ => "")).toMap
 
   "Search Binder" should {
 

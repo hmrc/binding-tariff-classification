@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.bindingtariffclassification.service
 
-import akka.stream.Materializer
 import uk.gov.hmrc.bindingtariffclassification.model._
 import uk.gov.hmrc.bindingtariffclassification.repository._
 
@@ -26,7 +25,7 @@ import scala.concurrent.Future
 @Singleton
 class UsersService @Inject() (
   usersRepository: UsersRepository
-)(implicit mat: Materializer) {
+) {
 
   def getUserById(id: String): Future[Option[Operator]] =
     usersRepository.getById(id)
