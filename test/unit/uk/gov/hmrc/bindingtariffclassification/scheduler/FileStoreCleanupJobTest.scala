@@ -181,7 +181,7 @@ class FileStoreCleanupJobTest extends BaseSpec with BeforeAndAfterEach {
     verify(fileStoreConnector, never()).delete(any[String])(any[HeaderCarrier])
 
   private def theFilesDeleted: List[String] = {
-    import scala.collection.JavaConverters._
+    import scala.jdk.CollectionConverters._
 
     val captor: ArgumentCaptor[String] = ArgumentCaptor.forClass(classOf[String])
     verify(fileStoreConnector, atLeastOnce()).delete(captor.capture())(any[HeaderCarrier])

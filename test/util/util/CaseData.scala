@@ -25,7 +25,7 @@ import java.time.{Instant, LocalDate, ZoneId}
 
 object CaseData {
 
-  private val secondsInAYear = 3600 * 24 * 365
+  private val secondsInAYear: Long = 3600 * 24 * 365
 
   private def createContact: Contact =
     Contact("Maurizio", "maurizio@me.com", Some("0123456789"))
@@ -197,7 +197,7 @@ object CaseData {
     Case(
       reference   = "9999999999",
       status      = CaseStatus.OPEN,
-      createdDate = Instant.now.minusSeconds(1 * secondsInAYear),
+      createdDate = Instant.now.minusSeconds(secondsInAYear),
       queueId     = Some("3"),
       assignee    = Some(Operator("0")),
       application = createBasicBTIApplication,
@@ -265,7 +265,6 @@ object CaseData {
     r: String                      = RandomGenerator.randomUUID(),
     status: CaseStatus             = CaseStatus.NEW,
     decision: Option[Decision]     = None,
-    queue: Option[String]          = None,
     assignee: Option[Operator]     = None,
     attachments: Seq[Attachment]   = Seq.empty,
     keywords: Set[String]          = Set.empty,
@@ -274,7 +273,6 @@ object CaseData {
     Case(
       reference     = r,
       status        = status,
-      queueId       = queue,
       assignee      = assignee,
       application   = app,
       decision      = decision,

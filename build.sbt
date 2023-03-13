@@ -19,7 +19,6 @@ lazy val microservice = (project in file("."))
   .settings(
     name := appName,
     scalaVersion := "2.13.10",
-    targetJvm := "jvm-1.8",
     PlayKeys.playDefaultPort := 9580,
     libraryDependencies ++= AppDependencies(),
     libraryDependencySchemes ++= Seq("org.scala-lang.modules" %% "scala-xml" % VersionScheme.Always),

@@ -38,7 +38,7 @@ class CaseSpec extends BaseFeatureSpec {
   private val q1         = "queue1"
   private val u1         = Operator("user1")
   private val c0         = createNewCase(app = createBasicBTIApplication)
-  private val c1         = createCase(app = createBasicBTIApplication, queue = Some(q1), assignee = Some(u1))
+  private val c1         = createCase(app = createBasicBTIApplication, assignee = Some(u1)).copy(queueId = Some(q1))
   private val status     = CaseStatus.CANCELLED
   private val c1_updated = c1.copy(status = status)
   private val c2 = createCase(

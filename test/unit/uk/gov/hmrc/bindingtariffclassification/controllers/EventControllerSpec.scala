@@ -21,7 +21,6 @@ import org.mockito.Mockito.{verifyNoMoreInteractions, when}
 import org.mockito.{ArgumentMatchers, Mockito}
 import org.scalatest.BeforeAndAfterEach
 import play.api.libs.json.Json.toJson
-import play.api.mvc.Result
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.bindingtariffclassification.base.BaseSpec
