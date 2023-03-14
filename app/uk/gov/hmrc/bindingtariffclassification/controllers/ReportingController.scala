@@ -24,13 +24,14 @@ import uk.gov.hmrc.bindingtariffclassification.model.RESTFormatters._
 import uk.gov.hmrc.bindingtariffclassification.model.reporting._
 import uk.gov.hmrc.bindingtariffclassification.service.ReportService
 
-import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.ExecutionContext
 
 @Singleton
 class ReportingController @Inject() (
   reportService: ReportService,
   mcc: MessagesControllerComponents
-) extends CommonController(mcc) {
+)(implicit ex: ExecutionContext)
+    extends CommonController(mcc) {
 
   def summaryReport(report: SummaryReport, pagination: Pagination): Action[AnyContent] = Action.async {
     reportService.summaryReport(report, pagination).map(result => Ok(Json.toJson(result)))

@@ -21,11 +21,12 @@ import uk.gov.hmrc.bindingtariffclassification.model._
 import uk.gov.hmrc.bindingtariffclassification.model.reporting._
 
 import javax.inject.{Inject, Singleton}
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class EncryptedCaseMongoRepository @Inject() (repository: CaseMongoRepository, crypto: Crypto) extends CaseRepository {
+class EncryptedCaseMongoRepository @Inject() (repository: CaseMongoRepository, crypto: Crypto)(
+  implicit ec: ExecutionContext
+) extends CaseRepository {
 
   private def encrypt: Case => Case = crypto.encrypt
 
@@ -61,14 +62,14 @@ class EncryptedCaseMongoRepository @Inject() (repository: CaseMongoRepository, c
     repository.summaryReport(report, pagination)
 
   override def caseReport(
-                           report: CaseReport,
-                           pagination: Pagination
-                         ): Future[Paged[Map[String, ReportResultField[_]]]] =
+    report: CaseReport,
+    pagination: Pagination
+  ): Future[Paged[Map[String, ReportResultField[_]]]] =
     repository.caseReport(report, pagination)
 
   override def queueReport(
-                            report: QueueReport,
-                            pagination: Pagination
-                          ): Future[Paged[QueueResultGroup]] =
+    report: QueueReport,
+    pagination: Pagination
+  ): Future[Paged[QueueResultGroup]] =
     repository.queueReport(report, pagination)
 }

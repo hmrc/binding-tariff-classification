@@ -36,6 +36,8 @@ import java.time.Instant
 import scala.concurrent.Future
 import scala.concurrent.Future._
 
+import scala.concurrent.ExecutionContext.Implicits.global
+
 // scalastyle:off magic.number
 class CaseControllerSpec extends BaseSpec with BeforeAndAfterEach {
 

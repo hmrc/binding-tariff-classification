@@ -30,12 +30,11 @@ import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.play.json.Codecs
 
 import javax.inject.{Inject, Singleton}
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.DurationInt
-import scala.concurrent.{Await, Future}
+import scala.concurrent.{Await, ExecutionContext, Future}
 
 @Singleton
-class CaseKeywordMongoView @Inject() (mongoComponent: MongoComponent) {
+class CaseKeywordMongoView @Inject() (mongoComponent: MongoComponent)(implicit ec: ExecutionContext) {
 
   private[repository] val caseKeywordsViewName = "caseKeywords"
 

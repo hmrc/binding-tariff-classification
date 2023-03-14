@@ -27,8 +27,7 @@ import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
 
 import javax.inject.{Inject, Singleton}
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.Future.successful
 
 @ImplementedBy(classOf[SequenceMongoRepository])
@@ -44,7 +43,7 @@ trait SequenceRepository {
 }
 
 @Singleton
-class SequenceMongoRepository @Inject() (mongoComponent: MongoComponent)
+class SequenceMongoRepository @Inject() (mongoComponent: MongoComponent)(implicit ec: ExecutionContext)
     extends PlayMongoRepository[Sequence](
       collectionName = "sequences",
       mongoComponent = mongoComponent,

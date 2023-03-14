@@ -41,53 +41,53 @@ import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
 
 import java.time.Instant
 import javax.inject.{Inject, Singleton}
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class CaseMongoRepository @Inject() (
-                                      appConfig: AppConfig,
-                                      mongoComponent: MongoComponent,
-                                      mapper: SearchMapper,
-                                      updateMapper: UpdateMapper
-                                    ) extends PlayMongoRepository[Case](
-  collectionName = "cases",
-  mongoComponent = mongoComponent,
-  domainFormat   = MongoFormatters.formatCase,
-  // TODO: We need to add relevant indexes for each possible search
-  // TODO: We should add compound indexes for searches involving multiple fields
-  indexes = Seq(
-    IndexModel(asc("reference"), IndexOptions().unique(true).name("reference_Index")),
-    IndexModel(asc("assignee.id"), IndexOptions().unique(false).name("assignee.id_Index")),
-    IndexModel(asc("queueId"), IndexOptions().unique(false).name("queueId_Index")),
-    IndexModel(asc("status"), IndexOptions().unique(false).name("status_Index")),
-    IndexModel(desc("createdDate"), IndexOptions().unique(false).name("createdDate_Index")),
-    IndexModel(
-      asc("application.holder.eori"),
-      IndexOptions().unique(false).name("application.holder.eori_Index")
-    ),
-    IndexModel(
-      asc("application.agent.eoriDetails.eori"),
-      IndexOptions().unique(false).name("application.agent.eoriDetails.eori_Index")
-    ),
-    IndexModel(
-      asc("application.type"),
-      IndexOptions().unique(false).name("application.type_Index")
-    ),
-    IndexModel(
-      asc("decision.effectiveEndDate"),
-      IndexOptions().unique(false).name("decision.effectiveEndDate_Index")
-    ),
-    IndexModel(
-      asc("decision.bindingCommodityCode"),
-      IndexOptions().unique(false).name("decision.bindingCommodityCode_Index")
-    ),
-    IndexModel(asc("daysElapsed"), IndexOptions().unique(false).name("daysElapsed_Index")),
-    IndexModel(asc("keywords"), IndexOptions().unique(false).name("keywords_Index"))
-  )
-)
-  with CaseRepository
-  with BaseMongoOperations[Case] {
+  appConfig: AppConfig,
+  mongoComponent: MongoComponent,
+  mapper: SearchMapper,
+  updateMapper: UpdateMapper
+)(implicit ec: ExecutionContext)
+    extends PlayMongoRepository[Case](
+      collectionName = "cases",
+      mongoComponent = mongoComponent,
+      domainFormat   = MongoFormatters.formatCase,
+      // TODO: We need to add relevant indexes for each possible search
+      // TODO: We should add compound indexes for searches involving multiple fields
+      indexes = Seq(
+        IndexModel(asc("reference"), IndexOptions().unique(true).name("reference_Index")),
+        IndexModel(asc("assignee.id"), IndexOptions().unique(false).name("assignee.id_Index")),
+        IndexModel(asc("queueId"), IndexOptions().unique(false).name("queueId_Index")),
+        IndexModel(asc("status"), IndexOptions().unique(false).name("status_Index")),
+        IndexModel(desc("createdDate"), IndexOptions().unique(false).name("createdDate_Index")),
+        IndexModel(
+          asc("application.holder.eori"),
+          IndexOptions().unique(false).name("application.holder.eori_Index")
+        ),
+        IndexModel(
+          asc("application.agent.eoriDetails.eori"),
+          IndexOptions().unique(false).name("application.agent.eoriDetails.eori_Index")
+        ),
+        IndexModel(
+          asc("application.type"),
+          IndexOptions().unique(false).name("application.type_Index")
+        ),
+        IndexModel(
+          asc("decision.effectiveEndDate"),
+          IndexOptions().unique(false).name("decision.effectiveEndDate_Index")
+        ),
+        IndexModel(
+          asc("decision.bindingCommodityCode"),
+          IndexOptions().unique(false).name("decision.bindingCommodityCode_Index")
+        ),
+        IndexModel(asc("daysElapsed"), IndexOptions().unique(false).name("daysElapsed_Index")),
+        IndexModel(asc("keywords"), IndexOptions().unique(false).name("keywords_Index"))
+      )
+    )
+    with CaseRepository
+    with BaseMongoOperations[Case] {
 
   import CaseMongoRepository._
 
@@ -316,10 +316,10 @@ class CaseMongoRepository @Inject() (
   }
 
   private def sortStage(
-                         sortBy: ReportField[_],
-                         sortOrder: SortDirection.Value
-                       ) =
-  // If not sorting by reference, add it as a secondary sort field to ensure stable sorting
+    sortBy: ReportField[_],
+    sortOrder: SortDirection.Value
+  ) =
+    // If not sorting by reference, add it as a secondary sort field to ensure stable sorting
     ((sortOrder, sortBy): @unchecked) match {
       case (SortDirection.ASCENDING, ReportField.Reference) =>
         sort(ascending(sortBy.underlyingField))
@@ -440,9 +440,9 @@ class CaseMongoRepository @Inject() (
   }
 
   override def caseReport(
-                           report: CaseReport,
-                           pagination: Pagination
-                         ): Future[Paged[Map[String, ReportResultField[_]]]] = {
+    report: CaseReport,
+    pagination: Pagination
+  ): Future[Paged[Map[String, ReportResultField[_]]]] = {
     logger.info(s"Running report: $report with pagination $pagination")
 
     val futureCount = collection
@@ -523,9 +523,9 @@ class CaseMongoRepository @Inject() (
   }
 
   override def queueReport(
-                            report: QueueReport,
-                            pagination: Pagination
-                          ): Future[Paged[QueueResultGroup]] = {
+    report: QueueReport,
+    pagination: Pagination
+  ): Future[Paged[QueueResultGroup]] = {
     logger.info(s"Running report: $report with pagination $pagination")
 
     val rest = Seq(queueGroupStage, count(countField))

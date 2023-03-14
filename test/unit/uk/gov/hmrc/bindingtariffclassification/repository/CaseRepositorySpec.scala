@@ -1039,7 +1039,6 @@ class CaseRepositorySpec
     val liabilities        = List(c4, c5, c7, c9, c17)
     val liveLiabilities    = List(c4, c5, c7, c9)
     val nonLiveLiabilities = List(c17)
-    val atarCases          = List(c1, c2, c3)
 
     val c18 = aCase(createCase(createMiscApplication))(
       withReference("18"),
