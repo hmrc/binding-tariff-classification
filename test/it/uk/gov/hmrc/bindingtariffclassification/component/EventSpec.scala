@@ -17,7 +17,6 @@
 package uk.gov.hmrc.bindingtariffclassification.component
 
 import java.util.UUID
-
 import play.api.http.HeaderNames.CONTENT_TYPE
 import play.api.http.Status.{NO_CONTENT, OK}
 import play.api.http.{ContentTypes, HttpVerbs, Status}
@@ -28,14 +27,18 @@ import uk.gov.hmrc.bindingtariffclassification.model._
 import util.CaseData.createCase
 import util.EventData._
 
+import java.time.temporal.ChronoUnit
+
 class EventSpec extends BaseFeatureSpec {
 
   protected val serviceUrl = s"http://localhost:$port"
 
   private val caseRef = UUID.randomUUID().toString
-  private val c1      = createCase(r = caseRef)
-  private val e1      = createCaseStatusChangeEvent(caseReference = caseRef)
-  private val e2      = createNoteEvent(caseReference = caseRef)
+  private val c1      = adaptCaseInstantFormat(createCase(r = caseRef))
+  private val e1Base = createCaseStatusChangeEvent(caseReference = caseRef)
+  private val e1      = e1Base.copy(timestamp = e1Base.timestamp.truncatedTo(ChronoUnit.MILLIS))
+  private val e2Base = createNoteEvent(caseReference = caseRef)
+  private val e2      = e2Base.copy(timestamp = e2Base.timestamp.truncatedTo(ChronoUnit.MILLIS))
 
   Feature("Delete All") {
 
@@ -220,5 +223,45 @@ class EventSpec extends BaseFeatureSpec {
       caseCreatedEvent.comment shouldBe "Liability case created"
     }
   }
-
+  private def adaptCaseInstantFormat(_case: Case): Case = {
+    val caseBaseDecision = _case.decision
+    val caseBaseApplication = _case.application
+    _case.copy(
+      createdDate = _case.createdDate.truncatedTo(ChronoUnit.MILLIS),
+      dateOfExtract = _case.dateOfExtract.map(_.truncatedTo(ChronoUnit.MILLIS)),
+      decision = caseBaseDecision.map { desc =>
+        desc.copy(
+          effectiveStartDate = desc.effectiveStartDate.map(_.truncatedTo(ChronoUnit.MILLIS)),
+          effectiveEndDate = desc.effectiveEndDate.map(_.truncatedTo(ChronoUnit.MILLIS)),
+          decisionPdf = desc.decisionPdf.map { attch =>
+            attch.copy(
+              timestamp = attch.timestamp.truncatedTo(ChronoUnit.MILLIS)
+            )
+          }
+        )
+      },
+      application = caseBaseApplication match {
+        case app: LiabilityOrder =>
+          app.copy(
+            entryDate = app.entryDate.map(_.truncatedTo(ChronoUnit.MILLIS)),
+            dateOfReceipt = app.dateOfReceipt.map(_.truncatedTo(ChronoUnit.MILLIS))
+          )
+        case app: BTIApplication =>
+          app.copy(
+            agent = app.agent.map(agent =>
+              agent.copy(
+                letterOfAuthorisation = agent.letterOfAuthorisation.map(att =>
+                  att.copy(
+                    timestamp = att.timestamp.truncatedTo(ChronoUnit.MILLIS)
+                  )
+                )
+              )
+            ),
+            applicationPdf =
+              app.applicationPdf.map(pdf => pdf.copy(timestamp = pdf.timestamp.truncatedTo(ChronoUnit.MILLIS)))
+          )
+        case _ => caseBaseApplication
+      }
+    )
+  }
 }

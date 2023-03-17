@@ -27,17 +27,21 @@ import org.mongodb.scala.model.{Filters, IndexModel, IndexOptions}
 import org.scalatest.concurrent.Eventually
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
 import uk.gov.hmrc.bindingtariffclassification.config.AppConfig
+import uk.gov.hmrc.bindingtariffclassification.model.CaseStatus.CaseStatus
 import uk.gov.hmrc.bindingtariffclassification.model._
 import uk.gov.hmrc.bindingtariffclassification.model.reporting._
 import uk.gov.hmrc.bindingtariffclassification.sort.{CaseSortField, SortDirection}
+import uk.gov.hmrc.bindingtariffclassification.utils.RandomGenerator
 import uk.gov.hmrc.mongo.test.MongoSupport
 import util.CaseData._
 import util.Cases._
 
 import java.time._
+import java.time.temporal.ChronoUnit
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
+// scalastyle:off magic.number
 class CaseRepositorySpec
     extends BaseMongoIndexSpec
     with BeforeAndAfterAll
@@ -54,13 +58,14 @@ class CaseRepositorySpec
   private def newMongoRepository: CaseMongoRepository =
     new CaseMongoRepository(config, mongoComponent, new SearchMapper(config), new UpdateMapper)
 
-  private val case1: Case     = createCase()
-  private val case2: Case     = createCase()
-  private val liabCase1: Case = createCase(app = createLiabilityOrder)
+  private val case1: Case     = createCaseForTest()
+  private val case2: Case     = createCaseForTest()
+  private val liabCase1: Case = createCaseForTest(app = createLiabilityOrder)
 
   override def beforeEach(): Unit = {
     super.beforeEach()
-    given(config.clock) willReturn Clock.fixed(Instant.parse("2021-02-01T09:00:00.00Z"), ZoneOffset.UTC)
+    given(config.clock) willReturn Clock
+      .fixed(Instant.parse("2021-02-01T09:00:00.00Z").truncatedTo(ChronoUnit.MILLIS), ZoneOffset.UTC)
     await(repository.deleteAll())
   }
 
@@ -93,8 +98,8 @@ class CaseRepositorySpec
   "delete" should {
 
     "remove the matching case" in {
-      val c1 = createCase(r = "REF_1")
-      val c2 = createCase(r = "REF_2")
+      val c1 = createCaseForTest(r = "REF_1")
+      val c2 = createCaseForTest(r = "REF_2")
 
       val size = collectionSize
 
@@ -276,10 +281,10 @@ class CaseRepositorySpec
     val queueIdY       = Some("queue_y")
     val unknownQueueId = Some("unknown_queue_id")
 
-    val caseWithEmptyQueue = createCase()
-    val caseWithQueueX1    = createCase().copy(queueId = queueIdX)
-    val caseWithQueueX2    = createCase().copy(queueId = queueIdX)
-    val caseWithQueueY     = createCase().copy(queueId = queueIdY)
+    val caseWithEmptyQueue = createCaseForTest()
+    val caseWithQueueX1    = createCaseForTest().copy(queueId = queueIdX)
+    val caseWithQueueX2    = createCaseForTest().copy(queueId = queueIdX)
+    val caseWithQueueY     = createCaseForTest().copy(queueId = queueIdY)
 
     "return an empty sequence when there are no matches" in {
       val search = CaseSearch(CaseFilter(queueId = unknownQueueId.map(Set(_))))
@@ -310,8 +315,8 @@ class CaseRepositorySpec
 
     val decisionExpired         = createDecision(effectiveEndDate = Some(pastDate))
     val decisionFuture          = createDecision(effectiveEndDate = Some(futureDate))
-    val caseWithExpiredDecision = createCase(decision             = Some(decisionExpired))
-    val caseWithFutureDecision  = createCase(decision             = Some(decisionFuture))
+    val caseWithExpiredDecision = createCaseForTest(decision      = Some(decisionExpired))
+    val caseWithFutureDecision  = createCaseForTest(decision      = Some(decisionFuture))
 
     "return an empty sequence when there are no matches" in {
       val search = CaseSearch(CaseFilter(minDecisionEnd = Some(Instant.now())))
@@ -333,10 +338,10 @@ class CaseRepositorySpec
     val assigneeY       = Operator("assignee_y")
     val unknownAssignee = Operator("unknown_assignee_id")
 
-    val caseWithEmptyAssignee = createCase()
-    val caseWithAssigneeX1    = createCase().copy(assignee = Some(assigneeX))
-    val caseWithAssigneeX2    = createCase().copy(assignee = Some(assigneeX))
-    val caseWithAssigneeY1    = createCase().copy(assignee = Some(assigneeY))
+    val caseWithEmptyAssignee = createCaseForTest()
+    val caseWithAssigneeX1    = createCaseForTest().copy(assignee = Some(assigneeX))
+    val caseWithAssigneeX2    = createCaseForTest().copy(assignee = Some(assigneeX))
+    val caseWithAssigneeY1    = createCaseForTest().copy(assignee = Some(assigneeY))
 
     "return an empty sequence when there are no matches" in {
       val search = CaseSearch(CaseFilter(assigneeId = Some(unknownAssignee.id)))
@@ -372,9 +377,9 @@ class CaseRepositorySpec
 
   "get by concrete status" should {
 
-    val caseWithStatusX1 = createCase().copy(status = CaseStatus.NEW)
-    val caseWithStatusX2 = createCase().copy(status = CaseStatus.NEW)
-    val caseWithStatusY1 = createCase().copy(status = CaseStatus.OPEN)
+    val caseWithStatusX1 = createCaseForTest().copy(status = CaseStatus.NEW)
+    val caseWithStatusX2 = createCaseForTest().copy(status = CaseStatus.NEW)
+    val caseWithStatusY1 = createCaseForTest().copy(status = CaseStatus.OPEN)
 
     "return an empty sequence when there are no matches" in {
       val search = CaseSearch(CaseFilter(statuses = Some(Set(PseudoCaseStatus.DRAFT))))
@@ -399,13 +404,13 @@ class CaseRepositorySpec
   "get by pseudo status" should {
     val effectiveEndDateTime = LocalDateTime.of(2019, 1, 1, 0, 0).toInstant(ZoneOffset.UTC)
 
-    val expiredCase = createCase(
+    val expiredCase = createCaseForTest(
       r        = "expired",
       status   = CaseStatus.COMPLETED,
       decision = Some(createDecision(effectiveEndDate = Some(effectiveEndDateTime.minusSeconds(1))))
     )
-    val newCase = createCase(r = "new", status = CaseStatus.NEW)
-    val liveCase = createCase(
+    val newCase = createCaseForTest(r = "new", status = CaseStatus.NEW)
+    val liveCase = createCaseForTest(
       r        = "live",
       status   = CaseStatus.COMPLETED,
       decision = Some(createDecision(effectiveEndDate = Some(effectiveEndDateTime.plusSeconds(1))))
@@ -439,11 +444,11 @@ class CaseRepositorySpec
 
   "get by multiple statuses" should {
 
-    val caseWithStatusX1 = createCase().copy(status = CaseStatus.NEW)
-    val caseWithStatusX2 = createCase().copy(status = CaseStatus.NEW)
-    val caseWithStatusY1 = createCase().copy(status = CaseStatus.OPEN)
-    val caseWithStatusZ1 = createCase().copy(status = CaseStatus.CANCELLED)
-    val caseWithStatusW1 = createCase().copy(status = CaseStatus.SUPPRESSED)
+    val caseWithStatusX1 = createCaseForTest().copy(status = CaseStatus.NEW)
+    val caseWithStatusX2 = createCaseForTest().copy(status = CaseStatus.NEW)
+    val caseWithStatusY1 = createCaseForTest().copy(status = CaseStatus.OPEN)
+    val caseWithStatusZ1 = createCaseForTest().copy(status = CaseStatus.CANCELLED)
+    val caseWithStatusW1 = createCaseForTest().copy(status = CaseStatus.SUPPRESSED)
 
     "return an empty sequence when there are no matches" in {
       val search = CaseSearch(CaseFilter(statuses = Some(Set(PseudoCaseStatus.DRAFT, PseudoCaseStatus.REFERRED))))
@@ -474,11 +479,11 @@ class CaseRepositorySpec
   }
 
   "get by multiple references" should {
-    val caseWithReferenceX1 = createCase().copy(reference = "x1")
-    val caseWithReferenceX2 = createCase().copy(reference = "x2")
-    val caseWithReferenceY1 = createCase().copy(reference = "y1")
-    val caseWithReferenceZ1 = createCase().copy(reference = "z1")
-    val caseWithReferenceW1 = createCase().copy(reference = "w1")
+    val caseWithReferenceX1 = createCaseForTest().copy(reference = "x1")
+    val caseWithReferenceX2 = createCaseForTest().copy(reference = "x2")
+    val caseWithReferenceY1 = createCaseForTest().copy(reference = "y1")
+    val caseWithReferenceZ1 = createCaseForTest().copy(reference = "z1")
+    val caseWithReferenceW1 = createCaseForTest().copy(reference = "w1")
 
     "return an empty sequence when there are no matches" in {
       val search = CaseSearch(CaseFilter(reference = Some(Set("a", "b"))))
@@ -506,9 +511,9 @@ class CaseRepositorySpec
 
   "get by single keyword" should {
 
-    val c1 = createCase(keywords = Set("BIKE", "MTB"))
-    val c2 = createCase(keywords = Set("KNIFE", "KITCHEN"))
-    val c3 = createCase(keywords = Set("BIKE", "HARDTAIL"))
+    val c1 = createCaseForTest(keywords = Set("BIKE", "MTB"))
+    val c2 = createCaseForTest(keywords = Set("KNIFE", "KITCHEN"))
+    val c3 = createCaseForTest(keywords = Set("BIKE", "HARDTAIL"))
 
     "return an empty sequence when there are no matches" in {
       store(case1, c1)
@@ -532,9 +537,9 @@ class CaseRepositorySpec
 
   "get by multiple keywords" should {
 
-    val c1 = createCase(keywords = Set("BIKE", "MTB"))
-    val c2 = createCase(keywords = Set("BIKE", "MTB", "29ER"))
-    val c3 = createCase(keywords = Set("BIKE", "HARDTAIL"))
+    val c1 = createCaseForTest(keywords = Set("BIKE", "MTB"))
+    val c2 = createCaseForTest(keywords = Set("BIKE", "MTB", "29ER"))
+    val c3 = createCaseForTest(keywords = Set("BIKE", "HARDTAIL"))
 
     "return an empty sequence when there are no matches" in {
       store(case1, c1, c2, c3)
@@ -559,7 +564,7 @@ class CaseRepositorySpec
   "get by trader name" should {
 
     val novakApp = createBasicBTIApplication.copy(holder = createEORIDetails.copy(businessName = "Novak Djokovic"))
-    val caseX    = createCase(app                        = novakApp)
+    val caseX    = createCaseForTest(app                 = novakApp)
 
     "return an empty sequence when there are no matches" in {
       store(case1, caseX)
@@ -597,7 +602,7 @@ class CaseRepositorySpec
 
     "return the expected documents when there are multiple matches" in {
       val novakApp2 = createBasicBTIApplication.copy(holder = createEORIDetails.copy(businessName = "Novak Djokovic 2"))
-      val caseX2    = createCase(app                        = novakApp2)
+      val caseX2    = createCaseForTest(app                 = novakApp2)
       store(caseX, caseX2)
 
       val search = CaseSearch(CaseFilter(caseSource = Some("Novak Djokovic")))
@@ -616,8 +621,8 @@ class CaseRepositorySpec
     val agentApp = createBTIApplicationWithAllFields()
       .copy(holder = createEORIDetails.copy(eori = holderEori), agent = Some(agentDetails))
 
-    val agentCase  = createCase(app = agentApp)
-    val holderCase = createCase(app = holderApp)
+    val agentCase  = createCaseForTest(app = agentApp)
+    val holderCase = createCaseForTest(app = holderApp)
 
     "return an empty sequence when there are no matches" in {
       store(agentCase, holderCase)
@@ -644,9 +649,10 @@ class CaseRepositorySpec
 
   "get by decision details" should {
 
-    val c1 = createCase(decision = Some(createDecision(goodsDescription             = "Amazing HTC smartphone")))
-    val c2 = createCase(decision = Some(createDecision(methodCommercialDenomination = Some("amazing football shoes"))))
-    val c3 = createCase(decision = Some(createDecision(justification                = "this is absolutely AAAAMAZINGGGG")))
+    val c1 = createCaseForTest(decision = Some(createDecision(goodsDescription = "Amazing HTC smartphone")))
+    val c2 =
+      createCaseForTest(decision = Some(createDecision(methodCommercialDenomination = Some("amazing football shoes"))))
+    val c3 = createCaseForTest(decision = Some(createDecision(justification = "this is absolutely AAAAMAZINGGGG")))
 
     "return an empty sequence when there are no matches" in {
       store(case1, c1, c2, c3)
@@ -678,8 +684,8 @@ class CaseRepositorySpec
 
   "get by commodity code name" should {
 
-    val caseX = createNewCaseWithExtraFields()
-    val caseY = createNewCaseWithExtraFields().copy(reference = "88888888")
+    val caseX = adaptCaseInstantFormat(createNewCaseWithExtraFields())
+    val caseY = adaptCaseInstantFormat(createNewCaseWithExtraFields().copy(reference = "88888888"))
 
     "return an empty sequence when there are no matches" in {
       store(case1)
@@ -723,8 +729,8 @@ class CaseRepositorySpec
   }
 
   "get by migration status" should {
-    val case1Migrated     = case1.copy(dateOfExtract     = Some(Instant.now()))
-    val liabCase1Migrated = liabCase1.copy(dateOfExtract = Some(Instant.now()))
+    val case1Migrated     = case1.copy(dateOfExtract     = Some(Instant.now().truncatedTo(ChronoUnit.MILLIS)))
+    val liabCase1Migrated = liabCase1.copy(dateOfExtract = Some(Instant.now().truncatedTo(ChronoUnit.MILLIS)))
 
     "return only migrated cases when specified in search" in {
       store(case1Migrated, case2, liabCase1Migrated)
@@ -775,13 +781,19 @@ class CaseRepositorySpec
     val statusX   = CaseStatus.NEW
     val statusY   = CaseStatus.OPEN
 
-    val caseWithNoQueueAndNoAssignee = createCase()
-    val caseWithQxAndAxAndSx         = createCase().copy(queueId = queueIdX, assignee = Some(assigneeX), status = statusX)
-    val caseWithQxAndAxAndSy         = createCase().copy(queueId = queueIdX, assignee = Some(assigneeX), status = statusY)
-    val caseWithQxAndAyAndSx         = createCase().copy(queueId = queueIdX, assignee = Some(assigneeY), status = statusX)
-    val caseWithQxAndAyAndSy         = createCase().copy(queueId = queueIdX, assignee = Some(assigneeY), status = statusY)
-    val caseWithQyAndAxAndSx         = createCase().copy(queueId = queueIdY, assignee = Some(assigneeX), status = statusX)
-    val caseWithQyAndAxAndSy         = createCase().copy(queueId = queueIdY, assignee = Some(assigneeX), status = statusY)
+    val caseWithNoQueueAndNoAssignee = createCaseForTest()
+    val caseWithQxAndAxAndSx =
+      createCaseForTest().copy(queueId = queueIdX, assignee = Some(assigneeX), status = statusX)
+    val caseWithQxAndAxAndSy =
+      createCaseForTest().copy(queueId = queueIdX, assignee = Some(assigneeX), status = statusY)
+    val caseWithQxAndAyAndSx =
+      createCaseForTest().copy(queueId = queueIdX, assignee = Some(assigneeY), status = statusX)
+    val caseWithQxAndAyAndSy =
+      createCaseForTest().copy(queueId = queueIdX, assignee = Some(assigneeY), status = statusY)
+    val caseWithQyAndAxAndSx =
+      createCaseForTest().copy(queueId = queueIdY, assignee = Some(assigneeX), status = statusX)
+    val caseWithQyAndAxAndSy =
+      createCaseForTest().copy(queueId = queueIdY, assignee = Some(assigneeX), status = statusY)
 
     "filter as expected" in {
       val search = CaseSearch(
@@ -817,7 +829,7 @@ class CaseRepositorySpec
 
     "return 'None' when the 'reference' doesn't match any document in the collection" in {
       for (_ <- 1 to 3)
-        await(repository.insert(createCase()))
+        await(repository.insert(createCaseForTest()))
       collectionSize shouldBe 3
 
       await(repository.getByReference("WRONG_REFERENCE")) shouldBe None
@@ -825,233 +837,271 @@ class CaseRepositorySpec
   }
 
   "SummaryReport" should {
-    val c1 = aCase(
-      withQueue("1"),
-      withActiveDaysElapsed(2),
-      withReferredDaysElapsed(1),
-      withReference("1"),
-      withStatus(CaseStatus.OPEN),
-      withAssignee(Some(Operator("1"))),
-      withCreatedDate(Instant.parse("2020-01-01T09:00:00.00Z")),
-      withDecision("9506999000")
+    val c1 = adaptCaseInstantFormat(
+      aCase(
+        withQueue("1"),
+        withActiveDaysElapsed(2),
+        withReferredDaysElapsed(1),
+        withReference("1"),
+        withStatus(CaseStatus.OPEN),
+        withAssignee(Some(Operator("1"))),
+        withCreatedDate(Instant.parse("2020-01-01T09:00:00.00Z")),
+        withDecision("9506999000")
+      )
     )
-    val c2 = aCase(
-      withQueue("2"),
-      withActiveDaysElapsed(4),
-      withReferredDaysElapsed(2),
-      withReference("2"),
-      withStatus(CaseStatus.OPEN),
-      withAssignee(Some(Operator("1"))),
-      withCreatedDate(Instant.parse("2020-01-01T09:00:00.00Z")),
-      withDecision("9507900000")
+    val c2 = adaptCaseInstantFormat(
+      aCase(
+        withQueue("2"),
+        withActiveDaysElapsed(4),
+        withReferredDaysElapsed(2),
+        withReference("2"),
+        withStatus(CaseStatus.OPEN),
+        withAssignee(Some(Operator("1"))),
+        withCreatedDate(Instant.parse("2020-01-01T09:00:00.00Z")),
+        withDecision("9507900000")
+      )
     )
-    val c3 = aCase(
-      withQueue("2"),
-      withActiveDaysElapsed(4),
-      withReferredDaysElapsed(7),
-      withReference("3"),
-      withStatus(CaseStatus.NEW),
-      withAssignee(Some(Operator("1"))),
-      withCreatedDate(Instant.parse("2020-12-31T09:00:00.00Z")),
-      withDecision("8518300090")
+    val c3 = adaptCaseInstantFormat(
+      aCase(
+        withQueue("2"),
+        withActiveDaysElapsed(4),
+        withReferredDaysElapsed(7),
+        withReference("3"),
+        withStatus(CaseStatus.NEW),
+        withAssignee(Some(Operator("1"))),
+        withCreatedDate(Instant.parse("2020-12-31T09:00:00.00Z")),
+        withDecision("8518300090")
+      )
     )
-    val c4 = aCase(liabCase1)(
-      withQueue("3"),
-      withActiveDaysElapsed(7),
-      withReferredDaysElapsed(6),
-      withReference("4"),
-      withStatus(CaseStatus.NEW),
-      withAssignee(Some(Operator("2"))),
-      withCreatedDate(Instant.parse("2020-12-31T09:00:00.00Z")),
-      withoutDecision()
+    val c4 = adaptCaseInstantFormat(
+      aCase(liabCase1)(
+        withQueue("3"),
+        withActiveDaysElapsed(7),
+        withReferredDaysElapsed(6),
+        withReference("4"),
+        withStatus(CaseStatus.NEW),
+        withAssignee(Some(Operator("2"))),
+        withCreatedDate(Instant.parse("2020-12-31T09:00:00.00Z")),
+        withoutDecision()
+      )
     )
-    val c5 = aCase(liabCase1)(
-      withQueue("3"),
-      withActiveDaysElapsed(4),
-      withReferredDaysElapsed(3),
-      withReference("5"),
-      withStatus(CaseStatus.REFERRED),
-      withAssignee(Some(Operator("2"))),
-      withCreatedDate(Instant.parse("2021-01-01T09:00:00.00Z")),
-      withDecision("9507209000")
+    val c5 = adaptCaseInstantFormat(
+      aCase(liabCase1)(
+        withQueue("3"),
+        withActiveDaysElapsed(4),
+        withReferredDaysElapsed(3),
+        withReference("5"),
+        withStatus(CaseStatus.REFERRED),
+        withAssignee(Some(Operator("2"))),
+        withCreatedDate(Instant.parse("2021-01-01T09:00:00.00Z")),
+        withDecision("9507209000")
+      )
     )
-    val c6 = aCase(
-      withQueue("4"),
-      withActiveDaysElapsed(5),
-      withReferredDaysElapsed(0),
-      withReference("6"),
-      withStatus(CaseStatus.REFERRED),
-      withAssignee(Some(Operator("3"))),
-      withCreatedDate(Instant.parse("2021-01-01T09:00:00.00Z")),
-      withoutDecision()
+    val c6 = adaptCaseInstantFormat(
+      aCase(
+        withQueue("4"),
+        withActiveDaysElapsed(5),
+        withReferredDaysElapsed(0),
+        withReference("6"),
+        withStatus(CaseStatus.REFERRED),
+        withAssignee(Some(Operator("3"))),
+        withCreatedDate(Instant.parse("2021-01-01T09:00:00.00Z")),
+        withoutDecision()
+      )
     )
     val cases = List(c1, c2, c3, c4, c5, c6)
 
-    val c7 = aCase(liabCase1)(
-      withQueue("3"),
-      withActiveDaysElapsed(4),
-      withReferredDaysElapsed(3),
-      withReference("7"),
-      withStatus(CaseStatus.COMPLETED),
-      withAssignee(Some(Operator("2"))),
-      withCreatedDate(Instant.parse("2021-01-01T09:00:00.00Z")),
-      withDecision("9507209000")
+    val c7 = adaptCaseInstantFormat(
+      aCase(liabCase1)(
+        withQueue("3"),
+        withActiveDaysElapsed(4),
+        withReferredDaysElapsed(3),
+        withReference("7"),
+        withStatus(CaseStatus.COMPLETED),
+        withAssignee(Some(Operator("2"))),
+        withCreatedDate(Instant.parse("2021-01-01T09:00:00.00Z")),
+        withDecision("9507209000")
+      )
     )
-    val c8 = aCase(
-      withQueue("4"),
-      withActiveDaysElapsed(8),
-      withReferredDaysElapsed(0),
-      withReference("8"),
-      withStatus(CaseStatus.COMPLETED),
-      withAssignee(Some(Operator("3"))),
-      withCreatedDate(Instant.parse("2021-01-01T09:00:00.00Z")),
-      withDecision("9507209000")
+    val c8 = adaptCaseInstantFormat(
+      aCase(
+        withQueue("4"),
+        withActiveDaysElapsed(8),
+        withReferredDaysElapsed(0),
+        withReference("8"),
+        withStatus(CaseStatus.COMPLETED),
+        withAssignee(Some(Operator("3"))),
+        withCreatedDate(Instant.parse("2021-01-01T09:00:00.00Z")),
+        withDecision("9507209000")
+      )
     )
     val liveCases = List(c7, c8)
 
-    val c9 = aCase(liabCase1)(
-      withQueue("3"),
-      withActiveDaysElapsed(4),
-      withReferredDaysElapsed(3),
-      withReference("9"),
-      withStatus(CaseStatus.COMPLETED),
-      withAssignee(Some(Operator("2"))),
-      withCreatedDate(Instant.parse("2021-01-01T09:00:00.00Z")),
-      withDecision(
-        "9507209000",
-        effectiveStartDate = Some(Instant.parse("2018-01-31T09:00:00.00Z")),
-        effectiveEndDate   = Some(Instant.parse("2021-01-31T09:00:00.00Z"))
+    val c9 = adaptCaseInstantFormat(
+      aCase(liabCase1)(
+        withQueue("3"),
+        withActiveDaysElapsed(4),
+        withReferredDaysElapsed(3),
+        withReference("9"),
+        withStatus(CaseStatus.COMPLETED),
+        withAssignee(Some(Operator("2"))),
+        withCreatedDate(Instant.parse("2021-01-01T09:00:00.00Z")),
+        withDecision(
+          "9507209000",
+          effectiveStartDate = Some(Instant.parse("2018-01-31T09:00:00.00Z")),
+          effectiveEndDate   = Some(Instant.parse("2021-01-31T09:00:00.00Z"))
+        )
       )
     )
-    val c10 = aCase(
-      withQueue("4"),
-      withActiveDaysElapsed(9),
-      withReferredDaysElapsed(0),
-      withReference("10"),
-      withStatus(CaseStatus.COMPLETED),
-      withAssignee(Some(Operator("3"))),
-      withCreatedDate(Instant.parse("2021-01-01T09:00:00.00Z")),
-      withDecision(
-        "9507209000",
-        effectiveStartDate = Some(Instant.parse("2018-01-31T09:00:00.00Z")),
-        effectiveEndDate   = Some(Instant.parse("2021-01-31T09:00:00.00Z"))
+    val c10 = adaptCaseInstantFormat(
+      aCase(
+        withQueue("4"),
+        withActiveDaysElapsed(9),
+        withReferredDaysElapsed(0),
+        withReference("10"),
+        withStatus(CaseStatus.COMPLETED),
+        withAssignee(Some(Operator("3"))),
+        withCreatedDate(Instant.parse("2021-01-01T09:00:00.00Z")),
+        withDecision(
+          "9507209000",
+          effectiveStartDate = Some(Instant.parse("2018-01-31T09:00:00.00Z")),
+          effectiveEndDate   = Some(Instant.parse("2021-01-31T09:00:00.00Z"))
+        )
       )
     )
     val expiredCases = List(c9, c10)
-    val c11 = aCase(
-      withActiveDaysElapsed(2),
-      withReferredDaysElapsed(0),
-      withReference("11"),
-      withStatus(CaseStatus.NEW),
-      withCreatedDate(Instant.parse("2021-01-01T09:00:00.00Z"))
+    val c11 = adaptCaseInstantFormat(
+      aCase(
+        withActiveDaysElapsed(2),
+        withReferredDaysElapsed(0),
+        withReference("11"),
+        withStatus(CaseStatus.NEW),
+        withCreatedDate(Instant.parse("2021-01-01T09:00:00.00Z"))
+      )
     )
-    val c12 = aCase(
-      withActiveDaysElapsed(1),
-      withReferredDaysElapsed(0),
-      withReference("12"),
-      withStatus(CaseStatus.NEW),
-      withCreatedDate(Instant.parse("2021-01-01T09:00:00.00Z"))
+    val c12 = adaptCaseInstantFormat(
+      aCase(
+        withActiveDaysElapsed(1),
+        withReferredDaysElapsed(0),
+        withReference("12"),
+        withStatus(CaseStatus.NEW),
+        withCreatedDate(Instant.parse("2021-01-01T09:00:00.00Z"))
+      )
     )
     val gatewayCases = List(c11, c12)
-    val c13 = aCase(liabCase1)(
-      withQueue("3"),
-      withActiveDaysElapsed(4),
-      withReferredDaysElapsed(3),
-      withReference("13"),
-      withStatus(CaseStatus.COMPLETED),
-      withAssignee(Some(Operator("2"))),
-      withCreatedDate(Instant.parse("2021-01-01T09:00:00.00Z")),
-      withDecision(
-        "9507209000",
-        effectiveStartDate = Some(Instant.parse("2018-01-31T09:00:00.00Z")),
-        effectiveEndDate   = None,
-        appeal = Seq(
-          Appeal("1", AppealStatus.IN_PROGRESS, AppealType.APPEAL_TIER_1),
-          Appeal("2", AppealStatus.ALLOWED, AppealType.REVIEW)
+    val c13 = adaptCaseInstantFormat(
+      aCase(liabCase1)(
+        withQueue("3"),
+        withActiveDaysElapsed(4),
+        withReferredDaysElapsed(3),
+        withReference("13"),
+        withStatus(CaseStatus.COMPLETED),
+        withAssignee(Some(Operator("2"))),
+        withCreatedDate(Instant.parse("2021-01-01T09:00:00.00Z")),
+        withDecision(
+          "9507209000",
+          effectiveStartDate = Some(Instant.parse("2018-01-31T09:00:00.00Z")),
+          effectiveEndDate   = None,
+          appeal = Seq(
+            Appeal("1", AppealStatus.IN_PROGRESS, AppealType.APPEAL_TIER_1),
+            Appeal("2", AppealStatus.ALLOWED, AppealType.REVIEW)
+          )
         )
       )
     )
-    val c14 = aCase(
-      withQueue("4"),
-      withActiveDaysElapsed(9),
-      withReferredDaysElapsed(0),
-      withReference("14"),
-      withStatus(CaseStatus.COMPLETED),
-      withAssignee(Some(Operator("3"))),
-      withCreatedDate(Instant.parse("2021-01-01T09:00:00.00Z")),
-      withDecision(
-        "9507209000",
-        effectiveStartDate = Some(Instant.parse("2018-01-31T09:00:00.00Z")),
-        effectiveEndDate   = Some(Instant.parse("2022-01-31T09:00:00.00Z")),
-        appeal = Seq(
-          Appeal("1", AppealStatus.IN_PROGRESS, AppealType.ADR)
+    val c14 = adaptCaseInstantFormat(
+      aCase(
+        withQueue("4"),
+        withActiveDaysElapsed(9),
+        withReferredDaysElapsed(0),
+        withReference("14"),
+        withStatus(CaseStatus.COMPLETED),
+        withAssignee(Some(Operator("3"))),
+        withCreatedDate(Instant.parse("2021-01-01T09:00:00.00Z")),
+        withDecision(
+          "9507209000",
+          effectiveStartDate = Some(Instant.parse("2018-01-31T09:00:00.00Z")),
+          effectiveEndDate   = Some(Instant.parse("2022-01-31T09:00:00.00Z")),
+          appeal = Seq(
+            Appeal("1", AppealStatus.IN_PROGRESS, AppealType.ADR)
+          )
         )
       )
     )
-    val c15 = aCase(
-      withQueue("4"),
-      withActiveDaysElapsed(11),
-      withReferredDaysElapsed(0),
-      withReference("15"),
-      withStatus(CaseStatus.COMPLETED),
-      withAssignee(Some(Operator("3"))),
-      withCreatedDate(Instant.parse("2021-01-01T09:00:00.00Z")),
-      withDecision(
-        "9507209000",
-        effectiveStartDate = Some(Instant.parse("2018-01-31T09:00:00.00Z")),
-        effectiveEndDate   = Some(Instant.parse("2019-01-31T09:00:00.00Z")),
-        appeal = Seq(
-          Appeal("1", AppealStatus.IN_PROGRESS, AppealType.SUPREME_COURT)
+    val c15 = adaptCaseInstantFormat(
+      aCase(
+        withQueue("4"),
+        withActiveDaysElapsed(11),
+        withReferredDaysElapsed(0),
+        withReference("15"),
+        withStatus(CaseStatus.COMPLETED),
+        withAssignee(Some(Operator("3"))),
+        withCreatedDate(Instant.parse("2021-01-01T09:00:00.00Z")),
+        withDecision(
+          "9507209000",
+          effectiveStartDate = Some(Instant.parse("2018-01-31T09:00:00.00Z")),
+          effectiveEndDate   = Some(Instant.parse("2019-01-31T09:00:00.00Z")),
+          appeal = Seq(
+            Appeal("1", AppealStatus.IN_PROGRESS, AppealType.SUPREME_COURT)
+          )
         )
       )
     )
-    val c16 = aCase(
-      withQueue("4"),
-      withActiveDaysElapsed(12),
-      withReferredDaysElapsed(0),
-      withReference("16"),
-      withStatus(CaseStatus.COMPLETED),
-      withAssignee(Some(Operator("3"))),
-      withCreatedDate(Instant.parse("2021-01-01T09:00:00.00Z")),
-      withDecision(
-        "9507209000",
-        effectiveStartDate = Some(Instant.parse("2018-01-31T09:00:00.00Z")),
-        effectiveEndDate   = Some(Instant.parse("2019-01-31T09:00:00.00Z")),
-        appeal = Seq(
-          Appeal("1", AppealStatus.ALLOWED, AppealType.REVIEW)
+    val c16 = adaptCaseInstantFormat(
+      aCase(
+        withQueue("4"),
+        withActiveDaysElapsed(12),
+        withReferredDaysElapsed(0),
+        withReference("16"),
+        withStatus(CaseStatus.COMPLETED),
+        withAssignee(Some(Operator("3"))),
+        withCreatedDate(Instant.parse("2021-01-01T09:00:00.00Z")),
+        withDecision(
+          "9507209000",
+          effectiveStartDate = Some(Instant.parse("2018-01-31T09:00:00.00Z")),
+          effectiveEndDate   = Some(Instant.parse("2019-01-31T09:00:00.00Z")),
+          appeal = Seq(
+            Appeal("1", AppealStatus.ALLOWED, AppealType.REVIEW)
+          )
         )
       )
     )
     val appealCases = List(c13, c14, c15, c16)
 
-    val c17 = aCase(
-      liabCase1.copy(application = liabCase1.application.asLiabilityOrder.copy(status = LiabilityStatus.NON_LIVE))
-    )(
-      withQueue("3"),
-      withActiveDaysElapsed(7),
-      withReferredDaysElapsed(6),
-      withReference("13"),
-      withStatus(CaseStatus.NEW),
-      withAssignee(Some(Operator("2"))),
-      withCreatedDate(Instant.parse("2020-12-31T09:00:00.00Z")),
-      withoutDecision()
+    val c17 = adaptCaseInstantFormat(
+      aCase(
+        liabCase1.copy(application = liabCase1.application.asLiabilityOrder.copy(status = LiabilityStatus.NON_LIVE))
+      )(
+        withQueue("3"),
+        withActiveDaysElapsed(7),
+        withReferredDaysElapsed(6),
+        withReference("13"),
+        withStatus(CaseStatus.NEW),
+        withAssignee(Some(Operator("2"))),
+        withCreatedDate(Instant.parse("2020-12-31T09:00:00.00Z")),
+        withoutDecision()
+      )
     )
     val liabilities        = List(c4, c5, c7, c9, c17)
     val liveLiabilities    = List(c4, c5, c7, c9)
     val nonLiveLiabilities = List(c17)
 
-    val c18 = aCase(createCase(createMiscApplication))(
-      withReference("18"),
-      withQueue("3"),
-      withActiveDaysElapsed(7),
-      withReferredDaysElapsed(6)
+    val c18 = adaptCaseInstantFormat(
+      aCase(createCase(createMiscApplication))(
+        withReference("18"),
+        withQueue("3"),
+        withActiveDaysElapsed(7),
+        withReferredDaysElapsed(6)
+      )
     )
 
-    val c19 = aCase(createCase(createCorrespondenceApplication))(
-      withReference("19"),
-      withQueue("4"),
-      withActiveDaysElapsed(12),
-      withReferredDaysElapsed(0)
+    val c19 = adaptCaseInstantFormat(
+      aCase(createCase(createCorrespondenceApplication))(
+        withReference("19"),
+        withQueue("4"),
+        withActiveDaysElapsed(12),
+        withReferredDaysElapsed(0)
+      )
     )
     val corresMiscCases = List(c18, c19)
 
@@ -2352,7 +2402,7 @@ class CaseRepositorySpec
     }
 
     "store dates as Mongo Dates" in {
-      val date    = Instant.now()
+      val date    = Instant.now().truncatedTo(ChronoUnit.MILLIS)
       val oldCase = case1.copy(createdDate = date)
       val newCase = case2.copy(createdDate = date.plusSeconds(1))
       await(repository.insert(oldCase))
@@ -2423,4 +2473,54 @@ class CaseRepositorySpec
   private def store(cases: Case*): Unit =
     cases.foreach { c: Case => await(repository.insert(c)) }
 
+  private def createCaseForTest(
+    app: Application           = createBasicBTIApplication,
+    r: String                  = RandomGenerator.randomUUID(),
+    status: CaseStatus         = CaseStatus.NEW,
+    decision: Option[Decision] = None,
+    keywords: Set[String]      = Set.empty
+  ): Case =
+    adaptCaseInstantFormat(createCase(app = app, r = r, status = status, decision = decision, keywords = keywords))
+
+  private def adaptCaseInstantFormat(_case: Case): Case = {
+    val caseBaseDecision    = _case.decision
+    val caseBaseApplication = _case.application
+    _case.copy(
+      createdDate   = _case.createdDate.truncatedTo(ChronoUnit.MILLIS),
+      dateOfExtract = _case.dateOfExtract.map(_.truncatedTo(ChronoUnit.MILLIS)),
+      decision = caseBaseDecision.map { desc =>
+        desc.copy(
+          effectiveStartDate = desc.effectiveStartDate.map(_.truncatedTo(ChronoUnit.MILLIS)),
+          effectiveEndDate   = desc.effectiveEndDate.map(_.truncatedTo(ChronoUnit.MILLIS)),
+          decisionPdf = desc.decisionPdf.map { attch =>
+            attch.copy(
+              timestamp = attch.timestamp.truncatedTo(ChronoUnit.MILLIS)
+            )
+          }
+        )
+      },
+      application = caseBaseApplication match {
+        case app: LiabilityOrder =>
+          app.copy(
+            entryDate     = app.entryDate.map(_.truncatedTo(ChronoUnit.MILLIS)),
+            dateOfReceipt = app.dateOfReceipt.map(_.truncatedTo(ChronoUnit.MILLIS))
+          )
+        case app: BTIApplication =>
+          app.copy(
+            agent = app.agent.map(agent =>
+              agent.copy(
+                letterOfAuthorisation = agent.letterOfAuthorisation.map(att =>
+                  att.copy(
+                    timestamp = att.timestamp.truncatedTo(ChronoUnit.MILLIS)
+                  )
+                )
+              )
+            ),
+            applicationPdf =
+              app.applicationPdf.map(pdf => pdf.copy(timestamp = pdf.timestamp.truncatedTo(ChronoUnit.MILLIS)))
+          )
+        case _ => caseBaseApplication
+      }
+    )
+  }
 }
