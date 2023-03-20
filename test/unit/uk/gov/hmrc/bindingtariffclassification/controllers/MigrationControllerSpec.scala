@@ -25,6 +25,8 @@ import uk.gov.hmrc.http.HttpVerbs
 
 import scala.concurrent.Future.{failed, successful}
 
+import scala.concurrent.ExecutionContext.Implicits.global
+
 class MigrationControllerSpec extends BaseSpec {
 
   private val runner = mock[MigrationRunner]

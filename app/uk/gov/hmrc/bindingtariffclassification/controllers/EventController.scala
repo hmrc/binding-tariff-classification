@@ -24,8 +24,7 @@ import uk.gov.hmrc.bindingtariffclassification.model.RESTFormatters.{formatEvent
 import uk.gov.hmrc.bindingtariffclassification.model._
 import uk.gov.hmrc.bindingtariffclassification.service.{CaseService, EventService}
 
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class EventController @Inject() (
@@ -34,7 +33,8 @@ class EventController @Inject() (
   caseService: CaseService,
   parser: BodyParsers.Default,
   mcc: MessagesControllerComponents
-) extends CommonController(mcc) {
+)(implicit ex: ExecutionContext)
+    extends CommonController(mcc) {
 
   lazy private val testModeFilter = TestMode.actionFilter(appConfig, parser)
 

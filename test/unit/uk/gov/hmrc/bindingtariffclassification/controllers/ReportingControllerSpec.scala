@@ -29,6 +29,8 @@ import scala.concurrent.Future
 import uk.gov.hmrc.bindingtariffclassification.model.Pagination
 import uk.gov.hmrc.bindingtariffclassification.model.Paged
 
+import scala.concurrent.ExecutionContext.Implicits.global
+
 class ReportingControllerSpec extends BaseSpec with BeforeAndAfterEach {
 
   private val reportService = mock[ReportService]

@@ -22,12 +22,13 @@ import org.mockito.BDDMockito.`given`
 import org.mockito.Mockito.{never, reset, times, verify}
 import org.mockito.invocation.InvocationOnMock
 import org.scalatest.BeforeAndAfterEach
-import play.api.test.Helpers._
 import uk.gov.hmrc.bindingtariffclassification.base.BaseSpec
 import uk.gov.hmrc.bindingtariffclassification.model._
 import uk.gov.hmrc.bindingtariffclassification.service.CaseService
 import uk.gov.hmrc.bindingtariffclassification.sort.CaseSortField
 import util.CaseData
+
+import scala.concurrent.ExecutionContext.Implicits.global
 
 import java.time.{LocalDate, ZoneOffset}
 import scala.concurrent.Future

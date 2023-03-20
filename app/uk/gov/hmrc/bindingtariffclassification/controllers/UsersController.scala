@@ -25,12 +25,13 @@ import uk.gov.hmrc.bindingtariffclassification.model.RESTFormatters._
 import uk.gov.hmrc.bindingtariffclassification.model.{Operator, _}
 import uk.gov.hmrc.bindingtariffclassification.service.UsersService
 
-import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.ExecutionContext
 import scala.concurrent.Future.successful
 
 @Singleton
-class UsersController @Inject() (appConfig: AppConfig, usersService: UsersService, mcc: MessagesControllerComponents)
-    extends CommonController(mcc) {
+class UsersController @Inject() (appConfig: AppConfig, usersService: UsersService, mcc: MessagesControllerComponents)(
+  implicit ex: ExecutionContext
+) extends CommonController(mcc) {
 
   def fetchUserDetails(id: String): Action[AnyContent] = Action.async {
     usersService.getUserById(id) map handleNotFound recover recovery

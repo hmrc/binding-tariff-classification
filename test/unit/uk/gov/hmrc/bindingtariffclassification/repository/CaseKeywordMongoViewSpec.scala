@@ -77,7 +77,7 @@ class CaseKeywordMongoViewSpec
     Case(
       reference   = "0000001",
       status      = CaseStatus.OPEN,
-      createdDate = Instant.now.minusSeconds(1 * secondsInAYear),
+      createdDate = Instant.now.minusSeconds(secondsInAYear),
       queueId     = Some("3"),
       assignee    = Some(Operator("001")),
       application = createBasicBTIApplication,

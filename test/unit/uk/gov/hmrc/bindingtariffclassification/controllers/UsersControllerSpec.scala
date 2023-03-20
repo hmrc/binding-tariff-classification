@@ -30,6 +30,8 @@ import uk.gov.hmrc.bindingtariffclassification.model._
 import uk.gov.hmrc.bindingtariffclassification.service.UsersService
 import util.{CaseData, DatabaseException}
 
+import scala.concurrent.ExecutionContext.Implicits.global
+
 import scala.concurrent.Future._
 
 class UsersControllerSpec extends BaseSpec with BeforeAndAfterEach {

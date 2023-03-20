@@ -26,6 +26,7 @@ import uk.gov.hmrc.bindingtariffclassification.utils.RandomGenerator
 import uk.gov.hmrc.mongo.test.MongoSupport
 import util.EventData._
 
+import java.time.temporal.ChronoUnit
 import java.time.{Instant, LocalDate, ZoneOffset}
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -44,7 +45,7 @@ class EventRepositorySpec
   private def createMongoRepo =
     new EventMongoRepository(mongoComponent)
 
-  private val e: Event = createNoteEvent("")
+  private val e: Event = createNoteEventForTest("")
 
   override def beforeEach(): Unit = {
     super.beforeEach()
@@ -78,9 +79,9 @@ class EventRepositorySpec
 
   "delete" should {
     "clear events by case reference" in {
-      val e1 = createNoteEvent("REF_1")
-      val e2 = createCaseStatusChangeEvent("REF_1")
-      val e3 = createCaseStatusChangeEvent("REF_2")
+      val e1 = createNoteEventForTest("REF_1")
+      val e2 = createCaseStatusChangeEventForTest("REF_1")
+      val e3 = createCaseStatusChangeEventForTest("REF_2")
 
       await(repository.insert(e1))
       await(repository.insert(e2))
@@ -95,8 +96,8 @@ class EventRepositorySpec
     }
 
     "clear events by event type" in {
-      val e1 = createNoteEvent("REF_1")
-      val e2 = createCaseStatusChangeEvent("REF_2")
+      val e1 = createNoteEventForTest("REF_1")
+      val e2 = createCaseStatusChangeEventForTest("REF_2")
 
       await(repository.insert(e1))
       await(repository.insert(e2))
@@ -142,8 +143,8 @@ class EventRepositorySpec
   "search" should {
 
     "retrieve all expected events from the collection by reference" in {
-      val e1 = createNoteEvent("REF_1")
-      val e2 = createCaseStatusChangeEvent("REF_2")
+      val e1 = createNoteEventForTest("REF_1")
+      val e2 = createCaseStatusChangeEventForTest("REF_2")
 
       await(repository.insert(e1))
       await(repository.insert(e2))
@@ -154,8 +155,8 @@ class EventRepositorySpec
     }
 
     "retrieve all expected events from the collection by type" in {
-      val e1 = createNoteEvent("REF_1")
-      val e2 = createCaseStatusChangeEvent("REF_1")
+      val e1 = createNoteEventForTest("REF_1")
+      val e2 = createCaseStatusChangeEventForTest("REF_1")
 
       await(repository.insert(e1))
       await(repository.insert(e2))
@@ -305,5 +306,15 @@ class EventRepositorySpec
   }
 
   private def selectorById(e: Event) = Filters.equal("id", e.id)
+
+  private def createNoteEventForTest(caseReference: String): Event = {
+    val baseEvent = createNoteEvent(caseReference)
+    baseEvent.copy(timestamp = baseEvent.timestamp.truncatedTo(ChronoUnit.MILLIS))
+  }
+
+  private def createCaseStatusChangeEventForTest(caseReference: String): Event = {
+    val baseEvent = createCaseStatusChangeEvent(caseReference)
+    baseEvent.copy(timestamp = baseEvent.timestamp.truncatedTo(ChronoUnit.MILLIS))
+  }
 
 }

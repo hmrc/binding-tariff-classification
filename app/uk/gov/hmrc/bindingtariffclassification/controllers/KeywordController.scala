@@ -25,14 +25,15 @@ import uk.gov.hmrc.bindingtariffclassification.model.RESTFormatters._
 import uk.gov.hmrc.bindingtariffclassification.model._
 import uk.gov.hmrc.bindingtariffclassification.service.KeywordService
 
-import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.ExecutionContext
 import scala.concurrent.Future.successful
 
 class KeywordController @Inject() (
   appConfig: AppConfig,
   keywordService: KeywordService,
   mcc: MessagesControllerComponents
-) extends CommonController(mcc) {
+)(implicit ex: ExecutionContext)
+    extends CommonController(mcc) {
 
   def addKeyword(): Action[JsValue] = Action.async(parse.json) { implicit request =>
     withJsonBody[NewKeywordRequest] { keywordRequest: NewKeywordRequest =>

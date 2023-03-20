@@ -17,7 +17,6 @@
 package uk.gov.hmrc.bindingtariffclassification.controllers
 
 import javax.inject.{Inject, Singleton}
-
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc._
 import uk.gov.hmrc.bindingtariffclassification.config.AppConfig
@@ -26,7 +25,7 @@ import uk.gov.hmrc.bindingtariffclassification.model.RESTFormatters._
 import uk.gov.hmrc.bindingtariffclassification.model._
 import uk.gov.hmrc.bindingtariffclassification.service.CaseService
 
-import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.ExecutionContext
 import scala.concurrent.Future.successful
 
 @Singleton
@@ -35,7 +34,8 @@ class CaseController @Inject() (
   caseService: CaseService,
   parser: BodyParsers.Default,
   mcc: MessagesControllerComponents
-) extends CommonController(mcc) {
+)(implicit ex: ExecutionContext)
+    extends CommonController(mcc) {
 
   lazy private val testModeFilter = TestMode.actionFilter(appConfig, parser)
 
@@ -68,7 +68,9 @@ class CaseController @Inject() (
           case _           => false
         }
         caseService.update(caseRequest, upsert) map handleNotFound recover recovery
-      } else successful(BadRequest(JsErrorResponse(ErrorCode.INVALID_REQUEST_PAYLOAD, "Invalid case reference")))
+      } else {
+        successful(BadRequest(JsErrorResponse(ErrorCode.INVALID_REQUEST_PAYLOAD, "Invalid case reference")))
+      }
     } recover recovery
   }
 

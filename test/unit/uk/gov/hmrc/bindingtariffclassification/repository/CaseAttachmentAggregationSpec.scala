@@ -22,6 +22,7 @@ import uk.gov.hmrc.bindingtariffclassification.model.Case
 import uk.gov.hmrc.mongo.test.MongoSupport
 import util.CaseData.{createAttachment, createBTIApplicationWithAllFields, createCase, createDecision}
 
+import java.time.temporal.ChronoUnit
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class CaseAttachmentAggregationSpec
@@ -41,12 +42,12 @@ class CaseAttachmentAggregationSpec
   private def newMongoAggregation: CaseAttachmentAggregation =
     new CaseAttachmentAggregation(mongoComponent)
 
-  private val attachment1           = createAttachment
-  private val attachment2           = createAttachment
-  private val attachment3           = createAttachment
-  private val applicationPdf        = createAttachment
-  private val decisionPdf           = createAttachment
-  private val letterOfAuthorization = createAttachment
+  private val attachment1           = createAttachmentForTests
+  private val attachment2           = createAttachmentForTests
+  private val attachment3           = createAttachmentForTests
+  private val applicationPdf        = createAttachmentForTests
+  private val decisionPdf           = createAttachmentForTests
+  private val letterOfAuthorization = createAttachmentForTests
 
   private val caseWithAttachments: Case = createCase(
     attachments = Seq(attachment1, attachment2, attachment3),
@@ -114,6 +115,11 @@ class CaseAttachmentAggregationSpec
 
       await(aggregation.find(decisionPdf.id)) shouldBe Some(decisionPdf)
     }
+  }
+
+  private def createAttachmentForTests = {
+    val baseAttch = createAttachment
+    baseAttch.copy(timestamp = baseAttch.timestamp.truncatedTo(ChronoUnit.MILLIS))
   }
 
 }

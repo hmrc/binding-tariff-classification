@@ -293,9 +293,7 @@ class ActiveDaysElapsedSpec extends BaseFeatureSpec with MockitoSugar {
       status      = status,
       daysElapsed = -1,
       application = liability.copy(
-        dateOfReceipt =
-          if (dateOfReceipt.isDefined) Some(LocalDate.parse(dateOfReceipt.get).atStartOfDay().toInstant(ZoneOffset.UTC))
-          else None
+        dateOfReceipt = dateOfReceipt.map(LocalDate.parse(_).atStartOfDay().toInstant(ZoneOffset.UTC))
       )
     )
   }

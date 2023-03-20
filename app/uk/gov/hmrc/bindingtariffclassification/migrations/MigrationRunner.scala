@@ -18,15 +18,13 @@ package uk.gov.hmrc.bindingtariffclassification.migrations
 
 import java.time.ZonedDateTime
 import javax.inject.{Inject, Singleton}
-
 import com.kenshoo.play.metrics.Metrics
 import uk.gov.hmrc.bindingtariffclassification.common.Logging
 import uk.gov.hmrc.bindingtariffclassification.metrics.HasMetrics
 import uk.gov.hmrc.bindingtariffclassification.model.JobRunEvent
 import uk.gov.hmrc.bindingtariffclassification.repository.MigrationLockRepository
 
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.Future.successful
 
 @Singleton
@@ -34,7 +32,8 @@ class MigrationRunner @Inject() (
   migrationLockRepository: MigrationLockRepository,
   migrationJobs: MigrationJobs,
   val metrics: Metrics
-) extends Logging
+)(implicit ec: ExecutionContext)
+    extends Logging
     with HasMetrics {
   def trigger[T](clazz: Class[T]): Future[Unit] =
     Future.sequence(migrationJobs.jobs.filter(clazz.isInstance(_)).map(run)).map(_ => ())
