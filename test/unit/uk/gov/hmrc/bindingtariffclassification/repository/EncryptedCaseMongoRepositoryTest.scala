@@ -109,7 +109,8 @@ class EncryptedCaseMongoRepositoryTest extends BaseMongoIndexSpec with BeforeAnd
   }
 
   "Report" should {
-    val pagination = Pagination()
+    val pagination  = Pagination()
+    val elapsedDays = 8
     "Summary Report delegate to repository" in {
       val summaryReport = SummaryReport(
         groupBy = NonEmptySeq.one(ReportField.Status),
@@ -121,7 +122,7 @@ class EncryptedCaseMongoRepositoryTest extends BaseMongoIndexSpec with BeforeAnd
             SimpleResultGroup(
               count     = 2,
               groupKey  = NonEmptySeq.one(ReportField.Status.withValue(Some(PseudoCaseStatus.COMPLETED))),
-              maxFields = List(ReportField.ElapsedDays.withValue(Some(8)))
+              maxFields = List(ReportField.ElapsedDays.withValue(Some(elapsedDays)))
             )
           )
         )

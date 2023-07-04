@@ -20,8 +20,8 @@ import org.mongodb.scala.MongoCollection
 import org.mongodb.scala.model.{IndexModel, IndexOptions, Indexes}
 import uk.gov.hmrc.bindingtariffclassification.base.BaseSpec
 
-import scala.collection.JavaConverters.{asScalaIteratorConverter, asScalaSetConverter, collectionAsScalaIterableConverter}
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.jdk.CollectionConverters.{IterableHasAsScala, SetHasAsScala}
 
 trait BaseMongoIndexSpec extends BaseSpec {
 

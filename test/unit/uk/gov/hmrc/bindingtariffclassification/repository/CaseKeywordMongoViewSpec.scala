@@ -148,7 +148,7 @@ class CaseKeywordMongoViewSpec
 
       val futureCollectionNames = await(result).flatMap(_ => mongoComponent.database.listCollectionNames().toFuture())
 
-      await(futureCollectionNames).sorted mustBe (Seq("system.views", "cases", "caseKeywords").sorted)
+      await(futureCollectionNames).sorted mustBe Seq("system.views", "cases", "caseKeywords").sorted
     }
 
     "getView will get the view" in {

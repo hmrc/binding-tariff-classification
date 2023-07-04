@@ -22,7 +22,7 @@ import uk.gov.hmrc.bindingtariffclassification.crypto.LocalCrypto
 import uk.gov.hmrc.bindingtariffclassification.migrations.{AddKeywordsMigrationJob, AmendDateOfExtractMigrationJob, MigrationJobs}
 import uk.gov.hmrc.bindingtariffclassification.repository.{CaseMongoRepository, CaseRepository, EncryptedCaseMongoRepository}
 import uk.gov.hmrc.bindingtariffclassification.scheduler._
-import uk.gov.hmrc.crypto.CompositeSymmetricCrypto
+import uk.gov.hmrc.crypto.AesCrypto
 
 import javax.inject.{Inject, Provider}
 
@@ -39,7 +39,7 @@ class Module extends play.api.inject.Module {
     }
 
     Seq(
-      bind[CompositeSymmetricCrypto].to(classOf[LocalCrypto]),
+      bind[AesCrypto].to(classOf[LocalCrypto]),
       bind[ScheduledJobs].toProvider[ScheduledJobProvider],
       bind[MigrationJobs].toProvider[MigrationJobProvider],
       bind[Scheduler].toSelf.eagerly(),

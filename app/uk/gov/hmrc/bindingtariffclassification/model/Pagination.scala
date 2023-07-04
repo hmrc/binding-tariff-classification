@@ -21,9 +21,7 @@ import play.api.mvc.QueryStringBindable
 case class Pagination(
   page: Int     = 1,
   pageSize: Int = 100
-) {
-  def next(): Pagination = copy(page = page + 1)
-}
+)
 
 object Pagination {
   val max: Pagination = Pagination(1, Integer.MAX_VALUE)

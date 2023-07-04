@@ -33,76 +33,98 @@ class CaseSpec extends BaseFeatureSpec {
 
   protected val serviceUrl = s"http://localhost:$port"
 
-  private val clock      = Clock.systemUTC()
-  private val q1         = "queue1"
-  private val u1         = Operator("user1")
-  private val c0         = createNewCase(app = createBasicBTIApplication)
-  private val c1         = adaptCaseInstantFormat(createCase(app = createBasicBTIApplication, assignee = Some(u1)).copy(queueId = Some(q1)))
+  private val clock = Clock.systemUTC()
+  private val q1    = "queue1"
+  private val u1    = Operator("user1")
+  private val c0    = createNewCase(app = createBasicBTIApplication)
+  private val c1 = adaptCaseInstantFormat(
+    createCase(app = createBasicBTIApplication, assignee = Some(u1)).copy(queueId = Some(q1))
+  )
   private val status     = CaseStatus.CANCELLED
   private val c1_updated = c1.copy(status = status)
-  private val c2 = adaptCaseInstantFormat(createCase(
-    r           = "case_ref_2",
-    app         = createLiabilityOrder,
-    decision    = Some(createDecision()),
-    attachments = Seq(createAttachment, createAttachmentWithOperator),
-    keywords    = Set("BIKE", "MTB", "HARDTAIL")
-  ))
+  private val c2 = adaptCaseInstantFormat(
+    createCase(
+      r           = "case_ref_2",
+      app         = createLiabilityOrder,
+      decision    = Some(createDecision()),
+      attachments = Seq(createAttachment, createAttachmentWithOperator),
+      keywords    = Set("BIKE", "MTB", "HARDTAIL")
+    )
+  )
   private val c2CreateWithExtraFields = createNewCase(app = createLiabilityOrderWithExtraFields)
   private val correspondenceCase      = createNewCase(app = createCorrespondenceApplication)
   private val miscCase                = createNewCase(app = createMiscApplication)
-  private val c2WithExtraFields = adaptCaseInstantFormat(createCase(
-    r           = "case_ref_2",
-    app         = createLiabilityOrderWithExtraFields,
-    decision    = Some(createDecision()),
-    attachments = Seq(createAttachment, createAttachmentWithOperator),
-    keywords    = Set("BIKE", "MTB", "HARDTAIL")
-  ))
+  private val c2WithExtraFields = adaptCaseInstantFormat(
+    createCase(
+      r           = "case_ref_2",
+      app         = createLiabilityOrderWithExtraFields,
+      decision    = Some(createDecision()),
+      attachments = Seq(createAttachment, createAttachmentWithOperator),
+      keywords    = Set("BIKE", "MTB", "HARDTAIL")
+    )
+  )
   private val c3 = adaptCaseInstantFormat(createNewCaseWithExtraFields())
   private val c4 = createNewCase(app = createBTIApplicationWithAllFields())
-  private val c5 = adaptCaseInstantFormat(createCase(r = "case_ref_5", app = createBasicBTIApplication.copy(holder = eORIDetailForNintedo)))
-  private val c6_live = adaptCaseInstantFormat(createCase(
-    status   = CaseStatus.COMPLETED,
-    decision = Some(createDecision(effectiveEndDate = Some(Instant.now(clock).plusSeconds(3600 * 24))))
-  ))
-  private val c6_expired = adaptCaseInstantFormat(createCase(
-    status   = CaseStatus.COMPLETED,
-    decision = Some(createDecision(effectiveEndDate = Some(Instant.now(clock).minusSeconds(3600 * 24))))
-  ))
+  private val c5 = adaptCaseInstantFormat(
+    createCase(r = "case_ref_5", app = createBasicBTIApplication.copy(holder = eORIDetailForNintedo))
+  )
+  private val c6_live = adaptCaseInstantFormat(
+    createCase(
+      status   = CaseStatus.COMPLETED,
+      decision = Some(createDecision(effectiveEndDate = Some(Instant.now(clock).plusSeconds(3600 * 24))))
+    )
+  )
+  private val c6_expired = adaptCaseInstantFormat(
+    createCase(
+      status   = CaseStatus.COMPLETED,
+      decision = Some(createDecision(effectiveEndDate = Some(Instant.now(clock).minusSeconds(3600 * 24))))
+    )
+  )
   private val c7 = adaptCaseInstantFormat(createCase(decision = Some(createDecision(goodsDescription = "LAPTOP"))))
   private val c8 =
-    adaptCaseInstantFormat(createCase(decision = Some(createDecision(methodCommercialDenomination = Some("laptop from Mexico")))))
-  private val c9  = adaptCaseInstantFormat(createCase(decision = Some(createDecision(justification = "this LLLLaptoppp"))))
+    adaptCaseInstantFormat(
+      createCase(decision = Some(createDecision(methodCommercialDenomination = Some("laptop from Mexico"))))
+    )
+  private val c9 = adaptCaseInstantFormat(
+    createCase(decision = Some(createDecision(justification = "this LLLLaptoppp")))
+  )
   private val c10 = adaptCaseInstantFormat(createCase(keywords = Set("MTB", "BICYCLE")))
-  private val c11 = adaptCaseInstantFormat(createCase(
-    decision = Some(
-      createDecision(
-        goodsDescription   = "LAPTOP",
-        effectiveStartDate = Some(Instant.now().minus(3, ChronoUnit.DAYS)),
-        effectiveEndDate   = Some(Instant.now().minus(1, ChronoUnit.DAYS))
-      )
-    ),
-    status = CaseStatus.COMPLETED
-  ))
-  private val c12 = adaptCaseInstantFormat(createCase(
-    decision = Some(
-      createDecision(
-        goodsDescription   = "SPANNER",
-        effectiveStartDate = Some(Instant.now().minus(3, ChronoUnit.DAYS)),
-        effectiveEndDate   = Some(Instant.now().minus(1, ChronoUnit.DAYS))
-      )
-    ),
-    status = CaseStatus.COMPLETED
-  ))
-  private val c13 = adaptCaseInstantFormat(createCase(
-    decision = Some(
-      createDecision(
-        goodsDescription   = "LAPTOP",
-        effectiveStartDate = Some(Instant.now()),
-        effectiveEndDate   = Some(Instant.now().plus(1, ChronoUnit.DAYS))
-      )
-    ),
-    status = CaseStatus.COMPLETED
-  ))
+  private val c11 = adaptCaseInstantFormat(
+    createCase(
+      decision = Some(
+        createDecision(
+          goodsDescription   = "LAPTOP",
+          effectiveStartDate = Some(Instant.now().minus(3, ChronoUnit.DAYS)),
+          effectiveEndDate   = Some(Instant.now().minus(1, ChronoUnit.DAYS))
+        )
+      ),
+      status = CaseStatus.COMPLETED
+    )
+  )
+  private val c12 = adaptCaseInstantFormat(
+    createCase(
+      decision = Some(
+        createDecision(
+          goodsDescription   = "SPANNER",
+          effectiveStartDate = Some(Instant.now().minus(3, ChronoUnit.DAYS)),
+          effectiveEndDate   = Some(Instant.now().minus(1, ChronoUnit.DAYS))
+        )
+      ),
+      status = CaseStatus.COMPLETED
+    )
+  )
+  private val c13 = adaptCaseInstantFormat(
+    createCase(
+      decision = Some(
+        createDecision(
+          goodsDescription   = "LAPTOP",
+          effectiveStartDate = Some(Instant.now()),
+          effectiveEndDate   = Some(Instant.now().plus(1, ChronoUnit.DAYS))
+        )
+      ),
+      status = CaseStatus.COMPLETED
+    )
+  )
   private val c0Json                      = Json.toJson(c0)
   private val c1Json                      = Json.toJson(c1)
   private val c1UpdatedJson               = Json.toJson(c1_updated)
@@ -1122,9 +1144,12 @@ class CaseSpec extends BaseFeatureSpec {
   Feature("Get Cases sorted by commodity code") {
 
     val caseWithEmptyCommCode = adaptCaseInstantFormat(createCase().copy(decision = None))
-    val caseY1                = adaptCaseInstantFormat(createCase().copy(decision = Some(createDecision(bindingCommodityCode = "777"))))
-    val caseY2                = adaptCaseInstantFormat(createCase().copy(decision = Some(createDecision(bindingCommodityCode = "777"))))
-    val caseZ                 = adaptCaseInstantFormat(createCase().copy(decision = Some(createDecision(bindingCommodityCode = "1111111111"))))
+    val caseY1 =
+      adaptCaseInstantFormat(createCase().copy(decision = Some(createDecision(bindingCommodityCode = "777"))))
+    val caseY2 =
+      adaptCaseInstantFormat(createCase().copy(decision = Some(createDecision(bindingCommodityCode = "777"))))
+    val caseZ =
+      adaptCaseInstantFormat(createCase().copy(decision = Some(createDecision(bindingCommodityCode = "1111111111"))))
 
     Scenario("Sorting default - ascending order") {
       Given("There are few cases in the database")
@@ -1372,13 +1397,21 @@ class CaseSpec extends BaseFeatureSpec {
 
   Feature("Get Cases sorted by case decision effective start date") {
 
-    val caseD0 = adaptCaseInstantFormat(createCase().copy(decision = Some(createDecision(effectiveStartDate = Some(Instant.now())))))
-    val caseD1 = adaptCaseInstantFormat(createCase()
-      .copy(decision = Some(createDecision(effectiveStartDate = Some(Instant.now().minus(1, ChronoUnit.DAYS))))))
-    val caseD2 = adaptCaseInstantFormat(createCase()
-      .copy(decision = Some(createDecision(effectiveStartDate = Some(Instant.now().minus(2, ChronoUnit.DAYS))))))
-    val caseD3 = adaptCaseInstantFormat(createCase()
-      .copy(decision = Some(createDecision(effectiveStartDate = Some(Instant.now().minus(3, ChronoUnit.DAYS))))))
+    val caseD0 = adaptCaseInstantFormat(
+      createCase().copy(decision = Some(createDecision(effectiveStartDate = Some(Instant.now()))))
+    )
+    val caseD1 = adaptCaseInstantFormat(
+      createCase()
+        .copy(decision = Some(createDecision(effectiveStartDate = Some(Instant.now().minus(1, ChronoUnit.DAYS)))))
+    )
+    val caseD2 = adaptCaseInstantFormat(
+      createCase()
+        .copy(decision = Some(createDecision(effectiveStartDate = Some(Instant.now().minus(2, ChronoUnit.DAYS)))))
+    )
+    val caseD3 = adaptCaseInstantFormat(
+      createCase()
+        .copy(decision = Some(createDecision(effectiveStartDate = Some(Instant.now().minus(3, ChronoUnit.DAYS)))))
+    )
 
     Scenario("Sorting default - ascending order") {
       Given("There are few cases in the database")
@@ -1431,15 +1464,15 @@ class CaseSpec extends BaseFeatureSpec {
   }
 
   private def adaptCaseInstantFormat(_case: Case): Case = {
-    val caseBaseDecision = _case.decision
+    val caseBaseDecision    = _case.decision
     val caseBaseApplication = _case.application
     _case.copy(
-      createdDate = _case.createdDate.truncatedTo(ChronoUnit.MILLIS),
+      createdDate   = _case.createdDate.truncatedTo(ChronoUnit.MILLIS),
       dateOfExtract = _case.dateOfExtract.map(_.truncatedTo(ChronoUnit.MILLIS)),
       decision = caseBaseDecision.map { desc =>
         desc.copy(
           effectiveStartDate = desc.effectiveStartDate.map(_.truncatedTo(ChronoUnit.MILLIS)),
-          effectiveEndDate = desc.effectiveEndDate.map(_.truncatedTo(ChronoUnit.MILLIS)),
+          effectiveEndDate   = desc.effectiveEndDate.map(_.truncatedTo(ChronoUnit.MILLIS)),
           decisionPdf = desc.decisionPdf.map { attch =>
             attch.copy(
               timestamp = attch.timestamp.truncatedTo(ChronoUnit.MILLIS)
@@ -1450,9 +1483,9 @@ class CaseSpec extends BaseFeatureSpec {
       application = caseBaseApplication match {
         case app: LiabilityOrder =>
           app.copy(
-            entryDate = app.entryDate.map(_.truncatedTo(ChronoUnit.MILLIS)),
+            entryDate     = app.entryDate.map(_.truncatedTo(ChronoUnit.MILLIS)),
             dateOfReceipt = app.dateOfReceipt.map(_.truncatedTo(ChronoUnit.MILLIS)),
-            repaymentClaim = app.repaymentClaim.map {claim =>
+            repaymentClaim = app.repaymentClaim.map { claim =>
               claim.copy(dateForRepayment = claim.dateForRepayment.map(_.truncatedTo(ChronoUnit.MILLIS)))
             }
           )
@@ -1472,8 +1505,8 @@ class CaseSpec extends BaseFeatureSpec {
           )
         case _ => caseBaseApplication
       },
-      attachments = _case.attachments.map {
-        attch => attch.copy(timestamp = attch.timestamp.truncatedTo(ChronoUnit.MILLIS))
+      attachments = _case.attachments.map { attch =>
+        attch.copy(timestamp = attch.timestamp.truncatedTo(ChronoUnit.MILLIS))
       }
     )
   }

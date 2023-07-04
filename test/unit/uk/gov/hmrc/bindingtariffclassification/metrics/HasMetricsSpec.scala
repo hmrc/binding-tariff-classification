@@ -26,7 +26,7 @@ import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AsyncWordSpecLike
 import org.scalatest.{BeforeAndAfterAll, OptionValues}
 import org.scalatestplus.mockito.MockitoSugar
-import play.api.mvc.Results
+import play.api.mvc.{AnyContentAsEmpty, Results}
 import play.api.test
 import play.api.test.{FakeRequest, Helpers}
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
@@ -217,7 +217,7 @@ class HasMetricsSpec
     }
 
     "withMetricsTimerAction" should {
-      def fakeRequest = FakeRequest()
+      def fakeRequest: FakeRequest[AnyContentAsEmpty.type] = FakeRequest()
 
       "increment success counter for an informational Result" in withTestActionMetrics { metrics =>
         metrics

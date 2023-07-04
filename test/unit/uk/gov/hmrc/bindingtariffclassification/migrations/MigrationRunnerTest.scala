@@ -53,6 +53,9 @@ class MigrationRunnerTest extends BaseSpec with BeforeAndAfterEach with Eventual
   private def givenAmendDateOfExtractJobRollbackSucceeds(): Unit =
     given(amendDateOfExtractJob.rollback()).willReturn(successful(()))
 
+  private def givenAmendDateOfExtractJobRollbackFails(): Unit =
+    given(amendDateOfExtractJob.rollback()).willReturn(failed(new RuntimeException("test")))
+
   override protected def beforeEach(): Unit = {
     super.beforeEach()
     given(amendDateOfExtractJob.name) willReturn "AmendDateOfExtract"
@@ -88,6 +91,18 @@ class MigrationRunnerTest extends BaseSpec with BeforeAndAfterEach with Eventual
       givenRollbackSucceeds()
       givenAmendDateOfExtractJobFails()
       givenAmendDateOfExtractJobRollbackSucceeds()
+
+      await(runner.trigger(amendDateOfExtractJob.getClass))
+
+      verify(amendDateOfExtractJob).execute()
+      verify(amendDateOfExtractJob).rollback()
+    }
+
+    "rollback failed when job failed" in withRunner { runner =>
+      givenTheLockSucceeds()
+      givenRollbackSucceeds()
+      givenAmendDateOfExtractJobFails()
+      givenAmendDateOfExtractJobRollbackFails()
 
       await(runner.trigger(amendDateOfExtractJob.getClass))
 

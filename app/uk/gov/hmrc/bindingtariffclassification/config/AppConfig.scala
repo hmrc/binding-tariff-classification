@@ -71,7 +71,7 @@ class AppConfig @Inject() (
   lazy val fileStoreUrl: String = config.baseUrl("binding-tariff-filestore")
 
   lazy val upsertAgents: Seq[String] =
-    configuration.get[String]("upsert-permitted-agents").split(",").filter(_.nonEmpty)
+    configuration.get[String]("upsert-permitted-agents").split(",").filter(_.nonEmpty).toSeq
 
   def getString(key: String): String =
     configuration.getOptional[String](key).getOrElse(configNotFoundError(key))

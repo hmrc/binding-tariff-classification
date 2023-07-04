@@ -127,7 +127,7 @@ class CaseMongoRepository @Inject() (
     collection.deleteMany(empty()).toFuture().map(_ => ())
 
   override def delete(reference: String): Future[Unit] =
-    collection.deleteOne(equal("reference", reference)).toFuture.map(_ => ())
+    collection.deleteOne(equal("reference", reference)).toFuture().map(_ => ())
 
   private def daysSince(operand: JsValueWrapper): JsValue = {
     val milliSecondsInOneDay = 86400000
@@ -243,7 +243,7 @@ class CaseMongoRepository @Inject() (
                 )
               )
           }
-        or((Seq(concreteFilter) ++ pseudoFilters.toSeq): _*)
+        or(Seq(concreteFilter) ++ pseudoFilters.toSeq: _*)
       }
 
     val liabilityStatusesFilter =
@@ -365,7 +365,7 @@ class CaseMongoRepository @Inject() (
         field.fieldName -> (JsString(s"$$${field.underlyingField}"): JsValueWrapper)
     }.toSeq: _*)
 
-    group(toBson(groupBy), (Seq(countField) ++ maxFields ++ casesField): _*)
+    group(toBson(groupBy), Seq(countField) ++ maxFields ++ casesField: _*)
   }
 
   private def getFieldValue(field: ReportField[_], json: Option[JsValue]): ReportResultField[_] = field match {

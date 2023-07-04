@@ -17,12 +17,12 @@
 package util
 
 import com.mongodb.WriteError
-import org.mongodb.scala.MongoWriteException
 import org.bson.BsonDocument
+import org.mongodb.scala.{MongoWriteException, ServerAddress}
 
 object DatabaseException {
 
-  def exception(code: Int, message: String, bsonDocument: Option[BsonDocument] = None) =
-    new MongoWriteException(new WriteError(code, message, bsonDocument.getOrElse(new BsonDocument())), null)
+  def exception(code: Int, message: String, bsonDocument: Option[BsonDocument] = None): MongoWriteException =
+    new MongoWriteException(new WriteError(code, message, bsonDocument.getOrElse(new BsonDocument())), ServerAddress())
 
 }

@@ -80,14 +80,9 @@ class UsersMongoRepository @Inject() (mongoComponent: MongoComponent)(implicit e
     val notDeletedFilter = equal("deleted", false)
 
     val optionalRoleFilter = search.role.map(r => in("role", r.map(_.toString).toSeq: _*))
-    val optionalTeamFilter = search.team.map(t => mappingNoneOrSome("memberOfTeams", t))
+    val optionalTeamFilter = search.team.map(t => in("memberOfTeams", Seq(t): _*))
     val filters            = List(Some(notDeletedFilter), optionalRoleFilter, optionalTeamFilter).flatten
     Filters.and(filters: _*)
   }
 
-  private def mappingNoneOrSome(field: String, value: String): Bson = value match {
-    case "none" => equal(field, size(field, 0))
-    case "some" => gt(field, size(field, 0))
-    case v      => in(field, Seq(v): _*)
-  }
 }

@@ -16,18 +16,18 @@
 
 package uk.gov.hmrc.bindingtariffclassification.crypto
 
-import java.util.UUID
-
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito
 import uk.gov.hmrc.bindingtariffclassification.base.BaseSpec
 import uk.gov.hmrc.bindingtariffclassification.model._
-import uk.gov.hmrc.crypto.{CompositeSymmetricCrypto, Crypted, PlainText}
+import uk.gov.hmrc.crypto.{AesCrypto, Crypted, PlainText}
 import util.CaseData._
+
+import java.util.UUID
 
 class CryptoSpec extends BaseSpec {
 
-  private val simmetricCrypto = mock[CompositeSymmetricCrypto]
+  private val simmetricCrypto = mock[AesCrypto]
   private val crypto          = new Crypto(simmetricCrypto)
 
   private def encEori(k: String)      = EORIDetails(k, "John Lewis", k, k, k, k, k)

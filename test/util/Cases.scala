@@ -38,7 +38,7 @@ object Cases {
   )
   private val eoriAgentDetailsExample = AgentDetails(
     EORIDetails("eori", "agent-business-name", "line1", "line2", "line3", "postcode", "country"),
-    Some(Attachment("letter-id", public = true, None, Instant.now(), shouldPublishToRulings = false))
+    Some(Attachment("letter-id", public = true, None, Instant.now()))
   )
   private val contactExample = Contact(
     "name",
@@ -128,36 +128,6 @@ object Cases {
 
   }
 
-  def withBTIDetails(
-    offline: Boolean                        = false,
-    goodName: String                        = "good name",
-    goodDescription: String                 = "good description",
-    confidentialInformation: Option[String] = None,
-    otherInformation: Option[String]        = None,
-    reissuedBTIReference: Option[String]    = None,
-    relatedBTIReference: Option[String]     = None,
-    knownLegalProceedings: Option[String]   = None,
-    envisagedCommodityCode: Option[String]  = None,
-    sampleToBeProvided: Boolean             = false,
-    sampleToBeReturned: Boolean             = false
-  ): Case => Case = { c =>
-    c.copy(application =
-      btiApplicationExample.copy(
-        offline                 = offline,
-        goodName                = goodName,
-        goodDescription         = goodDescription,
-        confidentialInformation = confidentialInformation,
-        otherInformation        = otherInformation,
-        reissuedBTIReference    = reissuedBTIReference,
-        relatedBTIReference     = relatedBTIReference,
-        knownLegalProceedings   = knownLegalProceedings,
-        envisagedCommodityCode  = envisagedCommodityCode,
-        sampleToBeProvided      = sampleToBeProvided,
-        sampleToBeReturned      = sampleToBeReturned
-      )
-    )
-  }
-
   def withHolder(
     eori: String         = "eori",
     businessName: String = "business name",
@@ -244,16 +214,12 @@ object Cases {
     _.copy(decision = None)
 
   def withDecision(
-    bindingCommodityCode: String                 = "decision-commodity-code",
-    effectiveStartDate: Option[Instant]          = Some(Instant.now()),
-    effectiveEndDate: Option[Instant]            = Some(ZonedDateTime.now(ZoneOffset.UTC).plus(3, ChronoUnit.YEARS).toInstant()),
-    justification: String                        = "decision-justification",
-    goodsDescription: String                     = "decision-goods-description",
-    methodSearch: Option[String]                 = None,
-    methodExclusion: Option[String]              = None,
-    methodCommercialDenomination: Option[String] = None,
-    appeal: Seq[Appeal]                          = Seq.empty,
-    cancellation: Option[Cancellation]           = None
+    bindingCommodityCode: String        = "decision-commodity-code",
+    effectiveStartDate: Option[Instant] = Some(Instant.now()),
+    effectiveEndDate: Option[Instant]   = Some(ZonedDateTime.now(ZoneOffset.UTC).plus(3, ChronoUnit.YEARS).toInstant()),
+    justification: String               = "decision-justification",
+    goodsDescription: String            = "decision-goods-description",
+    appeal: Seq[Appeal]                 = Seq.empty
   ): Case => Case =
     _.copy(decision =
       Some(
@@ -263,11 +229,11 @@ object Cases {
           effectiveEndDate,
           justification,
           goodsDescription,
-          methodSearch,
-          methodExclusion,
-          methodCommercialDenomination,
+          None,
+          None,
+          None,
           appeal,
-          cancellation
+          None
         )
       )
     )

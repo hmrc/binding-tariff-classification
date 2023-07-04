@@ -115,7 +115,7 @@ class CaseSearchTest extends BaseSpec {
     }
 
     "Bind query string with missing sort_by" in {
-      CaseSearch.bindable.bind("", params.filterKeys(_ != "sort_by").toMap) shouldBe Some(
+      CaseSearch.bindable.bind("", params.filter(_._1 != "sort_by")) shouldBe Some(
         Right(CaseSearch(filter, None))
       )
     }
@@ -179,7 +179,7 @@ class CaseSearchTest extends BaseSpec {
     }
 
     "Bind populated query string with missing sort_by" in {
-      CaseSort.bindable.bind("", params.filterKeys(_ != "sort_by").toMap) shouldBe None
+      CaseSort.bindable.bind("", params.filter(_._1 != "sort_by")) shouldBe None
     }
   }
 
