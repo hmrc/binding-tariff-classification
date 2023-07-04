@@ -20,8 +20,8 @@ import play.api.libs.json._
 
 object EnumJson {
 
-  implicit def format[E <: Enumeration](enum: E): Format[E#Value] =
-    Format(Reads.enumNameReads(enum), Writes.enumNameWrites)
+  implicit def format[E <: Enumeration](enumeration: E): Format[E#Value] =
+    Format(Reads.enumNameReads(enumeration), Writes.enumNameWrites)
 
   def readsMap[E, B](implicit erds: Reads[E], brds: Reads[B]): JsValue => JsResult[Map[E, B]] = (js: JsValue) => {
     val maprds: Reads[Map[String, B]] = Reads.mapReads[B]

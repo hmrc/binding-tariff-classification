@@ -20,6 +20,7 @@ import uk.gov.hmrc.bindingtariffclassification.base.BaseSpec
 
 import java.net.URLDecoder
 import java.time.Instant
+import scala.concurrent.ExecutionContext.Implicits.global
 
 class EventSearchTest extends BaseSpec {
 
@@ -37,7 +38,7 @@ class EventSearchTest extends BaseSpec {
     "max_timestamp"  -> Seq("1970-01-01T00:00:01Z")
   )
 
-  private val emptyParams: Map[String, Seq[String]] = params.mapValues(_.map(_ => "")).toMap
+  private val emptyParams: Map[String, Seq[String]] = params.view.mapValues(_.map(_ => "")).toMap
 
   /** When we add fields to Search these tests shouldn't need changing, only the fields above.
     */

@@ -35,9 +35,9 @@ class EventSpec extends BaseFeatureSpec {
 
   private val caseRef = UUID.randomUUID().toString
   private val c1      = adaptCaseInstantFormat(createCase(r = caseRef))
-  private val e1Base = createCaseStatusChangeEvent(caseReference = caseRef)
+  private val e1Base  = createCaseStatusChangeEvent(caseReference = caseRef)
   private val e1      = e1Base.copy(timestamp = e1Base.timestamp.truncatedTo(ChronoUnit.MILLIS))
-  private val e2Base = createNoteEvent(caseReference = caseRef)
+  private val e2Base  = createNoteEvent(caseReference = caseRef)
   private val e2      = e2Base.copy(timestamp = e2Base.timestamp.truncatedTo(ChronoUnit.MILLIS))
 
   Feature("Delete All") {
@@ -224,15 +224,15 @@ class EventSpec extends BaseFeatureSpec {
     }
   }
   private def adaptCaseInstantFormat(_case: Case): Case = {
-    val caseBaseDecision = _case.decision
+    val caseBaseDecision    = _case.decision
     val caseBaseApplication = _case.application
     _case.copy(
-      createdDate = _case.createdDate.truncatedTo(ChronoUnit.MILLIS),
+      createdDate   = _case.createdDate.truncatedTo(ChronoUnit.MILLIS),
       dateOfExtract = _case.dateOfExtract.map(_.truncatedTo(ChronoUnit.MILLIS)),
       decision = caseBaseDecision.map { desc =>
         desc.copy(
           effectiveStartDate = desc.effectiveStartDate.map(_.truncatedTo(ChronoUnit.MILLIS)),
-          effectiveEndDate = desc.effectiveEndDate.map(_.truncatedTo(ChronoUnit.MILLIS)),
+          effectiveEndDate   = desc.effectiveEndDate.map(_.truncatedTo(ChronoUnit.MILLIS)),
           decisionPdf = desc.decisionPdf.map { attch =>
             attch.copy(
               timestamp = attch.timestamp.truncatedTo(ChronoUnit.MILLIS)
@@ -243,7 +243,7 @@ class EventSpec extends BaseFeatureSpec {
       application = caseBaseApplication match {
         case app: LiabilityOrder =>
           app.copy(
-            entryDate = app.entryDate.map(_.truncatedTo(ChronoUnit.MILLIS)),
+            entryDate     = app.entryDate.map(_.truncatedTo(ChronoUnit.MILLIS)),
             dateOfReceipt = app.dateOfReceipt.map(_.truncatedTo(ChronoUnit.MILLIS))
           )
         case app: BTIApplication =>

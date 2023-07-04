@@ -20,6 +20,7 @@ import akka.actor.ActorSystem
 import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.WireMock
 import com.github.tomakehurst.wiremock.client.WireMock._
+import com.github.tomakehurst.wiremock.core.WireMockConfiguration
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig
 import com.github.tomakehurst.wiremock.stubbing.StubMapping
 import org.scalatestplus.play.BaseOneServerPerSuite
@@ -34,10 +35,10 @@ trait WiremockHelper {
   self: BaseOneServerPerSuite =>
 
   import WiremockHelper._
-  lazy val wmConfig  = wireMockConfig().port(wiremockPort)
-  val wireMockServer = new WireMockServer(wmConfig)
+  lazy val wmConfig: WireMockConfiguration = wireMockConfig().port(wiremockPort)
+  val wireMockServer                       = new WireMockServer(wmConfig)
 
-  implicit val system = ActorSystem("my-system")
+  implicit val system: ActorSystem = ActorSystem("my-system")
 
   def startWiremock(): Unit = {
     WireMock.configureFor(wiremockHost, wiremockPort)

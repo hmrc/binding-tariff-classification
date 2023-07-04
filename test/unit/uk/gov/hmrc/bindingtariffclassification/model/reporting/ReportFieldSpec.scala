@@ -25,28 +25,28 @@ class ReportFieldSpec extends BaseSpec {
   "ReportField" should {
     "produce ReportResultField using withValue" in {
       for (field <- ReportField.fields.values) field match {
-        case field @ CaseTypeField(fieldName, underlyingField) =>
+        case field @ CaseTypeField(fieldName, _) =>
           field.withValue(Some(ApplicationType.BTI)) shouldBe CaseTypeResultField(fieldName, Some(ApplicationType.BTI))
-        case field @ ChapterField(fieldName, underlyingField: String) =>
+        case field @ ChapterField(fieldName, _: String) =>
           field.withValue(Some("87")) shouldBe StringResultField(fieldName, Some("87"))
-        case field @ DateField(fieldName, underlyingField) =>
+        case field @ DateField(fieldName, _) =>
           val dateTime = Some(LocalDateTime.of(2021, 2, 19, 18, 20, 0).toInstant(ZoneOffset.UTC))
           field.withValue(dateTime) shouldBe DateResultField(fieldName, dateTime)
-        case field @ DaysSinceField(fieldName, underlyingField) =>
+        case field @ DaysSinceField(fieldName, _) =>
           field.withValue(Some(5L)) shouldBe NumberResultField(fieldName, Some(5L))
-        case field @ NumberField(fieldName, underlyingField) =>
+        case field @ NumberField(fieldName, _) =>
           field.withValue(Some(3L)) shouldBe NumberResultField(fieldName, Some(3L))
-        case field @ StatusField(fieldName, underlyingField) =>
+        case field @ StatusField(fieldName, _) =>
           field
             .withValue(Some(PseudoCaseStatus.OPEN)) shouldBe StatusResultField(fieldName, Some(PseudoCaseStatus.OPEN))
-        case field @ StringField(fieldName, underlyingField) =>
+        case field @ StringField(fieldName, _) =>
           field.withValue(Some("Chipotle Paste")) shouldBe StringResultField(fieldName, Some("Chipotle Paste"))
-        case field @ LiabilityStatusField(fieldName, underlyingField) =>
+        case field @ LiabilityStatusField(fieldName, _) =>
           field.withValue(Some(LiabilityStatus.LIVE)) shouldBe LiabilityStatusResultField(
             fieldName,
             Some(LiabilityStatus.LIVE)
           )
-        case field @ CoalesceField(fieldName, fieldChoices) =>
+        case field @ CoalesceField(fieldName, _) =>
           field.withValue(Some("Port Officer")) shouldBe StringResultField(fieldName, Some("Port Officer"))
       }
     }

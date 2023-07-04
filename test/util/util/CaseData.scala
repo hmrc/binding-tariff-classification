@@ -290,10 +290,9 @@ object CaseData {
 
   def createAttachmentWithOperator: Attachment =
     Attachment(
-      id                     = RandomGenerator.randomUUID(),
-      public                 = true,
-      operator               = Some(Operator(id = "0", Some("OperatorName"))),
-      shouldPublishToRulings = false
+      id       = RandomGenerator.randomUUID(),
+      public   = true,
+      operator = Some(Operator(id = "0", Some("OperatorName")))
     )
 
   def createUser(

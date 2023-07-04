@@ -65,10 +65,10 @@ class EventMongoRepository @Inject() (mongoComponent: MongoComponent)(implicit e
     )
 
   override def deleteAll(): Future[Unit] =
-    collection.deleteMany(empty()).toFuture().map(_ => Future.unit)
+    collection.deleteMany(empty()).toFuture().flatMap(_ => Future.unit)
 
   override def delete(search: EventSearch): Future[Unit] =
-    collection.deleteMany(filter = selector(search)).toFuture().map(_ => Future.unit)
+    collection.deleteMany(filter = selector(search)).toFuture().flatMap(_ => Future.unit)
 
   private def selector(search: EventSearch): Bson = {
     val queries = Seq[Bson]()

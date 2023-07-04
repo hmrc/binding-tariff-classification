@@ -16,22 +16,19 @@
 
 package uk.gov.hmrc.bindingtariffclassification.crypto
 
-import javax.inject.{Inject, Singleton}
 import uk.gov.hmrc.bindingtariffclassification.config.AppConfig
-import uk.gov.hmrc.crypto.{AesCrypto, CompositeSymmetricCrypto, Decrypter}
+import uk.gov.hmrc.crypto.AesCrypto
+
+import javax.inject.{Inject, Singleton}
 
 @Singleton
-class LocalCrypto @Inject() (appConfig: AppConfig) extends CompositeSymmetricCrypto {
+class LocalCrypto @Inject() (appConfig: AppConfig) extends AesCrypto {
 
-  override protected lazy val currentCrypto: AesCrypto = new AesCrypto {
-    override protected lazy val encryptionKey: String = {
-      appConfig.mongoEncryption.key match {
-        case Some(k) if appConfig.mongoEncryption.enabled => k
-        case _                                            => throw new RuntimeException("Missing config: 'mongodb.encryption.enabled'")
-      }
+  override protected lazy val encryptionKey: String = {
+    appConfig.mongoEncryption.key match {
+      case Some(k) if appConfig.mongoEncryption.enabled => k
+      case _                                            => throw new RuntimeException("Missing config: 'mongodb.encryption.enabled'")
     }
   }
-
-  override protected val previousCryptos = Seq.empty[Decrypter]
 
 }

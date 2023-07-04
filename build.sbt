@@ -1,17 +1,12 @@
 import play.sbt.PlayScala
-import uk.gov.hmrc.DefaultBuildSettings._
+import uk.gov.hmrc.DefaultBuildSettings.*
 
 val appName = "binding-tariff-classification"
 
-lazy val plugins: Seq[Plugins] =
-  Seq(PlayScala, SbtDistributablesPlugin)
-lazy val playSettings: Seq[Setting[_]] = Seq.empty
-
 lazy val microservice = (project in file("."))
-  .enablePlugins(plugins: _*)
+  .enablePlugins(PlayScala, SbtDistributablesPlugin)
   .disablePlugins(JUnitXmlReportPlugin) //Required to prevent https://github.com/scalatest/scalatest/issues/1427
-  .settings(playSettings: _*)
-  .settings(defaultSettings(): _*)
+  .settings(defaultSettings())
   .settings(majorVersion := 0)
   .settings(
     name := appName,
@@ -32,7 +27,7 @@ lazy val microservice = (project in file("."))
       )
     }
   )
-  .settings(inConfig(TemplateTest)(Defaults.testSettings): _*)
+  .settings(inConfig(TemplateTest)(Defaults.testSettings))
   .settings(
     Test / unmanagedSourceDirectories := Seq(
       (Test / baseDirectory).value / "test/unit",
@@ -59,9 +54,9 @@ lazy val TemplateTest   = config("tt") extend Test
 lazy val TemplateItTest = config("tit") extend IntegrationTest
 
 // Coverage configuration
-coverageMinimumStmtTotal := 94
+coverageMinimumStmtTotal := 95
 coverageFailOnMinimum := true
 coverageExcludedPackages := "<empty>;com.kenshoo.play.metrics.*;prod.*;testOnlyDoNotUseInAppConf.*;app.*;uk.gov.hmrc.BuildInfo"
 
-addCommandAlias("scalafmtAll", "all scalafmtSbt scalafmt Test/scalafmt")
-addCommandAlias("scalastyleAll", "all scalastyle Test/scalastyle")
+addCommandAlias("scalafmtAll", "all scalafmtSbt scalafmt Test/scalafmt IntegrationTest/scalafmt")
+addCommandAlias("scalastyleAll", "all scalastyle Test/scalastyle IntegrationTest/scalastyle")

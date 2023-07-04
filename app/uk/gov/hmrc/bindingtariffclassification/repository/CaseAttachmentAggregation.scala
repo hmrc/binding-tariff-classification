@@ -86,7 +86,7 @@ class CaseAttachmentAggregation @Inject() (mongoComponent: MongoComponent)(impli
       .withCodecRegistry(MongoCodecs.attachment)
       .aggregate(pipeline)
       .toFuture()
-      .map(_ => Future.unit)
+      .flatMap(_ => Future.unit)
 
   def find(attachmentId: String): Future[Option[Attachment]] =
     mongoComponent.database

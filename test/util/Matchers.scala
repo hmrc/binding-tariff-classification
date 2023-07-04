@@ -22,12 +22,14 @@ import org.scalatest.matchers.{MatchResult, Matcher}
 
 object Matchers {
 
-  def roughlyBe(time: Instant) = new RoughlyMatches(time)
+  private val sixtySeconds = 60
+
+  def roughlyBe(time: Instant): RoughlyMatches = new RoughlyMatches(time)
 
   protected class RoughlyMatches(time: Instant) extends Matcher[Instant] {
 
     override def apply(d: Instant): MatchResult = MatchResult(
-      d.isBefore(time.plusSeconds(60)) && d.isAfter(time.minusSeconds(60)),
+      d.isBefore(time.plusSeconds(sixtySeconds)) && d.isAfter(time.minusSeconds(sixtySeconds)),
       s"date [$d] was not within a minute of [$time]",
       s"date [$d] was within a minute of [$time]"
     )

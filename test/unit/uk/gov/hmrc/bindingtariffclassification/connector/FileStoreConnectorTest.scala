@@ -16,13 +16,11 @@
 
 package uk.gov.hmrc.bindingtariffclassification.connector
 
-import akka.actor.ActorSystem
 import com.github.tomakehurst.wiremock.client.WireMock._
 import org.mockito.BDDMockito.given
 import org.scalatest.BeforeAndAfterAll
 import play.api.http.Status
 import play.api.libs.json.Json
-import play.api.test.Helpers._
 import uk.gov.hmrc.bindingtariffclassification.base.BaseSpec
 import uk.gov.hmrc.bindingtariffclassification.config.AppConfig
 import uk.gov.hmrc.bindingtariffclassification.model.filestore.{FileMetadata, FileSearch, ScanStatus}
@@ -38,8 +36,7 @@ class FileStoreConnectorTest extends BaseSpec with WiremockTestServer with Befor
 
   private val config = mock[AppConfig]
 
-  private implicit val headers: HeaderCarrier   = HeaderCarrier()
-  private implicit val actorSystem: ActorSystem = ActorSystem("test")
+  private implicit val headers: HeaderCarrier = HeaderCarrier()
 
   private val appConfig = fakeApplication.injector.instanceOf[AppConfig]
 

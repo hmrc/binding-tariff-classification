@@ -16,12 +16,13 @@
 
 package uk.gov.hmrc.bindingtariffclassification.crypto
 
-import javax.inject._
 import uk.gov.hmrc.bindingtariffclassification.model._
-import uk.gov.hmrc.crypto.{CompositeSymmetricCrypto, Crypted, PlainText}
+import uk.gov.hmrc.crypto.{AesCrypto, Crypted, PlainText}
+
+import javax.inject._
 
 @Singleton
-class Crypto @Inject() (crypto: CompositeSymmetricCrypto) {
+class Crypto @Inject() (crypto: AesCrypto) {
 
   def encrypt(c: Case): Case =
     applyCrypto(c)(encryptString)

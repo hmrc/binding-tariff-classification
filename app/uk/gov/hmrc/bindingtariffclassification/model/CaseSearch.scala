@@ -40,8 +40,8 @@ object CaseSearch {
       Some(
         Right(
           CaseSearch(
-            filter.map(_.right.get).getOrElse(CaseFilter()),
-            sort.map(_.right.get)
+            filter.flatMap(_.toOption).getOrElse(CaseFilter()),
+            sort.flatMap(_.toOption)
           )
         )
       )
