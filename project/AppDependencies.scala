@@ -2,7 +2,7 @@ import play.sbt.PlayImport.*
 import sbt.*
 
 object AppDependencies {
-  private lazy val mongoHmrcVersion = "0.74.0"
+  private lazy val mongoHmrcVersion = "1.3.0"
   private lazy val akkaVersion      = "2.6.20"
   private lazy val bootstrapVersion = "7.19.0"
 

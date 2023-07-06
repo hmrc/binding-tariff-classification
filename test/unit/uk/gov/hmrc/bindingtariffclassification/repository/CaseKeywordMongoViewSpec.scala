@@ -135,8 +135,8 @@ class CaseKeywordMongoViewSpec
   "CaseKeywordMongoView" should {
 
     "dropView will drop the view" in {
-      val result = view.dropView(view.caseKeywordsViewName)
 
+      val result                = view.dropView(view.caseKeywordsViewName)
       val futureCollectionNames = await(result).flatMap(_ => mongoComponent.database.listCollectionNames().toFuture())
 
       await(futureCollectionNames) mustNot contain(view.caseKeywordsViewName)
