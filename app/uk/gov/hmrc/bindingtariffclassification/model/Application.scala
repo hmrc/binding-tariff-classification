@@ -29,8 +29,6 @@ sealed trait Application {
 
   def isBTI: Boolean            = isInstanceOf[BTIApplication]
   def isLiabilityOrder: Boolean = isInstanceOf[LiabilityOrder]
-  def isCorrespondence: Boolean = isInstanceOf[CorrespondenceApplication]
-  def isMisc: Boolean           = isInstanceOf[MiscApplication]
 
   def asBTI: BTIApplication                       = asInstanceOf[BTIApplication]
   def asLiabilityOrder: LiabilityOrder            = asInstanceOf[LiabilityOrder]

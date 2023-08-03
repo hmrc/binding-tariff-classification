@@ -6,7 +6,7 @@ The backend service which manages case data for the Advance Tariff Rulings servi
 
 ##### To run this Service you will need:
 
-1) [Service Manager](https://github.com/hmrc/service-manager) installed
+1) [Service Manager 2](https://github.com/hmrc/sm2) installed
 2) [SBT](https://www.scala-sbt.org) Version `>=1.x` installed
 3) [MongoDB](https://www.mongodb.com/) version `>=3.6` installed and running on port 27017
 4) [Localstack](https://github.com/localstack/localstack) installed and running on port 4572
@@ -31,14 +31,14 @@ The easiest way to run MongoDB and Localstack for local development is to use [D
 
 #### Starting the application:
  
-1) Launch dependencies using `sm --start DIGITAL_TARIFF_DEPS -r`
-2) Start the filestore service [binding-tariff-filestore](https://github.com/hmrc/binding-tariff-filestore) using `sm --start BINDING_TARIFF_FILESTORE -r`
+1) Launch dependencies using `sm2 --start DIGITAL_TARIFFS_DEPS`
+2) Start the filestore service [binding-tariff-filestore](https://github.com/hmrc/binding-tariff-filestore) using `sm2 --start BINDING_TARIFF_FILESTORE`
 
-Use `sbt run` to boot the app or run it with Service Manager using `sm --start BINDING_TARIFF_CLASSIFICATION -r`.
+Use `sbt run` to boot the app or run it with Service Manager 2 using `sm2 --start BINDING_TARIFF_CLASSIFICATION`.
 
 This application runs on port 9580.
 
-You can also run the `DIGITAL_TARIFFS` profile using `sm --start DIGITAL_TARIFFS -r` and then stop the Service Manager instance of this service using `sm --stop BINDING_TARIFF_CLASSIFICATION` before running with sbt.
+You can also run the `DIGITAL_TARIFFS` profile using `sm2 --start DIGITAL_TARIFFS` and then stop the Service Manager 2 instance of this service using `sm2 --stop BINDING_TARIFF_CLASSIFICATION` before running with sbt.
 
 ### Testing
 
