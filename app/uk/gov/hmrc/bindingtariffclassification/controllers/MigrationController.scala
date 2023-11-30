@@ -31,10 +31,11 @@ class MigrationController @Inject() (
 )(implicit ex: ExecutionContext)
     extends CommonController(mcc) {
 
-  migrationRunner.trigger(classOf[AddKeywordsMigrationJob])
+  migrationRunner.trigger(classOf[AddKeywordsMigrationJob])  // preserve this
 
-  def amendDateOfExtract(): Action[AnyContent] =
+  def amendDateOfExtract(): Action[AnyContent] = {
     Action.async {
       migrationRunner.trigger(classOf[AmendDateOfExtractMigrationJob]) map (_ => NoContent) recover recovery
     }
+  }
 }

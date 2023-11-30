@@ -16,17 +16,14 @@
 
 package uk.gov.hmrc.bindingtariffclassification.migrations
 
-import javax.inject.{Inject, Singleton}
-
 import better.files._
 import cats.syntax.all._
 import uk.gov.hmrc.bindingtariffclassification.common.Logging
-import uk.gov.hmrc.bindingtariffclassification.model.Keyword
+import uk.gov.hmrc.bindingtariffclassification.model.{Keyword, Pagination}
 import uk.gov.hmrc.bindingtariffclassification.service.KeywordService
 
-import scala.concurrent.Future
-import scala.concurrent.ExecutionContext
-import uk.gov.hmrc.bindingtariffclassification.model.Pagination
+import javax.inject.{Inject, Singleton}
+import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class AddKeywordsMigrationJob @Inject() (

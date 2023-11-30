@@ -16,26 +16,29 @@
 
 package uk.gov.hmrc.bindingtariffclassification.controllers
 
-import javax.inject.Inject
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Result}
 import uk.gov.hmrc.bindingtariffclassification.config.AppConfig
+import uk.gov.hmrc.bindingtariffclassification.migrations.{AddKeywordsMigrationJob, MigrationRunner}
 import uk.gov.hmrc.bindingtariffclassification.model.ErrorCode.NOTFOUND
 import uk.gov.hmrc.bindingtariffclassification.model.RESTFormatters._
 import uk.gov.hmrc.bindingtariffclassification.model._
 import uk.gov.hmrc.bindingtariffclassification.service.KeywordService
 
-import scala.concurrent.ExecutionContext
+import javax.inject.Inject
+import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.Future.successful
 
 class KeywordController @Inject() (
   appConfig: AppConfig,
+  migrationRunner: MigrationRunner,
   keywordService: KeywordService,
   mcc: MessagesControllerComponents
 )(implicit ex: ExecutionContext)
     extends CommonController(mcc) {
 
   def addKeyword(): Action[JsValue] = Action.async(parse.json) { implicit request =>
+
     withJsonBody[NewKeywordRequest] { keywordRequest: NewKeywordRequest =>
       for {
         k <- keywordService.addKeyword(keywordRequest.keyword)

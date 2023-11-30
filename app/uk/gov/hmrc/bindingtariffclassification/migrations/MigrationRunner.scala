@@ -16,16 +16,16 @@
 
 package uk.gov.hmrc.bindingtariffclassification.migrations
 
-import java.time.ZonedDateTime
-import javax.inject.{Inject, Singleton}
 import com.kenshoo.play.metrics.Metrics
 import uk.gov.hmrc.bindingtariffclassification.common.Logging
 import uk.gov.hmrc.bindingtariffclassification.metrics.HasMetrics
 import uk.gov.hmrc.bindingtariffclassification.model.JobRunEvent
-import uk.gov.hmrc.bindingtariffclassification.repository.MigrationLockRepository
+import uk.gov.hmrc.bindingtariffclassification.repository._
 
-import scala.concurrent.{ExecutionContext, Future}
+import java.time.ZonedDateTime
+import javax.inject.{Inject, Singleton}
 import scala.concurrent.Future.successful
+import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class MigrationRunner @Inject() (
@@ -35,6 +35,7 @@ class MigrationRunner @Inject() (
 )(implicit ec: ExecutionContext)
     extends Logging
     with HasMetrics {
+
   def trigger[T](clazz: Class[T]): Future[Unit] =
     Future.sequence(migrationJobs.jobs.filter(clazz.isInstance(_)).map(run)).map(_ => ())
 
@@ -43,30 +44,28 @@ class MigrationRunner @Inject() (
 
     logger.info(s"Migration Job [${job.name}]: Acquiring Lock")
     migrationLockRepository.lock(event).flatMap {
-      case true =>
+      case SuccessfulInsert | UpdatingDocument =>
         logger.info(s"Migration Job [${job.name}]: Successfully acquired lock. Starting Job.")
-        job.execute().map { _ =>
-          logger.info(s"Migration Job [${job.name}]: Completed Successfully")
-        } recover {
-          case t: Throwable =>
-            logger.error(s"Migration Job [${job.name}]: Failed", t)
-            logger.info(s"Migration Job [${job.name}]: Attempting to rollback")
-            job
-              .rollback()
-              .flatMap { _ =>
-                logger.info(s"Migration Job [${job.name}]: Rollback Completed Successfully")
-                migrationLockRepository.rollback(event)
-              }
-              .recover {
-                case t: Throwable =>
-                  logger.error(s"Migration Job [${job.name}]: Rollback Failed", t)
-                  timer.completeWithFailure()
-              }
-        }
-      case false =>
+        job.execute().map(_ => logger.info(s"Migration Job [${job.name}]: Completed Successfully"))
+      case _ =>
         logger.info(s"Migration Job [${job.name}]: Failed to acquire Lock. It may have been running already.")
         timer.completeWithFailure()
         successful(())
+    } recover {
+      case t: Throwable =>
+        logger.error(s"Migration Job [${job.name}]: Failed", t)
+        logger.info(s"Migration Job [${job.name}]: Attempting to rollback")
+        job
+          .rollback()
+          .flatMap { _ =>
+            logger.info(s"Migration Job [${job.name}]: Rollback Completed Successfully")
+            migrationLockRepository.rollback(event)
+          }
+          .recover {
+            case t: Throwable =>
+              logger.error(s"Migration Job [${job.name}]: Rollback Failed", t)
+              timer.completeWithFailure()
+          }
     }
   }
 }
