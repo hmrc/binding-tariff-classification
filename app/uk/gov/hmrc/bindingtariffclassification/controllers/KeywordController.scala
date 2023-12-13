@@ -38,9 +38,9 @@ class KeywordController @Inject() (
     extends CommonController(mcc) {
 
   def addKeyword(): Action[JsValue] = Action.async(parse.json) { implicit request =>
-
     withJsonBody[NewKeywordRequest] { keywordRequest: NewKeywordRequest =>
       for {
+        _ <- migrationRunner.trigger(classOf[AddKeywordsMigrationJob])  // TODO: Remove this is just for testing
         k <- keywordService.addKeyword(keywordRequest.keyword)
       } yield Created(Json.toJson(k)(RESTFormatters.formatKeyword))
     } recover recovery map { result =>
