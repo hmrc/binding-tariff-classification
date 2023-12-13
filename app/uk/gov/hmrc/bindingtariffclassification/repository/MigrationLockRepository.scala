@@ -20,7 +20,7 @@ import com.google.inject.ImplementedBy
 import org.mongodb.scala.MongoWriteException
 import org.mongodb.scala.model.Filters.{empty, equal}
 import org.mongodb.scala.model.Indexes._
-import org.mongodb.scala.model.{IndexModel, IndexOptions}
+import org.mongodb.scala.model.{IndexModel, IndexOptions, ReplaceOptions}
 import play.api.i18n.Lang.logger
 import uk.gov.hmrc.bindingtariffclassification.model.{JobRunEvent, MongoFormatters}
 import uk.gov.hmrc.mongo.MongoComponent
@@ -33,7 +33,7 @@ import scala.util.control.NonFatal
 @ImplementedBy(classOf[MigrationLockMongoRepository])
 trait MigrationLockRepository {
 
-  def lock(e: JobRunEvent): Future[Boolean]
+  def lock(e: JobRunEvent): Future[LockAction]
 
   def rollback(e: JobRunEvent): Future[Unit]
 
@@ -55,23 +55,39 @@ class MigrationLockMongoRepository @Inject() (mongoComponent: MongoComponent)(im
 
   val mongoDuplicateKeyErrorCode: Int = 11000
 
-  override def lock(e: JobRunEvent): Future[Boolean] =
-    collection.insertOne(e).toFuture().map { _ =>
-      logger.debug(s"Took Lock for [${e.name}]")
-      true
-    } recover {
+  override def lock(event: JobRunEvent): Future[LockAction] = {
+    val actionBasedOnDocumentPresence: Future[LockAction] =
+      for {
+        docs: Seq[JobRunEvent] <- collection.find(equal("name", event.name)).toFuture()
+        action <- if (docs.isEmpty) {
+                   logger.error(s"[MigrationLockMongoRepository][lock] Lock trying to insert an event")
+                   collection.insertOne(event).toFuture().map(_ => SuccessfulInsert)
+                 } else {
+                   logger.error(
+                     s"[MigrationLockMongoRepository][lock] Previous ${event.name} event found, Lock trying to update event"
+                   )
+                   collection
+                     .replaceOne(equal("name", event.name), event, ReplaceOptions().upsert(true))
+                     .toFuture()
+                     .map(_ => UpdatingDocument)
+                 }
+      } yield {
+        action
+      }
+    actionBasedOnDocumentPresence.recover {
       case error: MongoWriteException if isNotAPrimaryError(error.getCode) =>
         // Do not allow the migration job to proceed due to errors on secondary nodes, and attempt to rollback the changes
-        logger.error(s"Lock failed on secondary node", error)
-        rollback(e)
-        false
+        logger.error(s"[MigrationLockMongoRepository][lock] Lock failed on secondary node", error)
+        rollback(event)
+        IsNotPrimaryError
       case error: MongoWriteException if error.getCode == mongoDuplicateKeyErrorCode =>
-        logger.error(s"Lock already exists for [${e.name}]", error)
-        false
+        logger.error(s"[MigrationLockMongoRepository][lock] Lock already exists for [${event.name}]", error)
+        DuplicateKeyError
       case NonFatal(error) =>
-        logger.error(s"Unable to take Lock for [${e.name}]", error)
-        false
+        logger.error(s"[MigrationLockMongoRepository][lock] Unable to take Lock for [${event.name}]", error)
+        NonFatalError
     }
+  }
 
   override def rollback(e: JobRunEvent): Future[Unit] =
     collection.deleteOne(equal("name", e.name)).toFuture().flatMap { _ =>
