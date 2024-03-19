@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2024 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -63,7 +63,7 @@ abstract class BaseFeatureSpec
   private lazy val scheduledJobStores: Iterable[LockRepository] =
     app.injector.instanceOf[ScheduledJobs].jobs.map(_.lockRepository)
 
-  def dropStores(): Unit = {
+  def dropStores(): Iterable[Void] = {
     result(caseStore.collection.withWriteConcern(WriteConcern.JOURNALED).drop().toFuture(), timeout)
     result(eventStore.collection.withWriteConcern(WriteConcern.JOURNALED).drop().toFuture(), timeout)
     result(sequenceStore.collection.withWriteConcern(WriteConcern.JOURNALED).drop().toFuture(), timeout)
@@ -77,6 +77,7 @@ abstract class BaseFeatureSpec
   override protected def beforeEach(): Unit = {
     super.beforeEach()
     dropStores()
+    ()
   }
 
   protected def storeCases(cases: Case*): Seq[Case] =

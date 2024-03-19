@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2024 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,6 +30,8 @@ sealed abstract class Report extends Product with Serializable {
   def liabilityStatuses: Set[LiabilityStatus.Value]
   def teams: Set[String]
   def dateRange: InstantRange
+
+  def dueToExpireRange: Boolean
 }
 
 case class SummaryReport(
@@ -42,7 +44,8 @@ case class SummaryReport(
   teams: Set[String]                            = Set.empty,
   dateRange: InstantRange                       = InstantRange.allTime,
   maxFields: Seq[ReportField[Long]]             = Seq.empty,
-  includeCases: Boolean                         = false
+  includeCases: Boolean                         = false,
+  dueToExpireRange: Boolean                     = false
 ) extends Report
 
 object SummaryReport {
@@ -134,7 +137,8 @@ case class CaseReport(
   statuses: Set[PseudoCaseStatus.Value]         = Set.empty,
   liabilityStatuses: Set[LiabilityStatus.Value] = Set.empty,
   teams: Set[String]                            = Set.empty,
-  dateRange: InstantRange                       = InstantRange.allTime
+  dateRange: InstantRange                       = InstantRange.allTime,
+  dueToExpireRange: Boolean                     = false
 ) extends Report
 
 object CaseReport {
@@ -146,16 +150,18 @@ object CaseReport {
   private val fieldsKey            = "fields"
   private val statusesKey          = "status"
   private val liabilityStatusesKey = "liability_status"
+  private val dueToExpireReportKey = "due_to_expire"
 
   implicit def caseReportQueryStringBindable(
     implicit
     stringBindable: QueryStringBindable[String],
-    rangeBindable: QueryStringBindable[InstantRange]
+    rangeBindable: QueryStringBindable[InstantRange],
+    booleanBindable: QueryStringBindable[Boolean]
   ): QueryStringBindable[CaseReport] = new QueryStringBindable[CaseReport] {
     import uk.gov.hmrc.bindingtariffclassification.model.utils.BinderUtil._
 
     override def bind(key: String, requestParams: Map[String, Seq[String]]): Option[Either[String, CaseReport]] = {
-      val sortBy    = param(sortByKey)(requestParams).flatMap(ReportField.fields.get(_)).getOrElse(ReportField.Reference)
+      val sortBy    = param(sortByKey)(requestParams).flatMap(ReportField.fields.get).getOrElse(ReportField.Reference)
       val sortOrder = param(sortOrderKey)(requestParams).flatMap(bindSortDirection).getOrElse(SortDirection.ASCENDING)
       val dateRange = rangeBindable.bind(dateRangeKey, requestParams).getOrElse(Right(InstantRange.allTime))
       val teams     = params(teamsKey)(requestParams).getOrElse(Set.empty)
@@ -169,12 +175,14 @@ object CaseReport {
         .map(_.map(bindLiabilityStatus).collect { case Some(status) => status })
         .getOrElse(Set.empty)
       val fields = orderedParams(fieldsKey)(requestParams)
-        .map(_.flatMap(ReportField.fields.get(_)))
+        .map(_.flatMap(ReportField.fields.get))
         .flatMap(NonEmptySeq.fromSeq)
+      val dueToExpire = booleanBindable.bind(dueToExpireReportKey, requestParams).getOrElse(Right(false))
 
       fields.map { fields =>
         for {
           range <- dateRange
+          dte   <- dueToExpire
         } yield CaseReport(
           sortBy            = sortBy,
           sortOrder         = sortOrder,
@@ -183,7 +191,8 @@ object CaseReport {
           liabilityStatuses = liabilityStatuses,
           teams             = teams,
           dateRange         = range,
-          fields            = fields
+          fields            = fields,
+          dueToExpireRange  = dte
         )
       }
     }
@@ -197,7 +206,8 @@ object CaseReport {
         stringBindable.unbind(liabilityStatusesKey, value.liabilityStatuses.map(_.toString).mkString(",")),
         stringBindable.unbind(teamsKey, value.teams.mkString(",")),
         rangeBindable.unbind(dateRangeKey, value.dateRange),
-        stringBindable.unbind(fieldsKey, value.fields.map(_.fieldName).mkString_(","))
+        stringBindable.unbind(fieldsKey, value.fields.map(_.fieldName).mkString_(",")),
+        booleanBindable.unbind(dueToExpireReportKey, value.dueToExpireRange)
       ).mkString("&")
   }
 }
@@ -210,7 +220,8 @@ case class QueueReport(
   liabilityStatuses: Set[LiabilityStatus.Value] = Set.empty,
   teams: Set[String]                            = Set.empty,
   assignee: Option[String]                      = Option.empty,
-  dateRange: InstantRange                       = InstantRange.allTime
+  dateRange: InstantRange                       = InstantRange.allTime,
+  dueToExpireRange: Boolean                     = false
 ) extends Report
 
 object QueueReport {

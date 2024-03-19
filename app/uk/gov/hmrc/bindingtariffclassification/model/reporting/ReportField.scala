@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2024 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -76,6 +76,7 @@ object ReportField {
   val GoodsName = StringField("goods_name", "application.goodName")
   val TraderName =
     CoalesceField("trader_name", NonEmptySeq.of("application.traderName", "application.holder.businessName"))
+  val BusinessName    = StringField("business_name", "application.holder.businessName")
   val User            = StringField("assigned_user", "assignee.id")
   val Team            = StringField("assigned_team", "queueId")
   val DateCreated     = DateField("date_created", "createdDate")
@@ -85,6 +86,8 @@ object ReportField {
   val TotalDays       = DaysSinceField("total_days", "createdDate")
   val ReferredDays    = NumberField("referred_days", "referredDaysElapsed")
   val LiabilityStatus = LiabilityStatusField("liability_status", "application.status")
+  val ContactName     = StringField("contact_name", "application.contact.name")
+  val ContactEmail    = StringField("contact_email", "application.contact.email")
 
   val fields: Map[String, ReportField[_]] = List(
     Count,
@@ -96,13 +99,17 @@ object ReportField {
     Chapter,
     GoodsName,
     TraderName,
+    BusinessName,
     User,
     Team,
     DateCreated,
     DateCompleted,
+    DateExpired,
     ElapsedDays,
     TotalDays,
     ReferredDays,
-    LiabilityStatus
+    LiabilityStatus,
+    ContactName,
+    ContactEmail
   ).map(field => field.fieldName -> field).toMap
 }
