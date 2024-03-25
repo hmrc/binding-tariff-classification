@@ -2,7 +2,7 @@ import play.sbt.PlayImport.*
 import sbt.*
 
 object AppDependencies {
-  private lazy val mongoHmrcVersion = "1.3.0"
+  private lazy val mongoHmrcVersion = "1.8.0"
   private lazy val akkaVersion      = "2.6.20"
   private lazy val bootstrapVersion = "7.20.0"
 
@@ -16,7 +16,7 @@ object AppDependencies {
     "com.typesafe.akka"            %% "akka-slf4j"                  % akkaVersion,
     "com.typesafe.akka"            %% "akka-serialization-jackson"  % akkaVersion,
     "com.typesafe.play"            %% "play-json"                   % "2.9.4",
-    "org.typelevel"                %% "cats-core"                   % "2.9.0",
+    "org.typelevel"                %% "cats-core"                   % "2.10.0",
     "com.github.pathikrit"         %% "better-files"                % "3.9.2",
     "org.quartz-scheduler"         % "quartz"                       % "2.3.2",
     "com.fasterxml.jackson.module" %% "jackson-module-scala"        % "2.15.2"
