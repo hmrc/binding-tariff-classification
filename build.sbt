@@ -1,19 +1,22 @@
 import play.sbt.PlayScala
-import uk.gov.hmrc.DefaultBuildSettings.*
+import uk.gov.hmrc.DefaultBuildSettings.addTestReportOption
+import uk.gov.hmrc.DefaultBuildSettings.itSettings
 
 val appName = "binding-tariff-classification"
+
+ThisBuild / majorVersion := 0
+ThisBuild / scalaVersion := "2.13.13"
+
+// To resolve a bug with version 2.x.x of the scoverage plugin - https://github.com/sbt/sbt/issues/6997
+ThisBuild / libraryDependencySchemes += "org.scala-lang.modules" %% "scala-xml" % VersionScheme.Always
 
 lazy val microservice = (project in file("."))
   .enablePlugins(PlayScala, SbtDistributablesPlugin)
   .disablePlugins(JUnitXmlReportPlugin) //Required to prevent https://github.com/scalatest/scalatest/issues/1427
-  .settings(defaultSettings())
-  .settings(majorVersion := 0)
   .settings(
     name := appName,
-    scalaVersion := "2.13.11",
     PlayKeys.playDefaultPort := 9580,
     libraryDependencies ++= AppDependencies(),
-    libraryDependencySchemes ++= Seq("org.scala-lang.modules" %% "scala-xml" % VersionScheme.Always),
     Test / parallelExecution := false,
     Test / fork := true,
     retrieveManaged := true,
@@ -35,28 +38,20 @@ lazy val microservice = (project in file("."))
     ),
     addTestReportOption(Test, "test-reports")
   )
-  .configs(IntegrationTest)
-  .settings(integrationTestSettings())
-  .settings(
-    IntegrationTest / Keys.fork := true,
-    IntegrationTest / unmanagedSourceDirectories := Seq(
-      (IntegrationTest / baseDirectory).value / "test/it",
-      (Test / baseDirectory).value / "test/util"
-    ),
-    addTestReportOption(IntegrationTest, "int-test-reports"),
-    IntegrationTest / parallelExecution := false
-  )
 
-lazy val allPhases   = "tt->test;test->test;test->compile;compile->compile"
-lazy val allItPhases = "tit->it;it->it;it->compile;compile->compile"
+lazy val allPhases = "tt->test;test->test;test->compile;compile->compile"
 
-lazy val TemplateTest   = config("tt") extend Test
-lazy val TemplateItTest = config("tit") extend IntegrationTest
+lazy val TemplateTest = config("tt") extend Test
 
 // Coverage configuration
 coverageMinimumStmtTotal := 95
 coverageFailOnMinimum := true
 coverageExcludedPackages := "<empty>;com.kenshoo.play.metrics.*;prod.*;testOnlyDoNotUseInAppConf.*;app.*;uk.gov.hmrc.BuildInfo"
 
-addCommandAlias("scalafmtAll", "all scalafmtSbt scalafmt Test/scalafmt IntegrationTest/scalafmt")
-addCommandAlias("scalastyleAll", "all scalastyle Test/scalastyle IntegrationTest/scalastyle")
+lazy val it = project
+  .enablePlugins(PlayScala)
+  .dependsOn(microservice % "test->test") // the "test->test" allows reusing test code and test dependencies
+  .settings(itSettings())
+
+addCommandAlias("scalafmtAll", "all scalafmtSbt scalafmt Test/scalafmt it/Test/scalafmt")
+addCommandAlias("scalastyleAll", "all scalastyle Test/scalastyle it/Test/scalastyle")

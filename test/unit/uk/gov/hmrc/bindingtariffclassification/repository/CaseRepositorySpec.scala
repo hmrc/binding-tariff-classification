@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2024 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -1932,7 +1932,7 @@ class CaseRepositorySpec
       withStatus(CaseStatus.OPEN),
       withAssignee(Some(Operator("1"))),
       withCreatedDate(Instant.parse("2020-01-01T09:00:00.00Z")),
-      withDecision("9506999000")
+      withDecision("9506999000", effectiveEndDate = Some(Instant.parse("2027-01-01T09:00:00.00Z")))
     )
     val c2 = aCase(
       withQueue("2"),
@@ -1942,7 +1942,7 @@ class CaseRepositorySpec
       withStatus(CaseStatus.OPEN),
       withAssignee(Some(Operator("1"))),
       withCreatedDate(Instant.parse("2020-01-01T09:00:00.00Z")),
-      withDecision("9507900000")
+      withDecision("9507900000", effectiveEndDate = Some(Instant.parse("2027-01-01T09:00:00.00Z")))
     )
     val c3 = aCase(
       withQueue("2"),
@@ -1952,7 +1952,7 @@ class CaseRepositorySpec
       withStatus(CaseStatus.NEW),
       withAssignee(Some(Operator("1"))),
       withCreatedDate(Instant.parse("2020-12-31T09:00:00.00Z")),
-      withDecision("8518300090")
+      withDecision("8518300090", effectiveEndDate = Some(Instant.parse("2027-01-01T09:00:00.00Z")))
     )
     val c4 = aCase(liabCase1)(
       withQueue("3"),
@@ -1972,7 +1972,7 @@ class CaseRepositorySpec
       withStatus(CaseStatus.REFERRED),
       withAssignee(Some(Operator("2"))),
       withCreatedDate(Instant.parse("2021-01-01T09:00:00.00Z")),
-      withDecision("9507209000")
+      withDecision("9507209000", effectiveEndDate = Some(Instant.parse("2027-01-01T09:00:00.00Z")))
     )
     val c6 = aCase(
       withQueue("4"),
@@ -2018,6 +2018,51 @@ class CaseRepositorySpec
           "reference"    -> ReportField.Reference.withValue(Some("6")),
           "date_created" -> ReportField.DateCreated.withValue(Some(Instant.parse("2021-01-01T09:00:00.00Z"))),
           "elapsed_days" -> ReportField.ElapsedDays.withValue(Some(5))
+        )
+      )
+    }
+
+    "filter by due to expire date" in {
+      val completedCases = List(
+        c1.copy(status = CaseStatus.COMPLETED),
+        c2.copy(status = CaseStatus.COMPLETED),
+        c3.copy(status = CaseStatus.COMPLETED),
+        c4,
+        c5.copy(status = CaseStatus.COMPLETED),
+        c6
+      )
+      await(completedCases.traverse(repository.insert))
+      collectionSize shouldBe 6
+
+      val report = CaseReport(
+        sortBy           = ReportField.Reference,
+        fields           = NonEmptySeq.of(ReportField.Reference, ReportField.DateCreated, ReportField.DateExpired),
+        statuses         = Set(PseudoCaseStatus.COMPLETED),
+        dueToExpireRange = true
+      )
+
+      val paged = await(repository.caseReport(report, Pagination()))
+
+      paged.results shouldBe Seq(
+        Map(
+          "reference"    -> ReportField.Reference.withValue(Some("1")),
+          "date_created" -> ReportField.DateCreated.withValue(Some(Instant.parse("2020-01-01T09:00:00.00Z"))),
+          "date_expired" -> ReportField.DateExpired.withValue(Some(Instant.parse("2027-01-01T09:00:00.00Z")))
+        ),
+        Map(
+          "reference"    -> ReportField.Reference.withValue(Some("2")),
+          "date_created" -> ReportField.DateCreated.withValue(Some(Instant.parse("2020-01-01T09:00:00.00Z"))),
+          "date_expired" -> ReportField.DateExpired.withValue(Some(Instant.parse("2027-01-01T09:00:00.00Z")))
+        ),
+        Map(
+          "reference"    -> ReportField.Reference.withValue(Some("3")),
+          "date_created" -> ReportField.DateCreated.withValue(Some(Instant.parse("2020-12-31T09:00:00.00Z"))),
+          "date_expired" -> ReportField.DateExpired.withValue(Some(Instant.parse("2027-01-01T09:00:00.00Z")))
+        ),
+        Map(
+          "reference"    -> ReportField.Reference.withValue(Some("5")),
+          "date_created" -> ReportField.DateCreated.withValue(Some(Instant.parse("2021-01-01T09:00:00.00Z"))),
+          "date_expired" -> ReportField.DateExpired.withValue(Some(Instant.parse("2027-01-01T09:00:00.00Z")))
         )
       )
     }

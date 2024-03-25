@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2024 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -117,7 +117,8 @@ class ReportSpec extends BaseSpec {
             dateRange = InstantRange(
               Instant.parse("2020-03-21T12:03:15.000Z"),
               Instant.parse("2021-03-21T12:03:15.000Z")
-            )
+            ),
+            dueToExpireRange = true
           )
         ),
         "UTF-8"
@@ -130,7 +131,8 @@ class ReportSpec extends BaseSpec {
           "&team=1,3" +
           "&min_date=2020-03-21T12:03:15Z" +
           "&max_date=2021-03-21T12:03:15Z" +
-          "&fields=reference"
+          "&fields=reference" +
+          "&due_to_expire=true"
       )
 
       URLDecoder.decode(
@@ -149,7 +151,8 @@ class ReportSpec extends BaseSpec {
               ReportField.Status,
               ReportField.ElapsedDays,
               ReportField.TotalDays
-            )
+            ),
+            dueToExpireRange = true
           )
         ),
         "UTF-8"
@@ -162,7 +165,8 @@ class ReportSpec extends BaseSpec {
           "&team=4,5" +
           "&min_date=-1000000000-01-01T00:00:00Z" +
           "&max_date=+1000000000-12-31T23:59:59.999999999Z" +
-          "&fields=reference,source,status,elapsed_days,total_days"
+          "&fields=reference,source,status,elapsed_days,total_days" +
+          "&due_to_expire=true"
       )
     }
   }

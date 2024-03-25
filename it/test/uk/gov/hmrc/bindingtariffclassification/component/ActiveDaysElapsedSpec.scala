@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2024 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -303,8 +303,8 @@ class ActiveDaysElapsedSpec extends BaseFeatureSpec with MockitoSugar {
       .createCaseStatusChangeEvent(caseReference, from = OPEN, to = status)
       .copy(timestamp = toInstant(date))
 
-  private def givenThereIs(c: Case): Unit  = storeCases(c)
-  private def givenThereIs(c: Event): Unit = storeEvents(c)
+  private def givenThereIs(c: Case)  = storeCases(c)
+  private def givenThereIs(c: Event) = storeEvents(c)
 
   private def daysElapsedForCase: String => Long = { reference => getCase(reference).map(_.daysElapsed).getOrElse(0) }
 

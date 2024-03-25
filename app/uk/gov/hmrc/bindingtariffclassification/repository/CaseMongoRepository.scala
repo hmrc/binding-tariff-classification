@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2024 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -265,23 +265,32 @@ class CaseMongoRepository @Inject() (
         )
       }
 
-    val minDateFilter = if (report.dateRange.min != Instant.MIN) {
-      gte(ReportField.DateCreated.underlyingField, report.dateRange.min)
-    } else {
-      empty()
+    val dateFieldFilter = {
+      if (report.dueToExpireRange)
+        ReportField.DateExpired
+      else
+        ReportField.DateCreated
     }
 
-    val maxDateFilter = if (report.dateRange.max != Instant.MAX) {
-      lte(ReportField.DateCreated.underlyingField, report.dateRange.max)
-    } else {
-      empty()
-    }
+    def minDateFilter(dateField: DateField): Bson =
+      if (report.dateRange.min != Instant.MIN) {
+        gte(dateField.underlyingField, report.dateRange.min)
+      } else {
+        empty()
+      }
+
+    def maxDateFilter(dateField: DateField): Bson =
+      if (report.dateRange.max != Instant.MAX) {
+        lte(dateField.underlyingField, report.dateRange.max)
+      } else {
+        empty()
+      }
 
     val dateFilter =
       if (report.dateRange == InstantRange.allTime) {
         empty()
       } else {
-        and(minDateFilter, maxDateFilter)
+        and(minDateFilter(dateFieldFilter), maxDateFilter(dateFieldFilter))
       }
 
     val assigneeFilter = report match {

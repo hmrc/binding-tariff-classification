@@ -19,8 +19,7 @@ object AppDependencies {
     "org.typelevel"                %% "cats-core"                   % "2.9.0",
     "com.github.pathikrit"         %% "better-files"                % "3.9.2",
     "org.quartz-scheduler"         % "quartz"                       % "2.3.2",
-    "com.fasterxml.jackson.module" %% "jackson-module-scala"        % "2.15.2",
-    ws
+    "com.fasterxml.jackson.module" %% "jackson-module-scala"        % "2.15.2"
   )
 
   val test: Seq[ModuleID] = Seq(
@@ -31,7 +30,7 @@ object AppDependencies {
     "com.vladsch.flexmark"   % "flexmark-all"             % "0.64.8",
     "uk.gov.hmrc.mongo"      %% "hmrc-mongo-test-play-28" % mongoHmrcVersion,
     "org.scalaj"             %% "scalaj-http"             % "2.4.2"
-  ).map(_ % "test, it")
+  ).map(_ % Test)
 
   def apply(): Seq[ModuleID] = compile ++ test
 }

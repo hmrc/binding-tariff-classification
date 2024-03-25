@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2024 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -743,7 +743,7 @@ class CaseSpec extends BaseFeatureSpec {
         .asString
 
       result.code shouldEqual OK
-      Json.parse(result.body).as[Paged[Case]].results.map(_.reference) should contain only (c2.reference, c5.reference)
+      Json.parse(result.body).as[Paged[Case]].results.map(_.reference) shouldBe List(c2.reference, c5.reference)
     }
 
     Scenario("Filtering cases by multiple references - comma separated") {
@@ -755,7 +755,7 @@ class CaseSpec extends BaseFeatureSpec {
         .asString
 
       result.code shouldEqual OK
-      Json.parse(result.body).as[Paged[Case]].results.map(_.reference) should contain only (c2.reference, c5.reference)
+      Json.parse(result.body).as[Paged[Case]].results.map(_.reference) shouldBe List(c2.reference, c5.reference)
     }
 
   }
