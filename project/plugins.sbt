@@ -9,7 +9,7 @@ ThisBuild / libraryDependencySchemes ++= Seq(
   "org.scala-lang.modules" %% "scala-xml" % VersionScheme.Always
 )
 
-addSbtPlugin("com.typesafe.play"         % "sbt-plugin"            % "2.8.20")
+addSbtPlugin("com.typesafe.play"         % "sbt-plugin"            % "2.8.21")
 addSbtPlugin("net.virtual-void"          % "sbt-dependency-graph"  % "0.10.0-RC1")
 addSbtPlugin("org.irundaia.sbt"          % "sbt-sassify"           % "1.4.12")
 addSbtPlugin("org.scalastyle"            % "scalastyle-sbt-plugin" % "1.0.0" exclude ("org.scala-lang.modules", "scala-xml_2.12"))
