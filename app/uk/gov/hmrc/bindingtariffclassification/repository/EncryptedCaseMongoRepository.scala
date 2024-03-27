@@ -64,8 +64,27 @@ class EncryptedCaseMongoRepository @Inject() (repository: CaseMongoRepository, c
   override def caseReport(
     report: CaseReport,
     pagination: Pagination
-  ): Future[Paged[Map[String, ReportResultField[_]]]] =
-    repository.caseReport(report, pagination)
+  ): Future[Paged[Map[String, ReportResultField[_]]]] = {
+    val fReport = repository.caseReport(report, pagination)
+
+    val encryptedFieldNames = ReportField.encryptedFields.map(_.fieldName)
+
+    fReport.map { pagedResult =>
+      val result: Seq[Map[String, ReportResultField[_]]] = pagedResult.results.map(casesResult =>
+        casesResult.map {
+          case (fieldName, fieldValue) =>
+            fieldValue match {
+              case _ @StringResultField(_, data) if encryptedFieldNames.contains(fieldName) =>
+                val decryptedField = data.map(crypto.decryptString)
+                (fieldName, StringResultField(fieldName, decryptedField))
+              case _ =>
+                (fieldName, fieldValue)
+            }
+        }
+      )
+      pagedResult.copy(results = result)
+    }
+  }
 
   override def queueReport(
     report: QueueReport,

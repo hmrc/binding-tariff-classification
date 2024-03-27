@@ -256,9 +256,15 @@ class EventRepositorySpec
     "return pages of cases" in {
       await(repository.insert(createExtendedUseStatusChangeEvent("ref")))
       await(repository.insert(createNoteEvent("ref")))
+      await(repository.insert(createSampleReturnChangeEvent("ref")))
+      await(repository.insert(createSampleSendEvent("ref")))
+      await(repository.insert(createExpertAdviceReceivedEvent("ref")))
       await(repository.search(EventSearch(), Pagination(pageSize = 1))).size shouldBe 1
       await(repository.search(EventSearch(), Pagination(page     = 2, pageSize = 1))).size shouldBe 1
-      await(repository.search(EventSearch(), Pagination(page     = 3, pageSize = 1))).size shouldBe 0
+      await(repository.search(EventSearch(), Pagination(page     = 3, pageSize = 1))).size shouldBe 1
+      await(repository.search(EventSearch(), Pagination(page     = 4, pageSize = 1))).size shouldBe 1
+      await(repository.search(EventSearch(), Pagination(page     = 5, pageSize = 1))).size shouldBe 1
+      await(repository.search(EventSearch(), Pagination(page     = 6, pageSize = 1))).size shouldBe 0
     }
 
   }
