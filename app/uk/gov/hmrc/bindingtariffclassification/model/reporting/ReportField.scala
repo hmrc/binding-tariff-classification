@@ -112,4 +112,6 @@ object ReportField {
     ContactName,
     ContactEmail
   ).map(field => field.fieldName -> field).toMap
+
+  val encryptedFields: Seq[ReportField[_]] = Seq(ContactName, ContactEmail)
 }

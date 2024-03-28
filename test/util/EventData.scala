@@ -70,6 +70,25 @@ object EventData {
       details = ExtendedUseStatusChange(from = true, to = false, comment = Some("comment"))
     )
 
+  def createSampleReturnChangeEvent(caseReference: String): Event =
+    createEvent(
+      caseRef = caseReference,
+      details =
+        SampleReturnChange(from = Option(SampleReturn(1)), to = Option(SampleReturn(2)), comment = Some("comment"))
+    )
+
+  def createSampleSendEvent(caseReference: String): Event =
+    createEvent(
+      caseRef = caseReference,
+      details = SampleSendChange(from = Option(SampleSend(1)), to = Option(SampleSend(2)), comment = Some("comment"))
+    )
+
+  def createExpertAdviceReceivedEvent(caseReference: String): Event =
+    createEvent(
+      caseRef = caseReference,
+      details = ExpertAdviceReceived(comment = "comment")
+    )
+
   def createQueueChangeEvent(caseReference: String): Event =
     createEvent(
       caseRef = caseReference,

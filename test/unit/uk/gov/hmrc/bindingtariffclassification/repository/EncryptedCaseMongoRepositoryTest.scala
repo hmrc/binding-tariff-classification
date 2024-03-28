@@ -132,8 +132,10 @@ class EncryptedCaseMongoRepositoryTest extends BaseMongoIndexSpec with BeforeAnd
     }
 
     "Case Report delegate to repository" in {
+      when(crypto.decryptString).thenReturn(_ => "raw field")
+
       val caseReport = CaseReport(
-        fields = NonEmptySeq.one(ReportField.Status),
+        fields = NonEmptySeq.of(ReportField.Status, ReportField.ContactName, ReportField.ContactEmail),
         sortBy = ReportField.Count
       )
       given(underlyingRepo.caseReport(caseReport, pagination)) willReturn successful(
@@ -143,6 +145,12 @@ class EncryptedCaseMongoRepositoryTest extends BaseMongoIndexSpec with BeforeAnd
               "field1" -> NumberResultField(
                 "field",
                 None
+              )
+            ),
+            Map(
+              "contact-name" -> StringResultField(
+                "contact-name",
+                Option("raw field")
               )
             )
           )
