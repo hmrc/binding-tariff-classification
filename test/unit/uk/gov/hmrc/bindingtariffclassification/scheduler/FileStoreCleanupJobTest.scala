@@ -64,7 +64,7 @@ class FileStoreCleanupJobTest extends BaseSpec with BeforeAndAfterEach {
     given(caseService.refreshAttachments()).willReturn(successful(()))
     given(caseService.attachmentExists(any[String])).willReturn(successful(false))
     given(lockRepo.takeLock(any[String], any[String], any[scala.concurrent.duration.Duration]))
-      .willReturn(successful(None))
+      .willReturn(successful(true))
   }
 
   "Scheduled Job" should {

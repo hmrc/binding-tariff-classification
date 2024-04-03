@@ -70,7 +70,7 @@ class ReferredDaysElapsedJobTest extends BaseSpec with BeforeAndAfterEach {
     given(appConfig.clock).willReturn(clock)
     given(appConfig.referredDaysElapsed).willReturn(jobConfig)
     given(lockRepo.takeLock(any[String], any[String], any[scala.concurrent.duration.Duration]))
-      .willReturn(Future.successful(None))
+      .willReturn(Future.successful(true))
   }
 
   "Scheduled Job" should {
