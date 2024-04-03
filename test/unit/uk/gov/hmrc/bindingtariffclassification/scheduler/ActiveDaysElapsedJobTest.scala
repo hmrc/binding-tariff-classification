@@ -68,7 +68,7 @@ class ActiveDaysElapsedJobTest extends BaseSpec with BeforeAndAfterEach {
   override protected def beforeEach(): Unit = {
     given(appConfig.clock).willReturn(clock)
     given(appConfig.activeDaysElapsed).willReturn(jobConfig)
-    given(lockRepo.takeLock(any[String], any[String], any[Duration])).willReturn(Future.successful(None))
+    given(lockRepo.takeLock(any[String], any[String], any[Duration])).willReturn(Future.successful(true))
   }
 
   "Scheduled Job" should {

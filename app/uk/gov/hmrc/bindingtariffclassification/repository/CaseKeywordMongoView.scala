@@ -43,7 +43,7 @@ class CaseKeywordMongoView @Inject() (mongoComponent: MongoComponent)(implicit e
   private[repository] def createView(viewName: String, viewOn: String): Future[_] =
     mongoComponent.database.createView(viewName, viewOn, pipeline).toFuture()
 
-  private[repository] def dropView(viewName: String): Future[Unit] =
+  private[repository] def dropView(viewName: String): Future[Void] =
     getView(viewName)
       .drop()
       .toFuture()
