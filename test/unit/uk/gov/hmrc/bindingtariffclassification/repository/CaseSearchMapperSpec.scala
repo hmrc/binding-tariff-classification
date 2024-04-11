@@ -18,6 +18,7 @@ package uk.gov.hmrc.bindingtariffclassification.repository
 
 import org.mockito.BDDMockito._
 import org.mongodb.scala.model.Filters
+import org.mongodb.scala.model.Updates.set
 import play.api.libs.json._
 import uk.gov.hmrc.bindingtariffclassification.config.AppConfig
 import uk.gov.hmrc.bindingtariffclassification.model._
@@ -395,5 +396,12 @@ class CaseSearchMapperSpec extends BaseMongoIndexSpec {
 
     }
 
+    "convert to Json from JsValue" in {
+
+      val fieldName           = "employee"
+      val fieldValue: JsValue = Json.parse("""{"name" : "Thor"}""")
+
+      jsonMapper.updateField(fieldName, fieldValue) shouldBe set(fieldName, fieldValue)
+    }
   }
 }

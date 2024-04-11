@@ -17,7 +17,6 @@
 package uk.gov.hmrc.bindingtariffclassification.metrics
 
 import com.codahale.metrics.Timer
-import com.kenshoo.play.metrics.Metrics
 import org.mockito.ArgumentMatchers._
 import org.mockito.Mockito
 import org.mockito.Mockito._
@@ -27,9 +26,9 @@ import org.scalatest.wordspec.AsyncWordSpecLike
 import org.scalatest.{BeforeAndAfterAll, OptionValues}
 import org.scalatestplus.mockito.MockitoSugar
 import play.api.mvc.{AnyContentAsEmpty, Results}
-import play.api.test
 import play.api.test.{FakeRequest, Helpers}
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
+import uk.gov.hmrc.play.bootstrap.metrics.Metrics
 
 import scala.concurrent.Future
 

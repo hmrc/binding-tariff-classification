@@ -17,7 +17,6 @@
 package uk.gov.hmrc.bindingtariffclassification.component
 
 import java.time._
-import com.kenshoo.play.metrics.Metrics
 import org.scalatestplus.mockito.MockitoSugar
 import play.api.Application
 import play.api.inject.bind
@@ -27,6 +26,7 @@ import uk.gov.hmrc.bindingtariffclassification.config.AppConfig
 import uk.gov.hmrc.bindingtariffclassification.model.CaseStatus._
 import uk.gov.hmrc.bindingtariffclassification.model.{Case, Event}
 import uk.gov.hmrc.bindingtariffclassification.scheduler.ActiveDaysElapsedJob
+import uk.gov.hmrc.play.bootstrap.metrics.Metrics
 import util.CaseData._
 import util.{EventData, TestMetrics}
 
@@ -39,7 +39,6 @@ class ActiveDaysElapsedSpec extends BaseFeatureSpec with MockitoSugar {
 
   override lazy val app: Application = new GuiceApplicationBuilder()
     .bindings(bind[AppConfig].to[AppConfigWithAFixedDate])
-    .disable[com.kenshoo.play.metrics.PlayModule]
     .configure("metrics.enabled" -> false)
     .configure("mongodb.uri" -> "mongodb://localhost:27017/test-ClassificationMongoRepositoryTest")
     .overrides(bind[Metrics].toInstance(new TestMetrics))

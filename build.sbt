@@ -7,19 +7,15 @@ val appName = "binding-tariff-classification"
 ThisBuild / majorVersion := 0
 ThisBuild / scalaVersion := "2.13.13"
 
-// To resolve a bug with version 2.x.x of the scoverage plugin - https://github.com/sbt/sbt/issues/6997
-ThisBuild / libraryDependencySchemes += "org.scala-lang.modules" %% "scala-xml" % VersionScheme.Always
-
 lazy val microservice = (project in file("."))
   .enablePlugins(PlayScala, SbtDistributablesPlugin)
   .disablePlugins(JUnitXmlReportPlugin) //Required to prevent https://github.com/scalatest/scalatest/issues/1427
+  .settings(CodeCoverageSettings.settings)
   .settings(
     name := appName,
     PlayKeys.playDefaultPort := 9580,
     libraryDependencies ++= AppDependencies(),
     Test / parallelExecution := false,
-    Test / fork := true,
-    retrieveManaged := true,
     scalacOptions += "-Wconf:src=routes/.*:s",
     scalacOptions ~= { opts =>
       opts.filterNot(
@@ -42,11 +38,6 @@ lazy val microservice = (project in file("."))
 lazy val allPhases = "tt->test;test->test;test->compile;compile->compile"
 
 lazy val TemplateTest = config("tt") extend Test
-
-// Coverage configuration
-coverageMinimumStmtTotal := 95
-coverageFailOnMinimum := true
-coverageExcludedPackages := "<empty>;com.kenshoo.play.metrics.*;prod.*;testOnlyDoNotUseInAppConf.*;app.*;uk.gov.hmrc.BuildInfo"
 
 lazy val it = project
   .enablePlugins(PlayScala)

@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.bindingtariffclassification
 
-import com.kenshoo.play.metrics.Metrics
 import org.scalatest.BeforeAndAfterEach
 import play.api.Application
 import play.api.inject.bind
@@ -26,6 +25,7 @@ import uk.gov.hmrc.bindingtariffclassification.base.BaseSpec
 import uk.gov.hmrc.bindingtariffclassification.migrations.{AddKeywordsMigrationJob, AmendDateOfExtractMigrationJob, MigrationJobs}
 import uk.gov.hmrc.bindingtariffclassification.repository.{CaseMongoRepository, CaseRepository, EncryptedCaseMongoRepository}
 import uk.gov.hmrc.bindingtariffclassification.scheduler.{ActiveDaysElapsedJob, FileStoreCleanupJob, ReferredDaysElapsedJob, ScheduledJobs}
+import uk.gov.hmrc.play.bootstrap.metrics.Metrics
 import util.TestMetrics
 
 class ModuleTest extends BaseSpec with BeforeAndAfterEach with PlayRunners {

@@ -255,6 +255,9 @@ class EventRepositorySpec
 
     "return pages of cases" in {
       await(repository.insert(createExtendedUseStatusChangeEvent("ref")))
+      await(repository.insert(createAppealAddedEvent("ref")))
+      await(repository.insert(createAppealStatusChangeEvent("ref")))
+      await(repository.insert(createCaseRejectedEvent("ref")))
       await(repository.insert(createNoteEvent("ref")))
       await(repository.insert(createSampleReturnChangeEvent("ref")))
       await(repository.insert(createSampleSendEvent("ref")))
@@ -264,7 +267,10 @@ class EventRepositorySpec
       await(repository.search(EventSearch(), Pagination(page     = 3, pageSize = 1))).size shouldBe 1
       await(repository.search(EventSearch(), Pagination(page     = 4, pageSize = 1))).size shouldBe 1
       await(repository.search(EventSearch(), Pagination(page     = 5, pageSize = 1))).size shouldBe 1
-      await(repository.search(EventSearch(), Pagination(page     = 6, pageSize = 1))).size shouldBe 0
+      await(repository.search(EventSearch(), Pagination(page     = 6, pageSize = 1))).size shouldBe 1
+      await(repository.search(EventSearch(), Pagination(page     = 7, pageSize = 1))).size shouldBe 1
+      await(repository.search(EventSearch(), Pagination(page     = 8, pageSize = 1))).size shouldBe 1
+      await(repository.search(EventSearch(), Pagination(page     = 9, pageSize = 1))).size shouldBe 0
     }
 
   }
@@ -300,7 +306,7 @@ class EventRepositorySpec
       )
 
       val repo = createMongoRepo
-      await(repo.ensureIndexes)
+      await(repo.ensureIndexes())
 
       eventually(timeout(5.seconds), interval(100.milliseconds)) {
         assertIndexes(expectedIndexes.sorted, getIndexes(repo.collection).sorted)

@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.bindingtariffclassification.repository
 
-import akka.stream.Materializer
+import org.apache.pekko.stream.Materializer
 import org.mongodb.scala.bson.conversions.Bson
 import org.mongodb.scala.model.Aggregates.{`match`, replaceRoot, unwind}
 import org.mongodb.scala.model.Filters.notEqual

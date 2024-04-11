@@ -16,8 +16,7 @@
 
 package uk.gov.hmrc.bindingtariffclassification.base
 
-import akka.stream.Materializer
-import com.kenshoo.play.metrics.Metrics
+import org.apache.pekko.stream.Materializer
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
@@ -30,6 +29,7 @@ import play.api.{Application, Configuration}
 import uk.gov.hmrc.bindingtariffclassification.connector.ResourceFiles
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
+import uk.gov.hmrc.play.bootstrap.metrics.Metrics
 import util.TestMetrics
 
 import scala.concurrent.duration.{Duration, DurationInt, FiniteDuration}

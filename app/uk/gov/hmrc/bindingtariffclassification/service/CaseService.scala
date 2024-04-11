@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.bindingtariffclassification.service
 
-import akka.stream.Materializer
+import org.apache.pekko.stream.Materializer
 import uk.gov.hmrc.bindingtariffclassification.config.AppConfig
 import uk.gov.hmrc.bindingtariffclassification.model._
 import uk.gov.hmrc.bindingtariffclassification.repository.{CaseAttachmentAggregation, CaseRepository, MigrationLockRepository, SequenceRepository}

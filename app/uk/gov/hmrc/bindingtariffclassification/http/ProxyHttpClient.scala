@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.bindingtariffclassification.http
 
-import akka.actor.ActorSystem
+import org.apache.pekko.actor.ActorSystem
 import javax.inject.{Inject, Singleton}
 import play.api.Configuration
 import play.api.libs.ws.{WSClient, WSProxyServer}

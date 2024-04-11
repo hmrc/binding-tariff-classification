@@ -18,10 +18,24 @@ package uk.gov.hmrc.bindingtariffclassification.model
 
 import play.api.libs.json._
 
+import scala.util.Try
+
 object EnumJson {
 
   implicit def format[E <: Enumeration](enumeration: E): Format[E#Value] =
-    Format(Reads.enumNameReads(enumeration), Writes.enumNameWrites)
+    Format(enumReads(enumeration), Writes.enumNameWrites)
+
+  private def enumReads[E <: Enumeration](`enum`: E): Reads[E#Value] = {
+    case JsString(s) =>
+      Try(JsSuccess(enum.withName(s))).recover {
+        case _: NoSuchElementException =>
+          JsError(
+            s"Expected an enumeration of type: '${enum.getClass.getSimpleName}', but it does not contain the name: '$s'"
+          )
+      }.get
+
+    case _ => JsError("String value is expected")
+  }
 
   def readsMap[E, B](implicit erds: Reads[E], brds: Reads[B]): JsValue => JsResult[Map[E, B]] = (js: JsValue) => {
     val maprds: Reads[Map[String, B]] = Reads.mapReads[B]

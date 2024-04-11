@@ -114,7 +114,7 @@ class MigrationLockRepositorySpec
       )
 
       val repo = newMongoRepo
-      await(repo.ensureIndexes)
+      await(repo.ensureIndexes())
 
       import scala.concurrent.duration._
 

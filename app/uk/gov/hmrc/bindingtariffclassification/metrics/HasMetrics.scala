@@ -17,9 +17,10 @@
 package uk.gov.hmrc.bindingtariffclassification.metrics
 
 import com.codahale.metrics.{MetricRegistry, Timer}
-import com.kenshoo.play.metrics.Metrics
 import java.util.concurrent.atomic.AtomicBoolean
 import play.api.mvc.{Action, BaseController, Result}
+import uk.gov.hmrc.play.bootstrap.metrics.Metrics
+
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.control.NonFatal
 

@@ -18,7 +18,7 @@ package uk.gov.hmrc.bindingtariffclassification.connector
 
 import java.time.LocalDate
 
-import akka.actor.ActorSystem
+import org.apache.pekko.actor.ActorSystem
 import com.github.tomakehurst.wiremock.client.WireMock.{aResponse, get}
 import org.mockito.BDDMockito.given
 import org.scalatest.BeforeAndAfterAll

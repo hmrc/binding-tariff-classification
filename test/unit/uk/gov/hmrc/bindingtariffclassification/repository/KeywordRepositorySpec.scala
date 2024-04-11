@@ -48,7 +48,7 @@ class KeywordRepositorySpec
   override def beforeEach(): Unit = {
     super.beforeEach()
     await(repository.collection.deleteMany(Filters.empty()).toFuture())
-    await(repository.ensureIndexes)
+    await(repository.ensureIndexes())
     collectionSize shouldBe 0
   }
 

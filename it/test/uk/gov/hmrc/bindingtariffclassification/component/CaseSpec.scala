@@ -16,22 +16,29 @@
 
 package uk.gov.hmrc.bindingtariffclassification.component
 
+import org.apache.pekko.stream.Materializer
+
 import java.time.temporal.ChronoUnit
 import java.time.{Clock, Instant}
 import play.api.http.ContentTypes.JSON
 import play.api.http.HeaderNames.CONTENT_TYPE
-import play.api.http.HttpVerbs
 import play.api.http.Status._
 import play.api.libs.json.Json
-import scalaj.http.{Http, HttpResponse}
+import play.api.libs.ws.ahc.StandaloneAhcWSClient
 import uk.gov.hmrc.bindingtariffclassification.model.RESTFormatters._
 import uk.gov.hmrc.bindingtariffclassification.model._
 import util.CaseData._
 import util.Matchers.roughlyBe
 
+import scala.concurrent.Await
+import scala.concurrent.duration.Duration
+
 class CaseSpec extends BaseFeatureSpec {
 
   protected val serviceUrl = s"http://localhost:$port"
+
+  implicit val mat: Materializer        = app.materializer
+  val httpClient: StandaloneAhcWSClient = StandaloneAhcWSClient()
 
   private val clock = Clock.systemUTC()
   private val q1    = "queue1"
@@ -143,13 +150,14 @@ class CaseSpec extends BaseFeatureSpec {
       storeCases(c1, c2)
 
       When("I delete all documents")
-      val deleteResult = Http(s"$serviceUrl/cases")
-        .header(apiTokenKey, appConfig.authorization)
-        .method(HttpVerbs.DELETE)
-        .asString
+      val responseFuture = httpClient
+        .url(s"$serviceUrl/cases")
+        .withHttpHeaders(apiTokenKey -> appConfig.authorization)
+        .delete()
+      val deleteResult = Await.result(responseFuture, Duration(1000L, "ms"))
 
       Then("The response code should be 204")
-      deleteResult.code shouldEqual NO_CONTENT
+      deleteResult.status.intValue() shouldEqual NO_CONTENT
 
       And("The response body is empty")
       deleteResult.body shouldBe ""
@@ -165,14 +173,14 @@ class CaseSpec extends BaseFeatureSpec {
     Scenario("Create a new case") {
 
       When("I create a new case")
-      val result: HttpResponse[String] = Http(s"$serviceUrl/cases")
-        .header(apiTokenKey, appConfig.authorization)
-        .header(CONTENT_TYPE, JSON)
-        .postData(c0Json.toString())
-        .asString
+      val responseFuture = httpClient
+        .url(s"$serviceUrl/cases")
+        .withHttpHeaders(apiTokenKey -> appConfig.authorization, CONTENT_TYPE -> JSON)
+        .post(c0Json.toString())
+      val result = Await.result(responseFuture, Duration(1000L, "ms"))
 
       Then("The response code should be created")
-      result.code shouldEqual CREATED
+      result.status.intValue() shouldEqual CREATED
 
       And("The case is returned in the JSON response")
       val responseCase = Json.parse(result.body).as[Case]
@@ -182,14 +190,14 @@ class CaseSpec extends BaseFeatureSpec {
 
     Scenario("Extra fields are ignored when creating a case") {
       When("I create a new case with extra fields")
-      val result: HttpResponse[String] = Http(s"$serviceUrl/cases")
-        .header(apiTokenKey, appConfig.authorization)
-        .header(CONTENT_TYPE, JSON)
-        .postData(c3Json.toString())
-        .asString
+      val responseFuture = httpClient
+        .url(s"$serviceUrl/cases")
+        .withHttpHeaders(apiTokenKey -> appConfig.authorization, CONTENT_TYPE -> JSON)
+        .post(c3Json.toString())
+      val result = Await.result(responseFuture, Duration(1000L, "ms"))
 
       Then("The response code should be created")
-      result.code shouldEqual CREATED
+      result.status.intValue() shouldEqual CREATED
 
       And("The case is returned in the JSON response")
       val responseCase = Json.parse(result.body).as[Case]
@@ -204,14 +212,14 @@ class CaseSpec extends BaseFeatureSpec {
     Scenario("Create a new case with all fields") {
 
       When("I create a new case")
-      val result: HttpResponse[String] = Http(s"$serviceUrl/cases")
-        .header(apiTokenKey, appConfig.authorization)
-        .header(CONTENT_TYPE, JSON)
-        .postData(c4Json.toString())
-        .asString
+      val responseFuture = httpClient
+        .url(s"$serviceUrl/cases")
+        .withHttpHeaders(apiTokenKey -> appConfig.authorization, CONTENT_TYPE -> JSON)
+        .post(c4Json.toString())
+      val result = Await.result(responseFuture, Duration(1000L, "ms"))
 
       Then("The response code should be created")
-      result.code shouldEqual CREATED
+      result.status.intValue() shouldEqual CREATED
 
       And("The case is returned in the JSON response")
       val responseCase = Json.parse(result.body).as[Case]
@@ -222,14 +230,14 @@ class CaseSpec extends BaseFeatureSpec {
     Scenario("Create a new liability case with new fields DIT-1962") {
 
       When("I create a new liability case")
-      val result: HttpResponse[String] = Http(s"$serviceUrl/cases")
-        .header(apiTokenKey, appConfig.authorization)
-        .header(CONTENT_TYPE, JSON)
-        .postData(c2CreateWithExtraFieldsJson.toString())
-        .asString
+      val responseFuture = httpClient
+        .url(s"$serviceUrl/cases")
+        .withHttpHeaders(apiTokenKey -> appConfig.authorization, CONTENT_TYPE -> JSON)
+        .post(c2CreateWithExtraFieldsJson.toString())
+      val result = Await.result(responseFuture, Duration(1000L, "ms"))
 
       Then("The response code should be created")
-      result.code shouldEqual CREATED
+      result.status.intValue() shouldEqual CREATED
 
       And("The case is returned in the JSON response")
       val responseCase = Json.parse(result.body).as[Case]
@@ -254,14 +262,14 @@ class CaseSpec extends BaseFeatureSpec {
     Scenario("Create a new Correspondence case") {
 
       When("I create a new Correspondence case")
-      val result: HttpResponse[String] = Http(s"$serviceUrl/cases")
-        .header(apiTokenKey, appConfig.authorization)
-        .header(CONTENT_TYPE, JSON)
-        .postData(correspondenceCaseJson.toString())
-        .asString
+      val responseFuture = httpClient
+        .url(s"$serviceUrl/cases")
+        .withHttpHeaders(apiTokenKey -> appConfig.authorization, CONTENT_TYPE -> JSON)
+        .post(correspondenceCaseJson.toString())
+      val result = Await.result(responseFuture, Duration(1000L, "ms"))
 
       Then("The response code should be created")
-      result.code shouldEqual CREATED
+      result.status.intValue() shouldEqual CREATED
 
       And("The case is returned in the JSON response")
       val responseCase = Json.parse(result.body).as[Case]
@@ -288,14 +296,14 @@ class CaseSpec extends BaseFeatureSpec {
     Scenario("Create a new Misc case") {
 
       When("I create a new Misc case")
-      val result: HttpResponse[String] = Http(s"$serviceUrl/cases")
-        .header(apiTokenKey, appConfig.authorization)
-        .header(CONTENT_TYPE, JSON)
-        .postData(miscCaseJson.toString())
-        .asString
+      val responseFuture = httpClient
+        .url(s"$serviceUrl/cases")
+        .withHttpHeaders(apiTokenKey -> appConfig.authorization, CONTENT_TYPE -> JSON)
+        .post(miscCaseJson.toString())
+      val result = Await.result(responseFuture, Duration(1000L, "ms"))
 
       Then("The response code should be created")
-      result.code shouldEqual CREATED
+      result.status.intValue() shouldEqual CREATED
 
       And("The case is returned in the JSON response")
       val responseCase = Json.parse(result.body).as[Case]
@@ -315,14 +323,14 @@ class CaseSpec extends BaseFeatureSpec {
     Scenario("Update an non-existing case") {
 
       When("I update a non-existing case")
-      val result = Http(s"$serviceUrl/cases/${c1.reference}")
-        .header(apiTokenKey, appConfig.authorization)
-        .header(CONTENT_TYPE, JSON)
+      val responseFuture = httpClient
+        .url(s"$serviceUrl/cases/${c1.reference}")
+        .withHttpHeaders(apiTokenKey -> appConfig.authorization, CONTENT_TYPE -> JSON)
         .put(c1Json.toString())
-        .asString
+      val result = Await.result(responseFuture, Duration(1000L, "ms"))
 
       Then("The response code should be NOT FOUND")
-      result.code shouldEqual NOT_FOUND
+      result.status.intValue() shouldEqual NOT_FOUND
     }
 
     Scenario("Update an existing case") {
@@ -331,14 +339,14 @@ class CaseSpec extends BaseFeatureSpec {
       storeCases(c1)
 
       When("I update an existing case")
-      val result = Http(s"$serviceUrl/cases/${c1.reference}")
-        .header(apiTokenKey, appConfig.authorization)
-        .header(CONTENT_TYPE, JSON)
+      val responseFuture = httpClient
+        .url(s"$serviceUrl/cases/${c1.reference}")
+        .withHttpHeaders(apiTokenKey -> appConfig.authorization, CONTENT_TYPE -> JSON)
         .put(c1UpdatedJson.toString())
-        .asString
+      val result = Await.result(responseFuture, Duration(1000L, "ms"))
 
       Then("The response code should be OK")
-      result.code shouldEqual OK
+      result.status.intValue shouldEqual OK
 
       And("The case is returned in the JSON response")
       Json.parse(result.body) shouldBe c1UpdatedJson
@@ -350,14 +358,14 @@ class CaseSpec extends BaseFeatureSpec {
       storeCases(c2)
 
       When("I update an existing case")
-      val result = Http(s"$serviceUrl/cases/${c2.reference}")
-        .header(apiTokenKey, appConfig.authorization)
-        .header(CONTENT_TYPE, JSON)
+      val responseFuture = httpClient
+        .url(s"$serviceUrl/cases/${c2.reference}")
+        .withHttpHeaders(apiTokenKey -> appConfig.authorization, CONTENT_TYPE -> JSON)
         .put(c2WithExtraFieldsJson.toString())
-        .asString
+      val result = Await.result(responseFuture, Duration(1000L, "ms"))
 
       Then("Response should be OK")
-      result.code shouldEqual OK
+      result.status.intValue shouldEqual OK
 
       And("The case is returned in the JSON response")
       Json.parse(result.body) shouldBe c2WithExtraFieldsJson
@@ -372,12 +380,14 @@ class CaseSpec extends BaseFeatureSpec {
       storeCases(c1)
 
       When("I get a case")
-      val result = Http(s"$serviceUrl/cases/${c1.reference}")
-        .header(apiTokenKey, appConfig.authorization)
-        .asString
+      val responseFuture = httpClient
+        .url(s"$serviceUrl/cases/${c1.reference}")
+        .withHttpHeaders(apiTokenKey -> appConfig.authorization)
+        .get()
+      val result = Await.result(responseFuture, Duration(1000L, "ms"))
 
       Then("The response code should be OK")
-      result.code shouldEqual OK
+      result.status.intValue shouldEqual OK
 
       And("The case is returned in the JSON response")
       Json.parse(result.body) shouldBe c1Json
@@ -386,12 +396,14 @@ class CaseSpec extends BaseFeatureSpec {
     Scenario("Get a non-existing case") {
 
       When("I get a case")
-      val result = Http(s"$serviceUrl/cases/${c1.reference}")
-        .header(apiTokenKey, appConfig.authorization)
-        .asString
+      val responseFuture = httpClient
+        .url(s"$serviceUrl/cases/${c1.reference}")
+        .withHttpHeaders(apiTokenKey -> appConfig.authorization)
+        .get()
+      val result = Await.result(responseFuture, Duration(1000L, "ms"))
 
       Then("The response code should be NOT FOUND")
-      result.code shouldEqual NOT_FOUND
+      result.status.intValue shouldEqual NOT_FOUND
     }
 
   }
@@ -404,12 +416,14 @@ class CaseSpec extends BaseFeatureSpec {
       storeCases(c1, c2)
 
       When("I get all cases")
-      val result = Http(s"$serviceUrl/cases")
-        .header(apiTokenKey, appConfig.authorization)
-        .asString
+      val responseFuture = httpClient
+        .url(s"$serviceUrl/cases")
+        .withHttpHeaders(apiTokenKey -> appConfig.authorization)
+        .get()
+      val result = Await.result(responseFuture, Duration(1000L, "ms"))
 
       Then("The response code should be OK")
-      result.code shouldEqual OK
+      result.status.intValue shouldEqual OK
 
       And("The cases are returned in the JSON response")
       Json.parse(result.body) shouldBe Json.toJson(Paged(Seq(c1, c2)))
@@ -420,12 +434,14 @@ class CaseSpec extends BaseFeatureSpec {
       Given("There are no cases in the database")
 
       When("I get all cases")
-      val result = Http(s"$serviceUrl/cases")
-        .header(apiTokenKey, appConfig.authorization)
-        .asString
+      val responseFuture = httpClient
+        .url(s"$serviceUrl/cases")
+        .withHttpHeaders(apiTokenKey -> appConfig.authorization)
+        .get()
+      val result = Await.result(responseFuture, Duration(1000L, "ms"))
 
       Then("The response code should be OK")
-      result.code shouldEqual OK
+      result.status.intValue shouldEqual OK
 
       And("No cases are returned in the JSON response")
       Json.parse(result.body) shouldBe Json.toJson(Paged.empty[Case])
@@ -441,12 +457,14 @@ class CaseSpec extends BaseFeatureSpec {
       storeCases(c1, c2)
 
       When("I get cases by queue id")
-      val result = Http(s"$serviceUrl/cases?queue_id=none")
-        .header(apiTokenKey, appConfig.authorization)
-        .asString
+      val responseFuture = httpClient
+        .url(s"$serviceUrl/cases?queue_id=none")
+        .withHttpHeaders(apiTokenKey -> appConfig.authorization)
+        .get()
+      val result = Await.result(responseFuture, Duration(1000L, "ms"))
 
       Then("The response code should be OK")
-      result.code shouldEqual OK
+      result.status.intValue shouldEqual OK
 
       And("The expected cases are returned in the JSON response")
       Json.parse(result.body) shouldBe Json.toJson(Paged(Seq(c2)))
@@ -458,12 +476,14 @@ class CaseSpec extends BaseFeatureSpec {
       storeCases(c1, c2)
 
       When("I get cases by queue id")
-      val result = Http(s"$serviceUrl/cases?queue_id=some")
-        .header(apiTokenKey, appConfig.authorization)
-        .asString
+      val responseFuture = httpClient
+        .url(s"$serviceUrl/cases?queue_id=some")
+        .withHttpHeaders(apiTokenKey -> appConfig.authorization)
+        .get()
+      val result = Await.result(responseFuture, Duration(1000L, "ms"))
 
       Then("The response code should be OK")
-      result.code shouldEqual OK
+      result.status.intValue shouldEqual OK
 
       And("The expected cases are returned in the JSON response")
       Json.parse(result.body) shouldBe Json.toJson(Paged(Seq(c1)))
@@ -475,12 +495,14 @@ class CaseSpec extends BaseFeatureSpec {
       storeCases(c1, c2)
 
       When("I get cases by queue id")
-      val result = Http(s"$serviceUrl/cases?queue_id=$q1")
-        .header(apiTokenKey, appConfig.authorization)
-        .asString
+      val responseFuture = httpClient
+        .url(s"$serviceUrl/cases?queue_id=$q1")
+        .withHttpHeaders(apiTokenKey -> appConfig.authorization)
+        .get()
+      val result = Await.result(responseFuture, Duration(1000L, "ms"))
 
       Then("The response code should be OK")
-      result.code shouldEqual OK
+      result.status.intValue shouldEqual OK
 
       And("The expected cases are returned in the JSON response")
       Json.parse(result.body) shouldBe Json.toJson(Paged(Seq(c1)))
@@ -492,12 +514,14 @@ class CaseSpec extends BaseFeatureSpec {
       storeCases(c1, c2)
 
       When("I get cases by queue id")
-      val result = Http(s"$serviceUrl/cases?queue_id=wrong")
-        .header(apiTokenKey, appConfig.authorization)
-        .asString
+      val responseFuture = httpClient
+        .url(s"$serviceUrl/cases?queue_id=wrong")
+        .withHttpHeaders(apiTokenKey -> appConfig.authorization)
+        .get()
+      val result = Await.result(responseFuture, Duration(1000L, "ms"))
 
       Then("The response code should be OK")
-      result.code shouldEqual OK
+      result.status.intValue shouldEqual OK
 
       And("No cases are returned in the JSON response")
       Json.parse(result.body) shouldBe Json.toJson(Paged.empty[Case])
@@ -513,12 +537,14 @@ class CaseSpec extends BaseFeatureSpec {
       storeCases(c1, c2)
 
       When("I get cases by assignee id")
-      val result = Http(s"$serviceUrl/cases?assignee_id=none")
-        .header(apiTokenKey, appConfig.authorization)
-        .asString
+      val responseFuture = httpClient
+        .url(s"$serviceUrl/cases?assignee_id=none")
+        .withHttpHeaders(apiTokenKey -> appConfig.authorization)
+        .get()
+      val result = Await.result(responseFuture, Duration(1000L, "ms"))
 
       Then("The response code should be OK")
-      result.code shouldEqual OK
+      result.status.intValue shouldEqual OK
 
       And("The expected cases are returned in the JSON response")
       Json.parse(result.body) shouldBe Json.toJson(Paged(Seq(c2)))
@@ -530,12 +556,14 @@ class CaseSpec extends BaseFeatureSpec {
       storeCases(c1, c2)
 
       When("I get cases by assignee id")
-      val result = Http(s"$serviceUrl/cases?assignee_id=some")
-        .header(apiTokenKey, appConfig.authorization)
-        .asString
+      val responseFuture = httpClient
+        .url(s"$serviceUrl/cases?assignee_id=some")
+        .withHttpHeaders(apiTokenKey -> appConfig.authorization)
+        .get()
+      val result = Await.result(responseFuture, Duration(1000L, "ms"))
 
       Then("The response code should be OK")
-      result.code shouldEqual OK
+      result.status.intValue shouldEqual OK
 
       And("The expected cases are returned in the JSON response")
       Json.parse(result.body) shouldBe Json.toJson(Paged(Seq(c1)))
@@ -547,12 +575,14 @@ class CaseSpec extends BaseFeatureSpec {
       storeCases(c1, c2)
 
       When("I get cases by assignee id")
-      val result = Http(s"$serviceUrl/cases?assignee_id=${u1.id}")
-        .header(apiTokenKey, appConfig.authorization)
-        .asString
+      val responseFuture = httpClient
+        .url(s"$serviceUrl/cases?assignee_id=${u1.id}")
+        .withHttpHeaders(apiTokenKey -> appConfig.authorization)
+        .get()
+      val result = Await.result(responseFuture, Duration(1000L, "ms"))
 
       Then("The response code should be OK")
-      result.code shouldEqual OK
+      result.status.intValue shouldEqual OK
 
       And("The expected cases are returned in the JSON response")
       Json.parse(result.body) shouldBe Json.toJson(Paged(Seq(c1)))
@@ -564,12 +594,14 @@ class CaseSpec extends BaseFeatureSpec {
       storeCases(c1, c2)
 
       When("I get cases by assignee id")
-      val result = Http(s"$serviceUrl/cases?assignee_id=wrong")
-        .header(apiTokenKey, appConfig.authorization)
-        .asString
+      val responseFuture = httpClient
+        .url(s"$serviceUrl/cases?assignee_id=wrong")
+        .withHttpHeaders(apiTokenKey -> appConfig.authorization)
+        .get()
+      val result = Await.result(responseFuture, Duration(1000L, "ms"))
 
       Then("The response code should be OK")
-      result.code shouldEqual OK
+      result.status.intValue shouldEqual OK
 
       And("No cases are returned in the JSON response")
       Json.parse(result.body) shouldBe Json.toJson(Paged.empty[Case])
@@ -585,12 +617,14 @@ class CaseSpec extends BaseFeatureSpec {
       storeCases(c1, c2)
 
       When("I get cases by assignee id and queue id")
-      val result = Http(s"$serviceUrl/cases?assignee_id=none&queue_id=none")
-        .header(apiTokenKey, appConfig.authorization)
-        .asString
+      val responseFuture = httpClient
+        .url(s"$serviceUrl/cases?assignee_id=none&queue_id=none")
+        .withHttpHeaders(apiTokenKey -> appConfig.authorization)
+        .get()
+      val result = Await.result(responseFuture, Duration(1000L, "ms"))
 
       Then("The response code should be OK")
-      result.code shouldEqual OK
+      result.status.intValue shouldEqual OK
 
       And("The expected cases are returned in the JSON response")
       Json.parse(result.body) shouldBe Json.toJson(Paged(Seq(c2)))
@@ -602,12 +636,14 @@ class CaseSpec extends BaseFeatureSpec {
       storeCases(c1, c2)
 
       When("I get cases by assignee id and queue id")
-      val result = Http(s"$serviceUrl/cases?assignee_id=${u1.id}&queue_id=$q1")
-        .header(apiTokenKey, appConfig.authorization)
-        .asString
+      val responseFuture = httpClient
+        .url(s"$serviceUrl/cases?assignee_id=${u1.id}&queue_id=$q1")
+        .withHttpHeaders(apiTokenKey -> appConfig.authorization)
+        .get()
+      val result = Await.result(responseFuture, Duration(1000L, "ms"))
 
       Then("The response code should be OK")
-      result.code shouldEqual OK
+      result.status.intValue shouldEqual OK
 
       And("The expected cases are returned in the JSON response")
       Json.parse(result.body) shouldBe Json.toJson(Paged(Seq(c1)))
@@ -619,12 +655,14 @@ class CaseSpec extends BaseFeatureSpec {
       storeCases(c1, c2)
 
       When("I get cases by assignee id")
-      val result = Http(s"$serviceUrl/cases?assignee_id=_a_&queue_id=$q1")
-        .header(apiTokenKey, appConfig.authorization)
-        .asString
+      val responseFuture = httpClient
+        .url(s"$serviceUrl/cases?assignee_id=_a_&queue_id=$q1")
+        .withHttpHeaders(apiTokenKey -> appConfig.authorization)
+        .get()
+      val result = Await.result(responseFuture, Duration(1000L, "ms"))
 
       Then("The response code should be OK")
-      result.code shouldEqual OK
+      result.status.intValue shouldEqual OK
 
       And("No cases are returned in the JSON response")
       Json.parse(result.body) shouldBe Json.toJson(Paged.empty[Case])
@@ -638,11 +676,13 @@ class CaseSpec extends BaseFeatureSpec {
 
       storeCases(c1_updated, c2, c5)
 
-      val result = Http(s"$serviceUrl/cases?status=SUSPENDED")
-        .header(apiTokenKey, appConfig.authorization)
-        .asString
+      val responseFuture = httpClient
+        .url(s"$serviceUrl/cases?status=SUSPENDED")
+        .withHttpHeaders(apiTokenKey -> appConfig.authorization)
+        .get()
+      val result = Await.result(responseFuture, Duration(1000L, "ms"))
 
-      result.code shouldEqual OK
+      result.status.intValue shouldEqual OK
       Json.parse(result.body) shouldBe Json.toJson(Paged.empty[Case])
     }
 
@@ -650,11 +690,13 @@ class CaseSpec extends BaseFeatureSpec {
 
       storeCases(c1_updated, c2, c5)
 
-      val result = Http(s"$serviceUrl/cases?status=NEW")
-        .header(apiTokenKey, appConfig.authorization)
-        .asString
+      val responseFuture = httpClient
+        .url(s"$serviceUrl/cases?status=NEW")
+        .withHttpHeaders(apiTokenKey -> appConfig.authorization)
+        .get()
+      val result = Await.result(responseFuture, Duration(1000L, "ms"))
 
-      result.code shouldEqual OK
+      result.status.intValue shouldEqual OK
       Json.parse(result.body) shouldBe Json.toJson(Paged(Seq(c2, c5)))
     }
 
@@ -662,11 +704,13 @@ class CaseSpec extends BaseFeatureSpec {
 
       storeCases(c1_updated, c2, c6_live)
 
-      val result = Http(s"$serviceUrl/cases?status=LIVE")
-        .header(apiTokenKey, appConfig.authorization)
-        .asString
+      val responseFuture = httpClient
+        .url(s"$serviceUrl/cases?status=LIVE")
+        .withHttpHeaders(apiTokenKey -> appConfig.authorization)
+        .get()
+      val result = Await.result(responseFuture, Duration(1000L, "ms"))
 
-      result.code shouldEqual OK
+      result.status.intValue shouldEqual OK
       Json.parse(result.body) shouldBe Json.toJson(Paged(Seq(c6_live)))
     }
 
@@ -674,11 +718,13 @@ class CaseSpec extends BaseFeatureSpec {
 
       storeCases(c1_updated, c2, c5)
 
-      val result = Http(s"$serviceUrl/cases?status=NEW&status=CANCELLED")
-        .header(apiTokenKey, appConfig.authorization)
-        .asString
+      val responseFuture = httpClient
+        .url(s"$serviceUrl/cases?status=NEW&status=CANCELLED")
+        .withHttpHeaders(apiTokenKey -> appConfig.authorization)
+        .get()
+      val result = Await.result(responseFuture, Duration(1000L, "ms"))
 
-      result.code shouldEqual OK
+      result.status.intValue shouldEqual OK
       Json.parse(result.body) shouldBe Json.toJson(Paged(Seq(c1_updated, c2, c5)))
     }
 
@@ -686,11 +732,13 @@ class CaseSpec extends BaseFeatureSpec {
 
       storeCases(c1_updated, c6_expired, c6_live)
 
-      val result = Http(s"$serviceUrl/cases?status=LIVE&status=EXPIRED")
-        .header(apiTokenKey, appConfig.authorization)
-        .asString
+      val responseFuture = httpClient
+        .url(s"$serviceUrl/cases?status=LIVE&status=EXPIRED")
+        .withHttpHeaders(apiTokenKey -> appConfig.authorization)
+        .get()
+      val result = Await.result(responseFuture, Duration(1000L, "ms"))
 
-      result.code shouldEqual OK
+      result.status.intValue shouldEqual OK
       Json.parse(result.body) shouldBe Json.toJson(Paged(Seq(c6_expired, c6_live)))
     }
 
@@ -698,11 +746,13 @@ class CaseSpec extends BaseFeatureSpec {
 
       storeCases(c1_updated, c2, c5)
 
-      val result = Http(s"$serviceUrl/cases?status=NEW,CANCELLED")
-        .header(apiTokenKey, appConfig.authorization)
-        .asString
+      val responseFuture = httpClient
+        .url(s"$serviceUrl/cases?status=NEW,CANCELLED")
+        .withHttpHeaders(apiTokenKey -> appConfig.authorization)
+        .get()
+      val result = Await.result(responseFuture, Duration(1000L, "ms"))
 
-      result.code shouldEqual OK
+      result.status.intValue shouldEqual OK
       Json.parse(result.body) shouldBe Json.toJson(Paged(Seq(c1_updated, c2, c5)))
     }
 
@@ -714,11 +764,13 @@ class CaseSpec extends BaseFeatureSpec {
 
       storeCases(c2, c10)
 
-      val result = Http(s"$serviceUrl/cases?reference=a")
-        .header(apiTokenKey, appConfig.authorization)
-        .asString
+      val responseFuture = httpClient
+        .url(s"$serviceUrl/cases?reference=a")
+        .withHttpHeaders(apiTokenKey -> appConfig.authorization)
+        .get()
+      val result = Await.result(responseFuture, Duration(1000L, "ms"))
 
-      result.code shouldEqual OK
+      result.status.intValue shouldEqual OK
       Json.parse(result.body) shouldBe Json.toJson(Paged.empty[Case])
     }
 
@@ -726,11 +778,13 @@ class CaseSpec extends BaseFeatureSpec {
 
       storeCases(c2, c5, c10)
 
-      val result = Http(s"$serviceUrl/cases?reference=${c2.reference}")
-        .header(apiTokenKey, appConfig.authorization)
-        .asString
+      val responseFuture = httpClient
+        .url(s"$serviceUrl/cases?reference=${c2.reference}")
+        .withHttpHeaders(apiTokenKey -> appConfig.authorization)
+        .get()
+      val result = Await.result(responseFuture, Duration(1000L, "ms"))
 
-      result.code shouldEqual OK
+      result.status.intValue shouldEqual OK
       Json.parse(result.body) shouldBe Json.toJson(Paged(Seq(c2)))
     }
 
@@ -738,11 +792,13 @@ class CaseSpec extends BaseFeatureSpec {
 
       storeCases(c2, c5, c10)
 
-      val result = Http(s"$serviceUrl/cases?reference=${c2.reference}&reference=${c5.reference}")
-        .header(apiTokenKey, appConfig.authorization)
-        .asString
+      val responseFuture = httpClient
+        .url(s"$serviceUrl/cases?reference=${c2.reference}&reference=${c5.reference}")
+        .withHttpHeaders(apiTokenKey -> appConfig.authorization)
+        .get()
+      val result = Await.result(responseFuture, Duration(1000L, "ms"))
 
-      result.code shouldEqual OK
+      result.status.intValue shouldEqual OK
       Json.parse(result.body).as[Paged[Case]].results.map(_.reference) shouldBe List(c2.reference, c5.reference)
     }
 
@@ -750,11 +806,13 @@ class CaseSpec extends BaseFeatureSpec {
 
       storeCases(c2, c5, c10)
 
-      val result = Http(s"$serviceUrl/cases?reference=${c2.reference},${c5.reference}")
-        .header(apiTokenKey, appConfig.authorization)
-        .asString
+      val responseFuture = httpClient
+        .url(s"$serviceUrl/cases?reference=${c2.reference},${c5.reference}")
+        .withHttpHeaders(apiTokenKey -> appConfig.authorization)
+        .get()
+      val result = Await.result(responseFuture, Duration(1000L, "ms"))
 
-      result.code shouldEqual OK
+      result.status.intValue shouldEqual OK
       Json.parse(result.body).as[Paged[Case]].results.map(_.reference) shouldBe List(c2.reference, c5.reference)
     }
 
@@ -766,11 +824,13 @@ class CaseSpec extends BaseFeatureSpec {
 
       storeCases(c2, c10)
 
-      val result = Http(s"$serviceUrl/cases?keyword=PHONE")
-        .header(apiTokenKey, appConfig.authorization)
-        .asString
+      val responseFuture = httpClient
+        .url(s"$serviceUrl/cases?keyword=PHONE")
+        .withHttpHeaders(apiTokenKey -> appConfig.authorization)
+        .get()
+      val result = Await.result(responseFuture, Duration(1000L, "ms"))
 
-      result.code shouldEqual OK
+      result.status.intValue shouldEqual OK
       Json.parse(result.body) shouldBe Json.toJson(Paged.empty[Case])
     }
 
@@ -778,11 +838,13 @@ class CaseSpec extends BaseFeatureSpec {
 
       storeCases(c2, c5, c10)
 
-      val result = Http(s"$serviceUrl/cases?keyword=MTB")
-        .header(apiTokenKey, appConfig.authorization)
-        .asString
+      val responseFuture = httpClient
+        .url(s"$serviceUrl/cases?keyword=MTB")
+        .withHttpHeaders(apiTokenKey -> appConfig.authorization)
+        .get()
+      val result = Await.result(responseFuture, Duration(1000L, "ms"))
 
-      result.code shouldEqual OK
+      result.status.intValue shouldEqual OK
       Json.parse(result.body) shouldBe Json.toJson(Paged(Seq(c2, c10)))
     }
 
@@ -790,11 +852,13 @@ class CaseSpec extends BaseFeatureSpec {
 
       storeCases(c2, c5, c10)
 
-      val result = Http(s"$serviceUrl/cases?keyword=MTB&keyword=HARDTAIL")
-        .header(apiTokenKey, appConfig.authorization)
-        .asString
+      val responseFuture = httpClient
+        .url(s"$serviceUrl/cases?keyword=MTB&keyword=HARDTAIL")
+        .withHttpHeaders(apiTokenKey -> appConfig.authorization)
+        .get()
+      val result = Await.result(responseFuture, Duration(1000L, "ms"))
 
-      result.code shouldEqual OK
+      result.status.intValue shouldEqual OK
       Json.parse(result.body) shouldBe Json.toJson(Paged(Seq(c2)))
     }
 
@@ -802,11 +866,13 @@ class CaseSpec extends BaseFeatureSpec {
 
       storeCases(c2, c5, c10)
 
-      val result = Http(s"$serviceUrl/cases?keyword=MTB,HARDTAIL")
-        .header(apiTokenKey, appConfig.authorization)
-        .asString
+      val responseFuture = httpClient
+        .url(s"$serviceUrl/cases?keyword=MTB,HARDTAIL")
+        .withHttpHeaders(apiTokenKey -> appConfig.authorization)
+        .get()
+      val result = Await.result(responseFuture, Duration(1000L, "ms"))
 
-      result.code shouldEqual OK
+      result.status.intValue shouldEqual OK
       Json.parse(result.body) shouldBe Json.toJson(Paged(Seq(c2)))
     }
 
@@ -818,11 +884,13 @@ class CaseSpec extends BaseFeatureSpec {
 
       storeCases(c1, c2, c5)
 
-      val result = Http(s"$serviceUrl/cases?case_source=John%20Lewis")
-        .header(apiTokenKey, appConfig.authorization)
-        .asString
+      val responseFuture = httpClient
+        .url(s"$serviceUrl/cases?case_source=John%20Lewis")
+        .withHttpHeaders(apiTokenKey -> appConfig.authorization)
+        .get()
+      val result = Await.result(responseFuture, Duration(1000L, "ms"))
 
-      result.code shouldEqual OK
+      result.status.intValue shouldEqual OK
       Json.parse(result.body) shouldBe Json.toJson(Paged(Seq(c1, c2)))
     }
 
@@ -830,11 +898,13 @@ class CaseSpec extends BaseFeatureSpec {
 
       storeCases(c1)
 
-      val result = Http(s"$serviceUrl/cases?case_source=john%20Lewis")
-        .header(apiTokenKey, appConfig.authorization)
-        .asString
+      val responseFuture = httpClient
+        .url(s"$serviceUrl/cases?case_source=john%20Lewis")
+        .withHttpHeaders(apiTokenKey -> appConfig.authorization)
+        .get()
+      val result = Await.result(responseFuture, Duration(1000L, "ms"))
 
-      result.code shouldEqual OK
+      result.status.intValue shouldEqual OK
       Json.parse(result.body) shouldBe Json.toJson(Paged(Seq(c1)))
     }
 
@@ -842,11 +912,13 @@ class CaseSpec extends BaseFeatureSpec {
 
       storeCases(c1)
 
-      val result = Http(s"$serviceUrl/cases?case_source=Lewis")
-        .header(apiTokenKey, appConfig.authorization)
-        .asString
+      val responseFuture = httpClient
+        .url(s"$serviceUrl/cases?case_source=Lewis")
+        .withHttpHeaders(apiTokenKey -> appConfig.authorization)
+        .get()
+      val result = Await.result(responseFuture, Duration(1000L, "ms"))
 
-      result.code shouldEqual OK
+      result.status.intValue shouldEqual OK
       Json.parse(result.body) shouldBe Json.toJson(Paged(Seq(c1)))
     }
 
@@ -854,11 +926,13 @@ class CaseSpec extends BaseFeatureSpec {
 
       storeCases(c1)
 
-      val result = Http(s"$serviceUrl/cases?case_source=Albert")
-        .header(apiTokenKey, appConfig.authorization)
-        .asString
+      val responseFuture = httpClient
+        .url(s"$serviceUrl/cases?case_source=Albert")
+        .withHttpHeaders(apiTokenKey -> appConfig.authorization)
+        .get()
+      val result = Await.result(responseFuture, Duration(1000L, "ms"))
 
-      result.code shouldEqual OK
+      result.status.intValue shouldEqual OK
       Json.parse(result.body) shouldBe Json.toJson(Paged.empty[Case])
     }
 
@@ -870,11 +944,13 @@ class CaseSpec extends BaseFeatureSpec {
 
       storeCases(c1, c6_live)
 
-      val result = Http(s"$serviceUrl/cases?min_decision_end=1970-01-01T00:00:00Z")
-        .header(apiTokenKey, appConfig.authorization)
-        .asString
+      val responseFuture = httpClient
+        .url(s"$serviceUrl/cases?min_decision_end=1970-01-01T00:00:00Z")
+        .withHttpHeaders(apiTokenKey -> appConfig.authorization)
+        .get()
+      val result = Await.result(responseFuture, Duration(1000L, "ms"))
 
-      result.code shouldEqual OK
+      result.status.intValue shouldEqual OK
       Json.parse(result.body) shouldBe Json.toJson(Paged(Seq(c6_live)))
     }
 
@@ -882,11 +958,13 @@ class CaseSpec extends BaseFeatureSpec {
 
       storeCases(c1, c6_live)
 
-      val result = Http(s"$serviceUrl/cases?min_decision_end=3000-01-01T00:00:00Z")
-        .header(apiTokenKey, appConfig.authorization)
-        .asString
+      val responseFuture = httpClient
+        .url(s"$serviceUrl/cases?min_decision_end=3000-01-01T00:00:00Z")
+        .withHttpHeaders(apiTokenKey -> appConfig.authorization)
+        .get()
+      val result = Await.result(responseFuture, Duration(1000L, "ms"))
 
-      result.code shouldEqual OK
+      result.status.intValue shouldEqual OK
       Json.parse(result.body) shouldBe Json.toJson(Paged.empty[Case])
     }
 
@@ -898,11 +976,13 @@ class CaseSpec extends BaseFeatureSpec {
 
       storeCases(c1, c2, c5)
 
-      val result = Http(s"$serviceUrl/cases?commodity_code=66")
-        .header(apiTokenKey, appConfig.authorization)
-        .asString
+      val responseFuture = httpClient
+        .url(s"$serviceUrl/cases?commodity_code=66")
+        .withHttpHeaders(apiTokenKey -> appConfig.authorization)
+        .get()
+      val result = Await.result(responseFuture, Duration(1000L, "ms"))
 
-      result.code shouldEqual OK
+      result.status.intValue shouldEqual OK
       Json.parse(result.body) shouldBe Json.toJson(Paged.empty[Case])
     }
 
@@ -910,11 +990,13 @@ class CaseSpec extends BaseFeatureSpec {
 
       storeCases(c1, c2, c5, c6_live)
 
-      val result = Http(s"$serviceUrl/cases?commodity_code=12345678")
-        .header(apiTokenKey, appConfig.authorization)
-        .asString
+      val responseFuture = httpClient
+        .url(s"$serviceUrl/cases?commodity_code=12345678")
+        .withHttpHeaders(apiTokenKey -> appConfig.authorization)
+        .get()
+      val result = Await.result(responseFuture, Duration(1000L, "ms"))
 
-      result.code shouldEqual OK
+      result.status.intValue shouldEqual OK
       Json.parse(result.body) shouldBe Json.toJson(Paged(Seq(c2, c6_live)))
     }
 
@@ -922,11 +1004,13 @@ class CaseSpec extends BaseFeatureSpec {
 
       storeCases(c1, c2, c5, c6_live)
 
-      val result = Http(s"$serviceUrl/cases?commodity_code=123")
-        .header(apiTokenKey, appConfig.authorization)
-        .asString
+      val responseFuture = httpClient
+        .url(s"$serviceUrl/cases?commodity_code=123")
+        .withHttpHeaders(apiTokenKey -> appConfig.authorization)
+        .get()
+      val result = Await.result(responseFuture, Duration(1000L, "ms"))
 
-      result.code shouldEqual OK
+      result.status.intValue shouldEqual OK
       Json.parse(result.body) shouldBe Json.toJson(Paged(Seq(c2, c6_live)))
     }
 
@@ -934,11 +1018,13 @@ class CaseSpec extends BaseFeatureSpec {
 
       storeCases(c2, c6_live)
 
-      val result = Http(s"$serviceUrl/cases?commodity_code=456")
-        .header(apiTokenKey, appConfig.authorization)
-        .asString
+      val responseFuture = httpClient
+        .url(s"$serviceUrl/cases?commodity_code=456")
+        .withHttpHeaders(apiTokenKey -> appConfig.authorization)
+        .get()
+      val result = Await.result(responseFuture, Duration(1000L, "ms"))
 
-      result.code shouldEqual OK
+      result.status.intValue shouldEqual OK
       Json.parse(result.body) shouldBe Json.toJson(Paged.empty[Case])
     }
 
@@ -950,11 +1036,13 @@ class CaseSpec extends BaseFeatureSpec {
 
       storeCases(c1, c2, c5)
 
-      val result = Http(s"$serviceUrl/cases?decision_details=laptop")
-        .header(apiTokenKey, appConfig.authorization)
-        .asString
+      val responseFuture = httpClient
+        .url(s"$serviceUrl/cases?decision_details=laptop")
+        .withHttpHeaders(apiTokenKey -> appConfig.authorization)
+        .get()
+      val result = Await.result(responseFuture, Duration(1000L, "ms"))
 
-      result.code shouldEqual OK
+      result.status.intValue shouldEqual OK
       Json.parse(result.body) shouldBe Json.toJson(Paged.empty[Case])
     }
 
@@ -962,11 +1050,13 @@ class CaseSpec extends BaseFeatureSpec {
 
       storeCases(c1, c2, c7)
 
-      val result = Http(s"$serviceUrl/cases?decision_details=LAPTOP")
-        .header(apiTokenKey, appConfig.authorization)
-        .asString
+      val responseFuture = httpClient
+        .url(s"$serviceUrl/cases?decision_details=LAPTOP")
+        .withHttpHeaders(apiTokenKey -> appConfig.authorization)
+        .get()
+      val result = Await.result(responseFuture, Duration(1000L, "ms"))
 
-      result.code shouldEqual OK
+      result.status.intValue shouldEqual OK
       Json.parse(result.body) shouldBe Json.toJson(Paged(Seq(c7)))
     }
 
@@ -974,11 +1064,13 @@ class CaseSpec extends BaseFeatureSpec {
 
       storeCases(c1, c2, c8)
 
-      val result = Http(s"$serviceUrl/cases?decision_details=laptop%20from%20Mexico")
-        .header(apiTokenKey, appConfig.authorization)
-        .asString
+      val responseFuture = httpClient
+        .url(s"$serviceUrl/cases?decision_details=laptop%20from%20Mexico")
+        .withHttpHeaders(apiTokenKey -> appConfig.authorization)
+        .get()
+      val result = Await.result(responseFuture, Duration(1000L, "ms"))
 
-      result.code shouldEqual OK
+      result.status.intValue shouldEqual OK
       Json.parse(result.body) shouldBe Json.toJson(Paged(Seq(c8)))
     }
 
@@ -986,11 +1078,13 @@ class CaseSpec extends BaseFeatureSpec {
 
       storeCases(c1, c2, c9)
 
-      val result = Http(s"$serviceUrl/cases?decision_details=this%20LLLLaptoppp")
-        .header(apiTokenKey, appConfig.authorization)
-        .asString
+      val responseFuture = httpClient
+        .url(s"$serviceUrl/cases?decision_details=this%20LLLLaptoppp")
+        .withHttpHeaders(apiTokenKey -> appConfig.authorization)
+        .get()
+      val result = Await.result(responseFuture, Duration(1000L, "ms"))
 
-      result.code shouldEqual OK
+      result.status.intValue shouldEqual OK
       Json.parse(result.body) shouldBe Json.toJson(Paged(Seq(c9)))
     }
 
@@ -998,11 +1092,13 @@ class CaseSpec extends BaseFeatureSpec {
 
       storeCases(c1, c2, c7)
 
-      val result = Http(s"$serviceUrl/cases?decision_details=laptop")
-        .header(apiTokenKey, appConfig.authorization)
-        .asString
+      val responseFuture = httpClient
+        .url(s"$serviceUrl/cases?decision_details=laptop")
+        .withHttpHeaders(apiTokenKey -> appConfig.authorization)
+        .get()
+      val result = Await.result(responseFuture, Duration(1000L, "ms"))
 
-      result.code shouldEqual OK
+      result.status.intValue shouldEqual OK
       Json.parse(result.body) shouldBe Json.toJson(Paged(Seq(c7)))
     }
 
@@ -1010,11 +1106,13 @@ class CaseSpec extends BaseFeatureSpec {
 
       storeCases(c1, c2, c7, c8, c9)
 
-      val result = Http(s"$serviceUrl/cases?decision_details=laptop")
-        .header(apiTokenKey, appConfig.authorization)
-        .asString
+      val responseFuture = httpClient
+        .url(s"$serviceUrl/cases?decision_details=laptop")
+        .withHttpHeaders(apiTokenKey -> appConfig.authorization)
+        .get()
+      val result = Await.result(responseFuture, Duration(1000L, "ms"))
 
-      result.code shouldEqual OK
+      result.status.intValue shouldEqual OK
       Json.parse(result.body) shouldBe Json.toJson(Paged(Seq(c7, c8, c9)))
     }
 
@@ -1022,11 +1120,13 @@ class CaseSpec extends BaseFeatureSpec {
 
       storeCases(c11, c12, c13)
 
-      val result = Http(s"$serviceUrl/cases?decision_details=LAPTOP&status=EXPIRED")
-        .header(apiTokenKey, appConfig.authorization)
-        .asString
+      val responseFuture = httpClient
+        .url(s"$serviceUrl/cases?decision_details=LAPTOP&status=EXPIRED")
+        .withHttpHeaders(apiTokenKey -> appConfig.authorization)
+        .get()
+      val result = Await.result(responseFuture, Duration(1000L, "ms"))
 
-      result.code shouldEqual OK
+      result.status.intValue shouldEqual OK
       Json.parse(result.body) shouldBe Json.toJson(Paged(Seq(c11)))
     }
   }
@@ -1048,55 +1148,65 @@ class CaseSpec extends BaseFeatureSpec {
     Scenario("No matches") {
       storeCases(c1, c2)
 
-      val result = Http(s"$serviceUrl/cases?eori=333333")
-        .header(apiTokenKey, appConfig.authorization)
-        .asString
+      val responseFuture = httpClient
+        .url(s"$serviceUrl/cases?eori=333333")
+        .withHttpHeaders(apiTokenKey -> appConfig.authorization)
+        .get()
+      val result = Await.result(responseFuture, Duration(1000L, "ms"))
 
-      result.code shouldEqual OK
+      result.status.intValue shouldEqual OK
       Json.parse(result.body) shouldBe Json.toJson(Paged.empty[Case])
     }
 
     Scenario("Filtering by agent EORI") {
       storeCases(c1, c2, agentCase, holderCase)
 
-      val result = Http(s"$serviceUrl/cases?eori=eori_98765")
-        .header(apiTokenKey, appConfig.authorization)
-        .asString
+      val responseFuture = httpClient
+        .url(s"$serviceUrl/cases?eori=eori_98765")
+        .withHttpHeaders(apiTokenKey -> appConfig.authorization)
+        .get()
+      val result = Await.result(responseFuture, Duration(1000L, "ms"))
 
-      result.code shouldEqual OK
+      result.status.intValue shouldEqual OK
       Json.parse(result.body) shouldBe Json.toJson(Paged(Seq(agentCase)))
     }
 
     Scenario("Filtering by applicant EORI") {
       storeCases(c1, c2, agentCase, holderCase)
 
-      val result = Http(s"$serviceUrl/cases?eori=eori_01234")
-        .header(apiTokenKey, appConfig.authorization)
-        .asString
+      val responseFuture = httpClient
+        .url(s"$serviceUrl/cases?eori=eori_01234")
+        .withHttpHeaders(apiTokenKey -> appConfig.authorization)
+        .get()
+      val result = Await.result(responseFuture, Duration(1000L, "ms"))
 
-      result.code shouldEqual OK
+      result.status.intValue shouldEqual OK
       Json.parse(result.body) shouldBe Json.toJson(Paged(Seq(agentCase, holderCase)))
     }
 
     Scenario("Case-insensitive search") {
       storeCases(c1, c2, agentCase, holderCase)
 
-      val result = Http(s"$serviceUrl/cases?eori=EORI_98765")
-        .header(apiTokenKey, appConfig.authorization)
-        .asString
+      val responseFuture = httpClient
+        .url(s"$serviceUrl/cases?eori=EORI_98765")
+        .withHttpHeaders(apiTokenKey -> appConfig.authorization)
+        .get()
+      val result = Await.result(responseFuture, Duration(1000L, "ms"))
 
-      result.code shouldEqual OK
+      result.status.intValue shouldEqual OK
       Json.parse(result.body) shouldBe Json.toJson(Paged.empty[Case])
     }
 
     Scenario("Filtering by substring") {
       storeCases(c1, c2, agentCase, holderCase)
 
-      val result = Http(s"$serviceUrl/cases?eori=2345")
-        .header(apiTokenKey, appConfig.authorization)
-        .asString
+      val responseFuture = httpClient
+        .url(s"$serviceUrl/cases?eori=2345")
+        .withHttpHeaders(apiTokenKey -> appConfig.authorization)
+        .get()
+      val result = Await.result(responseFuture, Duration(1000L, "ms"))
 
-      result.code shouldEqual OK
+      result.status.intValue shouldEqual OK
       Json.parse(result.body) shouldBe Json.toJson(Paged.empty[Case])
     }
 
@@ -1108,11 +1218,13 @@ class CaseSpec extends BaseFeatureSpec {
 
       storeCases(c1, c5)
 
-      val result = Http(s"$serviceUrl/cases?application_type=LIABILITY_ORDER")
-        .header(apiTokenKey, appConfig.authorization)
-        .asString
+      val responseFuture = httpClient
+        .url(s"$serviceUrl/cases?application_type=LIABILITY_ORDER")
+        .withHttpHeaders(apiTokenKey -> appConfig.authorization)
+        .get()
+      val result = Await.result(responseFuture, Duration(1000L, "ms"))
 
-      result.code shouldEqual OK
+      result.status.intValue shouldEqual OK
       Json.parse(result.body) shouldBe Json.toJson(Paged.empty[Case])
     }
 
@@ -1120,11 +1232,13 @@ class CaseSpec extends BaseFeatureSpec {
 
       storeCases(c1, c2, c7)
 
-      val result = Http(s"$serviceUrl/cases?application_type=BTI")
-        .header(apiTokenKey, appConfig.authorization)
-        .asString
+      val responseFuture = httpClient
+        .url(s"$serviceUrl/cases?application_type=BTI")
+        .withHttpHeaders(apiTokenKey -> appConfig.authorization)
+        .get()
+      val result = Await.result(responseFuture, Duration(1000L, "ms"))
 
-      result.code shouldEqual OK
+      result.status.intValue shouldEqual OK
       Json.parse(result.body) shouldBe Json.toJson(Paged(Seq(c1, c7)))
     }
 
@@ -1132,11 +1246,13 @@ class CaseSpec extends BaseFeatureSpec {
 
       storeCases(c7)
 
-      val result = Http(s"$serviceUrl/cases?application_type=bti")
-        .header(apiTokenKey, appConfig.authorization)
-        .asString
+      val responseFuture = httpClient
+        .url(s"$serviceUrl/cases?application_type=bti")
+        .withHttpHeaders(apiTokenKey -> appConfig.authorization)
+        .get()
+      val result = Await.result(responseFuture, Duration(1000L, "ms"))
 
-      result.code shouldEqual OK
+      result.status.intValue shouldEqual OK
       Json.parse(result.body) shouldBe Json.toJson(Paged(Seq(c7)))
     }
   }
@@ -1156,12 +1272,14 @@ class CaseSpec extends BaseFeatureSpec {
       storeCases(caseY2, caseWithEmptyCommCode, caseY1, caseZ)
 
       When("I get all cases sorted by commodity code")
-      val result = Http(s"$serviceUrl/cases?sort_by=commodity-code")
-        .header(apiTokenKey, appConfig.authorization)
-        .asString
+      val responseFuture = httpClient
+        .url(s"$serviceUrl/cases?sort_by=commodity-code")
+        .withHttpHeaders(apiTokenKey -> appConfig.authorization)
+        .get()
+      val result = Await.result(responseFuture, Duration(1000L, "ms"))
 
       Then("The response code should be 200")
-      result.code shouldEqual OK
+      result.status.intValue shouldEqual OK
 
       And("The expected cases are returned in the JSON response")
       Json.parse(result.body) shouldBe Json.toJson(Paged(Seq(caseWithEmptyCommCode, caseZ, caseY2, caseY1)))
@@ -1172,12 +1290,14 @@ class CaseSpec extends BaseFeatureSpec {
       storeCases(caseY1, caseWithEmptyCommCode, caseY2, caseZ)
 
       When("I get all cases sorted by commodity code")
-      val result = Http(s"$serviceUrl/cases?sort_by=commodity-code&sort_direction=asc")
-        .header(apiTokenKey, appConfig.authorization)
-        .asString
+      val responseFuture = httpClient
+        .url(s"$serviceUrl/cases?sort_by=commodity-code&sort_direction=asc")
+        .withHttpHeaders(apiTokenKey -> appConfig.authorization)
+        .get()
+      val result = Await.result(responseFuture, Duration(1000L, "ms"))
 
       Then("The response code should be 200")
-      result.code shouldEqual OK
+      result.status.intValue shouldEqual OK
 
       And("The expected cases are returned in the JSON response")
       Json.parse(result.body) shouldBe Json.toJson(Paged(Seq(caseWithEmptyCommCode, caseZ, caseY1, caseY2)))
@@ -1188,12 +1308,14 @@ class CaseSpec extends BaseFeatureSpec {
       storeCases(caseZ, caseWithEmptyCommCode, caseY2, caseY1)
 
       When("I get all cases sorted by commodity code")
-      val result = Http(s"$serviceUrl/cases?sort_by=commodity-code&sort_direction=desc")
-        .header(apiTokenKey, appConfig.authorization)
-        .asString
+      val responseFuture = httpClient
+        .url(s"$serviceUrl/cases?sort_by=commodity-code&sort_direction=desc")
+        .withHttpHeaders(apiTokenKey -> appConfig.authorization)
+        .get()
+      val result = Await.result(responseFuture, Duration(1000L, "ms"))
 
       Then("The response code should be 200")
-      result.code shouldEqual OK
+      result.status.intValue shouldEqual OK
 
       And("The expected cases are returned in the JSON response")
       Json.parse(result.body) shouldBe Json.toJson(Paged(Seq(caseY2, caseY1, caseZ, caseWithEmptyCommCode)))
@@ -1211,12 +1333,14 @@ class CaseSpec extends BaseFeatureSpec {
       storeCases(case1, case2)
 
       When("I get all cases sorted by reference")
-      val result = Http(s"$serviceUrl/cases?sort_by=reference")
-        .header(apiTokenKey, appConfig.authorization)
-        .asString
+      val responseFuture = httpClient
+        .url(s"$serviceUrl/cases?sort_by=reference")
+        .withHttpHeaders(apiTokenKey -> appConfig.authorization)
+        .get()
+      val result = Await.result(responseFuture, Duration(1000L, "ms"))
 
       Then("The response code should be 200")
-      result.code shouldEqual OK
+      result.status.intValue shouldEqual OK
 
       And("The expected cases are returned in the JSON response")
       Json.parse(result.body) shouldBe Json.toJson(Paged(Seq(case1, case2)))
@@ -1227,12 +1351,14 @@ class CaseSpec extends BaseFeatureSpec {
       storeCases(case2, case1)
 
       When("I get all cases sorted by reference")
-      val result = Http(s"$serviceUrl/cases?sort_by=reference&sort_direction=asc")
-        .header(apiTokenKey, appConfig.authorization)
-        .asString
+      val responseFuture = httpClient
+        .url(s"$serviceUrl/cases?sort_by=reference&sort_direction=asc")
+        .withHttpHeaders(apiTokenKey -> appConfig.authorization)
+        .get()
+      val result = Await.result(responseFuture, Duration(1000L, "ms"))
 
       Then("The response code should be 200")
-      result.code shouldEqual OK
+      result.status.intValue shouldEqual OK
 
       And("The expected cases are returned in the JSON response")
       Json.parse(result.body) shouldBe Json.toJson(Paged(Seq(case1, case2)))
@@ -1243,12 +1369,14 @@ class CaseSpec extends BaseFeatureSpec {
       storeCases(case1, case2)
 
       When("I get all cases sorted by reference")
-      val result = Http(s"$serviceUrl/cases?sort_by=reference&sort_direction=desc")
-        .header(apiTokenKey, appConfig.authorization)
-        .asString
+      val responseFuture = httpClient
+        .url(s"$serviceUrl/cases?sort_by=reference&sort_direction=desc")
+        .withHttpHeaders(apiTokenKey -> appConfig.authorization)
+        .get()
+      val result = Await.result(responseFuture, Duration(1000L, "ms"))
 
       Then("The response code should be 200")
-      result.code shouldEqual OK
+      result.status.intValue shouldEqual OK
 
       And("The expected cases are returned in the JSON response")
       Json.parse(result.body) shouldBe Json.toJson(Paged(Seq(case2, case1)))
@@ -1266,12 +1394,14 @@ class CaseSpec extends BaseFeatureSpec {
       storeCases(oldCase, newCase)
 
       When("I get all cases sorted by elapsed days")
-      val result = Http(s"$serviceUrl/cases?sort_by=days-elapsed")
-        .header(apiTokenKey, appConfig.authorization)
-        .asString
+      val responseFuture = httpClient
+        .url(s"$serviceUrl/cases?sort_by=days-elapsed")
+        .withHttpHeaders(apiTokenKey -> appConfig.authorization)
+        .get()
+      val result = Await.result(responseFuture, Duration(1000L, "ms"))
 
       Then("The response code should be 200")
-      result.code shouldEqual OK
+      result.status.intValue shouldEqual OK
 
       And("The expected cases are returned in the JSON response")
       Json.parse(result.body) shouldBe Json.toJson(Paged(Seq(newCase, oldCase)))
@@ -1282,12 +1412,14 @@ class CaseSpec extends BaseFeatureSpec {
       storeCases(oldCase, newCase)
 
       When("I get all cases sorted by elapsed days")
-      val result = Http(s"$serviceUrl/cases?sort_by=days-elapsed&sort_direction=asc")
-        .header(apiTokenKey, appConfig.authorization)
-        .asString
+      val responseFuture = httpClient
+        .url(s"$serviceUrl/cases?sort_by=days-elapsed&sort_direction=asc")
+        .withHttpHeaders(apiTokenKey -> appConfig.authorization)
+        .get()
+      val result = Await.result(responseFuture, Duration(1000L, "ms"))
 
       Then("The response code should be 200")
-      result.code shouldEqual OK
+      result.status.intValue shouldEqual OK
 
       And("The expected cases are returned in the JSON response")
       Json.parse(result.body) shouldBe Json.toJson(Paged(Seq(newCase, oldCase)))
@@ -1298,12 +1430,14 @@ class CaseSpec extends BaseFeatureSpec {
       storeCases(oldCase, newCase)
 
       When("I get all cases sorted by elapsed days")
-      val result = Http(s"$serviceUrl/cases?sort_by=days-elapsed&sort_direction=desc")
-        .header(apiTokenKey, appConfig.authorization)
-        .asString
+      val responseFuture = httpClient
+        .url(s"$serviceUrl/cases?sort_by=days-elapsed&sort_direction=desc")
+        .withHttpHeaders(apiTokenKey -> appConfig.authorization)
+        .get()
+      val result = Await.result(responseFuture, Duration(1000L, "ms"))
 
       Then("The response code should be 200")
-      result.code shouldEqual OK
+      result.status.intValue shouldEqual OK
 
       And("The expected cases are returned in the JSON response")
       Json.parse(result.body) shouldBe Json.toJson(Paged(Seq(oldCase, newCase)))
@@ -1317,20 +1451,24 @@ class CaseSpec extends BaseFeatureSpec {
 
       storeCases(c1, c2)
 
-      val result1 = Http(s"$serviceUrl/cases?page_size=1&page=1")
-        .header(apiTokenKey, appConfig.authorization)
-        .asString
+      val responseFuture1 = httpClient
+        .url(s"$serviceUrl/cases?page_size=1&page=1")
+        .withHttpHeaders(apiTokenKey -> appConfig.authorization)
+        .get()
+      val result1 = Await.result(responseFuture1, Duration(1000L, "ms"))
 
-      result1.code shouldEqual OK
+      result1.status.intValue shouldEqual OK
       Json.parse(result1.body) shouldBe Json.toJson(
         Paged(results = Seq(c1), pageIndex = 1, pageSize = 1, resultCount = 2)
       )
 
-      val result2 = Http(s"$serviceUrl/cases?page_size=1&page=2")
-        .header(apiTokenKey, appConfig.authorization)
-        .asString
+      val responseFuture2 = httpClient
+        .url(s"$serviceUrl/cases?page_size=1&page=2")
+        .withHttpHeaders(apiTokenKey -> appConfig.authorization)
+        .get()
+      val result2 = Await.result(responseFuture2, Duration(1000L, "ms"))
 
-      result2.code shouldEqual OK
+      result2.status.intValue shouldEqual OK
       Json.parse(result2.body) shouldBe Json.toJson(
         Paged(results = Seq(c2), pageIndex = 2, pageSize = 1, resultCount = 2)
       )
@@ -1350,12 +1488,14 @@ class CaseSpec extends BaseFeatureSpec {
       storeCases(caseD0, caseD1, caseD2, caseD3)
 
       When("I get all cases sorted by created date")
-      val result = Http(s"$serviceUrl/cases?sort_by=created-date")
-        .header(apiTokenKey, appConfig.authorization)
-        .asString
+      val responseFuture = httpClient
+        .url(s"$serviceUrl/cases?sort_by=created-date")
+        .withHttpHeaders(apiTokenKey -> appConfig.authorization)
+        .get()
+      val result = Await.result(responseFuture, Duration(1000L, "ms"))
 
       Then("The response code should be 200")
-      result.code shouldEqual OK
+      result.status.intValue shouldEqual OK
 
       And("The expected cases are returned in the JSON response")
       Json.parse(result.body) shouldBe Json.toJson(Paged(Seq(caseD3, caseD2, caseD1, caseD0)))
@@ -1366,12 +1506,14 @@ class CaseSpec extends BaseFeatureSpec {
       storeCases(caseD0, caseD1, caseD2, caseD3)
 
       When("I get all cases sorted by created date")
-      val result = Http(s"$serviceUrl/cases?sort_by=created-date&sort_direction=asc")
-        .header(apiTokenKey, appConfig.authorization)
-        .asString
+      val responseFuture = httpClient
+        .url(s"$serviceUrl/cases?sort_by=created-date&sort_direction=asc")
+        .withHttpHeaders(apiTokenKey -> appConfig.authorization)
+        .get()
+      val result = Await.result(responseFuture, Duration(1000L, "ms"))
 
       Then("The response code should be 200")
-      result.code shouldEqual OK
+      result.status.intValue shouldEqual OK
 
       And("The expected cases are returned in the JSON response")
       Json.parse(result.body) shouldBe Json.toJson(Paged(Seq(caseD3, caseD2, caseD1, caseD0)))
@@ -1382,12 +1524,14 @@ class CaseSpec extends BaseFeatureSpec {
       storeCases(caseD0, caseD1, caseD2, caseD3)
 
       When("I get all cases sorted by created date")
-      val result = Http(s"$serviceUrl/cases?sort_by=created-date&sort_direction=desc")
-        .header(apiTokenKey, appConfig.authorization)
-        .asString
+      val responseFuture = httpClient
+        .url(s"$serviceUrl/cases?sort_by=created-date&sort_direction=desc")
+        .withHttpHeaders(apiTokenKey -> appConfig.authorization)
+        .get()
+      val result = Await.result(responseFuture, Duration(1000L, "ms"))
 
       Then("The response code should be 200")
-      result.code shouldEqual OK
+      result.status.intValue shouldEqual OK
 
       And("The expected cases are returned in the JSON response")
       Json.parse(result.body) shouldBe Json.toJson(Paged(Seq(caseD0, caseD1, caseD2, caseD3)))
@@ -1418,12 +1562,14 @@ class CaseSpec extends BaseFeatureSpec {
       storeCases(caseD0, caseD3, caseD2, caseD1)
 
       When("I get all cases sorted by created date")
-      val result = Http(s"$serviceUrl/cases?sort_by=decision-start-date")
-        .header(apiTokenKey, appConfig.authorization)
-        .asString
+      val responseFuture = httpClient
+        .url(s"$serviceUrl/cases?sort_by=decision-start-date")
+        .withHttpHeaders(apiTokenKey -> appConfig.authorization)
+        .get()
+      val result = Await.result(responseFuture, Duration(1000L, "ms"))
 
       Then("The response code should be 200")
-      result.code shouldEqual OK
+      result.status.intValue shouldEqual OK
 
       And("The expected cases are returned in the JSON response")
       Json.parse(result.body) shouldBe Json.toJson(Paged(Seq(caseD3, caseD2, caseD1, caseD0)))
@@ -1434,12 +1580,14 @@ class CaseSpec extends BaseFeatureSpec {
       storeCases(caseD0, caseD1, caseD2, caseD3)
 
       When("I get all cases sorted by decision effective start date")
-      val result = Http(s"$serviceUrl/cases?sort_by=decision-start-date&sort_direction=asc")
-        .header(apiTokenKey, appConfig.authorization)
-        .asString
+      val responseFuture = httpClient
+        .url(s"$serviceUrl/cases?sort_by=decision-start-date&sort_direction=asc")
+        .withHttpHeaders(apiTokenKey -> appConfig.authorization)
+        .get()
+      val result = Await.result(responseFuture, Duration(1000L, "ms"))
 
       Then("The response code should be 200")
-      result.code shouldEqual OK
+      result.status.intValue shouldEqual OK
 
       And("The expected cases are returned in the JSON response")
       Json.parse(result.body) shouldBe Json.toJson(Paged(Seq(caseD3, caseD2, caseD1, caseD0)))
@@ -1450,12 +1598,14 @@ class CaseSpec extends BaseFeatureSpec {
       storeCases(caseD0, caseD3, caseD2, caseD1)
 
       When("I get all cases sorted by decision effective start date")
-      val result = Http(s"$serviceUrl/cases?sort_by=decision-start-date&sort_direction=desc")
-        .header(apiTokenKey, appConfig.authorization)
-        .asString
+      val responseFuture = httpClient
+        .url(s"$serviceUrl/cases?sort_by=decision-start-date&sort_direction=desc")
+        .withHttpHeaders(apiTokenKey -> appConfig.authorization)
+        .get()
+      val result = Await.result(responseFuture, Duration(1000L, "ms"))
 
       Then("The response code should be 200")
-      result.code shouldEqual OK
+      result.status.intValue shouldEqual OK
 
       And("The expected cases are returned in the JSON response")
       Json.parse(result.body) shouldBe Json.toJson(Paged(Seq(caseD0, caseD1, caseD2, caseD3)))
@@ -1481,17 +1631,17 @@ class CaseSpec extends BaseFeatureSpec {
         )
       },
       application = caseBaseApplication match {
-        case app: LiabilityOrder =>
-          app.copy(
-            entryDate     = app.entryDate.map(_.truncatedTo(ChronoUnit.MILLIS)),
-            dateOfReceipt = app.dateOfReceipt.map(_.truncatedTo(ChronoUnit.MILLIS)),
-            repaymentClaim = app.repaymentClaim.map { claim =>
+        case liabilityApp: LiabilityOrder =>
+          liabilityApp.copy(
+            entryDate     = liabilityApp.entryDate.map(_.truncatedTo(ChronoUnit.MILLIS)),
+            dateOfReceipt = liabilityApp.dateOfReceipt.map(_.truncatedTo(ChronoUnit.MILLIS)),
+            repaymentClaim = liabilityApp.repaymentClaim.map { claim =>
               claim.copy(dateForRepayment = claim.dateForRepayment.map(_.truncatedTo(ChronoUnit.MILLIS)))
             }
           )
-        case app: BTIApplication =>
-          app.copy(
-            agent = app.agent.map(agent =>
+        case btiApp: BTIApplication =>
+          btiApp.copy(
+            agent = btiApp.agent.map(agent =>
               agent.copy(
                 letterOfAuthorisation = agent.letterOfAuthorisation.map(att =>
                   att.copy(
@@ -1501,7 +1651,7 @@ class CaseSpec extends BaseFeatureSpec {
               )
             ),
             applicationPdf =
-              app.applicationPdf.map(pdf => pdf.copy(timestamp = pdf.timestamp.truncatedTo(ChronoUnit.MILLIS)))
+              btiApp.applicationPdf.map(pdf => pdf.copy(timestamp = pdf.timestamp.truncatedTo(ChronoUnit.MILLIS)))
           )
         case _ => caseBaseApplication
       },

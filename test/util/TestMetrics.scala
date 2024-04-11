@@ -16,10 +16,10 @@
 
 package util
 
-import com.kenshoo.play.metrics.Metrics
 import com.codahale.metrics.MetricRegistry
+import uk.gov.hmrc.play.bootstrap.metrics.Metrics
 
 class TestMetrics extends Metrics {
   override def defaultRegistry: MetricRegistry = new MetricRegistry
-  override def toJson: String                  = ""
+  def toJson: String                           = ""
 }
