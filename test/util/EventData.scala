@@ -89,6 +89,24 @@ object EventData {
       details = ExpertAdviceReceived(comment = "comment")
     )
 
+  def createAppealAddedEvent(caseReference: String): Event =
+    createEvent(
+      caseRef = caseReference,
+      details = AppealAdded(AppealType.APPEAL_TIER_1, AppealStatus.ALLOWED)
+    )
+
+  def createAppealStatusChangeEvent(caseReference: String): Event =
+    createEvent(
+      caseRef = caseReference,
+      details = AppealStatusChange(AppealType.APPEAL_TIER_1, AppealStatus.ALLOWED, AppealStatus.DISMISSED)
+    )
+
+  def createCaseRejectedEvent(caseReference: String): Event =
+    createEvent(
+      caseRef = caseReference,
+      details = RejectCaseStatusChange(CaseStatus.NEW, CaseStatus.REJECTED, reason = RejectReason.APPLICATION_WITHDRAWN)
+    )
+
   def createQueueChangeEvent(caseReference: String): Event =
     createEvent(
       caseRef = caseReference,

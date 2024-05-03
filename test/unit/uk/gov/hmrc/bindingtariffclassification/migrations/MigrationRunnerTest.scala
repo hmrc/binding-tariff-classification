@@ -24,10 +24,10 @@ import org.scalatest.concurrent.Eventually
 import uk.gov.hmrc.bindingtariffclassification.base.BaseSpec
 import uk.gov.hmrc.bindingtariffclassification.model.JobRunEvent
 import uk.gov.hmrc.bindingtariffclassification.repository.MigrationLockRepository
+import uk.gov.hmrc.play.bootstrap.metrics.{Metrics, MetricsImpl}
 import util.TestMetrics
 
 import scala.concurrent.ExecutionContext.Implicits.global
-
 import scala.concurrent.Future.{failed, successful}
 
 class MigrationRunnerTest extends BaseSpec with BeforeAndAfterEach with Eventually {

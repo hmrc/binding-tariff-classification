@@ -16,22 +16,29 @@
 
 package uk.gov.hmrc.bindingtariffclassification.component
 
+import org.apache.pekko.stream.Materializer
+
 import java.util.UUID
 import play.api.http.HeaderNames.CONTENT_TYPE
 import play.api.http.Status.{NO_CONTENT, OK}
-import play.api.http.{ContentTypes, HttpVerbs, Status}
+import play.api.http.{ContentTypes, Status}
 import play.api.libs.json.Json
-import scalaj.http.Http
+import play.api.libs.ws.ahc.StandaloneAhcWSClient
 import uk.gov.hmrc.bindingtariffclassification.model.RESTFormatters.{formatEvent, formatNewEventRequest}
 import uk.gov.hmrc.bindingtariffclassification.model._
 import util.CaseData.createCase
 import util.EventData._
 
 import java.time.temporal.ChronoUnit
+import scala.concurrent.Await
+import scala.concurrent.duration.Duration
 
 class EventSpec extends BaseFeatureSpec {
 
   protected val serviceUrl = s"http://localhost:$port"
+
+  implicit val mat: Materializer        = app.materializer
+  val httpClient: StandaloneAhcWSClient = StandaloneAhcWSClient()
 
   private val caseRef = UUID.randomUUID().toString
   private val c1      = adaptCaseInstantFormat(createCase(r = caseRef))
@@ -48,13 +55,14 @@ class EventSpec extends BaseFeatureSpec {
       storeEvents(e1, e2)
 
       When("I delete all documents")
-      val deleteResult = Http(s"$serviceUrl/events")
-        .header(apiTokenKey, appConfig.authorization)
-        .method(HttpVerbs.DELETE)
-        .asString
+      val responseFuture = httpClient
+        .url(s"$serviceUrl/events")
+        .withHttpHeaders(apiTokenKey -> appConfig.authorization)
+        .delete()
+      val deleteResult = Await.result(responseFuture, Duration(1000L, "ms"))
 
       Then("The response code should be 204")
-      deleteResult.code shouldEqual NO_CONTENT
+      deleteResult.status.intValue() shouldEqual NO_CONTENT
 
       And("The response body is empty")
       deleteResult.body shouldBe ""
@@ -73,12 +81,14 @@ class EventSpec extends BaseFeatureSpec {
       storeCases(c1)
 
       When("I get the events for a specific case reference")
-      val result = Http(s"$serviceUrl/cases/$caseRef/events")
-        .header(apiTokenKey, appConfig.authorization)
-        .asString
+      val responseFuture = httpClient
+        .url(s"$serviceUrl/cases/$caseRef/events")
+        .withHttpHeaders(apiTokenKey -> appConfig.authorization)
+        .get()
+      val result = Await.result(responseFuture, Duration(1000L, "ms"))
 
       Then("The response code should be OK")
-      result.code shouldEqual OK
+      result.status.intValue() shouldEqual OK
 
       And("An empty sequence is returned in the JSON response")
       Json.parse(result.body) shouldBe Json.toJson(Paged.empty[Event])
@@ -91,12 +101,14 @@ class EventSpec extends BaseFeatureSpec {
       storeEvents(e1)
 
       When("I get the events for that specific case")
-      val result = Http(s"$serviceUrl/cases/$caseRef/events")
-        .header(apiTokenKey, appConfig.authorization)
-        .asString
+      val responseFuture = httpClient
+        .url(s"$serviceUrl/cases/$caseRef/events")
+        .withHttpHeaders(apiTokenKey -> appConfig.authorization)
+        .get()
+      val result = Await.result(responseFuture, Duration(1000L, "ms"))
 
       Then("The response code should be OK")
-      result.code shouldEqual OK
+      result.status.intValue() shouldEqual OK
 
       And("All events are returned in the JSON response")
       Json.parse(result.body) shouldBe Json.toJson(Paged(Seq(e1)))
@@ -108,12 +120,14 @@ class EventSpec extends BaseFeatureSpec {
 
     Scenario("No events found") {
       When("I get the events")
-      val result = Http(s"$serviceUrl/events")
-        .header(apiTokenKey, appConfig.authorization)
-        .asString
+      val responseFuture = httpClient
+        .url(s"$serviceUrl/events")
+        .withHttpHeaders(apiTokenKey -> appConfig.authorization)
+        .get()
+      val result = Await.result(responseFuture, Duration(1000L, "ms"))
 
       Then("The response code should be OK")
-      result.code shouldEqual OK
+      result.status.intValue() shouldEqual OK
 
       And("An empty sequence is returned in the JSON response")
       Json.parse(result.body) shouldBe Json.toJson(Paged.empty[Event])
@@ -125,12 +139,14 @@ class EventSpec extends BaseFeatureSpec {
       storeEvents(e1)
 
       When("I get the events for that specific case")
-      val result = Http(s"$serviceUrl/events")
-        .header(apiTokenKey, appConfig.authorization)
-        .asString
+      val responseFuture = httpClient
+        .url(s"$serviceUrl/events")
+        .withHttpHeaders(apiTokenKey -> appConfig.authorization)
+        .get()
+      val result = Await.result(responseFuture, Duration(1000L, "ms"))
 
       Then("The response code should be OK")
-      result.code shouldEqual OK
+      result.status.intValue() shouldEqual OK
 
       And("All events are returned in the JSON response")
       Json.parse(result.body) shouldBe Json.toJson(Paged(Seq(e1)))
@@ -142,12 +158,14 @@ class EventSpec extends BaseFeatureSpec {
       storeEvents(e1)
 
       When("I get the events for that specific case")
-      val result = Http(s"$serviceUrl/events?case_reference=${c1.reference}")
-        .header(apiTokenKey, appConfig.authorization)
-        .asString
+      val responseFuture = httpClient
+        .url(s"$serviceUrl/events?case_reference=${c1.reference}")
+        .withHttpHeaders(apiTokenKey -> appConfig.authorization)
+        .get()
+      val result = Await.result(responseFuture, Duration(1000L, "ms"))
 
       Then("The response code should be OK")
-      result.code shouldEqual OK
+      result.status.intValue() shouldEqual OK
 
       And("All events are returned in the JSON response")
       Json.parse(result.body) shouldBe Json.toJson(Paged(Seq(e1)))
@@ -160,12 +178,14 @@ class EventSpec extends BaseFeatureSpec {
       storeEvents(e2)
 
       When("I get the events for that specific case")
-      val result = Http(s"$serviceUrl/events?type=${e1.details.`type`}")
-        .header(apiTokenKey, appConfig.authorization)
-        .asString
+      val responseFuture = httpClient
+        .url(s"$serviceUrl/events?type=${e1.details.`type`}")
+        .withHttpHeaders(apiTokenKey -> appConfig.authorization)
+        .get()
+      val result = Await.result(responseFuture, Duration(1000L, "ms"))
 
       Then("The response code should be OK")
-      result.code shouldEqual OK
+      result.status.intValue() shouldEqual OK
 
       And("All events are returned in the JSON response")
       Json.parse(result.body) shouldBe Json.toJson(Paged(Seq(e1)))
@@ -182,14 +202,15 @@ class EventSpec extends BaseFeatureSpec {
 
       When("I create an Event")
       val payload = NewEventRequest(Note("Note"), Operator("user-id", Some("user name")))
-      val result = Http(s"$serviceUrl/cases/$caseRef/events")
-        .header(apiTokenKey, appConfig.authorization)
-        .header(CONTENT_TYPE, ContentTypes.JSON)
-        .postData(Json.toJson(payload).toString())
-        .asString
+
+      val responseFuture = httpClient
+        .url(s"$serviceUrl/cases/$caseRef/events")
+        .withHttpHeaders(apiTokenKey -> appConfig.authorization, CONTENT_TYPE -> ContentTypes.JSON)
+        .post(Json.toJson(payload).toString())
+      val result = Await.result(responseFuture, Duration(1000L, "ms"))
 
       Then("The response code should be created")
-      result.code shouldEqual Status.CREATED
+      result.status.intValue() shouldEqual Status.CREATED
 
       And("The event is returned in the JSON response")
       val responseEvent = Json.parse(result.body).as[Event]
@@ -206,14 +227,14 @@ class EventSpec extends BaseFeatureSpec {
 
       When("I create an Event")
       val payload = NewEventRequest(CaseCreated("Liability case created"), Operator("user-id", Some("user name")))
-      val result = Http(s"$serviceUrl/cases/$caseRef/events")
-        .header(apiTokenKey, appConfig.authorization)
-        .header(CONTENT_TYPE, ContentTypes.JSON)
-        .postData(Json.toJson(payload).toString())
-        .asString
+      val responseFuture = httpClient
+        .url(s"$serviceUrl/cases/$caseRef/events")
+        .withHttpHeaders(apiTokenKey -> appConfig.authorization, CONTENT_TYPE -> ContentTypes.JSON)
+        .post(Json.toJson(payload).toString())
+      val result = Await.result(responseFuture, Duration(1000L, "ms"))
 
       Then("The response code should be CREATED")
-      result.code shouldEqual Status.CREATED
+      result.status.intValue() shouldEqual Status.CREATED
 
       And("The event is returned in the JSON response")
       val responseEvent = Json.parse(result.body).as[Event]
@@ -241,14 +262,14 @@ class EventSpec extends BaseFeatureSpec {
         )
       },
       application = caseBaseApplication match {
-        case app: LiabilityOrder =>
-          app.copy(
-            entryDate     = app.entryDate.map(_.truncatedTo(ChronoUnit.MILLIS)),
-            dateOfReceipt = app.dateOfReceipt.map(_.truncatedTo(ChronoUnit.MILLIS))
+        case liabilityApp: LiabilityOrder =>
+          liabilityApp.copy(
+            entryDate     = liabilityApp.entryDate.map(_.truncatedTo(ChronoUnit.MILLIS)),
+            dateOfReceipt = liabilityApp.dateOfReceipt.map(_.truncatedTo(ChronoUnit.MILLIS))
           )
-        case app: BTIApplication =>
-          app.copy(
-            agent = app.agent.map(agent =>
+        case btiApp: BTIApplication =>
+          btiApp.copy(
+            agent = btiApp.agent.map(agent =>
               agent.copy(
                 letterOfAuthorisation = agent.letterOfAuthorisation.map(att =>
                   att.copy(
@@ -258,7 +279,7 @@ class EventSpec extends BaseFeatureSpec {
               )
             ),
             applicationPdf =
-              app.applicationPdf.map(pdf => pdf.copy(timestamp = pdf.timestamp.truncatedTo(ChronoUnit.MILLIS)))
+              btiApp.applicationPdf.map(pdf => pdf.copy(timestamp = pdf.timestamp.truncatedTo(ChronoUnit.MILLIS)))
           )
         case _ => caseBaseApplication
       }

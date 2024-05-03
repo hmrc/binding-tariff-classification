@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.bindingtariffclassification.connector
 
-import com.kenshoo.play.metrics.Metrics
 import play.api.libs.json.Json
 import uk.gov.hmrc.bindingtariffclassification.common.Logging
 import uk.gov.hmrc.bindingtariffclassification.config.AppConfig
@@ -25,6 +24,7 @@ import uk.gov.hmrc.bindingtariffclassification.metrics.HasMetrics
 import uk.gov.hmrc.bindingtariffclassification.model.BankHolidaysResponse
 import uk.gov.hmrc.bindingtariffclassification.model.RESTFormatters.formatBankHolidaysResponse
 import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.play.bootstrap.metrics.Metrics
 
 import java.nio.charset.StandardCharsets
 import java.time.LocalDate

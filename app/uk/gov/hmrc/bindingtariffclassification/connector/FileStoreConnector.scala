@@ -17,17 +17,17 @@
 package uk.gov.hmrc.bindingtariffclassification.connector
 
 import javax.inject.{Inject, Singleton}
-import akka.stream.Materializer
-import akka.stream.scaladsl.Source
+import org.apache.pekko.stream.Materializer
+import org.apache.pekko.stream.scaladsl.Source
 import uk.gov.hmrc.bindingtariffclassification.config.AppConfig
 import uk.gov.hmrc.bindingtariffclassification.model.filestore.{FileMetadata, FileSearch}
 import uk.gov.hmrc.bindingtariffclassification.model.{Paged, Pagination}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 
 import scala.concurrent.{ExecutionContext, Future}
-import com.kenshoo.play.metrics.Metrics
 import uk.gov.hmrc.bindingtariffclassification.metrics.HasMetrics
 import uk.gov.hmrc.play.bootstrap.http.DefaultHttpClient
+import uk.gov.hmrc.play.bootstrap.metrics.Metrics
 
 @Singleton
 class FileStoreConnector @Inject() (appConfig: AppConfig, http: DefaultHttpClient, val metrics: Metrics)(

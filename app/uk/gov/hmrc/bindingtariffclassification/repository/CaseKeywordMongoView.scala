@@ -43,7 +43,7 @@ class CaseKeywordMongoView @Inject() (mongoComponent: MongoComponent)(implicit e
   private[repository] def createView(viewName: String, viewOn: String): Future[_] =
     mongoComponent.database.createView(viewName, viewOn, pipeline).toFuture()
 
-  private[repository] def dropView(viewName: String): Future[Void] =
+  private[repository] def dropView(viewName: String): Future[Unit] =
     getView(viewName)
       .drop()
       .toFuture()
@@ -84,7 +84,7 @@ class CaseKeywordMongoView @Inject() (mongoComponent: MongoComponent)(implicit e
   private val unwindKeywords  = unwind("$keywords")
   private val group           = Aggregates.group("$keywords", push("cases", "$$ROOT"))
   private val addKeywordField = addFields(Field("keyword.name", "$_id"))
-  private val project         = Aggregates.project(Codecs.toBson(Json.obj("_id" -> 0)).asDocument()) // todo fix this
+  private val project         = Aggregates.project(Codecs.toBson(Json.obj("_id" -> 0)).asDocument()) //todo fix this
 
   protected val pipeline: Seq[Bson] =
     Seq(

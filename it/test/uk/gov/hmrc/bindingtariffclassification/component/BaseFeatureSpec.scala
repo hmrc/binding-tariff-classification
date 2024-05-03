@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.bindingtariffclassification.component
 
-import com.kenshoo.play.metrics.Metrics
 import com.mongodb.WriteConcern
 import org.scalatest._
 import org.scalatest.featurespec.AnyFeatureSpec
@@ -30,6 +29,7 @@ import uk.gov.hmrc.bindingtariffclassification.model.{Case, Event, Sequence}
 import uk.gov.hmrc.bindingtariffclassification.repository.{CaseMongoRepository, EventMongoRepository, SequenceMongoRepository}
 import uk.gov.hmrc.bindingtariffclassification.scheduler.ScheduledJobs
 import uk.gov.hmrc.mongo.lock.{LockRepository, MongoLockRepository}
+import uk.gov.hmrc.play.bootstrap.metrics.Metrics
 import util.TestMetrics
 
 import scala.concurrent.Await.result
@@ -63,7 +63,7 @@ abstract class BaseFeatureSpec
   private lazy val scheduledJobStores: Iterable[LockRepository] =
     app.injector.instanceOf[ScheduledJobs].jobs.map(_.lockRepository)
 
-  def dropStores(): Iterable[Void] = {
+  def dropStores(): Iterable[Unit] = {
     result(caseStore.collection.withWriteConcern(WriteConcern.JOURNALED).drop().toFuture(), timeout)
     result(eventStore.collection.withWriteConcern(WriteConcern.JOURNALED).drop().toFuture(), timeout)
     result(sequenceStore.collection.withWriteConcern(WriteConcern.JOURNALED).drop().toFuture(), timeout)

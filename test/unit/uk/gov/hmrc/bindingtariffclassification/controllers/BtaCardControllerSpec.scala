@@ -15,7 +15,7 @@
  */
 
 package uk.gov.hmrc.bindingtariffclassification.controllers
-import akka.japi.Option.Some
+
 import com.google.inject.Inject
 import org.mockito.Mockito.when
 import play.api.inject.Injector

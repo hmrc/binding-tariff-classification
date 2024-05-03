@@ -18,11 +18,11 @@ package uk.gov.hmrc.bindingtariffclassification.migrations
 
 import java.time.ZonedDateTime
 import javax.inject.{Inject, Singleton}
-import com.kenshoo.play.metrics.Metrics
 import uk.gov.hmrc.bindingtariffclassification.common.Logging
 import uk.gov.hmrc.bindingtariffclassification.metrics.HasMetrics
 import uk.gov.hmrc.bindingtariffclassification.model.JobRunEvent
 import uk.gov.hmrc.bindingtariffclassification.repository.MigrationLockRepository
+import uk.gov.hmrc.play.bootstrap.metrics.Metrics
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.Future.successful
