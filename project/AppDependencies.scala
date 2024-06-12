@@ -16,7 +16,7 @@ object AppDependencies {
     "org.typelevel"                %% "cats-core"                   % "2.10.0",
     "com.github.pathikrit"         %% "better-files"                % "3.9.2",
     "org.quartz-scheduler"         % "quartz"                       % "2.3.2",
-    "com.fasterxml.jackson.module" %% "jackson-module-scala"        % "2.17.0"
+    "com.fasterxml.jackson.module" %% "jackson-module-scala"        % "2.17.1"
   )
 
   val test: Seq[ModuleID] = Seq(
