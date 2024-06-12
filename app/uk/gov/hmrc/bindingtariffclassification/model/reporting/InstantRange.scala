@@ -26,7 +26,7 @@ case class InstantRange(
 )
 
 object InstantRange {
-  val allTime = InstantRange(Instant.MIN, Instant.MAX)
+  val allTime: InstantRange = InstantRange(Instant.MIN, Instant.MAX)
 
   implicit def bindable(implicit stringBinder: QueryStringBindable[String]): QueryStringBindable[InstantRange] =
     new QueryStringBindable[InstantRange] {
@@ -43,10 +43,11 @@ object InstantRange {
         val maxValue: Instant = param(max(key)).flatMap(bindInstant).getOrElse(Instant.MAX)
         val range             = InstantRange(minValue, maxValue)
 
-        if (range == InstantRange.allTime)
+        if (range == InstantRange.allTime) {
           None
-        else
+        } else {
           Some(Right(range))
+        }
       }
 
       override def unbind(key: String, filter: InstantRange): String =

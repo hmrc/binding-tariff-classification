@@ -127,9 +127,9 @@ class SearchMapper @Inject() (appConfig: AppConfig) extends Mapper {
 
   private def inArrayOrNone[T](values: IterableOnce[T])(implicit writes: Writes[T]): JsObject =
     values match {
-      case _ if values.iterator.exists(_ == "some") =>
+      case _ if values.iterator.contains("some") =>
         Json.obj("$ne" -> JsNull)
-      case _ if values.iterator.exists(_ == "none") =>
+      case _ if values.iterator.contains("none") =>
         JsObject(
           Map(
             "$in" -> JsArray(JsNull :: values.iterator.toList.filterNot(_ == "none").map(writes.writes))

@@ -71,11 +71,11 @@ object SummaryReport {
     override def bind(key: String, requestParams: Map[String, Seq[String]]): Option[Either[String, SummaryReport]] = {
       val includeCases = boolBindable.bind(includeCasesKey, requestParams).getOrElse(Right(false))
       val dateRange    = rangeBindable.bind(dateRangeKey, requestParams).getOrElse(Right(InstantRange.allTime))
-      val sortBy       = param(sortByKey)(requestParams).flatMap(ReportField.fields.get(_))
+      val sortBy       = param(sortByKey)(requestParams).flatMap(ReportField.fields.get)
       val sortOrder    = param(sortOrderKey)(requestParams).flatMap(bindSortDirection).getOrElse(SortDirection.ASCENDING)
       val teams        = params(teamsKey)(requestParams).getOrElse(Set.empty)
       val groupBy = orderedParams(groupByKey)(requestParams)
-        .map(_.flatMap(ReportField.fields.get(_)))
+        .map(_.flatMap(ReportField.fields.get))
         .flatMap(NonEmptySeq.fromSeq)
       val caseTypes = params(caseTypesKey)(requestParams)
         .map(_.map(bindApplicationType).collect { case Some(value) => value })

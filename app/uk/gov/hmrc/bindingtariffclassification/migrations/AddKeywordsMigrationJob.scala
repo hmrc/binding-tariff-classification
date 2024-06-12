@@ -39,13 +39,14 @@ class AddKeywordsMigrationJob @Inject() (
 
   override def execute(): Future[Unit] =
     keywordService.findAll(Pagination()).flatMap { page =>
-      if (page.resultCount > 0)
+      if (page.resultCount > 0) {
         Future.unit
-      else
+      } else {
         using(Resource.getAsStream("keywords.txt")) { stream =>
           val keywords = stream.lines
           keywords.toList.traverse_(keyword => keywordService.addKeyword(Keyword(keyword, approved = true)))
         }
+      }
     }
 
   override def rollback(): Future[Unit] =

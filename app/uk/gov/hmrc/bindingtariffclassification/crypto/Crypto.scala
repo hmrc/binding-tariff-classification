@@ -95,12 +95,12 @@ class Crypto @Inject() (crypto: AesCrypto) {
           )
         )
       case CORRESPONDENCE =>
-        val corres = c.application.asCorrespondence
+        val correspondence = c.application.asCorrespondence
         c.copy(
-          application = corres.copy(
-            contact   = applyCrypto(corres.contact)(f),
-            agentName = corres.agentName.map(f(_)),
-            address   = applyCrypto(corres.address)(f)
+          application = correspondence.copy(
+            contact   = applyCrypto(correspondence.contact)(f),
+            agentName = correspondence.agentName.map(f(_)),
+            address   = applyCrypto(correspondence.address)(f)
           )
         )
       case t: ApplicationType =>

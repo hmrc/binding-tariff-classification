@@ -35,10 +35,10 @@ class CryptoSpec extends BaseSpec {
   private def encContacts(k: String)  = Contact(k, k, Some(k))
   private def encAddress(k: String)   = Address(k, k, Some(k), Some(k))
 
-  private val bti    = createBTIApplicationWithAllFields()
-  private val lo     = createLiabilityOrder
-  private val misc   = createMiscApplication
-  private val corres = createCorrespondenceApplication
+  private val bti            = createBTIApplicationWithAllFields()
+  private val lo             = createLiabilityOrder
+  private val misc           = createMiscApplication
+  private val correspondence = createCorrespondenceApplication
 
   private def expectedEncryptedBti(k: String, letter: Option[Attachment]): BTIApplication =
     bti.copy(
@@ -61,7 +61,7 @@ class CryptoSpec extends BaseSpec {
     )
 
   private def expectedEncryptedCorrespondenceApplication(k: String): CorrespondenceApplication =
-    corres.copy(
+    correspondence.copy(
       contact   = encContacts(k),
       agentName = Some(k),
       address   = encAddress(k)
@@ -91,7 +91,7 @@ class CryptoSpec extends BaseSpec {
     }
 
     "encrypt Correspondence applications" in {
-      val c   = createCase(app = corres)
+      val c   = createCase(app = correspondence)
       val enc = crypto.encrypt(c)
       enc shouldBe c.copy(application = expectedEncryptedCorrespondenceApplication(k))
     }
@@ -122,7 +122,7 @@ class CryptoSpec extends BaseSpec {
     }
 
     "decrypt Correspondence applications" in {
-      val c   = createCase(app = corres)
+      val c   = createCase(app = correspondence)
       val dec = crypto.decrypt(c)
       dec shouldBe c.copy(application = expectedEncryptedCorrespondenceApplication(k))
     }

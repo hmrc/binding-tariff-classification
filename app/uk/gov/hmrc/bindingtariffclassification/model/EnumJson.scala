@@ -37,17 +37,18 @@ object EnumJson {
     case _ => JsError("String value is expected")
   }
 
-  def readsMap[E, B](implicit erds: Reads[E], brds: Reads[B]): JsValue => JsResult[Map[E, B]] = (js: JsValue) => {
-    val maprds: Reads[Map[String, B]] = Reads.mapReads[B]
-    Json
-      .fromJson[Map[String, B]](js)(maprds)
-      .map(_.map {
-        case (key: String, value: B) =>
-          erds.reads(JsString(key)).get -> value
-      })
-  }
+  private def readsMap[E, B](implicit erds: Reads[E], brds: Reads[B]): JsValue => JsResult[Map[E, B]] =
+    (js: JsValue) => {
+      val maprds: Reads[Map[String, B]] = Reads.mapReads[B]
+      Json
+        .fromJson[Map[String, B]](js)(maprds)
+        .map(_.map {
+          case (key: String, value: B) =>
+            erds.reads(JsString(key)).get -> value
+        })
+    }
 
-  def writesMap[E, B](implicit ewrts: Writes[E], bwrts: Writes[B]): Map[E, B] => JsObject =
+  private def writesMap[E, B](implicit ewrts: Writes[E], bwrts: Writes[B]): Map[E, B] => JsObject =
     (map: Map[E, B]) =>
       Json
         .toJson(map.map {

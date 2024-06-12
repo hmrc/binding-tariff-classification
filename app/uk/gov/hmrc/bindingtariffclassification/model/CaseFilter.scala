@@ -48,7 +48,7 @@ object CaseFilter {
   private val assigneeIdKey       = "assignee_id"
   private val statusKey           = "status"
   private val caseSourceKey       = "case_source"
-  private val caseDetailseKey     = "case_details"
+  private val caseDetailsKey      = "case_details"
   private val minDecisionStartKey = "min_decision_start"
   private val minDecisionEndKey   = "min_decision_end"
   private val commodityCodeKey    = "commodity_code"
@@ -76,7 +76,7 @@ object CaseFilter {
             assigneeId       = param(assigneeIdKey),
             statuses         = params(statusKey).map(_.map(bindPseudoCaseStatus).filter(_.isDefined).map(_.get)),
             caseSource       = param(caseSourceKey),
-            caseDetails      = param(caseDetailseKey),
+            caseDetails      = param(caseDetailsKey),
             minDecisionStart = param(minDecisionStartKey).flatMap(bindInstant),
             minDecisionEnd   = param(minDecisionEndKey).flatMap(bindInstant),
             commodityCode    = param(commodityCodeKey),
@@ -90,18 +90,18 @@ object CaseFilter {
 
     override def unbind(key: String, filter: CaseFilter): String =
       Seq(
-        filter.reference.map(_.map(s => stringBinder.unbind(referenceKey, s.toString)).mkString("&")),
+        filter.reference.map(_.map(s => stringBinder.unbind(referenceKey, s)).mkString("&")),
         filter.applicationType.map(_.map(s => stringBinder.unbind(applicationTypeKey, s.toString)).mkString("&")),
-        filter.queueId.map(_.map(s => stringBinder.unbind(queueIdKey, s.toString)).mkString("&")),
+        filter.queueId.map(_.map(s => stringBinder.unbind(queueIdKey, s)).mkString("&")),
         filter.eori.map(stringBinder.unbind(eoriKey, _)),
         filter.assigneeId.map(stringBinder.unbind(assigneeIdKey, _)),
         filter.statuses.map(_.map(s => stringBinder.unbind(statusKey, s.toString)).mkString("&")),
         filter.caseSource.map(stringBinder.unbind(caseSourceKey, _)),
-        filter.caseDetails.map(stringBinder.unbind(caseDetailseKey, _)),
+        filter.caseDetails.map(stringBinder.unbind(caseDetailsKey, _)),
         filter.minDecisionEnd.map(i => stringBinder.unbind(minDecisionEndKey, i.toString)),
         filter.commodityCode.map(stringBinder.unbind(commodityCodeKey, _)),
         filter.decisionDetails.map(stringBinder.unbind(decisionDetailsKey, _)),
-        filter.keywords.map(_.map(s => stringBinder.unbind(keywordKey, s.toString)).mkString("&")),
+        filter.keywords.map(_.map(s => stringBinder.unbind(keywordKey, s)).mkString("&")),
         filter.migrated.map(boolBinder.unbind(migratedKey, _))
       ).filter(_.isDefined).map(_.get).mkString("&")
   }

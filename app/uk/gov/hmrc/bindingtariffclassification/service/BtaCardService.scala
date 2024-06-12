@@ -41,26 +41,26 @@ class BtaCardService @Inject() (caseRepository: CaseRepository)(implicit ec: Exe
     val totalApplications = data.filter { case (caseStatus, _) => applicationStatuses.contains(caseStatus) }
     BtaCard(
       eori = eori,
-      applications =
-        if (totalApplications.isEmpty) None
-        else {
-          Some(
-            BtaApplications(
-              total      = totalApplications.map { case (_, applications) => applications.length }.sum,
-              actionable = totalApplications.getOrElse(REFERRED, List.empty).length
-            )
+      applications = if (totalApplications.isEmpty) {
+        None
+      } else {
+        Some(
+          BtaApplications(
+            total      = totalApplications.map { case (_, applications) => applications.length }.sum,
+            actionable = totalApplications.getOrElse(REFERRED, List.empty).length
           )
-        },
-      rulings =
-        if (totalRulings.total == 0) None
-        else {
-          Some(
-            BtaRulings(
-              total    = totalRulings.total,
-              expiring = totalRulings.expiring
-            )
+        )
+      },
+      rulings = if (totalRulings.total == 0) {
+        None
+      } else {
+        Some(
+          BtaRulings(
+            total    = totalRulings.total,
+            expiring = totalRulings.expiring
           )
-        }
+        )
+      }
     )
   }
 

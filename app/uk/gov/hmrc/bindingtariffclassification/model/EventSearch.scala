@@ -58,7 +58,7 @@ object EventSearch {
 
       override def unbind(key: String, filter: EventSearch): String =
         Seq(
-          filter.caseReference.map(_.map(s => stringBinder.unbind(caseReferenceKey, s.toString)).mkString("&")),
+          filter.caseReference.map(_.map(s => stringBinder.unbind(caseReferenceKey, s)).mkString("&")),
           filter.`type`.map(_.map(s => stringBinder.unbind(typeKey, s.toString)).mkString("&")),
           filter.timestampMin.map(i => stringBinder.unbind(timestampMinKey, i.toString)),
           filter.timestampMax.map(i => stringBinder.unbind(timestampMaxKey, i.toString))

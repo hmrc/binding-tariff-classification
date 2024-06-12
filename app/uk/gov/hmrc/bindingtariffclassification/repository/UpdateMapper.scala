@@ -24,7 +24,7 @@ import uk.gov.hmrc.bindingtariffclassification.model.{ApplicationUpdate, BTIUpda
 import javax.inject.{Inject, Singleton}
 
 @Singleton
-class UpdateMapper @Inject() () extends Mapper {
+class UpdateMapper @Inject() extends Mapper {
   def updateApplication(update: ApplicationUpdate): Seq[(String, JsValueWrapper)] =
     update match {
       case BTIUpdate(applicationPdf) =>

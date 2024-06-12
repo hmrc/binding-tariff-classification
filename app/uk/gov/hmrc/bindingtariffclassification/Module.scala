@@ -28,7 +28,7 @@ import javax.inject.{Inject, Provider}
 
 class Module extends play.api.inject.Module {
 
-  def isMongoEncryptionEnabled(configuration: Configuration): Boolean =
+  private def isMongoEncryptionEnabled(configuration: Configuration): Boolean =
     configuration.get[Boolean]("mongodb.encryption.enabled")
 
   override def bindings(environment: Environment, configuration: Configuration): Seq[Binding[_]] = {

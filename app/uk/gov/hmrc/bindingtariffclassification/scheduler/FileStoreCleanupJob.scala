@@ -19,7 +19,7 @@ package uk.gov.hmrc.bindingtariffclassification.scheduler
 import org.apache.pekko.stream.Materializer
 import org.apache.pekko.stream.scaladsl.{Sink, Source}
 import uk.gov.hmrc.bindingtariffclassification.common.Logging
-import uk.gov.hmrc.bindingtariffclassification.config.AppConfig
+import uk.gov.hmrc.bindingtariffclassification.config.{AppConfig, JobConfig}
 import uk.gov.hmrc.bindingtariffclassification.connector.FileStoreConnector
 import uk.gov.hmrc.bindingtariffclassification.model._
 import uk.gov.hmrc.bindingtariffclassification.model.filestore.{FileMetadata, FileSearch}
@@ -43,7 +43,7 @@ class FileStoreCleanupJob @Inject() (
     extends ScheduledJob
     with Logging {
 
-  override val jobConfig = appConfig.fileStoreCleanup
+  override val jobConfig: JobConfig = appConfig.fileStoreCleanup
 
   override val lockRepository: LockRepository = mongoLockRepository
   override val lockId: String                 = "filestore_cleanup"

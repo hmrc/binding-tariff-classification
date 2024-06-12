@@ -266,10 +266,11 @@ class CaseMongoRepository @Inject() (
       }
 
     val dateFieldFilter = {
-      if (report.dueToExpireRange)
+      if (report.dueToExpireRange) {
         ReportField.DateExpired
-      else
+      } else {
         ReportField.DateCreated
+      }
     }
 
     def minDateFilter(dateField: DateField): Bson =
@@ -425,7 +426,7 @@ class CaseMongoRepository @Inject() (
         bsonDocSeq
           .map(bsonDocument => Json.parse(bsonDocument.toJson).as[JsObject])
           .map { json =>
-            if (report.includeCases)
+            if (report.includeCases) {
               CaseResultGroup(
                 count = json(ReportField.Count.fieldName).as[Long],
                 groupKey = report.groupBy
@@ -434,7 +435,7 @@ class CaseMongoRepository @Inject() (
                   report.maxFields.map(field => getNumberFieldValue(field, json.value.get(field.fieldName))).toList,
                 cases = json("cases").as[List[Case]]
               )
-            else
+            } else {
               SimpleResultGroup(
                 count = json(ReportField.Count.fieldName).as[Long],
                 groupKey = report.groupBy
@@ -442,6 +443,7 @@ class CaseMongoRepository @Inject() (
                 maxFields =
                   report.maxFields.map(field => getNumberFieldValue(field, json.value.get(field.fieldName))).toList
               )
+            }
           }
       )
 

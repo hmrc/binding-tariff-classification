@@ -17,7 +17,7 @@
 package uk.gov.hmrc.bindingtariffclassification.scheduler
 
 import uk.gov.hmrc.bindingtariffclassification.common.Logging
-import uk.gov.hmrc.bindingtariffclassification.config.AppConfig
+import uk.gov.hmrc.bindingtariffclassification.config.{AppConfig, JobConfig}
 import uk.gov.hmrc.bindingtariffclassification.connector.BankHolidaysConnector
 import uk.gov.hmrc.bindingtariffclassification.model._
 import uk.gov.hmrc.bindingtariffclassification.service.{CaseService, EventService}
@@ -44,7 +44,7 @@ class ActiveDaysElapsedJob @Inject() (
     extends ScheduledJob
     with Logging {
 
-  override val jobConfig = appConfig.activeDaysElapsed
+  override val jobConfig: JobConfig = appConfig.activeDaysElapsed
 
   override val lockRepository: LockRepository = mongoLockRepository
   override val lockId: String                 = "active_days_elapsed"

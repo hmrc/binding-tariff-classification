@@ -50,7 +50,7 @@ class UsersController @Inject() (appConfig: AppConfig, usersService: UsersServic
         c <- usersService.insertUser(userRequest.operator)
       } yield Created(Json.toJson(c)(RESTFormatters.formatOperator))
     } recover recovery map { result =>
-      logger.debug(s"User creation Result : $result");
+      logger.debug(s"User creation Result : $result")
       result
     }
   }
@@ -64,7 +64,7 @@ class UsersController @Inject() (appConfig: AppConfig, usersService: UsersServic
             case _           => false
           }
           usersService.updateUser(user, upsert) map handleNotFound recover recovery
-        } else
+        } else {
           successful(
             BadRequest(
               JsErrorResponse(
@@ -73,6 +73,7 @@ class UsersController @Inject() (appConfig: AppConfig, usersService: UsersServic
               )
             )
           )
+        }
       } recover recovery
     }
 

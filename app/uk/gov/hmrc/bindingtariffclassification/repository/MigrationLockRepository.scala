@@ -53,7 +53,7 @@ class MigrationLockMongoRepository @Inject() (mongoComponent: MongoComponent)(im
     )
     with MigrationLockRepository {
 
-  val mongoDuplicateKeyErrorCode: Int = 11000
+  private val mongoDuplicateKeyErrorCode: Int = 11000
 
   override def lock(e: JobRunEvent): Future[Boolean] =
     collection.insertOne(e).toFuture().map { _ =>
@@ -83,7 +83,7 @@ class MigrationLockMongoRepository @Inject() (mongoComponent: MongoComponent)(im
     collection.deleteMany(empty()).toFuture().flatMap(_ => Future.unit)
 
   /** Tells if this error is due to a write on a secondary node. */
-  def isNotAPrimaryError(code: Int): Boolean = Some(code).exists {
+  private def isNotAPrimaryError(code: Int): Boolean = Some(code).exists {
     case 10058 | 10107 | 13435 | 13436 => true
     case _                             => false
   }
