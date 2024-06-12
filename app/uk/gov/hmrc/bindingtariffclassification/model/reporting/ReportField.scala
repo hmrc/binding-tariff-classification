@@ -54,7 +54,7 @@ case class DaysSinceField(override val fieldName: String, override val underlyin
     extends ReportField[Long](fieldName, underlyingField) {
   def withValue(value: Option[Long]): NumberResultField = NumberResultField(fieldName, value)
 }
-case class CoalesceField(override val fieldName: String, val fieldChoices: NonEmptySeq[String])
+case class CoalesceField(override val fieldName: String, fieldChoices: NonEmptySeq[String])
     extends ReportField[String](fieldName, fieldChoices.head) {
   def withValue(value: Option[String]): StringResultField = StringResultField(fieldName, value)
 }
@@ -65,29 +65,29 @@ case class LiabilityStatusField(override val fieldName: String, override val und
 }
 
 object ReportField {
-  val Count       = NumberField("count", "count")
-  val Reference   = StringField("reference", "reference")
-  val Description = StringField("description", "application.detailedDescription")
-  val CaseSource =
+  val Count: NumberField     = NumberField("count", "count")
+  val Reference: StringField = StringField("reference", "reference")
+  private val Description    = StringField("description", "application.detailedDescription")
+  val CaseSource: CoalesceField =
     CoalesceField("source", NonEmptySeq.of("application.correspondenceStarter", "application.caseType"))
-  val Status    = StatusField("status", "status")
-  val CaseType  = CaseTypeField("case_type", "application.type")
-  val Chapter   = ChapterField("chapter", "decision.bindingCommodityCode")
-  val GoodsName = StringField("goods_name", "application.goodName")
-  val TraderName =
+  val Status: StatusField            = StatusField("status", "status")
+  val CaseType: CaseTypeField        = CaseTypeField("case_type", "application.type")
+  val Chapter: ChapterField          = ChapterField("chapter", "decision.bindingCommodityCode")
+  private val GoodsName: StringField = StringField("goods_name", "application.goodName")
+  private val TraderName: CoalesceField =
     CoalesceField("trader_name", NonEmptySeq.of("application.traderName", "application.holder.businessName"))
-  val BusinessName    = StringField("business_name", "application.holder.businessName")
-  val User            = StringField("assigned_user", "assignee.id")
-  val Team            = StringField("assigned_team", "queueId")
-  val DateCreated     = DateField("date_created", "createdDate")
-  val DateCompleted   = DateField("date_completed", "decision.effectiveStartDate")
-  val DateExpired     = DateField("date_expired", "decision.effectiveEndDate")
-  val ElapsedDays     = NumberField("elapsed_days", "daysElapsed")
-  val TotalDays       = DaysSinceField("total_days", "createdDate")
-  val ReferredDays    = NumberField("referred_days", "referredDaysElapsed")
-  val LiabilityStatus = LiabilityStatusField("liability_status", "application.status")
-  val ContactName     = StringField("contact_name", "application.contact.name")
-  val ContactEmail    = StringField("contact_email", "application.contact.email")
+  private val BusinessName: StringField     = StringField("business_name", "application.holder.businessName")
+  val User: StringField                     = StringField("assigned_user", "assignee.id")
+  val Team: StringField                     = StringField("assigned_team", "queueId")
+  val DateCreated: DateField                = DateField("date_created", "createdDate")
+  private val DateCompleted                 = DateField("date_completed", "decision.effectiveStartDate")
+  val DateExpired: DateField                = DateField("date_expired", "decision.effectiveEndDate")
+  val ElapsedDays: NumberField              = NumberField("elapsed_days", "daysElapsed")
+  val TotalDays: DaysSinceField             = DaysSinceField("total_days", "createdDate")
+  val ReferredDays: NumberField             = NumberField("referred_days", "referredDaysElapsed")
+  val LiabilityStatus: LiabilityStatusField = LiabilityStatusField("liability_status", "application.status")
+  val ContactName: StringField              = StringField("contact_name", "application.contact.name")
+  val ContactEmail: StringField             = StringField("contact_email", "application.contact.email")
 
   val fields: Map[String, ReportField[_]] = List(
     Count,

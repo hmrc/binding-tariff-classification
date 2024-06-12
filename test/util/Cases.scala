@@ -216,7 +216,7 @@ object Cases {
   def withDecision(
     bindingCommodityCode: String        = "decision-commodity-code",
     effectiveStartDate: Option[Instant] = Some(Instant.now()),
-    effectiveEndDate: Option[Instant]   = Some(ZonedDateTime.now(ZoneOffset.UTC).plus(3, ChronoUnit.YEARS).toInstant()),
+    effectiveEndDate: Option[Instant]   = Some(ZonedDateTime.now(ZoneOffset.UTC).plus(3, ChronoUnit.YEARS).toInstant),
     justification: String               = "decision-justification",
     goodsDescription: String            = "decision-goods-description",
     appeal: Seq[Appeal]                 = Seq.empty

@@ -16,10 +16,12 @@
 
 package uk.gov.hmrc.bindingtariffclassification.model
 
+import uk.gov.hmrc.bindingtariffclassification.model
+
 object AppealType extends Enumeration {
   type AppealType = Value
   val ADR, REVIEW, APPEAL_TIER_1, APPEAL_TIER_2, COURT_OF_APPEALS, SUPREME_COURT = Value
 
-  val reviewTypes = Set(ADR, REVIEW)
-  val appealTypes = Set(APPEAL_TIER_1, APPEAL_TIER_2, COURT_OF_APPEALS, SUPREME_COURT)
+  val reviewTypes: Set[model.AppealType.Value] = Set(ADR, REVIEW)
+  val appealTypes: Set[model.AppealType.Value] = Set(APPEAL_TIER_1, APPEAL_TIER_2, COURT_OF_APPEALS, SUPREME_COURT)
 }

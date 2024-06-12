@@ -44,7 +44,7 @@ class Scheduler @Inject() (
 
   lifecycle.addStopHook(() => Future(quartz.shutdown()))
 
-  val (enabledJobs, disabledJobs) = scheduledJobs.jobs.partition(_.enabled)
+  private val (enabledJobs, disabledJobs) = scheduledJobs.jobs.partition(_.enabled)
 
   disabledJobs.foreach(job => logger.warn(s"Scheduled job [${job.name}] is disabled"))
 

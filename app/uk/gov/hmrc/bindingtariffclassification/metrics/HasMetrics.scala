@@ -43,20 +43,20 @@ trait HasMetrics {
 
   def metrics: Metrics
 
-  lazy val registry: MetricRegistry = metrics.defaultRegistry
+  private lazy val registry: MetricRegistry = metrics.defaultRegistry
 
   val localMetrics = new LocalMetrics
 
   class LocalMetrics {
-    def startTimer(metric: Metric)                    = registry.timer(s"$metric-timer").time()
-    def stopTimer(context: Timer.Context)             = context.stop()
+    def startTimer(metric: Metric): Timer.Context     = registry.timer(s"$metric-timer").time()
+    def stopTimer(context: Timer.Context): Long       = context.stop()
     def incrementSuccessCounter(metric: Metric): Unit = registry.counter(s"$metric-success-counter").inc()
     def incrementFailedCounter(metric: Metric): Unit  = registry.counter(s"$metric-failed-counter").inc()
   }
 
   class MetricsTimer(metric: Metric) {
-    val timer        = localMetrics.startTimer(metric)
-    val timerRunning = new AtomicBoolean(true)
+    val timer: Timer.Context = localMetrics.startTimer(metric)
+    private val timerRunning = new AtomicBoolean(true)
 
     def completeWithSuccess(): Unit =
       if (timerRunning.compareAndSet(true, false)) {
@@ -86,10 +86,11 @@ trait HasMetrics {
 
         // Clean up timer according to server response
         result.foreach { result =>
-          if (isFailureStatus(result.header.status))
+          if (isFailureStatus(result.header.status)) {
             timer.completeWithFailure()
-          else
+          } else {
             timer.completeWithSuccess()
+          }
         }
 
         // Clean up timer for unhandled exceptions
