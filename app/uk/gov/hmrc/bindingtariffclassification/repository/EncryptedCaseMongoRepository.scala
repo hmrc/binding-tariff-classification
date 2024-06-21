@@ -24,8 +24,8 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class EncryptedCaseMongoRepository @Inject() (repository: CaseMongoRepository, crypto: Crypto)(
-  implicit ec: ExecutionContext
+class EncryptedCaseMongoRepository @Inject() (repository: CaseMongoRepository, crypto: Crypto)(implicit
+  ec: ExecutionContext
 ) extends CaseRepository {
 
   private def encrypt: Case => Case = crypto.encrypt
@@ -71,15 +71,14 @@ class EncryptedCaseMongoRepository @Inject() (repository: CaseMongoRepository, c
 
     fReport.map { pagedResult =>
       val result: Seq[Map[String, ReportResultField[_]]] = pagedResult.results.map(casesResult =>
-        casesResult.map {
-          case (fieldName, fieldValue) =>
-            fieldValue match {
-              case _ @StringResultField(_, data) if encryptedFieldNames.contains(fieldName) =>
-                val decryptedField = data.map(crypto.decryptString)
-                (fieldName, StringResultField(fieldName, decryptedField))
-              case _ =>
-                (fieldName, fieldValue)
-            }
+        casesResult.map { case (fieldName, fieldValue) =>
+          fieldValue match {
+            case _ @StringResultField(_, data) if encryptedFieldNames.contains(fieldName) =>
+              val decryptedField = data.map(crypto.decryptString)
+              (fieldName, StringResultField(fieldName, decryptedField))
+            case _ =>
+              (fieldName, fieldValue)
+          }
         }
       )
       pagedResult.copy(results = result)

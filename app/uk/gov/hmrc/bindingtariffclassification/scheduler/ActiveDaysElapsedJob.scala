@@ -54,7 +54,7 @@ class ActiveDaysElapsedJob @Inject() (
 
   private lazy val criteria = CaseSearch(
     filter = CaseFilter(statuses = Some(Set(PseudoCaseStatus.OPEN, PseudoCaseStatus.NEW))),
-    sort   = Some(CaseSort(Set(CaseSortField.REFERENCE)))
+    sort = Some(CaseSort(Set(CaseSortField.REFERENCE)))
   )
 
   override def execute(): Future[Unit] =
@@ -112,17 +112,17 @@ class ActiveDaysElapsedJob @Inject() (
     for {
       // Get the Status Change events for that case
       events <- eventService.search(
-                 EventSearch(Some(Set(c.reference)), Some(caseStatusChangeEventTypes)),
-                 Pagination(1, Integer.MAX_VALUE)
-               )
+                  EventSearch(Some(Set(c.reference)), Some(caseStatusChangeEventTypes)),
+                  Pagination(1, Integer.MAX_VALUE)
+                )
 
       // Generate a timeline of the Case Status over time
       statusTimeline @ _ = StatusTimeline.from(events.results)
 
       // Filter down to the days the case was not Referred or Suspended
       trackedActionableDays @ _ = workingDaysTracked
-        .filterNot(statusTimeline.statusOn(_).contains(CaseStatus.REFERRED))
-        .filterNot(statusTimeline.statusOn(_).contains(CaseStatus.SUSPENDED))
+                                    .filterNot(statusTimeline.statusOn(_).contains(CaseStatus.REFERRED))
+                                    .filterNot(statusTimeline.statusOn(_).contains(CaseStatus.SUSPENDED))
 
       trackedDaysElapsed   = trackedActionableDays.length.toLong
       untrackedDaysElapsed = c.migratedDaysElapsed.getOrElse(0L)

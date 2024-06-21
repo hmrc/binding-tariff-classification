@@ -19,14 +19,13 @@ package uk.gov.hmrc.bindingtariffclassification.model
 import play.api.mvc.QueryStringBindable
 
 case class CaseSearch(
-  filter: CaseFilter     = CaseFilter(),
+  filter: CaseFilter = CaseFilter(),
   sort: Option[CaseSort] = None
 )
 
 object CaseSearch {
 
-  implicit def bindable(
-    implicit
+  implicit def bindable(implicit
     filterBinder: QueryStringBindable[CaseFilter],
     sortBinder: QueryStringBindable[CaseSort]
   ): QueryStringBindable[CaseSearch] = new QueryStringBindable[CaseSearch] {

@@ -19,7 +19,7 @@ package uk.gov.hmrc.bindingtariffclassification.model
 import play.api.mvc.QueryStringBindable
 
 case class Pagination(
-  page: Int     = 1,
+  page: Int = 1,
   pageSize: Int = 100
 )
 

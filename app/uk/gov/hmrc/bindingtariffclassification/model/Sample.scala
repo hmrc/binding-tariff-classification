@@ -21,8 +21,8 @@ import uk.gov.hmrc.bindingtariffclassification.model.SampleSend.SampleSend
 import uk.gov.hmrc.bindingtariffclassification.model.SampleStatus.SampleStatus
 
 case class Sample(
-  status: Option[SampleStatus]       = None,
-  requestedBy: Option[Operator]      = None,
+  status: Option[SampleStatus] = None,
+  requestedBy: Option[Operator] = None,
   returnStatus: Option[SampleReturn] = None,
-  whoIsSending: Option[SampleSend]   = None
+  whoIsSending: Option[SampleSend] = None
 )

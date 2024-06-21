@@ -22,7 +22,7 @@ case class NewCaseRequest(
 ) {
   def toCase(reference: String): Case = Case(
     reference = reference,
-    status    = CaseStatus.NEW,
+    status = CaseStatus.NEW,
     sample = if (application.isBTI && application.asBTI.sampleToBeProvided) {
       Sample(status = Some(SampleStatus.AWAITING))
     } else {

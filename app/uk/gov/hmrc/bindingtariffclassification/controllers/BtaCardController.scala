@@ -40,10 +40,9 @@ class BtaCardController @Inject() (
         logger.info(s"[BtaCardController][getBtaCard] Card generated: ${Json.toJson(card).toString()}")
         Ok(Json.toJson(card))
       }
-      .recover {
-        case ex: Exception =>
-          logger.error(s"[BtaCardController][getBtaCard] Failure generating BTA Card counts: ${ex.getMessage}")
-          InternalServerError
+      .recover { case ex: Exception =>
+        logger.error(s"[BtaCardController][getBtaCard] Failure generating BTA Card counts: ${ex.getMessage}")
+        InternalServerError
       }
   }
 }

@@ -46,7 +46,7 @@ class BtaCardService @Inject() (caseRepository: CaseRepository)(implicit ec: Exe
       } else {
         Some(
           BtaApplications(
-            total      = totalApplications.map { case (_, applications) => applications.length }.sum,
+            total = totalApplications.map { case (_, applications) => applications.length }.sum,
             actionable = totalApplications.getOrElse(REFERRED, List.empty).length
           )
         )
@@ -56,7 +56,7 @@ class BtaCardService @Inject() (caseRepository: CaseRepository)(implicit ec: Exe
       } else {
         Some(
           BtaRulings(
-            total    = totalRulings.total,
+            total = totalRulings.total,
             expiring = totalRulings.expiring
           )
         )

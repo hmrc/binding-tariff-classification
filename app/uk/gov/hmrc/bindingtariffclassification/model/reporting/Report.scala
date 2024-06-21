@@ -37,15 +37,15 @@ sealed abstract class Report extends Product with Serializable {
 case class SummaryReport(
   groupBy: NonEmptySeq[ReportField[_]],
   sortBy: ReportField[_],
-  sortOrder: SortDirection.Value                = SortDirection.ASCENDING,
-  caseTypes: Set[ApplicationType.Value]         = Set.empty,
-  statuses: Set[PseudoCaseStatus.Value]         = Set.empty,
+  sortOrder: SortDirection.Value = SortDirection.ASCENDING,
+  caseTypes: Set[ApplicationType.Value] = Set.empty,
+  statuses: Set[PseudoCaseStatus.Value] = Set.empty,
   liabilityStatuses: Set[LiabilityStatus.Value] = Set.empty,
-  teams: Set[String]                            = Set.empty,
-  dateRange: InstantRange                       = InstantRange.allTime,
-  maxFields: Seq[ReportField[Long]]             = Seq.empty,
-  includeCases: Boolean                         = false,
-  dueToExpireRange: Boolean                     = false
+  teams: Set[String] = Set.empty,
+  dateRange: InstantRange = InstantRange.allTime,
+  maxFields: Seq[ReportField[Long]] = Seq.empty,
+  includeCases: Boolean = false,
+  dueToExpireRange: Boolean = false
 ) extends Report
 
 object SummaryReport {
@@ -60,8 +60,7 @@ object SummaryReport {
   private val statusesKey          = "status"
   private val liabilityStatusesKey = "liability_status"
 
-  implicit def summaryReportQueryStringBindable(
-    implicit
+  implicit def summaryReportQueryStringBindable(implicit
     stringBindable: QueryStringBindable[String],
     boolBindable: QueryStringBindable[Boolean],
     rangeBindable: QueryStringBindable[InstantRange]
@@ -93,23 +92,22 @@ object SummaryReport {
         }))
         .getOrElse(Seq.empty)
 
-      (groupBy, sortBy).mapN {
-        case (groupBy, sortBy) =>
-          for {
-            range   <- dateRange
-            include <- includeCases
-          } yield SummaryReport(
-            dateRange         = range,
-            groupBy           = groupBy,
-            sortBy            = sortBy,
-            sortOrder         = sortOrder,
-            caseTypes         = caseTypes,
-            statuses          = statuses,
-            liabilityStatuses = liabilityStatuses,
-            teams             = teams,
-            maxFields         = maxFields,
-            includeCases      = include
-          )
+      (groupBy, sortBy).mapN { case (groupBy, sortBy) =>
+        for {
+          range   <- dateRange
+          include <- includeCases
+        } yield SummaryReport(
+          dateRange = range,
+          groupBy = groupBy,
+          sortBy = sortBy,
+          sortOrder = sortOrder,
+          caseTypes = caseTypes,
+          statuses = statuses,
+          liabilityStatuses = liabilityStatuses,
+          teams = teams,
+          maxFields = maxFields,
+          includeCases = include
+        )
       }
     }
 
@@ -131,14 +129,14 @@ object SummaryReport {
 
 case class CaseReport(
   fields: NonEmptySeq[ReportField[_]],
-  sortBy: ReportField[_]                        = ReportField.Reference,
-  sortOrder: SortDirection.Value                = SortDirection.ASCENDING,
-  caseTypes: Set[ApplicationType.Value]         = Set.empty,
-  statuses: Set[PseudoCaseStatus.Value]         = Set.empty,
+  sortBy: ReportField[_] = ReportField.Reference,
+  sortOrder: SortDirection.Value = SortDirection.ASCENDING,
+  caseTypes: Set[ApplicationType.Value] = Set.empty,
+  statuses: Set[PseudoCaseStatus.Value] = Set.empty,
   liabilityStatuses: Set[LiabilityStatus.Value] = Set.empty,
-  teams: Set[String]                            = Set.empty,
-  dateRange: InstantRange                       = InstantRange.allTime,
-  dueToExpireRange: Boolean                     = false
+  teams: Set[String] = Set.empty,
+  dateRange: InstantRange = InstantRange.allTime,
+  dueToExpireRange: Boolean = false
 ) extends Report
 
 object CaseReport {
@@ -152,8 +150,7 @@ object CaseReport {
   private val liabilityStatusesKey = "liability_status"
   private val dueToExpireReportKey = "due_to_expire"
 
-  implicit def caseReportQueryStringBindable(
-    implicit
+  implicit def caseReportQueryStringBindable(implicit
     stringBindable: QueryStringBindable[String],
     rangeBindable: QueryStringBindable[InstantRange],
     booleanBindable: QueryStringBindable[Boolean]
@@ -184,15 +181,15 @@ object CaseReport {
           range <- dateRange
           dte   <- dueToExpire
         } yield CaseReport(
-          sortBy            = sortBy,
-          sortOrder         = sortOrder,
-          caseTypes         = caseTypes,
-          statuses          = statuses,
+          sortBy = sortBy,
+          sortOrder = sortOrder,
+          caseTypes = caseTypes,
+          statuses = statuses,
           liabilityStatuses = liabilityStatuses,
-          teams             = teams,
-          dateRange         = range,
-          fields            = fields,
-          dueToExpireRange  = dte
+          teams = teams,
+          dateRange = range,
+          fields = fields,
+          dueToExpireRange = dte
         )
       }
     }
@@ -213,15 +210,15 @@ object CaseReport {
 }
 
 case class QueueReport(
-  sortBy: ReportField[_]                        = ReportField.Team,
-  sortOrder: SortDirection.Value                = SortDirection.ASCENDING,
-  caseTypes: Set[ApplicationType.Value]         = Set.empty,
-  statuses: Set[PseudoCaseStatus.Value]         = Set.empty,
+  sortBy: ReportField[_] = ReportField.Team,
+  sortOrder: SortDirection.Value = SortDirection.ASCENDING,
+  caseTypes: Set[ApplicationType.Value] = Set.empty,
+  statuses: Set[PseudoCaseStatus.Value] = Set.empty,
   liabilityStatuses: Set[LiabilityStatus.Value] = Set.empty,
-  teams: Set[String]                            = Set.empty,
-  assignee: Option[String]                      = Option.empty,
-  dateRange: InstantRange                       = InstantRange.allTime,
-  dueToExpireRange: Boolean                     = false
+  teams: Set[String] = Set.empty,
+  assignee: Option[String] = Option.empty,
+  dateRange: InstantRange = InstantRange.allTime,
+  dueToExpireRange: Boolean = false
 ) extends Report
 
 object QueueReport {
@@ -234,8 +231,7 @@ object QueueReport {
   private val assigneeKey          = "assigned_user"
   private val liabilityStatusesKey = "liability_status"
 
-  implicit def queueReportQueryStringBindable(
-    implicit
+  implicit def queueReportQueryStringBindable(implicit
     stringBindable: QueryStringBindable[String],
     rangeBindable: QueryStringBindable[InstantRange]
   ): QueryStringBindable[QueueReport] = new QueryStringBindable[QueueReport] {
@@ -260,14 +256,14 @@ object QueueReport {
         for {
           range <- dateRange
         } yield QueueReport(
-          sortBy            = sortBy,
-          sortOrder         = sortOrder,
-          caseTypes         = caseTypes,
-          statuses          = statuses,
+          sortBy = sortBy,
+          sortOrder = sortOrder,
+          caseTypes = caseTypes,
+          statuses = statuses,
           liabilityStatuses = liabilityStatuses,
-          teams             = teams,
-          dateRange         = range,
-          assignee          = assignee
+          teams = teams,
+          dateRange = range,
+          assignee = assignee
         )
       )
     }

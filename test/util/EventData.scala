@@ -27,30 +27,30 @@ object EventData {
 
   private def createEvent(caseRef: String, details: Details, date: Instant = Instant.now()): Event =
     Event(
-      id            = RandomGenerator.randomUUID(),
-      details       = details,
-      operator      = Operator(RandomGenerator.randomUUID(), Some("user name")),
+      id = RandomGenerator.randomUUID(),
+      details = details,
+      operator = Operator(RandomGenerator.randomUUID(), Some("user name")),
       caseReference = caseRef,
-      timestamp     = date
+      timestamp = date
     )
 
   def createNoteEvent(caseReference: String, date: Instant = Instant.now()): Event =
     createEvent(
       caseRef = caseReference,
       details = Note("This is a random note"),
-      date    = date
+      date = date
     )
 
   def createCaseStatusChangeEvent(
     caseReference: String,
     from: CaseStatus = DRAFT,
-    to: CaseStatus   = NEW,
-    date: Instant    = Instant.now()
+    to: CaseStatus = NEW,
+    date: Instant = Instant.now()
   ): Event =
     createEvent(
       caseRef = caseReference,
       details = createCaseStatusChangeEventDetails(from, to),
-      date    = date
+      date = date
     )
 
   def createCaseStatusChangeEventDetails(from: CaseStatus, to: CaseStatus): Details =

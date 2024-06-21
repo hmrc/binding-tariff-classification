@@ -58,10 +58,9 @@ object Paged {
           (js \ "resultCount").as[Long]
         )
       ).map(JsSuccess(_))
-        .recover {
-          case t: Throwable =>
-            JsError(t.getMessage)
-      } get
+        .recover { case t: Throwable =>
+          JsError(t.getMessage)
+        } get
 
   private def writes[T](implicit fmt: Writes[T]): Paged[T] => JsValue =
     (paged: Paged[T]) =>

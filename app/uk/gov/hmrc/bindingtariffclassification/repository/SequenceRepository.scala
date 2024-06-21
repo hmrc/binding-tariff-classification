@@ -47,7 +47,7 @@ class SequenceMongoRepository @Inject() (mongoComponent: MongoComponent)(implici
     extends PlayMongoRepository[Sequence](
       collectionName = "sequences",
       mongoComponent = mongoComponent,
-      domainFormat   = formatSequence,
+      domainFormat = formatSequence,
       indexes = Seq(
         IndexModel(ascending("name"), IndexOptions().unique(true).name("name_Index"))
       )
@@ -61,8 +61,8 @@ class SequenceMongoRepository @Inject() (mongoComponent: MongoComponent)(implici
   override def incrementAndGetByName(name: String): Future[Sequence] =
     collection
       .findOneAndUpdate(
-        filter  = byName(name),
-        update  = Updates.inc("value", 1),
+        filter = byName(name),
+        update = Updates.inc("value", 1),
         options = FindOneAndUpdateOptions().upsert(true).returnDocument(ReturnDocument.AFTER)
       )
       .headOption()

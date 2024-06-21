@@ -129,13 +129,13 @@ object Cases {
   }
 
   def withHolder(
-    eori: String         = "eori",
+    eori: String = "eori",
     businessName: String = "business name",
     addressLine1: String = "address line 1",
     addressLine2: String = "address line 2",
     addressLine3: String = "address line 3",
-    postcode: String     = "postcode",
-    country: String      = "country"
+    postcode: String = "postcode",
+    country: String = "country"
   ): Case => Case = { c =>
     c.copy(application =
       c.application
@@ -156,22 +156,22 @@ object Cases {
 
   def withOptionalApplicationFields(
     confidentialInformation: Option[String] = None,
-    otherInformation: Option[String]        = None,
-    reissuedBTIReference: Option[String]    = None,
-    relatedBTIReference: Option[String]     = None,
-    knownLegalProceedings: Option[String]   = None,
-    envisagedCommodityCode: Option[String]  = None
+    otherInformation: Option[String] = None,
+    reissuedBTIReference: Option[String] = None,
+    relatedBTIReference: Option[String] = None,
+    knownLegalProceedings: Option[String] = None,
+    envisagedCommodityCode: Option[String] = None
   ): Case => Case = { c =>
     c.copy(
       application = c.application
         .asInstanceOf[BTIApplication]
         .copy(
           confidentialInformation = confidentialInformation,
-          otherInformation        = otherInformation,
-          reissuedBTIReference    = reissuedBTIReference,
-          relatedBTIReference     = relatedBTIReference,
-          knownLegalProceedings   = knownLegalProceedings,
-          envisagedCommodityCode  = envisagedCommodityCode
+          otherInformation = otherInformation,
+          reissuedBTIReference = reissuedBTIReference,
+          relatedBTIReference = relatedBTIReference,
+          knownLegalProceedings = knownLegalProceedings,
+          envisagedCommodityCode = envisagedCommodityCode
         )
     )
   }
@@ -187,13 +187,13 @@ object Cases {
   }
 
   def withAgent(
-    eori: String               = "agent-eori",
-    businessName: String       = "agent-business",
-    addressLine1: String       = "agent-address1",
-    addressLine2: String       = "agent-address2",
-    addressLine3: String       = "agent-address3",
-    postcode: String           = "agent-postcode",
-    country: String            = "agent-country",
+    eori: String = "agent-eori",
+    businessName: String = "agent-business",
+    addressLine1: String = "agent-address1",
+    addressLine2: String = "agent-address2",
+    addressLine3: String = "agent-address3",
+    postcode: String = "agent-postcode",
+    country: String = "agent-country",
     letter: Option[Attachment] = None
   ): Case => Case = { c =>
     val eoriDetails  = EORIDetails(eori, businessName, addressLine1, addressLine2, addressLine3, postcode, country)
@@ -214,12 +214,12 @@ object Cases {
     _.copy(decision = None)
 
   def withDecision(
-    bindingCommodityCode: String        = "decision-commodity-code",
+    bindingCommodityCode: String = "decision-commodity-code",
     effectiveStartDate: Option[Instant] = Some(Instant.now()),
-    effectiveEndDate: Option[Instant]   = Some(ZonedDateTime.now(ZoneOffset.UTC).plus(3, ChronoUnit.YEARS).toInstant),
-    justification: String               = "decision-justification",
-    goodsDescription: String            = "decision-goods-description",
-    appeal: Seq[Appeal]                 = Seq.empty
+    effectiveEndDate: Option[Instant] = Some(ZonedDateTime.now(ZoneOffset.UTC).plus(3, ChronoUnit.YEARS).toInstant),
+    justification: String = "decision-justification",
+    goodsDescription: String = "decision-goods-description",
+    appeal: Seq[Appeal] = Seq.empty
   ): Case => Case =
     _.copy(decision =
       Some(

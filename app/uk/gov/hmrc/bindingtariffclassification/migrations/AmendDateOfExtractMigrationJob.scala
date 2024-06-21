@@ -34,7 +34,7 @@ class AmendDateOfExtractMigrationJob @Inject() (
     with Logging {
   private lazy val criteria = CaseSearch(
     filter = CaseFilter(migrated = Some(true)),
-    sort   = Some(CaseSort(Set(CaseSortField.REFERENCE)))
+    sort = Some(CaseSort(Set(CaseSortField.REFERENCE)))
   )
   // scalastyle:off magic.number
   private lazy val originalDate = LocalDate.of(2021, 1, 1).atStartOfDay(ZoneOffset.UTC).toInstant
