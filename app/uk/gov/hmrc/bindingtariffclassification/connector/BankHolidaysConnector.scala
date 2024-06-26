@@ -33,8 +33,7 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.io.Source
 
 @Singleton
-class BankHolidaysConnector @Inject() (appConfig: AppConfig, http: ProxyHttpClient, val metrics: Metrics)(
-  implicit
+class BankHolidaysConnector @Inject() (appConfig: AppConfig, http: ProxyHttpClient, val metrics: Metrics)(implicit
   executionContext: ExecutionContext
 ) extends Logging
     with HasMetrics {
@@ -46,15 +45,14 @@ class BankHolidaysConnector @Inject() (appConfig: AppConfig, http: ProxyHttpClie
         .map(_.`england-and-wales`.events.map(_.date).toSet)
     }
 
-  private def withResourcesFile: PartialFunction[Throwable, BankHolidaysResponse] = {
-    case t =>
-      logger.error("Bank Holidays Request Failed", t)
-      val url    = getClass.getClassLoader.getResource("bank-holidays-fallback.json")
-      val source = Source.fromURL(url, StandardCharsets.UTF_8.name())
-      val content =
-        try source.getLines().mkString
-        finally source.close()
-      Json.fromJson(Json.parse(content)).get
+  private def withResourcesFile: PartialFunction[Throwable, BankHolidaysResponse] = { case t =>
+    logger.error("Bank Holidays Request Failed", t)
+    val url    = getClass.getClassLoader.getResource("bank-holidays-fallback.json")
+    val source = Source.fromURL(url, StandardCharsets.UTF_8.name())
+    val content =
+      try source.getLines().mkString
+      finally source.close()
+    Json.fromJson(Json.parse(content)).get
   }
 
 }

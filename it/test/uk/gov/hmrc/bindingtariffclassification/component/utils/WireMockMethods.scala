@@ -31,8 +31,8 @@ trait WireMockMethods {
     private val mapping = {
       val uriMapping = method.wireMockMapping(urlMatching(uri))
 
-      val uriMappingWithHeaders = headers.foldLeft(uriMapping) {
-        case (m, (key, value)) => m.withHeader(key, equalTo(value))
+      val uriMappingWithHeaders = headers.foldLeft(uriMapping) { case (m, (key, value)) =>
+        m.withHeader(key, equalTo(value))
       }
 
       body match {
@@ -52,8 +52,8 @@ trait WireMockMethods {
     private def thenReturnInternal(status: Int, headers: Map[String, String], body: Option[String]): StubMapping = {
       val response = {
         val statusResponse = aResponse().withStatus(status)
-        val responseWithHeaders = headers.foldLeft(statusResponse) {
-          case (res, (key, value)) => res.withHeader(key, value)
+        val responseWithHeaders = headers.foldLeft(statusResponse) { case (res, (key, value)) =>
+          res.withHeader(key, value)
         }
         body match {
           case Some(extractedBody) => responseWithHeaders.withBody(extractedBody)

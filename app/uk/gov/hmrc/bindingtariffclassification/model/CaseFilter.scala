@@ -23,20 +23,20 @@ import uk.gov.hmrc.bindingtariffclassification.model.ApplicationType.Application
 import uk.gov.hmrc.bindingtariffclassification.model.PseudoCaseStatus.PseudoCaseStatus
 
 case class CaseFilter(
-  reference: Option[Set[String]]                = None,
+  reference: Option[Set[String]] = None,
   applicationType: Option[Set[ApplicationType]] = None,
-  queueId: Option[Set[String]]                  = None,
-  eori: Option[String]                          = None,
-  assigneeId: Option[String]                    = None,
-  statuses: Option[Set[PseudoCaseStatus]]       = None,
-  caseDetails: Option[String]                   = None,
-  caseSource: Option[String]                    = None,
-  minDecisionStart: Option[Instant]             = None,
-  minDecisionEnd: Option[Instant]               = None,
-  commodityCode: Option[String]                 = None,
-  decisionDetails: Option[String]               = None,
-  keywords: Option[Set[String]]                 = None,
-  migrated: Option[Boolean]                     = None
+  queueId: Option[Set[String]] = None,
+  eori: Option[String] = None,
+  assigneeId: Option[String] = None,
+  statuses: Option[Set[PseudoCaseStatus]] = None,
+  caseDetails: Option[String] = None,
+  caseSource: Option[String] = None,
+  minDecisionStart: Option[Instant] = None,
+  minDecisionEnd: Option[Instant] = None,
+  commodityCode: Option[String] = None,
+  decisionDetails: Option[String] = None,
+  keywords: Option[Set[String]] = None,
+  migrated: Option[Boolean] = None
 )
 
 object CaseFilter {
@@ -56,8 +56,7 @@ object CaseFilter {
   private val keywordKey          = "keyword"
   private val migratedKey         = "migrated"
 
-  implicit def bindable(
-    implicit
+  implicit def bindable(implicit
     stringBinder: QueryStringBindable[String],
     boolBinder: QueryStringBindable[Boolean]
   ): QueryStringBindable[CaseFilter] = new QueryStringBindable[CaseFilter] {
@@ -69,20 +68,20 @@ object CaseFilter {
       Some(
         Right(
           CaseFilter(
-            reference        = params(referenceKey),
-            applicationType  = params(applicationTypeKey).map(_.map(bindApplicationType).filter(_.isDefined).map(_.get)),
-            queueId          = params(queueIdKey),
-            eori             = param(eoriKey),
-            assigneeId       = param(assigneeIdKey),
-            statuses         = params(statusKey).map(_.map(bindPseudoCaseStatus).filter(_.isDefined).map(_.get)),
-            caseSource       = param(caseSourceKey),
-            caseDetails      = param(caseDetailsKey),
+            reference = params(referenceKey),
+            applicationType = params(applicationTypeKey).map(_.map(bindApplicationType).filter(_.isDefined).map(_.get)),
+            queueId = params(queueIdKey),
+            eori = param(eoriKey),
+            assigneeId = param(assigneeIdKey),
+            statuses = params(statusKey).map(_.map(bindPseudoCaseStatus).filter(_.isDefined).map(_.get)),
+            caseSource = param(caseSourceKey),
+            caseDetails = param(caseDetailsKey),
             minDecisionStart = param(minDecisionStartKey).flatMap(bindInstant),
-            minDecisionEnd   = param(minDecisionEndKey).flatMap(bindInstant),
-            commodityCode    = param(commodityCodeKey),
-            decisionDetails  = param(decisionDetailsKey),
-            keywords         = params(keywordKey).map(_.map(_.toUpperCase)),
-            migrated         = boolBinder.bind(migratedKey, requestParams).flatMap(_.toOption)
+            minDecisionEnd = param(minDecisionEndKey).flatMap(bindInstant),
+            commodityCode = param(commodityCodeKey),
+            decisionDetails = param(decisionDetailsKey),
+            keywords = params(keywordKey).map(_.map(_.toUpperCase)),
+            migrated = boolBinder.bind(migratedKey, requestParams).flatMap(_.toOption)
           )
         )
       )

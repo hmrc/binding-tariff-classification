@@ -1,7 +1,7 @@
 import sbt.*
 
 object AppDependencies {
-  private lazy val mongoHmrcVersion = "1.8.0"
+  private lazy val mongoHmrcVersion = "2.1.0"
   private lazy val bootstrapVersion = "8.6.0"
   private lazy val pekkoVersion     = "1.0.2"
 
@@ -13,17 +13,16 @@ object AppDependencies {
     "org.apache.pekko"             %% "pekko-stream"                % pekkoVersion,
     "org.apache.pekko"             %% "pekko-actor-typed"           % pekkoVersion,
     "org.apache.pekko"             %% "pekko-serialization-jackson" % pekkoVersion,
-    "org.typelevel"                %% "cats-core"                   % "2.10.0",
+    "org.typelevel"                %% "cats-core"                   % "2.12.0",
     "com.github.pathikrit"         %% "better-files"                % "3.9.2",
-    "org.quartz-scheduler"         % "quartz"                       % "2.3.2",
+    "org.quartz-scheduler"          % "quartz"                      % "2.3.2",
     "com.fasterxml.jackson.module" %% "jackson-module-scala"        % "2.17.1"
   )
 
   val test: Seq[ModuleID] = Seq(
-    "uk.gov.hmrc"            %% "bootstrap-test-play-30"  % bootstrapVersion,
-    "com.github.tomakehurst" % "wiremock"                 % "2.33.2",
-    "uk.gov.hmrc.mongo"      %% "hmrc-mongo-test-play-30" % mongoHmrcVersion,
-    "org.apache.pekko"       %% "pekko-http-testkit"      % "1.0.1"
+    "uk.gov.hmrc"       %% "bootstrap-test-play-30"  % bootstrapVersion,
+    "uk.gov.hmrc.mongo" %% "hmrc-mongo-test-play-30" % mongoHmrcVersion,
+    "org.apache.pekko"  %% "pekko-http-testkit"      % "1.0.1"
   ).map(_ % Test)
 
   def apply(): Seq[ModuleID] = compile ++ test

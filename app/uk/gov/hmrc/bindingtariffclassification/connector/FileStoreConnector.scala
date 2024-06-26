@@ -30,8 +30,7 @@ import uk.gov.hmrc.play.bootstrap.http.DefaultHttpClient
 import uk.gov.hmrc.play.bootstrap.metrics.Metrics
 
 @Singleton
-class FileStoreConnector @Inject() (appConfig: AppConfig, http: DefaultHttpClient, val metrics: Metrics)(
-  implicit
+class FileStoreConnector @Inject() (appConfig: AppConfig, http: DefaultHttpClient, val metrics: Metrics)(implicit
   mat: Materializer
 ) extends HasMetrics {
 
@@ -62,9 +61,8 @@ class FileStoreConnector @Inject() (appConfig: AppConfig, http: DefaultHttpClien
               headers = addHeaders
             )
           }
-          .runFold(Seq.empty[FileMetadata]) {
-            case (acc, next) =>
-              acc ++ next.results
+          .runFold(Seq.empty[FileMetadata]) { case (acc, next) =>
+            acc ++ next.results
           }
           .map(results => Paged(results = results, pagination = Pagination.max, resultCount = results.size.toLong))
       } else {

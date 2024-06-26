@@ -37,8 +37,7 @@ trait BaseMongoOperations[T] {
   private def countDocument(filter: Bson): Future[Long] =
     collection.countDocuments(filter).toFuture()
 
-  protected def countMany(filter: Bson, sort: Bson, pagination: Pagination)(
-    implicit
+  protected def countMany(filter: Bson, sort: Bson, pagination: Pagination)(implicit
     ec: ExecutionContext,
     ct: ClassTag[T]
   ): Future[Paged[T]] = {
@@ -50,9 +49,8 @@ trait BaseMongoOperations[T] {
       .limit(pagination.pageSize)
       .toFuture()
 
-    (count, results).mapN {
-      case (resultsSize, events) =>
-        Paged(events, pagination, resultsSize)
+    (count, results).mapN { case (resultsSize, events) =>
+      Paged(events, pagination, resultsSize)
     }
   }
 
@@ -69,9 +67,8 @@ object BaseMongoOperations {
     runAggregation: Future[Seq[A]],
     pagination: Pagination
   )(implicit ec: ExecutionContext): Future[Paged[A]] =
-    (futureCount, runAggregation).mapN {
-      case (count, results) =>
-        val totalCount = count.map(field => field.getInt32(countField).getValue).getOrElse(0)
-        Paged(results, pagination, totalCount.toLong)
+    (futureCount, runAggregation).mapN { case (count, results) =>
+      val totalCount = count.map(field => field.getInt32(countField).getValue).getOrElse(0)
+      Paged(results, pagination, totalCount.toLong)
     }
 }

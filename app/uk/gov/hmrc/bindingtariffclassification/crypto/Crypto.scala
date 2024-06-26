@@ -36,20 +36,20 @@ class Crypto @Inject() (crypto: AesCrypto) {
 
   private def applyCrypto(c: Contact)(f: String => String): Contact =
     c.copy(
-      name  = f(c.name),
+      name = f(c.name),
       email = f(c.email),
       phone = c.phone map f
     )
 
   private def applyCrypto(e: EORIDetails)(f: String => String): EORIDetails =
     e.copy(
-      eori         = f(e.eori),
+      eori = f(e.eori),
       businessName = e.businessName,
       addressLine1 = f(e.addressLine1),
       addressLine2 = f(e.addressLine2),
       addressLine3 = f(e.addressLine3),
-      postcode     = f(e.postcode),
-      country      = f(e.country)
+      postcode = f(e.postcode),
+      country = f(e.country)
     )
 
   private def applyCrypto(a: AgentDetails)(f: String => String): AgentDetails =
@@ -58,9 +58,9 @@ class Crypto @Inject() (crypto: AesCrypto) {
   private def applyCrypto(a: Address)(f: String => String): Address =
     a.copy(
       buildingAndStreet = f(a.buildingAndStreet),
-      townOrCity        = f(a.townOrCity),
-      county            = a.county.map(f(_)),
-      postCode          = a.postCode.map(f(_))
+      townOrCity = f(a.townOrCity),
+      county = a.county.map(f(_)),
+      postCode = a.postCode.map(f(_))
     )
 
   private def applyCrypto(c: Case)(f: String => String): Case = {
@@ -72,9 +72,9 @@ class Crypto @Inject() (crypto: AesCrypto) {
         val bti = c.application.asBTI
         c.copy(
           application = bti.copy(
-            holder                  = applyCrypto(bti.holder)(f),
-            contact                 = applyCrypto(bti.contact)(f),
-            agent                   = bti.agent map (applyCrypto(_)(f)),
+            holder = applyCrypto(bti.holder)(f),
+            contact = applyCrypto(bti.contact)(f),
+            agent = bti.agent map (applyCrypto(_)(f)),
             confidentialInformation = bti.confidentialInformation map f
           )
         )
@@ -89,18 +89,18 @@ class Crypto @Inject() (crypto: AesCrypto) {
         val misc = c.application.asMisc
         c.copy(
           application = misc.copy(
-            contact     = applyCrypto(misc.contact)(f),
+            contact = applyCrypto(misc.contact)(f),
             contactName = misc.contactName.map(f(_)),
-            name        = f(misc.name)
+            name = f(misc.name)
           )
         )
       case CORRESPONDENCE =>
         val correspondence = c.application.asCorrespondence
         c.copy(
           application = correspondence.copy(
-            contact   = applyCrypto(correspondence.contact)(f),
+            contact = applyCrypto(correspondence.contact)(f),
             agentName = correspondence.agentName.map(f(_)),
-            address   = applyCrypto(correspondence.address)(f)
+            address = applyCrypto(correspondence.address)(f)
           )
         )
       case t: ApplicationType =>

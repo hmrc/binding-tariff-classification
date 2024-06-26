@@ -54,7 +54,7 @@ class ReferredDaysElapsedJob @Inject() (
   private implicit val carrier: HeaderCarrier = HeaderCarrier()
   private lazy val criteria = CaseSearch(
     filter = CaseFilter(statuses = Some(Set(PseudoCaseStatus.REFERRED, PseudoCaseStatus.SUSPENDED))),
-    sort   = Some(CaseSort(Set(CaseSortField.REFERENCE)))
+    sort = Some(CaseSort(Set(CaseSortField.REFERENCE)))
   )
 
   override def execute(): Future[Unit] =
@@ -74,22 +74,22 @@ class ReferredDaysElapsedJob @Inject() (
   private def getReferralStartDate(c: Case): Future[Option[LocalDate]] =
     for {
       eventSearch <- eventService.search(
-                      search = EventSearch(
-                        Some(Set(c.reference)),
-                        Some(Set(EventType.CASE_STATUS_CHANGE, EventType.CASE_REFERRAL))
-                      ),
-                      pagination = Pagination(1, Integer.MAX_VALUE)
-                    )
+                       search = EventSearch(
+                         Some(Set(c.reference)),
+                         Some(Set(EventType.CASE_STATUS_CHANGE, EventType.CASE_REFERRAL))
+                       ),
+                       pagination = Pagination(1, Integer.MAX_VALUE)
+                     )
 
       startTimestamp = eventSearch.results
-        .filter(_.details.isInstanceOf[FieldChange[CaseStatus]])
-        .sortBy(_.timestamp)(Ordering[Instant].reverse)
-        .headOption
-        .filter(event =>
-          Set(CaseStatus.REFERRED, CaseStatus.SUSPENDED)
-            .contains(event.details.asInstanceOf[FieldChange[CaseStatus]].to)
-        )
-        .map(_.timestamp)
+                         .filter(_.details.isInstanceOf[FieldChange[CaseStatus]])
+                         .sortBy(_.timestamp)(Ordering[Instant].reverse)
+                         .headOption
+                         .filter(event =>
+                           Set(CaseStatus.REFERRED, CaseStatus.SUSPENDED)
+                             .contains(event.details.asInstanceOf[FieldChange[CaseStatus]].to)
+                         )
+                         .map(_.timestamp)
 
     } yield startTimestamp.map(LocalDateTime.ofInstant(_, ZoneOffset.UTC).toLocalDate)
 
@@ -110,11 +110,11 @@ class ReferredDaysElapsedJob @Inject() (
       referralStartDate <- getReferralStartDate(c)
 
       referredDaysElapsed = referralStartDate
-        .map(getReferredDaysElapsed)
-        .getOrElse {
-          logger.warn(s"$name: Unable to find referral event for [${c.reference}]")
-          0L
-        }
+                              .map(getReferredDaysElapsed)
+                              .getOrElse {
+                                logger.warn(s"$name: Unable to find referral event for [${c.reference}]")
+                                0L
+                              }
 
       // Update the case
       updatedCase <- caseService.update(c.copy(referredDaysElapsed = referredDaysElapsed), upsert = false)

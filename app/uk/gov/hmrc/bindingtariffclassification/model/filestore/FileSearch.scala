@@ -21,7 +21,7 @@ import play.api.mvc.QueryStringBindable
 import scala.util.Try
 
 case class FileSearch(
-  ids: Option[Set[String]]   = None,
+  ids: Option[Set[String]] = None,
   published: Option[Boolean] = None
 )
 
@@ -29,8 +29,7 @@ object FileSearch {
   private val idKey        = "id"
   private val publishedKey = "published"
 
-  implicit def bindable(
-    implicit
+  implicit def bindable(implicit
     stringBinder: QueryStringBindable[String],
     booleanBinder: QueryStringBindable[Boolean]
   ): QueryStringBindable[FileSearch] = new QueryStringBindable[FileSearch] {
@@ -54,7 +53,7 @@ object FileSearch {
       Some(
         Right(
           FileSearch(
-            ids       = params(idKey, s => s),
+            ids = params(idKey, s => s),
             published = param(publishedKey, _.toBoolean)
           )
         )

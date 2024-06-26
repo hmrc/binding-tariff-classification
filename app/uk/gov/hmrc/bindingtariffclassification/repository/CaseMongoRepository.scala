@@ -53,7 +53,7 @@ class CaseMongoRepository @Inject() (
     extends PlayMongoRepository[Case](
       collectionName = "cases",
       mongoComponent = mongoComponent,
-      domainFormat   = MongoFormatters.formatCase,
+      domainFormat = MongoFormatters.formatCase,
       // TODO: We need to add relevant indexes for each possible search
       // TODO: We should add compound indexes for searches involving multiple fields
       indexes = Seq(
@@ -104,8 +104,8 @@ class CaseMongoRepository @Inject() (
   override def update(reference: String, caseUpdate: CaseUpdate): Future[Option[Case]] =
     collection
       .findOneAndUpdate(
-        filter  = mapper.reference(reference),
-        update  = updateMapper.updateCase(caseUpdate),
+        filter = mapper.reference(reference),
+        update = updateMapper.updateCase(caseUpdate),
         options = FindOneAndUpdateOptions().returnDocument(ReturnDocument.AFTER)
       )
       .toFutureOption()
@@ -158,7 +158,7 @@ class CaseMongoRepository @Inject() (
       notEmpty(
         filter(
           input = "$decision.appeal",
-          cond  = inQ("$$this.type", AppealType.appealTypes.map(Json.toJson(_)))
+          cond = inQ("$$this.type", AppealType.appealTypes.map(Json.toJson(_)))
         )
       )
     )
@@ -169,7 +169,7 @@ class CaseMongoRepository @Inject() (
       notEmpty(
         filter(
           input = "$decision.appeal",
-          cond  = inQ("$$this.type", AppealType.reviewTypes.map(Json.toJson(_)))
+          cond = inQ("$$this.type", AppealType.reviewTypes.map(Json.toJson(_)))
         )
       )
     )
@@ -181,13 +181,13 @@ class CaseMongoRepository @Inject() (
     )
 
     cond(
-      ifExpr   = isAppeal,
+      ifExpr = isAppeal,
       thenExpr = Json.toJson(PseudoCaseStatus.UNDER_APPEAL),
       elseExpr = cond(
-        ifExpr   = isReview,
+        ifExpr = isReview,
         thenExpr = Json.toJson(PseudoCaseStatus.UNDER_REVIEW),
         elseExpr = cond(
-          ifExpr   = isExpired,
+          ifExpr = isExpired,
           thenExpr = Json.toJson(PseudoCaseStatus.EXPIRED),
           elseExpr = statusField
         )
@@ -196,9 +196,8 @@ class CaseMongoRepository @Inject() (
   }
 
   private def coalesce(fieldChoices: NonEmptySeq[String]): JsValue =
-    fieldChoices.init.foldRight(JsString("$" + fieldChoices.last): JsValue) {
-      case (field, expr) =>
-        Json.obj("$ifNull" -> Json.arr("$" + field, expr))
+    fieldChoices.init.foldRight(JsString("$" + fieldChoices.last): JsValue) { case (field, expr) =>
+      Json.obj("$ifNull" -> Json.arr("$" + field, expr))
     }
 
   private def matchStage(report: Report): Bson = {
@@ -566,7 +565,7 @@ class CaseMongoRepository @Inject() (
               if (field.isNull) None else Some(field.asString().getValue)
             QueueResultGroup(
               count = bsonDocument.getInt32(ReportField.Count.fieldName).getValue,
-              team  = wrapAsOptionOfString(bsonDocument.getDocument("_id").get(ReportField.Team.fieldName, BsonNull())),
+              team = wrapAsOptionOfString(bsonDocument.getDocument("_id").get(ReportField.Team.fieldName, BsonNull())),
               caseType = ApplicationType
                 .withName(bsonDocument.getDocument("_id").getString(ReportField.CaseType.fieldName).getValue)
             )

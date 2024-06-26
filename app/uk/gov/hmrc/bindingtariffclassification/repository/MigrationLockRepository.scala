@@ -35,9 +35,11 @@ trait MigrationLockRepository {
 
   def lock(e: JobRunEvent): Future[Boolean]
 
-  def rollback(e: JobRunEvent): Future[Unit]
+  def delete(e: JobRunEvent): Future[Unit]
 
   def deleteAll(): Future[Unit]
+
+  def findOne(name: String): Future[Option[JobRunEvent]]
 
 }
 
@@ -46,7 +48,7 @@ class MigrationLockMongoRepository @Inject() (mongoComponent: MongoComponent)(im
     extends PlayMongoRepository[JobRunEvent](
       collectionName = "migrations",
       mongoComponent = mongoComponent,
-      domainFormat   = MongoFormatters.formatJobRunEvent,
+      domainFormat = MongoFormatters.formatJobRunEvent,
       indexes = Seq(
         IndexModel(ascending("name"), IndexOptions().unique(true).name("name_Index"))
       )
@@ -63,7 +65,7 @@ class MigrationLockMongoRepository @Inject() (mongoComponent: MongoComponent)(im
       case error: MongoWriteException if isNotAPrimaryError(error.getCode) =>
         // Do not allow the migration job to proceed due to errors on secondary nodes, and attempt to rollback the changes
         logger.error(s"Lock failed on secondary node", error)
-        rollback(e)
+        delete(e)
         false
       case error: MongoWriteException if error.getCode == mongoDuplicateKeyErrorCode =>
         logger.error(s"Lock already exists for [${e.name}]", error)
@@ -73,7 +75,7 @@ class MigrationLockMongoRepository @Inject() (mongoComponent: MongoComponent)(im
         false
     }
 
-  override def rollback(e: JobRunEvent): Future[Unit] =
+  override def delete(e: JobRunEvent): Future[Unit] =
     collection.deleteOne(equal("name", e.name)).toFuture().flatMap { _ =>
       logger.debug(s"Removed Lock for [${e.name}]")
       Future.unit
@@ -81,6 +83,9 @@ class MigrationLockMongoRepository @Inject() (mongoComponent: MongoComponent)(im
 
   override def deleteAll(): Future[Unit] =
     collection.deleteMany(empty()).toFuture().flatMap(_ => Future.unit)
+
+  override def findOne(name: String): Future[Option[JobRunEvent]] =
+    collection.find(equal("name", name)).headOption()
 
   /** Tells if this error is due to a write on a secondary node. */
   private def isNotAPrimaryError(code: Int): Boolean = Some(code).exists {

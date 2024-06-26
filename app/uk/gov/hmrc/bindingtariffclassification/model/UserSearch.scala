@@ -26,8 +26,7 @@ object UserSearch {
   private val roleKey = "role"
   private val teamKey = "member_of_teams"
 
-  implicit def bindable(
-    implicit
+  implicit def bindable(implicit
     stringBinder: QueryStringBindable[String]
   ): QueryStringBindable[UserSearch] =
     new QueryStringBindable[UserSearch] {

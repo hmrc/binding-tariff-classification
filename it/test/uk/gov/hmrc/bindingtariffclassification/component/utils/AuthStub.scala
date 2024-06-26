@@ -33,7 +33,7 @@ object AuthStub extends WireMockMethods {
     when(method = POST, uri = authoriseUri)
       .thenReturn(
         status = OK,
-        body   = AllEnrolments(Set(Enrolment("HMRC-ATAR-ORG", Seq(EnrolmentIdentifier("EORINumber", "GB123")), "active")))
+        body = AllEnrolments(Set(Enrolment("HMRC-ATAR-ORG", Seq(EnrolmentIdentifier("EORINumber", "GB123")), "active")))
       )
 
   def unauthorised(): StubMapping =

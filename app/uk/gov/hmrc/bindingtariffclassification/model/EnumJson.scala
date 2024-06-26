@@ -27,11 +27,10 @@ object EnumJson {
 
   private def enumReads[E <: Enumeration](`enum`: E): Reads[E#Value] = {
     case JsString(s) =>
-      Try(JsSuccess(enum.withName(s))).recover {
-        case _: NoSuchElementException =>
-          JsError(
-            s"Expected an enumeration of type: '${enum.getClass.getSimpleName}', but it does not contain the name: '$s'"
-          )
+      Try(JsSuccess(enum.withName(s))).recover { case _: NoSuchElementException =>
+        JsError(
+          s"Expected an enumeration of type: '${enum.getClass.getSimpleName}', but it does not contain the name: '$s'"
+        )
       }.get
 
     case _ => JsError("String value is expected")
@@ -42,23 +41,21 @@ object EnumJson {
       val maprds: Reads[Map[String, B]] = Reads.mapReads[B]
       Json
         .fromJson[Map[String, B]](js)(maprds)
-        .map(_.map {
-          case (key: String, value: B) =>
-            erds.reads(JsString(key)).get -> value
+        .map(_.map { case (key: String, value: B) =>
+          erds.reads(JsString(key)).get -> value
         })
     }
 
   private def writesMap[E, B](implicit ewrts: Writes[E], bwrts: Writes[B]): Map[E, B] => JsObject =
     (map: Map[E, B]) =>
       Json
-        .toJson(map.map {
-          case (group, value) =>
-            group.toString -> value
+        .toJson(map.map { case (group, value) =>
+          group.toString -> value
         })
         .as[JsObject]
 
   def formatMap[E, B](implicit efmt: Format[E], bfmt: Format[B]): OFormat[Map[E, B]] = OFormat(
-    read  = readsMap(efmt, bfmt),
+    read = readsMap(efmt, bfmt),
     write = writesMap(efmt, bfmt)
   )
 

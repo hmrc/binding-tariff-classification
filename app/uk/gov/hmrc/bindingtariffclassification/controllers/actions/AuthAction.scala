@@ -29,8 +29,7 @@ import uk.gov.hmrc.play.http.HeaderCarrierConverter
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class AuthAction @Inject() (override val authConnector: AuthConnector, val parser: BodyParsers.Default)(
-  implicit
+class AuthAction @Inject() (override val authConnector: AuthConnector, val parser: BodyParsers.Default)(implicit
   val executionContext: ExecutionContext
 ) extends ActionBuilder[BtaRequest, AnyContent]
     with ActionFunction[Request, BtaRequest]
@@ -52,8 +51,7 @@ class AuthAction @Inject() (override val authConnector: AuthConnector, val parse
         Future.successful(Forbidden)
     }
 
-  private def retrievalData[A](request: Request[A], block: BtaRequest[A] => Future[Result])(
-    implicit
+  private def retrievalData[A](request: Request[A], block: BtaRequest[A] => Future[Result])(implicit
     hc: HeaderCarrier
   ): Future[Result] =
     getEnrolmentsAndEori().flatMap {
@@ -80,11 +78,10 @@ class AuthAction @Inject() (override val authConnector: AuthConnector, val parse
             Future.successful(Left(Forbidden))
         }
       }
-      .recover {
-        case e =>
-          logger
-            .error(s"[AuthAction][getEnrolmentsAndEori] An exception occurred during auth action: ${e.getMessage}", e)
-          Left(Forbidden)
+      .recover { case e =>
+        logger
+          .error(s"[AuthAction][getEnrolmentsAndEori] An exception occurred during auth action: ${e.getMessage}", e)
+        Left(Forbidden)
       }
 
 }

@@ -46,7 +46,7 @@ class UsersMongoRepository @Inject() (mongoComponent: MongoComponent)(implicit e
     extends PlayMongoRepository[Operator](
       collectionName = "users",
       mongoComponent = mongoComponent,
-      domainFormat   = formatOperator,
+      domainFormat = formatOperator,
       indexes = Seq(
         IndexModel(ascending("id"), IndexOptions().unique(true).name("id_Index")),
         IndexModel(ascending("role"), IndexOptions().unique(false).name("role_Index")),

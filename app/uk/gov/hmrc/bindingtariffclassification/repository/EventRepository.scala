@@ -44,7 +44,7 @@ class EventMongoRepository @Inject() (mongoComponent: MongoComponent)(implicit e
     extends PlayMongoRepository[Event](
       collectionName = "events",
       mongoComponent = mongoComponent,
-      domainFormat   = MongoFormatters.formatEvent,
+      domainFormat = MongoFormatters.formatEvent,
       indexes = Seq(
         IndexModel(Indexes.ascending("id"), IndexOptions().unique(true).name("id_Index")),
         IndexModel(Indexes.ascending("caseReference"), IndexOptions().unique(false).name("caseReference_Index")),

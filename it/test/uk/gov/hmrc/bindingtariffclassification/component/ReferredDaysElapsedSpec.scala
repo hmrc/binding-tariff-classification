@@ -118,9 +118,9 @@ class ReferredDaysElapsedSpec extends BaseFeatureSpec with MockitoSugar {
 
   private def aCaseWith(reference: String, createdDate: String, status: CaseStatus): Case =
     createCase(app = createBasicBTIApplication).copy(
-      reference           = reference,
-      createdDate         = LocalDate.parse(createdDate).atStartOfDay().toInstant(ZoneOffset.UTC),
-      status              = status,
+      reference = reference,
+      createdDate = LocalDate.parse(createdDate).atStartOfDay().toInstant(ZoneOffset.UTC),
+      status = status,
       referredDaysElapsed = -1
     )
 

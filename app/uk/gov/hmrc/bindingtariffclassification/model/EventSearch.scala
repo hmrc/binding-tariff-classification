@@ -23,9 +23,9 @@ import uk.gov.hmrc.bindingtariffclassification.model.EventType.EventType
 
 case class EventSearch(
   caseReference: Option[Set[String]] = None,
-  `type`: Option[Set[EventType]]     = None,
-  timestampMin: Option[Instant]      = None,
-  timestampMax: Option[Instant]      = None
+  `type`: Option[Set[EventType]] = None,
+  timestampMin: Option[Instant] = None,
+  timestampMax: Option[Instant] = None
 )
 
 object EventSearch {
@@ -48,9 +48,9 @@ object EventSearch {
           Right(
             EventSearch(
               caseReference = params(caseReferenceKey),
-              `type`        = params(typeKey).map(_.map(bindEventType).filter(_.isDefined).map(_.get)),
-              timestampMin  = param(timestampMinKey).flatMap(bindInstant),
-              timestampMax  = param(timestampMaxKey).flatMap(bindInstant)
+              `type` = params(typeKey).map(_.map(bindEventType).filter(_.isDefined).map(_.get)),
+              timestampMin = param(timestampMinKey).flatMap(bindInstant),
+              timestampMax = param(timestampMaxKey).flatMap(bindInstant)
             )
           )
         )

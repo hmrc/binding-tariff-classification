@@ -47,7 +47,7 @@ class KeywordsMongoRepository @Inject() (mongoComponent: MongoComponent)(implici
     extends PlayMongoRepository[Keyword](
       collectionName = "keywords",
       mongoComponent = mongoComponent,
-      domainFormat   = formatKeywords,
+      domainFormat = formatKeywords,
       indexes = Seq(
         IndexModel(ascending("name"), IndexOptions().unique(true).name("name_Index"))
       )

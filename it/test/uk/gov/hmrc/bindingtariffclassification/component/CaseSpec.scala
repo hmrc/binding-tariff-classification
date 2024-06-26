@@ -51,11 +51,11 @@ class CaseSpec extends BaseFeatureSpec {
   private val c1_updated = c1.copy(status = status)
   private val c2 = adaptCaseInstantFormat(
     createCase(
-      r           = "case_ref_2",
-      app         = createLiabilityOrder,
-      decision    = Some(createDecision()),
+      r = "case_ref_2",
+      app = createLiabilityOrder,
+      decision = Some(createDecision()),
       attachments = Seq(createAttachment, createAttachmentWithOperator),
-      keywords    = Set("BIKE", "MTB", "HARDTAIL")
+      keywords = Set("BIKE", "MTB", "HARDTAIL")
     )
   )
   private val c2CreateWithExtraFields = createNewCase(app = createLiabilityOrderWithExtraFields)
@@ -63,11 +63,11 @@ class CaseSpec extends BaseFeatureSpec {
   private val miscCase                = createNewCase(app = createMiscApplication)
   private val c2WithExtraFields = adaptCaseInstantFormat(
     createCase(
-      r           = "case_ref_2",
-      app         = createLiabilityOrderWithExtraFields,
-      decision    = Some(createDecision()),
+      r = "case_ref_2",
+      app = createLiabilityOrderWithExtraFields,
+      decision = Some(createDecision()),
       attachments = Seq(createAttachment, createAttachmentWithOperator),
-      keywords    = Set("BIKE", "MTB", "HARDTAIL")
+      keywords = Set("BIKE", "MTB", "HARDTAIL")
     )
   )
   private val c3 = adaptCaseInstantFormat(createNewCaseWithExtraFields())
@@ -77,13 +77,13 @@ class CaseSpec extends BaseFeatureSpec {
   )
   private val c6_live = adaptCaseInstantFormat(
     createCase(
-      status   = CaseStatus.COMPLETED,
+      status = CaseStatus.COMPLETED,
       decision = Some(createDecision(effectiveEndDate = Some(Instant.now(clock).plusSeconds(3600 * 24))))
     )
   )
   private val c6_expired = adaptCaseInstantFormat(
     createCase(
-      status   = CaseStatus.COMPLETED,
+      status = CaseStatus.COMPLETED,
       decision = Some(createDecision(effectiveEndDate = Some(Instant.now(clock).minusSeconds(3600 * 24))))
     )
   )
@@ -100,9 +100,9 @@ class CaseSpec extends BaseFeatureSpec {
     createCase(
       decision = Some(
         createDecision(
-          goodsDescription   = "LAPTOP",
+          goodsDescription = "LAPTOP",
           effectiveStartDate = Some(Instant.now().minus(3, ChronoUnit.DAYS)),
-          effectiveEndDate   = Some(Instant.now().minus(1, ChronoUnit.DAYS))
+          effectiveEndDate = Some(Instant.now().minus(1, ChronoUnit.DAYS))
         )
       ),
       status = CaseStatus.COMPLETED
@@ -112,9 +112,9 @@ class CaseSpec extends BaseFeatureSpec {
     createCase(
       decision = Some(
         createDecision(
-          goodsDescription   = "SPANNER",
+          goodsDescription = "SPANNER",
           effectiveStartDate = Some(Instant.now().minus(3, ChronoUnit.DAYS)),
-          effectiveEndDate   = Some(Instant.now().minus(1, ChronoUnit.DAYS))
+          effectiveEndDate = Some(Instant.now().minus(1, ChronoUnit.DAYS))
         )
       ),
       status = CaseStatus.COMPLETED
@@ -124,9 +124,9 @@ class CaseSpec extends BaseFeatureSpec {
     createCase(
       decision = Some(
         createDecision(
-          goodsDescription   = "LAPTOP",
+          goodsDescription = "LAPTOP",
           effectiveStartDate = Some(Instant.now()),
-          effectiveEndDate   = Some(Instant.now().plus(1, ChronoUnit.DAYS))
+          effectiveEndDate = Some(Instant.now().plus(1, ChronoUnit.DAYS))
         )
       ),
       status = CaseStatus.COMPLETED
@@ -201,12 +201,12 @@ class CaseSpec extends BaseFeatureSpec {
 
       And("The case is returned in the JSON response")
       val responseCase = Json.parse(result.body).as[Case]
-      responseCase.reference   shouldBe "600000001"
-      responseCase.status      shouldBe CaseStatus.NEW
+      responseCase.reference shouldBe "600000001"
+      responseCase.status    shouldBe CaseStatus.NEW
       responseCase.createdDate should roughlyBe(Instant.now())
-      responseCase.assignee    shouldBe None
-      responseCase.queueId     shouldBe None
-      responseCase.decision    shouldBe None
+      responseCase.assignee  shouldBe None
+      responseCase.queueId   shouldBe None
+      responseCase.decision  shouldBe None
     }
 
     Scenario("Create a new case with all fields") {
@@ -241,10 +241,10 @@ class CaseSpec extends BaseFeatureSpec {
 
       And("The case is returned in the JSON response")
       val responseCase = Json.parse(result.body).as[Case]
-      responseCase.reference                                                            shouldBe "800000001"
-      responseCase.status                                                               shouldBe CaseStatus.NEW
-      responseCase.application.asLiabilityOrder.btiReference                            shouldBe Some("BTI-REFERENCE")
-      responseCase.application.asLiabilityOrder.repaymentClaim.get.dvrNumber            shouldBe Some("DVR-123456")
+      responseCase.reference                                                          shouldBe "800000001"
+      responseCase.status                                                             shouldBe CaseStatus.NEW
+      responseCase.application.asLiabilityOrder.btiReference                          shouldBe Some("BTI-REFERENCE")
+      responseCase.application.asLiabilityOrder.repaymentClaim.get.dvrNumber          shouldBe Some("DVR-123456")
       responseCase.application.asLiabilityOrder.repaymentClaim.get.dateForRepayment.get should roughlyBe(Instant.now())
       responseCase.application.asLiabilityOrder.dateOfReceipt.get                       should roughlyBe(Instant.now())
 
@@ -1617,12 +1617,12 @@ class CaseSpec extends BaseFeatureSpec {
     val caseBaseDecision    = _case.decision
     val caseBaseApplication = _case.application
     _case.copy(
-      createdDate   = _case.createdDate.truncatedTo(ChronoUnit.MILLIS),
+      createdDate = _case.createdDate.truncatedTo(ChronoUnit.MILLIS),
       dateOfExtract = _case.dateOfExtract.map(_.truncatedTo(ChronoUnit.MILLIS)),
       decision = caseBaseDecision.map { desc =>
         desc.copy(
           effectiveStartDate = desc.effectiveStartDate.map(_.truncatedTo(ChronoUnit.MILLIS)),
-          effectiveEndDate   = desc.effectiveEndDate.map(_.truncatedTo(ChronoUnit.MILLIS)),
+          effectiveEndDate = desc.effectiveEndDate.map(_.truncatedTo(ChronoUnit.MILLIS)),
           decisionPdf = desc.decisionPdf.map { attch =>
             attch.copy(
               timestamp = attch.timestamp.truncatedTo(ChronoUnit.MILLIS)
@@ -1633,7 +1633,7 @@ class CaseSpec extends BaseFeatureSpec {
       application = caseBaseApplication match {
         case liabilityApp: LiabilityOrder =>
           liabilityApp.copy(
-            entryDate     = liabilityApp.entryDate.map(_.truncatedTo(ChronoUnit.MILLIS)),
+            entryDate = liabilityApp.entryDate.map(_.truncatedTo(ChronoUnit.MILLIS)),
             dateOfReceipt = liabilityApp.dateOfReceipt.map(_.truncatedTo(ChronoUnit.MILLIS)),
             repaymentClaim = liabilityApp.repaymentClaim.map { claim =>
               claim.copy(dateForRepayment = claim.dateForRepayment.map(_.truncatedTo(ChronoUnit.MILLIS)))

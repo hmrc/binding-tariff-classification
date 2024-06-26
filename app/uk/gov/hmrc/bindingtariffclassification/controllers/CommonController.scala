@@ -43,9 +43,8 @@ class CommonController(
       case Failure(e) => successful(BadRequest(JsErrorResponse(UNKNOWN_ERROR, e.getMessage)))
     }
 
-  private[controllers] def recovery: PartialFunction[Throwable, Result] = {
-    case e: Throwable =>
-      handleException(e)
+  private[controllers] def recovery: PartialFunction[Throwable, Result] = { case e: Throwable =>
+    handleException(e)
   }
 
   private[controllers] def handleException(e: Throwable) = {

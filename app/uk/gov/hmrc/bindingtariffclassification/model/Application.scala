@@ -40,20 +40,20 @@ case class BTIApplication(
   holder: EORIDetails,
   override val contact: Contact,
   agent: Option[AgentDetails] = None,
-  offline: Boolean            = false,
+  offline: Boolean = false,
   goodName: String,
   goodDescription: String,
   confidentialInformation: Option[String] = None,
-  otherInformation: Option[String]        = None,
-  reissuedBTIReference: Option[String]    = None,
-  relatedBTIReference: Option[String]     = None,
-  relatedBTIReferences: List[String]      = Nil,
-  knownLegalProceedings: Option[String]   = None,
-  envisagedCommodityCode: Option[String]  = None,
-  sampleToBeProvided: Boolean             = false,
-  sampleIsHazardous: Option[Boolean]      = None,
-  sampleToBeReturned: Boolean             = false,
-  applicationPdf: Option[Attachment]      = None
+  otherInformation: Option[String] = None,
+  reissuedBTIReference: Option[String] = None,
+  relatedBTIReference: Option[String] = None,
+  relatedBTIReferences: List[String] = Nil,
+  knownLegalProceedings: Option[String] = None,
+  envisagedCommodityCode: Option[String] = None,
+  sampleToBeProvided: Boolean = false,
+  sampleIsHazardous: Option[Boolean] = None,
+  sampleToBeReturned: Boolean = false,
+  applicationPdf: Option[Attachment] = None
 ) extends Application {
   override val `type`: model.ApplicationType.Value = ApplicationType.BTI
 }
@@ -63,16 +63,16 @@ case class LiabilityOrder(
   goodName: Option[String],
   status: LiabilityStatus,
   traderName: String,
-  entryDate: Option[Instant]                         = None,
-  entryNumber: Option[String]                        = None,
-  traderCommodityCode: Option[String]                = None,
-  officerCommodityCode: Option[String]               = None,
-  btiReference: Option[String]                       = None,
-  repaymentClaim: Option[RepaymentClaim]             = None,
-  dateOfReceipt: Option[Instant]                     = None,
+  entryDate: Option[Instant] = None,
+  entryNumber: Option[String] = None,
+  traderCommodityCode: Option[String] = None,
+  officerCommodityCode: Option[String] = None,
+  btiReference: Option[String] = None,
+  repaymentClaim: Option[RepaymentClaim] = None,
+  dateOfReceipt: Option[Instant] = None,
   traderContactDetails: Option[TraderContactDetails] = None,
-  agentName: Option[String]                          = None,
-  port: Option[String]                               = None
+  agentName: Option[String] = None,
+  port: Option[String] = None
 ) extends Application {
   override val `type`: model.ApplicationType.Value = ApplicationType.LIABILITY_ORDER
 }
@@ -86,7 +86,7 @@ case class CorrespondenceApplication(
   summary: String,
   detailedDescription: String,
   relatedBTIReference: Option[String] = None,
-  relatedBTIReferences: List[String]  = Nil,
+  relatedBTIReferences: List[String] = Nil,
   sampleToBeProvided: Boolean,
   sampleToBeReturned: Boolean,
   messagesLogged: List[Message] = Nil

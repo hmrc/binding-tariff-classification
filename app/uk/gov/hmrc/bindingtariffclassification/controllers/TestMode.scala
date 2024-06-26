@@ -24,8 +24,7 @@ import scala.concurrent.{ExecutionContext, Future}
 
 object TestMode {
 
-  def actionFilter(appConfig: AppConfig, bodyParser: BodyParsers.Default)(
-    implicit
+  def actionFilter(appConfig: AppConfig, bodyParser: BodyParsers.Default)(implicit
     ec: ExecutionContext
   ): ActionBuilder[Request, AnyContent] with ActionFilter[Request] =
     new ActionBuilder[Request, AnyContent] with ActionFilter[Request] {
