@@ -22,7 +22,7 @@ import org.scalatest.BeforeAndAfterEach
 import uk.gov.hmrc.bindingtariffclassification.base.BaseSpec
 import uk.gov.hmrc.bindingtariffclassification.config.AppConfig
 import uk.gov.hmrc.bindingtariffclassification.model._
-import uk.gov.hmrc.bindingtariffclassification.repository.{CaseAttachmentAggregation, CaseRepository, MigrationLockRepository, SequenceRepository}
+import uk.gov.hmrc.bindingtariffclassification.repository.{CaseAttachmentAggregation, CaseRepository, MigrationLockMongoRepository, SequenceRepository}
 
 import scala.concurrent.Future.successful
 
@@ -34,7 +34,7 @@ class CaseServiceSpec extends BaseSpec with BeforeAndAfterEach {
 
   private val caseRepository            = mock[CaseRepository]
   private val sequenceRepository        = mock[SequenceRepository]
-  private val migrationRepository       = mock[MigrationLockRepository]
+  private val migrationRepository       = mock[MigrationLockMongoRepository]
   private val caseAttachmentAggregation = mock[CaseAttachmentAggregation]
   private val eventService              = mock[EventService]
   private val appConfig                 = mock[AppConfig]

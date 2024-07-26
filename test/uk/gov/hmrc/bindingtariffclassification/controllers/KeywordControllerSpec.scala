@@ -34,8 +34,6 @@ import util.{CaseData, DatabaseException}
 
 import scala.concurrent.Future._
 
-import scala.concurrent.ExecutionContext.Implicits.global
-
 class KeywordControllerSpec extends BaseSpec with BeforeAndAfterEach {
 
   override protected def beforeEach(): Unit =

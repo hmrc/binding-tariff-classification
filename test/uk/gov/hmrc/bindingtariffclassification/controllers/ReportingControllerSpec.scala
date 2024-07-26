@@ -22,14 +22,11 @@ import org.scalatest.BeforeAndAfterEach
 import play.api.http.Status._
 import play.api.test.FakeRequest
 import uk.gov.hmrc.bindingtariffclassification.base.BaseSpec
+import uk.gov.hmrc.bindingtariffclassification.model.{Paged, Pagination}
 import uk.gov.hmrc.bindingtariffclassification.model.reporting._
 import uk.gov.hmrc.bindingtariffclassification.service.ReportService
 
 import scala.concurrent.Future
-import uk.gov.hmrc.bindingtariffclassification.model.Pagination
-import uk.gov.hmrc.bindingtariffclassification.model.Paged
-
-import scala.concurrent.ExecutionContext.Implicits.global
 
 class ReportingControllerSpec extends BaseSpec with BeforeAndAfterEach {
 

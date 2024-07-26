@@ -18,10 +18,14 @@ package uk.gov.hmrc.bindingtariffclassification.config
 
 import play.api.Configuration
 import uk.gov.hmrc.bindingtariffclassification.base.BaseSpec
+import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 import java.time.ZoneOffset
 
 class AppConfigTest extends BaseSpec {
+
+//  lazy val realConfig: Configuration                             = fakeApplication.injector.instanceOf[Configuration]
+//  lazy val serviceConfig: ServicesConfig                         = fakeApplication.injector.instanceOf[ServicesConfig]
 
   private def configWith(pairs: (String, String)*): AppConfig = {
     val currConfigs  = realConfig.entrySet.map(pair => pair._1 -> pair._2.render()).toMap

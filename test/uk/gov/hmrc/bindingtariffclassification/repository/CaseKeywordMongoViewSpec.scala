@@ -16,9 +16,7 @@
 
 package uk.gov.hmrc.bindingtariffclassification.repository
 
-import org.mongodb.scala.model.Filters
 import org.scalatest.matchers.must.Matchers._
-import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
 import uk.gov.hmrc.bindingtariffclassification.config.AppConfig
 import uk.gov.hmrc.bindingtariffclassification.model.Role.CLASSIFICATION_OFFICER
 import uk.gov.hmrc.bindingtariffclassification.model._
@@ -27,13 +25,8 @@ import uk.gov.hmrc.mongo.test.DefaultPlayMongoRepositorySupport
 import util.CaseData.{createBasicBTIApplication, createDecision, createLiabilityOrder}
 
 import java.time.Instant
-import scala.concurrent.ExecutionContext.Implicits.global
 
-class CaseKeywordMongoViewSpec
-    extends BaseMongoIndexSpec
-    with BeforeAndAfterAll
-    with BeforeAndAfterEach
-    with DefaultPlayMongoRepositorySupport[Case] {
+class CaseKeywordMongoViewSpec extends BaseMongoIndexSpec with DefaultPlayMongoRepositorySupport[Case] {
 
   private val config = mock[AppConfig]
   private val view   = new CaseKeywordMongoView(mongoComponent)
@@ -112,12 +105,12 @@ class CaseKeywordMongoViewSpec
 
   override def beforeEach(): Unit = {
     super.beforeEach()
-    deleteAll()
+    await(deleteAll())
   }
 
   override def afterAll(): Unit = {
     super.afterAll()
-    deleteAll()
+    await(deleteAll())
   }
 
   private def collectionSize: Int =
@@ -135,7 +128,7 @@ class CaseKeywordMongoViewSpec
     "dropView will drop the view" in {
 
       val result                = view.dropView(view.caseKeywordsViewName)
-      val futureCollectionNames = await(result).flatMap(_ => mongoComponent.database.listCollectionNames().toFuture())
+      val futureCollectionNames = result.flatMap(_ => mongoComponent.database.listCollectionNames().toFuture())
 
       await(futureCollectionNames) mustNot contain(view.caseKeywordsViewName)
     }
