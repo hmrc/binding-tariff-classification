@@ -16,23 +16,22 @@
 
 package uk.gov.hmrc.bindingtariffclassification.connector
 
-import javax.inject.{Inject, Singleton}
 import org.apache.pekko.stream.Materializer
 import org.apache.pekko.stream.scaladsl.Source
 import uk.gov.hmrc.bindingtariffclassification.config.AppConfig
+import uk.gov.hmrc.bindingtariffclassification.metrics.HasMetrics
 import uk.gov.hmrc.bindingtariffclassification.model.filestore.{FileMetadata, FileSearch}
 import uk.gov.hmrc.bindingtariffclassification.model.{Paged, Pagination}
-import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
+import uk.gov.hmrc.http.HttpReads.Implicits._
+import uk.gov.hmrc.http.client.HttpClientV2
+import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, StringContextOps}
 
+import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
-import uk.gov.hmrc.bindingtariffclassification.metrics.HasMetrics
-import uk.gov.hmrc.play.bootstrap.http.DefaultHttpClient
-import uk.gov.hmrc.play.bootstrap.metrics.Metrics
 
-@Singleton
-class FileStoreConnector @Inject() (appConfig: AppConfig, http: DefaultHttpClient, val metrics: Metrics)(implicit
+class FileStoreConnector @Inject() (appConfig: AppConfig, http: HttpClientV2, hasMetrics: HasMetrics)(implicit
   mat: Materializer
-) extends HasMetrics {
+) {
 
   implicit val ec: ExecutionContext = mat.executionContext
 
@@ -50,32 +49,43 @@ class FileStoreConnector @Inject() (appConfig: AppConfig, http: DefaultHttpClien
     }
   }
 
+  private def findQueryUri(search: FileSearch, pagination: Pagination): String = {
+    val queryParams = FileSearch.bindable.unbind("", search) + "&" + Pagination.bindable.unbind("", pagination)
+    s"${appConfig.fileStoreUrl}/file?$queryParams"
+  }
+
   def find(search: FileSearch, pagination: Pagination)(implicit hc: HeaderCarrier): Future[Paged[FileMetadata]] =
-    withMetricsTimerAsync("find-attachments") { _ =>
+    hasMetrics.withMetricsTimerAsync("find-attachments") { _ =>
       if (search.ids.exists(_.nonEmpty) && pagination.equals(Pagination.max)) {
         Source(search.ids.get)
           .grouped(BatchSize)
           .mapAsyncUnordered(Runtime.getRuntime.availableProcessors()) { idBatch =>
-            http.GET[Paged[FileMetadata]](
-              findQueryUri(search.copy(ids = Some(idBatch.toSet)), Pagination.max),
-              headers = addHeaders
-            )
+            http
+              .get(url"${findQueryUri(search.copy(ids = Some(idBatch.toSet)), Pagination.max)}")
+              .setHeader(
+                addHeaders: _*
+              )
+              .execute[Paged[FileMetadata]]
           }
           .runFold(Seq.empty[FileMetadata]) { case (acc, next) =>
             acc ++ next.results
           }
           .map(results => Paged(results = results, pagination = Pagination.max, resultCount = results.size.toLong))
       } else {
-        http.GET[Paged[FileMetadata]](findQueryUri(search, pagination), headers = addHeaders)
+        http
+          .get(url"${findQueryUri(search, pagination)}")
+          .setHeader(addHeaders: _*)
+          .execute[Paged[FileMetadata]]
       }
     }
 
-  def delete(id: String)(implicit hc: HeaderCarrier): Future[Unit] = withMetricsTimerAsync("delete-attachment") { _ =>
-    http.DELETE[HttpResponse](s"${appConfig.fileStoreUrl}/file/$id", headers = addHeaders).map(_ => ())
-  }
-
-  private def findQueryUri(search: FileSearch, pagination: Pagination): String = {
-    val queryParams = FileSearch.bindable.unbind("", search) + "&" + Pagination.bindable.unbind("", pagination)
-    s"${appConfig.fileStoreUrl}/file?$queryParams"
-  }
+  def delete(id: String)(implicit hc: HeaderCarrier): Future[Unit] =
+    hasMetrics
+      .withMetricsTimerAsync("delete-attachment") { _ =>
+        http
+          .delete(url"${appConfig.fileStoreUrl}/file/$id")
+          .setHeader(addHeaders: _*)
+          .execute[HttpResponse]
+      }
+      .map(_ => ())
 }

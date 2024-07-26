@@ -2,7 +2,7 @@ import sbt.*
 
 object AppDependencies {
   private lazy val mongoHmrcVersion = "2.1.0"
-  private lazy val bootstrapVersion = "8.6.0"
+  private lazy val bootstrapVersion = "9.1.0"
   private lazy val pekkoVersion     = "1.0.2"
 
   lazy val compile: Seq[ModuleID] = Seq(
@@ -16,7 +16,7 @@ object AppDependencies {
     "org.typelevel"                %% "cats-core"                   % "2.12.0",
     "com.github.pathikrit"         %% "better-files"                % "3.9.2",
     "org.quartz-scheduler"          % "quartz"                      % "2.3.2",
-    "com.fasterxml.jackson.module" %% "jackson-module-scala"        % "2.17.1"
+    "com.fasterxml.jackson.module" %% "jackson-module-scala"        % "2.17.2"
   )
 
   val test: Seq[ModuleID] = Seq(

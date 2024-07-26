@@ -38,7 +38,6 @@ import util.Cases._
 
 import java.time._
 import java.time.temporal.ChronoUnit
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 // scalastyle:off magic.number

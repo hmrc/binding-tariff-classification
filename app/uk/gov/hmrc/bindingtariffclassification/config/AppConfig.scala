@@ -97,7 +97,8 @@ class AppConfig @Inject() (
     MongoEncryption(encryptionEnabled, encryptionKey)
   }
 
-  lazy val maxUriLength: Long = configuration.underlying.getBytes("akka.http.parsing.max-uri-length")
+  lazy val maxUriLength: Long =
+    configuration.underlying.getBytes("pekko.http.parsing.max-uri-length")
 
 }
 

@@ -36,7 +36,6 @@ import util.CaseData
 import util.EventData.createCaseStatusChangeEventDetails
 
 import java.time._
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.concurrent.Future.successful
 import scala.concurrent.duration.Duration

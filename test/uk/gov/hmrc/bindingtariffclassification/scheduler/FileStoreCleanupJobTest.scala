@@ -32,7 +32,6 @@ import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mongo.lock.LockRepository
 
 import java.time._
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future.{failed, successful}
 
 // scalastyle:off magic.number

@@ -24,7 +24,6 @@ import uk.gov.hmrc.bindingtariffclassification.model._
 import uk.gov.hmrc.mongo.test.MongoSupport
 
 import java.time.{LocalDate, ZoneOffset, ZonedDateTime}
-import scala.concurrent.ExecutionContext.Implicits.global
 
 class MigrationLockRepositorySpec
     extends BaseMongoIndexSpec
@@ -122,7 +121,7 @@ class MigrationLockRepositorySpec
         assertIndexes(expectedIndexes.sorted, getIndexes(repo.collection).sorted)
       }
 
-      await(repo.collection.drop())
+      await(repo.collection.drop().toFuture())
     }
   }
 

@@ -23,8 +23,6 @@ import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
 import uk.gov.hmrc.bindingtariffclassification.model._
 import uk.gov.hmrc.mongo.test.MongoSupport
 
-import scala.concurrent.ExecutionContext.Implicits.global
-
 class UsersRepositorySpec
     extends BaseMongoIndexSpec
     with BeforeAndAfterAll

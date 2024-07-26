@@ -21,7 +21,6 @@ import uk.gov.hmrc.bindingtariffclassification.base.BaseSpec
 import uk.gov.hmrc.bindingtariffclassification.repository.CaseRepository
 import util.CaseData
 
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 // scalastyle:off magic.number

@@ -14,26 +14,26 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.bindingtariffclassification.component
+package uk.gov.hmrc.bindingtariffclassification.component.controllers
 
 import org.apache.pekko.stream.Materializer
-
-import java.time.temporal.ChronoUnit
-import java.time.{Clock, Instant}
 import play.api.http.ContentTypes.JSON
 import play.api.http.HeaderNames.CONTENT_TYPE
 import play.api.http.Status._
 import play.api.libs.json.Json
 import play.api.libs.ws.ahc.StandaloneAhcWSClient
+import uk.gov.hmrc.bindingtariffclassification.component.BaseFeatureSpec
 import uk.gov.hmrc.bindingtariffclassification.model.RESTFormatters._
 import uk.gov.hmrc.bindingtariffclassification.model._
 import util.CaseData._
 import util.Matchers.roughlyBe
 
+import java.time.temporal.ChronoUnit
+import java.time.{Clock, Instant}
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
 
-class CaseSpec extends BaseFeatureSpec {
+class CaseControllerISpec extends BaseFeatureSpec {
 
   protected val serviceUrl = s"http://localhost:$port"
 
