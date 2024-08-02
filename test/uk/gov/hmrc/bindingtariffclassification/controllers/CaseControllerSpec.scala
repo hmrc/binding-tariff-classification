@@ -36,7 +36,6 @@ import java.time.Instant
 import scala.concurrent.Future
 import scala.concurrent.Future._
 
-// scalastyle:off magic.number
 class CaseControllerSpec extends BaseSpec with BeforeAndAfterEach {
 
   override protected def beforeEach(): Unit =

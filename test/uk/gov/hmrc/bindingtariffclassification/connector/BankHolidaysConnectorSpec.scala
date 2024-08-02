@@ -42,7 +42,6 @@ import uk.gov.hmrc.http.HttpReads
 import java.time.LocalDate
 import scala.concurrent.Future
 
-// scalastyle:off magic.number
 class BankHolidaysConnectorSpec extends BaseSpec {
 
   trait ConnectorTestSetup {

@@ -307,12 +307,12 @@ class CaseControllerISpec extends BaseFeatureSpec {
 
       And("The case is returned in the JSON response")
       val responseCase = Json.parse(result.body).as[Case]
-      responseCase.reference                             shouldBe "800000001"
-      responseCase.status                                shouldBe CaseStatus.NEW
-      responseCase.application.asMisc.name               shouldBe "name"
-      responseCase.application.asMisc.contactName        shouldBe Some("contactName")
-      responseCase.application.asMisc.caseType           shouldBe MiscCaseType.HARMONISED
-      responseCase.application.asMisc.contact            shouldBe Contact("Maurizio", "maurizio@me.com", Some("0123456789"))
+      responseCase.reference                      shouldBe "800000001"
+      responseCase.status                         shouldBe CaseStatus.NEW
+      responseCase.application.asMisc.name        shouldBe "name"
+      responseCase.application.asMisc.contactName shouldBe Some("contactName")
+      responseCase.application.asMisc.caseType    shouldBe MiscCaseType.HARMONISED
+      responseCase.application.asMisc.contact     shouldBe Contact("Maurizio", "maurizio@me.com", Some("0123456789"))
       responseCase.application.asMisc.sampleToBeProvided shouldBe false
       responseCase.application.asMisc.sampleToBeReturned shouldBe false
     }

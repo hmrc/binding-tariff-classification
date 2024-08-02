@@ -27,7 +27,7 @@ class LocalCrypto @Inject() (appConfig: AppConfig) extends AesCrypto {
   override protected lazy val encryptionKey: String = {
     appConfig.mongoEncryption.key match {
       case Some(k) if appConfig.mongoEncryption.enabled => k
-      case _                                            => throw new RuntimeException("Missing config: 'mongodb.encryption.enabled'")
+      case _ => throw new RuntimeException("Missing config: 'mongodb.encryption.enabled'")
     }
   }
 

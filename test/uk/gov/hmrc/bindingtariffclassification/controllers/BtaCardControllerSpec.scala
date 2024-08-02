@@ -33,7 +33,6 @@ import uk.gov.hmrc.http.{HeaderCarrier, HttpVerbs}
 
 import scala.concurrent.{ExecutionContext, Future}
 
-// scalastyle:off magic.number
 class BtaCardControllerSpec extends BaseSpec {
 
   private val eori                          = "GB123"

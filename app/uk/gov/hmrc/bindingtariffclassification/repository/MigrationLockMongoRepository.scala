@@ -61,7 +61,7 @@ class MigrationLockMongoRepository @Inject() (mongoComponent: MongoComponent)(im
     }
 
   def delete(e: JobRunEvent): Future[Unit] =
-    collection.deleteOne(equal("name", e.name)).toFuture().map { result =>
+    collection.deleteOne(equal("name", e.name)).toFuture().map { _ =>
       logger.debug(s"Removed Lock for [${e.name}]")
       Future.unit
     }

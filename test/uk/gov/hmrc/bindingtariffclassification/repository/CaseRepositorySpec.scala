@@ -40,7 +40,6 @@ import java.time._
 import java.time.temporal.ChronoUnit
 import scala.concurrent.Future
 
-// scalastyle:off magic.number
 // scalastyle:off file.size.limit
 class CaseRepositorySpec
     extends BaseMongoIndexSpec

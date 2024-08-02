@@ -20,7 +20,6 @@ package reporting
 import java.time.{LocalDateTime, ZoneOffset}
 import uk.gov.hmrc.bindingtariffclassification.base.BaseSpec
 
-// scalastyle:off magic.number
 class ReportFieldSpec extends BaseSpec {
 
   "ReportField" should {

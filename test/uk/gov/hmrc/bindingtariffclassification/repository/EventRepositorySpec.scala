@@ -29,7 +29,6 @@ import util.EventData._
 import java.time.temporal.ChronoUnit
 import java.time.{Instant, LocalDate, ZoneOffset}
 
-// scalastyle:off magic.number
 class EventRepositorySpec
     extends BaseMongoIndexSpec
     with BeforeAndAfterAll
