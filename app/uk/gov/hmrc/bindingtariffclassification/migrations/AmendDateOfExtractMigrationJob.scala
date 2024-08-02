@@ -39,7 +39,6 @@ class AmendDateOfExtractMigrationJob @Inject() (
 
   private lazy val originalDate = LocalDate.of(2021, 1, 1).atStartOfDay(ZoneOffset.UTC).toInstant
   private lazy val updatedDate  = LocalDate.of(2020, 12, 31).atStartOfDay(ZoneOffset.UTC).toInstant
-  // scalastyle:on magic.number
 
   override val name: String = "AmendDateOfExtract"
 
