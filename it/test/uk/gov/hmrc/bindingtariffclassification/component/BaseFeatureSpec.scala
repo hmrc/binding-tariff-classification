@@ -16,24 +16,33 @@
 
 package uk.gov.hmrc.bindingtariffclassification.component
 
+import com.codahale.metrics.Timer
 import com.mongodb.WriteConcern
+import org.mockito.ArgumentMatchers.anyString
+import org.mockito.Mockito
+import org.mockito.Mockito.when
 import org.scalatest._
 import org.scalatest.featurespec.AnyFeatureSpec
 import org.scalatest.matchers.should.Matchers
+import org.scalatestplus.mockito.MockitoSugar.mock
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
 import play.api.Application
 import play.api.inject.bind
 import play.api.inject.guice.GuiceApplicationBuilder
 import uk.gov.hmrc.bindingtariffclassification.config.AppConfig
+import uk.gov.hmrc.bindingtariffclassification.metrics.HasMetrics
 import uk.gov.hmrc.bindingtariffclassification.model.{Case, Event, Sequence}
 import uk.gov.hmrc.bindingtariffclassification.repository.{CaseMongoRepository, EventMongoRepository, SequenceMongoRepository}
 import uk.gov.hmrc.bindingtariffclassification.scheduler.ScheduledJobs
+import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.http.client.HttpClientV2
+import uk.gov.hmrc.http.test.HttpClientV2Support
 import uk.gov.hmrc.mongo.lock.{LockRepository, MongoLockRepository}
 import uk.gov.hmrc.play.bootstrap.metrics.Metrics
 import util.TestMetrics
 
 import scala.concurrent.Await.result
-import scala.concurrent.ExecutionContext.Implicits.global
+//import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.concurrent.duration._
 
@@ -43,11 +52,31 @@ abstract class BaseFeatureSpec
     with GivenWhenThen
     with GuiceOneServerPerSuite
     with BeforeAndAfterEach
-    with BeforeAndAfterAll {
+    with BeforeAndAfterAll
+    with HttpClientV2Support {
+
+  implicit val ec: scala.concurrent.ExecutionContext = scala.concurrent.ExecutionContext.global
+
+  implicit val hc: HeaderCarrier = HeaderCarrier()
+
+  val mockHasMetrics: HasMetrics   = mock[HasMetrics]
+  val mockHttpClient: HttpClientV2 = Mockito.mock(classOf[HttpClientV2])
+
+  trait MockHasMetrics {
+    self: HasMetrics =>
+    val timer: Timer.Context                = mock[Timer.Context]
+    val metrics: Metrics                    = mock[Metrics]
+    override val localMetrics: LocalMetrics = mock[LocalMetrics]
+    when(localMetrics.startTimer(anyString())) thenReturn timer
+  }
+
+  object FakeHasMetrics extends HasMetrics with MockHasMetrics
 
   override lazy val app: Application = GuiceApplicationBuilder()
     .configure("mongodb.uri" -> "mongodb://localhost:27017/test-ClassificationMongoRepositoryTest")
     .overrides(bind[Metrics].toInstance(new TestMetrics))
+    .overrides(bind[HasMetrics].toInstance(FakeHasMetrics))
+    .overrides(bind[HttpClientV2].toInstance(httpClientV2))
     .build()
 
   protected val timeout: FiniteDuration = 5.seconds

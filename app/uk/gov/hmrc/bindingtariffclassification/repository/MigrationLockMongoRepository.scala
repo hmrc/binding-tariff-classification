@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.bindingtariffclassification.repository
 
-import com.google.inject.ImplementedBy
 import org.mongodb.scala.MongoWriteException
 import org.mongodb.scala.model.Filters.{empty, equal}
 import org.mongodb.scala.model.Indexes._
@@ -30,19 +29,6 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.control.NonFatal
 
-@ImplementedBy(classOf[MigrationLockMongoRepository])
-trait MigrationLockRepository {
-
-  def lock(e: JobRunEvent): Future[Boolean]
-
-  def delete(e: JobRunEvent): Future[Unit]
-
-  def deleteAll(): Future[Unit]
-
-  def findOne(name: String): Future[Option[JobRunEvent]]
-
-}
-
 @Singleton
 class MigrationLockMongoRepository @Inject() (mongoComponent: MongoComponent)(implicit ec: ExecutionContext)
     extends PlayMongoRepository[JobRunEvent](
@@ -52,12 +38,11 @@ class MigrationLockMongoRepository @Inject() (mongoComponent: MongoComponent)(im
       indexes = Seq(
         IndexModel(ascending("name"), IndexOptions().unique(true).name("name_Index"))
       )
-    )
-    with MigrationLockRepository {
+    ) {
 
   private val mongoDuplicateKeyErrorCode: Int = 11000
 
-  override def lock(e: JobRunEvent): Future[Boolean] =
+  def lock(e: JobRunEvent): Future[Boolean] =
     collection.insertOne(e).toFuture().map { _ =>
       logger.debug(s"Took Lock for [${e.name}]")
       true
@@ -75,16 +60,16 @@ class MigrationLockMongoRepository @Inject() (mongoComponent: MongoComponent)(im
         false
     }
 
-  override def delete(e: JobRunEvent): Future[Unit] =
-    collection.deleteOne(equal("name", e.name)).toFuture().flatMap { _ =>
+  def delete(e: JobRunEvent): Future[Unit] =
+    collection.deleteOne(equal("name", e.name)).toFuture().map { _ =>
       logger.debug(s"Removed Lock for [${e.name}]")
       Future.unit
     }
 
-  override def deleteAll(): Future[Unit] =
+  def deleteAll(): Future[Unit] =
     collection.deleteMany(empty()).toFuture().flatMap(_ => Future.unit)
 
-  override def findOne(name: String): Future[Option[JobRunEvent]] =
+  def findOne(name: String): Future[Option[JobRunEvent]] =
     collection.find(equal("name", name)).headOption()
 
   /** Tells if this error is due to a write on a secondary node. */

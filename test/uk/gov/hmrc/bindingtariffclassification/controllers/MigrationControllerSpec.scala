@@ -20,32 +20,37 @@ import org.mockito.Mockito.when
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.bindingtariffclassification.base.BaseSpec
-import uk.gov.hmrc.bindingtariffclassification.migrations.{AmendDateOfExtractMigrationJob, MigrationRunner}
+import uk.gov.hmrc.bindingtariffclassification.migrations.{AddKeywordsMigrationJob, AmendDateOfExtractMigrationJob, JobExecuted, MigrationRunner}
 import uk.gov.hmrc.http.HttpVerbs
 
+import scala.concurrent.Future
 import scala.concurrent.Future.{failed, successful}
-
-import scala.concurrent.ExecutionContext.Implicits.global
 
 class MigrationControllerSpec extends BaseSpec {
 
   private val runner = mock[MigrationRunner]
+  private val fakeAmendDateOfExtractMigrationJob: AmendDateOfExtractMigrationJob =
+    fakeApplication.injector.instanceOf[AmendDateOfExtractMigrationJob]
+  private val fakeAddKeywordsMigrationJob: AddKeywordsMigrationJob =
+    fakeApplication.injector.instanceOf[AddKeywordsMigrationJob]
 
   private val fakeRequest = FakeRequest(method = HttpVerbs.PUT, path = "/scheduler/days-elapsed")
 
-  private val controller = new MigrationController(runner, mcc)
+  private val controller =
+    new MigrationController(runner, fakeAddKeywordsMigrationJob, fakeAmendDateOfExtractMigrationJob, mcc)
 
   "Amend Date Of Extract" should {
 
     "return 204 when the runner executes successfully" in {
-      when(runner.trigger(classOf[AmendDateOfExtractMigrationJob])).thenReturn(successful(()))
+
+      when(runner.trigger(fakeAmendDateOfExtractMigrationJob)).thenReturn(Future(Some(JobExecuted)))
 
       val result = controller.amendDateOfExtract()(fakeRequest).futureValue
       result.header.status shouldBe NO_CONTENT
     }
 
     "return 500 when an error occurred" in {
-      when(runner.trigger(classOf[AmendDateOfExtractMigrationJob])).thenReturn(failed(new RuntimeException))
+      when(runner.trigger(fakeAmendDateOfExtractMigrationJob)).thenReturn(failed(new RuntimeException))
 
       val result = controller.amendDateOfExtract()(fakeRequest)
 

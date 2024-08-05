@@ -16,24 +16,69 @@
 
 package uk.gov.hmrc.bindingtariffclassification.component.utils
 
+import com.codahale.metrics.Timer
+import com.mongodb.WriteConcern
+import org.mockito.ArgumentMatchers.anyString
+import org.mockito.Mockito.when
 import org.scalatest._
 import org.scalatest.concurrent.Eventually
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpecLike
+import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
+import play.api.inject.bind
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.{Application, Environment, Mode}
+import uk.gov.hmrc.bindingtariffclassification.config.AppConfig
+import uk.gov.hmrc.bindingtariffclassification.metrics.HasMetrics
+import uk.gov.hmrc.bindingtariffclassification.model.{Case, Event, Sequence}
+import uk.gov.hmrc.bindingtariffclassification.repository.{CaseMongoRepository, EventMongoRepository, SequenceMongoRepository}
+import uk.gov.hmrc.bindingtariffclassification.scheduler.ScheduledJobs
+import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.http.client.HttpClientV2
+import uk.gov.hmrc.http.test.HttpClientV2Support
+import uk.gov.hmrc.mongo.lock.{LockRepository, MongoLockRepository}
+import uk.gov.hmrc.play.bootstrap.metrics.Metrics
+import util.TestMetrics
+
+import scala.concurrent.Await.result
+import scala.concurrent.duration.{Duration, DurationInt, FiniteDuration}
+import scala.concurrent.{Await, Future}
 
 trait IntegrationSpecBase
-    extends TestSuite
+    extends AnyWordSpecLike
     with WiremockHelper
+    with Matchers
+    with MockitoSugar
     with GuiceOneServerPerSuite
     with BeforeAndAfterEach
     with BeforeAndAfterAll
-    with Eventually {
+    with Eventually
+    with HttpClientV2Support {
 
-  override implicit lazy val app: Application = new GuiceApplicationBuilder()
-    .in(Environment.simple(mode = Mode.Dev))
-    .configure(config)
-    .build()
+  implicit val hc: HeaderCarrier = HeaderCarrier()
+
+  implicit val ec: scala.concurrent.ExecutionContext = scala.concurrent.ExecutionContext.global
+
+  trait MockHasMetrics {
+    self: HasMetrics =>
+    val timer: Timer.Context                = mock[Timer.Context]
+    val metrics: Metrics                    = mock[Metrics]
+    override val localMetrics: LocalMetrics = mock[LocalMetrics]
+    when(localMetrics.startTimer(anyString())) thenReturn timer
+  }
+
+  object FakeHasMetrics extends HasMetrics with MockHasMetrics
+
+  override implicit lazy val app: Application =
+    new GuiceApplicationBuilder()
+      .in(Environment.simple(mode = Mode.Dev))
+      .configure(config)
+      .overrides(bind[Metrics].toInstance(new TestMetrics))
+      .overrides(bind[HasMetrics].toInstance(FakeHasMetrics))
+      .overrides(bind[HttpClientV2].toInstance(httpClientV2))
+      .build()
+
   val mockHost: String = WiremockHelper.wiremockHost
   val mockPort: String = WiremockHelper.wiremockPort.toString
   val mockUrl          = s"http://$mockHost:$mockPort"
@@ -51,8 +96,61 @@ trait IntegrationSpecBase
     "internalServiceHostPatterns"       -> Nil
   )
 
-  override def beforeEach(): Unit =
+  protected val timeout: FiniteDuration = 5.seconds
+
+  protected lazy val appConfig: AppConfig = app.injector.instanceOf[AppConfig]
+
+  protected lazy val apiTokenKey = "X-Api-Token"
+
+  private lazy val caseStore: CaseMongoRepository           = app.injector.instanceOf[CaseMongoRepository]
+  private lazy val eventStore: EventMongoRepository         = app.injector.instanceOf[EventMongoRepository]
+  private lazy val sequenceStore: SequenceMongoRepository   = app.injector.instanceOf[SequenceMongoRepository]
+  private lazy val mongoLockRepository: MongoLockRepository = app.injector.instanceOf[MongoLockRepository]
+  private lazy val scheduledJobStores: Iterable[LockRepository] =
+    app.injector.instanceOf[ScheduledJobs].jobs.map(_.lockRepository)
+
+  def dropStores(): Iterable[Unit] = {
+    result(caseStore.collection.withWriteConcern(WriteConcern.JOURNALED).drop().toFuture(), timeout)
+    result(eventStore.collection.withWriteConcern(WriteConcern.JOURNALED).drop().toFuture(), timeout)
+    result(sequenceStore.collection.withWriteConcern(WriteConcern.JOURNALED).drop().toFuture(), timeout)
+    result(mongoLockRepository.collection.withWriteConcern(WriteConcern.JOURNALED).drop().toFuture(), timeout)
+    result(
+      Future.traverse(scheduledJobStores)(_.asInstanceOf[MongoLockRepository].collection.drop().toFuture()),
+      timeout
+    )
+  }
+
+  implicit val defaultTimeout: FiniteDuration = 5.seconds
+
+  def await[A](future: Future[A])(implicit timeout: Duration): A =
+    Await.result(future, timeout)
+
+  protected def storeCases(cases: Case*): Seq[Case] =
+    cases.map { c: Case =>
+      // for simplicity encryption is not tested here (because disabled in application.conf)
+      result(caseStore.insert(c), timeout)
+    }
+
+  protected def storeEvents(events: Event*): Seq[Event] =
+    events.map(e => result(eventStore.insert(e), timeout))
+
+  protected def storeSequences(sequences: Sequence*): Seq[Sequence] =
+    sequences.map(s => result(sequenceStore.insert(s), timeout))
+
+  protected def caseStoreSize: Long =
+    result(caseStore.collection.countDocuments().toFuture(), timeout)
+
+  protected def eventStoreSize: Long =
+    result(eventStore.collection.countDocuments().toFuture(), timeout)
+
+  protected def getCase(ref: String): Option[Case] =
+    // for simplicity decryption is not tested here (because disabled in application.conf)
+    result(caseStore.getByReference(ref), timeout)
+
+  override def beforeEach(): Unit = {
+    dropStores()
     resetWiremock()
+  }
 
   override def beforeAll(): Unit = {
     super.beforeAll()

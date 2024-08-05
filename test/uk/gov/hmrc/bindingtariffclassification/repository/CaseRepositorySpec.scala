@@ -38,11 +38,8 @@ import util.Cases._
 
 import java.time._
 import java.time.temporal.ChronoUnit
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-// scalastyle:off magic.number
-// scalastyle:off file.size.limit
 class CaseRepositorySpec
     extends BaseMongoIndexSpec
     with BeforeAndAfterAll
@@ -2570,5 +2567,3 @@ class CaseRepositorySpec
     )
   }
 }
-// scalastyle:on magic.number
-// scalastyle:on file.size.limit

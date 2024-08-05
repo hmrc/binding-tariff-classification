@@ -31,10 +31,8 @@ import uk.gov.hmrc.bindingtariffclassification.model.bta.{BtaApplications, BtaCa
 import uk.gov.hmrc.bindingtariffclassification.service.BtaCardService
 import uk.gov.hmrc.http.{HeaderCarrier, HttpVerbs}
 
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{ExecutionContext, Future}
 
-// scalastyle:off magic.number
 class BtaCardControllerSpec extends BaseSpec {
 
   private val eori                          = "GB123"

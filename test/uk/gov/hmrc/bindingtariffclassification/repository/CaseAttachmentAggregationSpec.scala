@@ -23,7 +23,6 @@ import uk.gov.hmrc.mongo.test.MongoSupport
 import util.CaseData.{createAttachment, createBTIApplicationWithAllFields, createCase, createDecision}
 
 import java.time.temporal.ChronoUnit
-import scala.concurrent.ExecutionContext.Implicits.global
 
 class CaseAttachmentAggregationSpec
     extends BaseMongoIndexSpec

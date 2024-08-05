@@ -18,6 +18,7 @@ package uk.gov.hmrc.bindingtariffclassification.config
 
 import play.api.Configuration
 import uk.gov.hmrc.bindingtariffclassification.base.BaseSpec
+import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 import java.time.ZoneOffset
 

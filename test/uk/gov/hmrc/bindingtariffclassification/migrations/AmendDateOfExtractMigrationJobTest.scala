@@ -28,12 +28,9 @@ import uk.gov.hmrc.bindingtariffclassification.service.CaseService
 import uk.gov.hmrc.bindingtariffclassification.sort.CaseSortField
 import util.CaseData
 
-import scala.concurrent.ExecutionContext.Implicits.global
-
 import java.time.{LocalDate, ZoneOffset}
 import scala.concurrent.Future
 
-// scalastyle:off magic.number
 class AmendDateOfExtractMigrationJobTest extends BaseSpec with BeforeAndAfterEach {
 
   private val caseService = mock[CaseService]
