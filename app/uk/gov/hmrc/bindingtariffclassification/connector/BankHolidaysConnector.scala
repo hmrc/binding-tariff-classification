@@ -16,46 +16,43 @@
 
 package uk.gov.hmrc.bindingtariffclassification.connector
 
-import play.api.Logging
 import play.api.libs.json.Json
+import uk.gov.hmrc.bindingtariffclassification.common.Logging
 import uk.gov.hmrc.bindingtariffclassification.config.AppConfig
+import uk.gov.hmrc.bindingtariffclassification.http.ProxyHttpClient
 import uk.gov.hmrc.bindingtariffclassification.metrics.HasMetrics
 import uk.gov.hmrc.bindingtariffclassification.model.BankHolidaysResponse
 import uk.gov.hmrc.bindingtariffclassification.model.RESTFormatters.formatBankHolidaysResponse
-import uk.gov.hmrc.http.client.HttpClientV2
-import uk.gov.hmrc.http.{HeaderCarrier, StringContextOps}
+import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.play.bootstrap.metrics.Metrics
 
 import java.nio.charset.StandardCharsets
 import java.time.LocalDate
-import javax.inject.Inject
+import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 import scala.io.Source
 
-class BankHolidaysConnector @Inject() (
-  appConfig: AppConfig,
-  http: HttpClientV2,
-  hasMetrics: HasMetrics
-)(implicit
+@Singleton
+class BankHolidaysConnector @Inject() (appConfig: AppConfig, http: ProxyHttpClient, val metrics: Metrics)(implicit
   executionContext: ExecutionContext
-) extends Logging {
-
+) extends Logging
+    with HasMetrics {
   def get()(implicit headerCarrier: HeaderCarrier): Future[Set[LocalDate]] =
-    hasMetrics
-      .withMetricsTimerAsync("get-bank-holidays") { _: hasMetrics.MetricsTimer =>
-        http
-          .get(url"${appConfig.bankHolidaysUrl}")
-          .execute[BankHolidaysResponse]
-      }
-      .map(_.`england-and-wales`.events.map(_.date).toSet)
-      .recover(withResourcesFile)
+    withMetricsTimerAsync("get-bank-holidays") { _ =>
+      http
+        .GET[BankHolidaysResponse](appConfig.bankHolidaysUrl)
+        .recover(withResourcesFile)
+        .map(_.`england-and-wales`.events.map(_.date).toSet)
+    }
 
-  private def withResourcesFile: PartialFunction[Throwable, Set[LocalDate]] = { case t =>
+  private def withResourcesFile: PartialFunction[Throwable, BankHolidaysResponse] = { case t =>
     logger.error("Bank Holidays Request Failed", t)
     val url    = getClass.getClassLoader.getResource("bank-holidays-fallback.json")
     val source = Source.fromURL(url, StandardCharsets.UTF_8.name())
     val content =
       try source.getLines().mkString
       finally source.close()
-    Json.fromJson(Json.parse(content)).get.`england-and-wales`.events.map(_.date).toSet
+    Json.fromJson(Json.parse(content)).get
   }
+
 }

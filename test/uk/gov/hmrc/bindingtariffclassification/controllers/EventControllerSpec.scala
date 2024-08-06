@@ -35,6 +35,8 @@ import java.time.Instant
 import java.util.UUID
 import scala.concurrent.Future._
 
+import scala.concurrent.ExecutionContext.Implicits.global
+
 class EventControllerSpec extends BaseSpec with BeforeAndAfterEach {
 
   private val caseReference = UUID.randomUUID().toString

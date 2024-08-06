@@ -226,8 +226,8 @@ object CaseData {
     } else {
       def dateToInstant(localDate: LocalDate) = localDate.atStartOfDay(ZoneId.systemDefault()).toInstant
       val now                                 = LocalDate.now()
-      val actionableA = (1 to actionableApplications).map(_ => createCase(status = CaseStatus.REFERRED))
-      val totalA = (1 to (totalApplications - actionableApplications)).map(_ => createCase(status = CaseStatus.OPEN))
+      val actionableA                         = (1 to actionableApplications).map(_ => createCase(status = CaseStatus.REFERRED))
+      val totalA                              = (1 to (totalApplications - actionableApplications)).map(_ => createCase(status = CaseStatus.OPEN))
       val expiringR = (1 to expiringRulings).map { _ =>
         createCase(
           status = CaseStatus.COMPLETED,

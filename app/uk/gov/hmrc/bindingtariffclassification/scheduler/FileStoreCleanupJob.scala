@@ -82,12 +82,10 @@ class FileStoreCleanupJob @Inject() (
 
   private def deleteFile(file: FileMetadata): Future[Unit] = {
     logger.info(s"$name: Removing file [${file.fileName}] with id [${file.id}]")
-    fileStoreConnector
-      .delete(file.id)
-      .recoverWith { case NonFatal(e) =>
-        Future {
-          logger.error(s"$name: Failed to remove file [${file.fileName}] with id [${file.id}]", e)
-        }
+    fileStoreConnector.delete(file.id) recoverWith { case NonFatal(e) =>
+      Future {
+        logger.error(s"$name: Failed to remove file [${file.fileName}] with id [${file.id}]", e)
       }
+    }
   }
 }

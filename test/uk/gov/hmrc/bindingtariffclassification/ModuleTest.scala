@@ -22,39 +22,31 @@ import play.api.inject.bind
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.PlayRunners
 import uk.gov.hmrc.bindingtariffclassification.base.BaseSpec
-import uk.gov.hmrc.bindingtariffclassification.metrics.HasMetrics
 import uk.gov.hmrc.bindingtariffclassification.migrations.{AddKeywordsMigrationJob, AmendDateOfExtractMigrationJob, MigrationJobs}
 import uk.gov.hmrc.bindingtariffclassification.repository.{CaseMongoRepository, CaseRepository, EncryptedCaseMongoRepository}
 import uk.gov.hmrc.bindingtariffclassification.scheduler.{ActiveDaysElapsedJob, FileStoreCleanupJob, ReferredDaysElapsedJob, ScheduledJobs}
-import uk.gov.hmrc.http.client.{HttpClientV2, RequestBuilder}
 import uk.gov.hmrc.play.bootstrap.metrics.Metrics
+import util.TestMetrics
 
 class ModuleTest extends BaseSpec with BeforeAndAfterEach with PlayRunners {
 
   private def app(conf: (String, Any)*): Application =
     new GuiceApplicationBuilder()
       .bindings(new Module)
+      .overrides(bind[Metrics].toInstance(new TestMetrics))
       .configure(conf: _*)
-      .overrides(bind[RequestBuilder].toInstance(mockRequestBuilder))
-      .overrides(bind[Metrics].toInstance(mockMetrics))
-      .overrides(bind[HasMetrics].toInstance(mockHasMetrics))
-      .overrides(bind[HttpClientV2].toInstance(mockHttpClient))
       .build()
 
-  val mockCaseRepository: CaseMongoRepository = mock[CaseMongoRepository]
-
   "Module 'bind" should {
-
     "Bind encryption repository" in {
-
       val application: Application = app("mongodb.encryption.enabled" -> true)
       running(application) {
         application.injector.instanceOf[CaseRepository].isInstanceOf[EncryptedCaseMongoRepository] shouldBe true
       }
+
     }
 
     "Bind standard repository" in {
-
       val application: Application = app("mongodb.encryption.enabled" -> false)
       running(application) {
         application.injector.instanceOf[CaseRepository].isInstanceOf[CaseMongoRepository] shouldBe true

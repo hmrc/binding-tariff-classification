@@ -24,6 +24,7 @@ import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
 import uk.gov.hmrc.bindingtariffclassification.model._
 import uk.gov.hmrc.mongo.test.MongoSupport
 
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.DurationInt
 
 class SequenceRepositorySpec
@@ -131,7 +132,7 @@ class SequenceRepositorySpec
         assertIndexes(expectedIndexes.sorted, getIndexes(repo.collection).sorted)
       }
 
-      await(repo.collection.drop().toFuture())
+      await(repo.collection.drop())
     }
   }
 

@@ -22,12 +22,8 @@ import scala.util.Try
 
 object EnumJson {
 
-  implicit def format[E <: Enumeration](enumeration: E): Format[enumeration.Value] = {
-    val reads: Reads[enumeration.Value]   = Reads.enumNameReads(enumeration)
-    val writes: Writes[enumeration.Value] = Writes.enumNameWrites
-
-    Format(reads, writes)
-  }
+  implicit def format[E <: Enumeration](enumeration: E): Format[E#Value] =
+    Format(enumReads(enumeration), Writes.enumNameWrites)
 
   private def enumReads[E <: Enumeration](`enum`: E): Reads[E#Value] = {
     case JsString(s) =>

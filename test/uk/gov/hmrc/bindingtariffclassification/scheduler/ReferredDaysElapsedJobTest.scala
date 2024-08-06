@@ -36,9 +36,11 @@ import util.CaseData
 import util.EventData.createCaseStatusChangeEventDetails
 
 import java.time._
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.concurrent.Future.successful
 
+// scalastyle:off magic.number
 class ReferredDaysElapsedJobTest extends BaseSpec with BeforeAndAfterEach {
 
   private val caseService           = mock[CaseService]
@@ -323,9 +325,8 @@ class ReferredDaysElapsedJobTest extends BaseSpec with BeforeAndAfterEach {
 
   private def givenAPageOfCases(page: Int, pageSize: Int, totalCases: Int, cases: Case*): Unit = {
     val pagination = Pagination(page = page)
-    given(caseService.get(caseSearch, pagination)).willReturn(
+    given(caseService.get(caseSearch, pagination)) willReturn
       Future.successful(Paged(cases, Pagination(page = page, pageSize = pageSize), totalCases))
-    )
   }
 
   private def givenAPageOfEventsFor(reference: String, page: Int, totalEvents: Int, events: Event*): Unit = {
@@ -335,9 +336,8 @@ class ReferredDaysElapsedJobTest extends BaseSpec with BeforeAndAfterEach {
         EventSearch(Some(Set(reference)), Some(Set(EventType.CASE_STATUS_CHANGE, EventType.CASE_REFERRAL))),
         pagination
       )
-    ).willReturn(
+    ) willReturn
       Future.successful(Paged(events, pagination, totalEvents))
-    )
   }
 
   private def givenThereAreNoEventsFor(reference: String): Unit = {
@@ -347,7 +347,8 @@ class ReferredDaysElapsedJobTest extends BaseSpec with BeforeAndAfterEach {
         EventSearch(Some(Set(reference)), Some(Set(EventType.CASE_STATUS_CHANGE, EventType.CASE_REFERRAL))),
         pagination
       )
-    ).willReturn(Future.successful(Paged.empty[Event]))
+    ) willReturn
+      Future.successful(Paged.empty[Event])
   }
 
   private def aCaseWith(reference: String, createdDate: String): Case =
@@ -361,8 +362,8 @@ class ReferredDaysElapsedJobTest extends BaseSpec with BeforeAndAfterEach {
 
   private def aStatusChangeWith(date: String, status: CaseStatus): Event = {
     val e = mock[Event]
-    given(e.details).willReturn(createCaseStatusChangeEventDetails(mock[CaseStatus], status))
-    given(e.timestamp).willReturn(LocalDateTime.parse(date).toInstant(ZoneOffset.UTC))
+    given(e.details) willReturn createCaseStatusChangeEventDetails(mock[CaseStatus], status)
+    given(e.timestamp) willReturn LocalDateTime.parse(date).toInstant(ZoneOffset.UTC)
     e
   }
 

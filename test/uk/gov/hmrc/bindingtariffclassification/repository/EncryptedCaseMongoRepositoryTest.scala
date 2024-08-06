@@ -25,6 +25,7 @@ import uk.gov.hmrc.bindingtariffclassification.crypto.Crypto
 import uk.gov.hmrc.bindingtariffclassification.model.ApplicationType.BTI
 import uk.gov.hmrc.bindingtariffclassification.model._
 import uk.gov.hmrc.bindingtariffclassification.model.reporting._
+import scala.concurrent.ExecutionContext.Implicits.global
 
 import scala.concurrent.Future.successful
 

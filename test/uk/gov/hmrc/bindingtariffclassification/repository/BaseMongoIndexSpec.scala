@@ -21,6 +21,7 @@ import org.mongodb.scala.model.{IndexModel, IndexOptions, Indexes}
 import org.scalatest.Assertion
 import uk.gov.hmrc.bindingtariffclassification.base.BaseSpec
 
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.jdk.CollectionConverters.{IterableHasAsScala, SetHasAsScala}
 
 trait BaseMongoIndexSpec extends BaseSpec {

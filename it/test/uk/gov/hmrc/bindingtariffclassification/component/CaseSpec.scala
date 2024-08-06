@@ -14,26 +14,26 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.bindingtariffclassification.component.controllers
+package uk.gov.hmrc.bindingtariffclassification.component
 
 import org.apache.pekko.stream.Materializer
+
+import java.time.temporal.ChronoUnit
+import java.time.{Clock, Instant}
 import play.api.http.ContentTypes.JSON
 import play.api.http.HeaderNames.CONTENT_TYPE
 import play.api.http.Status._
 import play.api.libs.json.Json
 import play.api.libs.ws.ahc.StandaloneAhcWSClient
-import uk.gov.hmrc.bindingtariffclassification.component.BaseFeatureSpec
 import uk.gov.hmrc.bindingtariffclassification.model.RESTFormatters._
 import uk.gov.hmrc.bindingtariffclassification.model._
 import util.CaseData._
 import util.Matchers.roughlyBe
 
-import java.time.temporal.ChronoUnit
-import java.time.{Clock, Instant}
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
 
-class CaseControllerISpec extends BaseFeatureSpec {
+class CaseSpec extends BaseFeatureSpec {
 
   protected val serviceUrl = s"http://localhost:$port"
 
@@ -307,12 +307,12 @@ class CaseControllerISpec extends BaseFeatureSpec {
 
       And("The case is returned in the JSON response")
       val responseCase = Json.parse(result.body).as[Case]
-      responseCase.reference                      shouldBe "800000001"
-      responseCase.status                         shouldBe CaseStatus.NEW
-      responseCase.application.asMisc.name        shouldBe "name"
-      responseCase.application.asMisc.contactName shouldBe Some("contactName")
-      responseCase.application.asMisc.caseType    shouldBe MiscCaseType.HARMONISED
-      responseCase.application.asMisc.contact     shouldBe Contact("Maurizio", "maurizio@me.com", Some("0123456789"))
+      responseCase.reference                             shouldBe "800000001"
+      responseCase.status                                shouldBe CaseStatus.NEW
+      responseCase.application.asMisc.name               shouldBe "name"
+      responseCase.application.asMisc.contactName        shouldBe Some("contactName")
+      responseCase.application.asMisc.caseType           shouldBe MiscCaseType.HARMONISED
+      responseCase.application.asMisc.contact            shouldBe Contact("Maurizio", "maurizio@me.com", Some("0123456789"))
       responseCase.application.asMisc.sampleToBeProvided shouldBe false
       responseCase.application.asMisc.sampleToBeReturned shouldBe false
     }
