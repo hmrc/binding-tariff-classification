@@ -20,8 +20,8 @@ package reporting
 import java.time.{LocalDateTime, ZoneOffset}
 import uk.gov.hmrc.bindingtariffclassification.base.BaseSpec
 
+// scalastyle:off magic.number
 class ReportFieldSpec extends BaseSpec {
-
   "ReportField" should {
     "produce ReportResultField using withValue" in {
       for (field <- ReportField.fields.values) field match {

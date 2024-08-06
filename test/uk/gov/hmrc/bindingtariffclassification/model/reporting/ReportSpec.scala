@@ -18,13 +18,13 @@ package uk.gov.hmrc.bindingtariffclassification.model.reporting
 
 import java.net.URLDecoder
 import java.time.Instant
+
 import cats.data.NonEmptySeq
 import uk.gov.hmrc.bindingtariffclassification.base.BaseSpec
 import uk.gov.hmrc.bindingtariffclassification.sort.SortDirection
 import uk.gov.hmrc.bindingtariffclassification.model.{ApplicationType, LiabilityStatus, PseudoCaseStatus}
 
 class ReportSpec extends BaseSpec {
-
   "CaseReport" should {
     "bind from query string" in {
       val params1 = Map[String, Seq[String]](

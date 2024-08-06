@@ -30,6 +30,7 @@ import uk.gov.hmrc.bindingtariffclassification.model.bta.BtaRequest
 import uk.gov.hmrc.http.{HeaderCarrier, UpstreamErrorResponse}
 import uk.gov.hmrc.auth.core.authorise.Predicate
 
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{ExecutionContext, Future}
 
 class AuthActionSpec extends BaseSpec with BeforeAndAfterEach {

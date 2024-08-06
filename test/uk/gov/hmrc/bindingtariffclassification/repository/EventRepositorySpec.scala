@@ -28,7 +28,9 @@ import util.EventData._
 
 import java.time.temporal.ChronoUnit
 import java.time.{Instant, LocalDate, ZoneOffset}
+import scala.concurrent.ExecutionContext.Implicits.global
 
+// scalastyle:off magic.number
 class EventRepositorySpec
     extends BaseMongoIndexSpec
     with BeforeAndAfterAll
@@ -310,7 +312,7 @@ class EventRepositorySpec
         assertIndexes(expectedIndexes.sorted, getIndexes(repo.collection).sorted)
       }
 
-      await(repo.collection.drop().toFuture())
+      await(repo.collection.drop())
     }
 
   }

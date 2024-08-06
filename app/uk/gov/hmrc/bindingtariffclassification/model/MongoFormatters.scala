@@ -64,8 +64,8 @@ object MongoFormatters {
   // User formatters
   implicit val role: Format[Role.Value]                             = EnumJson.format(Role)
   implicit val formatApplicationType: Format[ApplicationType.Value] = EnumJson.format(ApplicationType)
-  implicit val formatOperator: OFormat[Operator] = Json.using[Json.WithDefaultValues].format[Operator]
-  implicit val formatKeywords: OFormat[Keyword]  = Json.using[Json.WithDefaultValues].format[Keyword]
+  implicit val formatOperator: OFormat[Operator]                    = Json.using[Json.WithDefaultValues].format[Operator]
+  implicit val formatKeywords: OFormat[Keyword]                     = Json.using[Json.WithDefaultValues].format[Keyword]
 
   // `Sequence` formatters
   implicit val formatSequence: OFormat[Sequence] = Json.format[Sequence]
@@ -87,14 +87,14 @@ object MongoFormatters {
   implicit val formatRejectedReason: Format[RejectReason.Value]       = EnumJson.format(RejectReason)
   implicit val formatLiabilityStatus: Format[LiabilityStatus.Value]   = EnumJson.format(LiabilityStatus)
   implicit val miscCaseType: Format[MiscCaseType.Value]               = EnumJson.format(MiscCaseType)
-  implicit val formatAttachment: OFormat[Attachment]     = Json.using[Json.WithDefaultValues].format[Attachment]
-  implicit val formatEORIDetails: OFormat[EORIDetails]   = Json.format[EORIDetails]
-  implicit val formatAgentDetails: OFormat[AgentDetails] = Json.format[AgentDetails]
-  implicit val formatContact: OFormat[Contact]           = Json.format[Contact]
-  implicit val messageLoggedFormat: OFormat[Message]     = Json.format[Message]
+  implicit val formatAttachment: OFormat[Attachment]                  = Json.using[Json.WithDefaultValues].format[Attachment]
+  implicit val formatEORIDetails: OFormat[EORIDetails]                = Json.format[EORIDetails]
+  implicit val formatAgentDetails: OFormat[AgentDetails]              = Json.format[AgentDetails]
+  implicit val formatContact: OFormat[Contact]                        = Json.format[Contact]
+  implicit val messageLoggedFormat: OFormat[Message]                  = Json.format[Message]
 
-  implicit val formatLiabilityOrder: OFormat[LiabilityOrder] = Json.format[LiabilityOrder]
-  implicit val formatBTIApplication: OFormat[BTIApplication] = Json.using[Json.WithDefaultValues].format[BTIApplication]
+  implicit val formatLiabilityOrder: OFormat[LiabilityOrder]            = Json.format[LiabilityOrder]
+  implicit val formatBTIApplication: OFormat[BTIApplication]            = Json.using[Json.WithDefaultValues].format[BTIApplication]
   implicit val formatCorrespondence: OFormat[CorrespondenceApplication] = Json.format[CorrespondenceApplication]
   implicit val formatMisc: OFormat[MiscApplication]                     = Json.format[MiscApplication]
 
@@ -110,9 +110,9 @@ object MongoFormatters {
   implicit val formatCancellation: OFormat[Cancellation] = Json.format[Cancellation]
   implicit val formatDecision: OFormat[Decision]         = Json.format[Decision]
   implicit val formatSample: OFormat[Sample]             = Json.format[Sample]
-  implicit val formatCase: OFormat[Case] = JsonUtil.convertToOFormat(Json.using[Json.WithDefaultValues].format[Case])
-  implicit val formatCaseHeader: OFormat[CaseHeader]   = Json.format[CaseHeader]
-  implicit val formatCaseKeyword: OFormat[CaseKeyword] = Json.format[CaseKeyword]
+  implicit val formatCase: OFormat[Case]                 = JsonUtil.convertToOFormat(Json.using[Json.WithDefaultValues].format[Case])
+  implicit val formatCaseHeader: OFormat[CaseHeader]     = Json.format[CaseHeader]
+  implicit val formatCaseKeyword: OFormat[CaseKeyword]   = Json.format[CaseKeyword]
 
   // `Event` formatters
   implicit val formatCaseStatusChange: OFormat[CaseStatusChange] = Json.format[CaseStatusChange]

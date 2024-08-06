@@ -19,7 +19,7 @@ package uk.gov.hmrc.bindingtariffclassification.service
 import org.apache.pekko.stream.Materializer
 import uk.gov.hmrc.bindingtariffclassification.config.AppConfig
 import uk.gov.hmrc.bindingtariffclassification.model._
-import uk.gov.hmrc.bindingtariffclassification.repository.{CaseAttachmentAggregation, CaseRepository, MigrationLockMongoRepository, SequenceRepository}
+import uk.gov.hmrc.bindingtariffclassification.repository.{CaseAttachmentAggregation, CaseRepository, MigrationLockRepository, SequenceRepository}
 
 import java.time.Instant
 import java.util.UUID
@@ -31,7 +31,7 @@ class CaseService @Inject() (
   appConfig: AppConfig,
   caseRepository: CaseRepository,
   sequenceRepository: SequenceRepository,
-  migrationRepository: MigrationLockMongoRepository,
+  migrationRepository: MigrationLockRepository,
   caseAttachmentAggregation: CaseAttachmentAggregation,
   eventService: EventService
 )(implicit mat: Materializer) {

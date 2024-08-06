@@ -18,23 +18,23 @@ package uk.gov.hmrc.bindingtariffclassification.controllers
 
 import javax.inject.{Inject, Singleton}
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
-import uk.gov.hmrc.bindingtariffclassification.migrations.{AddKeywordsMigrationJob, AmendDateOfExtractMigrationJob, MigrationRunner}
+import uk.gov.hmrc.bindingtariffclassification.migrations.{AmendDateOfExtractMigrationJob, MigrationRunner}
+
+import uk.gov.hmrc.bindingtariffclassification.migrations.AddKeywordsMigrationJob
 
 import scala.concurrent.ExecutionContext
 
 @Singleton
 class MigrationController @Inject() (
   migrationRunner: MigrationRunner,
-  addKeywordsMigrationJob: AddKeywordsMigrationJob,
-  amendDateOfExtractMigrationJob: AmendDateOfExtractMigrationJob,
   mcc: MessagesControllerComponents
 )(implicit ex: ExecutionContext)
     extends CommonController(mcc) {
 
-  migrationRunner.trigger(addKeywordsMigrationJob)
+  migrationRunner.trigger(classOf[AddKeywordsMigrationJob])
 
   def amendDateOfExtract(): Action[AnyContent] =
     Action.async {
-      migrationRunner.trigger(amendDateOfExtractMigrationJob) map (_ => NoContent) recover recovery
+      migrationRunner.trigger(classOf[AmendDateOfExtractMigrationJob]) map (_ => NoContent) recover recovery
     }
 }

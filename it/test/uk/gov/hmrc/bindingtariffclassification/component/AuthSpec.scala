@@ -16,82 +16,60 @@
 
 package uk.gov.hmrc.bindingtariffclassification.component
 
-import play.api.http.Status.{FORBIDDEN, OK}
+import play.api.http.Status._
+import play.api.libs.ws.ahc.StandaloneAhcWSClient
 import uk.gov.hmrc.bindingtariffclassification.component.utils.IntegrationSpecBase
-import uk.gov.hmrc.http.HttpReads.Implicits._
-import uk.gov.hmrc.http.client.HttpClientV2
-import uk.gov.hmrc.http.{HttpResponse, StringContextOps}
 
-class AuthSpec extends IntegrationSpecBase {
+import scala.concurrent.Await
+import scala.concurrent.duration.Duration
+
+class AuthSpec extends BaseFeatureSpec with IntegrationSpecBase {
 
   protected val serviceUrl = s"http://localhost:$port"
 
-  val httpClient: HttpClientV2 = httpClientV2
+  val httpClient: StandaloneAhcWSClient = StandaloneAhcWSClient()
 
-  "GET /cases" when {
+  Feature("Authentication") {
 
-    "Auth header present with correct value" must {
+    Scenario("Auth header present with correct value") {
 
-      "return 200 OK" in {
+      When("I call an endpoint with the correct auth token")
+      val responseFuture =
+        httpClient.url(s"$serviceUrl/cases").withHttpHeaders(apiTokenKey -> appConfig.authorization).get()
+      val result = Await.result(responseFuture, Duration(1000L, "ms"))
 
-        val responseFuture =
-          httpClient
-            .get(url"$serviceUrl/cases")
-            .setHeader(apiTokenKey -> appConfig.authorization)
-            .execute[HttpResponse]
-
-        val result = await(responseFuture)
-
-        result.status shouldBe OK
-      }
+      Then("The response code should be 200")
+      result.status shouldEqual OK
     }
 
-    "Auth header present with wrong value" must {
+    Scenario("Auth header present with incorrect value") {
 
-      "return 403 FORBIDDEN" in {
+      When("I call an endpoint with an incorrect auth token")
+      val responseFuture = httpClient.url(s"$serviceUrl/cases").withHttpHeaders(apiTokenKey -> "WRONG_TOKEN").get()
+      val result         = Await.result(responseFuture, Duration(1000L, "ms"))
 
-        val responseFuture =
-          httpClient
-            .get(url"$serviceUrl/cases")
-            .setHeader(apiTokenKey -> "WRONG_TOKEN")
-            .execute[HttpResponse]
-
-        val result = await(responseFuture)
-
-        result.status shouldBe FORBIDDEN
-        result.body   shouldBe "Missing or invalid 'X-Api-Token'"
-      }
+      Then("The response code should be 403")
+      result.status shouldEqual FORBIDDEN
+      result.body shouldBe "Missing or invalid 'X-Api-Token'"
     }
 
-    "Auth header not present" must {
+    Scenario("Auth header not present") {
 
-      "return 403 FORBIDDEN" in {
+      When("I call an endpoint with the no auth token")
+      val responseFuture = httpClient.url(s"$serviceUrl/cases").get()
+      val result         = Await.result(responseFuture, Duration(1000L, "ms"))
 
-        val responseFuture =
-          httpClient
-            .get(url"$serviceUrl/cases")
-            .execute[HttpResponse]
-
-        val result = await(responseFuture)
-
-        result.status shouldBe FORBIDDEN
-        result.body   shouldBe "Missing or invalid 'X-Api-Token'"
-      }
+      Then("The response code should be 403")
+      result.status shouldEqual FORBIDDEN
+      result.body shouldBe "Missing or invalid 'X-Api-Token'"
     }
 
-    "Calls to the health endpoint do not require auth token" must {
+    Scenario("Calls to the health endpoint do not require auth token") {
+      val responseFuture = httpClient.url(s"$serviceUrl/ping/ping").get()
+      val result         = Await.result(responseFuture, Duration(1000L, "ms"))
 
-      "return 200 OK" in {
-
-        val responseFuture =
-          httpClient
-            .get(url"$serviceUrl/ping/ping")
-            .execute[HttpResponse]
-
-        val result = await(responseFuture)
-
-        result.status shouldBe OK
-      }
+      Then("The response code should be 200")
+      result.status shouldEqual OK
     }
   }
 }
