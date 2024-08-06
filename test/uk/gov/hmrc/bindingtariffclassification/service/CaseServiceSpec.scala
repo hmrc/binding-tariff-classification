@@ -26,7 +26,7 @@ import uk.gov.hmrc.bindingtariffclassification.repository.{CaseAttachmentAggrega
 
 import scala.concurrent.Future.successful
 
-// scalastyle:off magic.number
+
 class CaseServiceSpec extends BaseSpec with BeforeAndAfterEach {
 
   private val c1      = mock[Case]

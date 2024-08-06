@@ -23,27 +23,22 @@ import play.api.http.Status
 import play.api.libs.ws.WSClient
 import uk.gov.hmrc.bindingtariffclassification.base.BaseSpec
 import uk.gov.hmrc.bindingtariffclassification.config.AppConfig
-import uk.gov.hmrc.bindingtariffclassification.http.ProxyHttpClient
 import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.http.test.HttpClientV2Support
 import uk.gov.hmrc.play.audit.http.HttpAuditing
 import util.TestMetrics
 
 import java.time.LocalDate
 import scala.concurrent.ExecutionContext.Implicits.global
 
-// scalastyle:off magic.number
-class BankHolidaysConnectorTest extends BaseSpec with WiremockTestServer {
+
+class BankHolidaysConnectorTest extends BaseSpec with WiremockTestServer with HttpClientV2Support {
 
   private val config = mock[AppConfig]
 
   private implicit val headers: HeaderCarrier   = HeaderCarrier()
-  private implicit val actorSystem: ActorSystem = ActorSystem("test")
 
-  private val wsClient: WSClient  = fakeApplication.injector.instanceOf[WSClient]
-  private val httpAuditEvent      = fakeApplication.injector.instanceOf[HttpAuditing]
-  private val hmrcProxyHttpClient = new ProxyHttpClient(fakeApplication.configuration, httpAuditEvent, wsClient)
-
-  private val connector = new BankHolidaysConnector(config, hmrcProxyHttpClient, new TestMetrics)
+  private val connector = new BankHolidaysConnector(config, httpClientV2, new TestMetrics)
 
   override protected def beforeEach(): Unit = {
     super.beforeEach()

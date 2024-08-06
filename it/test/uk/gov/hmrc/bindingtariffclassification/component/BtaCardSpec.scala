@@ -18,21 +18,22 @@ package uk.gov.hmrc.bindingtariffclassification.component
 
 import play.api.http.Status._
 import play.api.libs.json.Json
-import play.api.libs.ws.ahc.StandaloneAhcWSClient
 import uk.gov.hmrc.bindingtariffclassification.component.utils.{AuthStub, IntegrationSpecBase}
 import uk.gov.hmrc.bindingtariffclassification.model.bta.{BtaApplications, BtaCard, BtaRulings}
+import uk.gov.hmrc.http.{HttpResponse, StringContextOps}
 import util.CaseData
+import uk.gov.hmrc.http.HttpReads.Implicits._
 
 import scala.concurrent.duration.Duration
 import scala.concurrent.Await
 
-// scalastyle:off magic.number
+
 class BtaCardSpec extends BaseFeatureSpec with IntegrationSpecBase {
 
   protected val serviceUrl = s"http://localhost:$port"
   protected val eori       = "GB123"
 
-  val httpClient: StandaloneAhcWSClient = StandaloneAhcWSClient()
+  val httpClient = httpClientV2
 
   Feature("Get BTA Card") {
 
@@ -46,7 +47,11 @@ class BtaCardSpec extends BaseFeatureSpec with IntegrationSpecBase {
 
       When("I call the BTA Card endpoint for the counts")
 
-      val responseFuture = httpClient.url(s"$serviceUrl/bta-card").withHttpHeaders("Authorization" -> "Auth").get()
+      val responseFuture =
+        httpClient
+          .get(url"$serviceUrl/bta-card")
+          .setHeader("Authorization" -> "Auth")
+          .execute[HttpResponse]
 
       val result = Await.result(responseFuture, Duration(1000L, "ms"))
 
@@ -73,8 +78,13 @@ class BtaCardSpec extends BaseFeatureSpec with IntegrationSpecBase {
 
       When("I call the BTA Card endpoint for the counts")
 
-      val responseFuture = httpClient.url(s"$serviceUrl/bta-card").withHttpHeaders("Authorization" -> "Auth").get()
-      val result         = Await.result(responseFuture, Duration(1000L, "ms"))
+      val responseFuture =
+        httpClient
+          .get(url"$serviceUrl/bta-card")
+          .setHeader("Authorization" -> "Auth")
+          .execute[HttpResponse]
+
+      val result = Await.result(responseFuture, Duration(1000L, "ms"))
 
       Then("The response code should be 200")
       result.status shouldEqual OK
@@ -98,8 +108,14 @@ class BtaCardSpec extends BaseFeatureSpec with IntegrationSpecBase {
       storeCases(CaseData.createBtaCardData(eori, 10, 9, 0, 0): _*)
 
       When("I call the BTA Card endpoint for the counts")
-      val responseFuture = httpClient.url(s"$serviceUrl/bta-card").withHttpHeaders("Authorization" -> "Auth").get()
-      val result         = Await.result(responseFuture, Duration(1000L, "ms"))
+
+      val responseFuture =
+        httpClient
+          .get(url"$serviceUrl/bta-card")
+          .setHeader("Authorization" -> "Auth")
+          .execute[HttpResponse]
+
+      val result = Await.result(responseFuture, Duration(1000L, "ms"))
 
       Then("The response code should be 200")
       result.status shouldEqual OK
@@ -122,8 +138,14 @@ class BtaCardSpec extends BaseFeatureSpec with IntegrationSpecBase {
       dropStores()
 
       When("I call the BTA Card endpoint for the counts")
-      val responseFuture = httpClient.url(s"$serviceUrl/bta-card").withHttpHeaders("Authorization" -> "Auth").get()
-      val result         = Await.result(responseFuture, Duration(1000L, "ms"))
+
+      val responseFuture =
+        httpClient
+          .get(url"$serviceUrl/bta-card")
+          .setHeader("Authorization" -> "Auth")
+          .execute[HttpResponse]
+
+      val result = Await.result(responseFuture, Duration(1000L, "ms"))
 
       Then("The response code should be 200")
       result.status shouldEqual OK
@@ -144,8 +166,13 @@ class BtaCardSpec extends BaseFeatureSpec with IntegrationSpecBase {
       dropStores()
 
       When("I call the BTA Card endpoint for the counts")
-      val responseFuture = httpClient.url(s"$serviceUrl/bta-card").get()
-      val result         = Await.result(responseFuture, Duration(1000L, "ms"))
+
+      val responseFuture =
+        httpClient
+          .get(url"$serviceUrl/bta-card")
+          .execute[HttpResponse]
+
+      val result = Await.result(responseFuture, Duration(1000L, "ms"))
 
       Then("The response code should be 403")
       result.status shouldEqual FORBIDDEN
@@ -160,8 +187,14 @@ class BtaCardSpec extends BaseFeatureSpec with IntegrationSpecBase {
       dropStores()
 
       When("I call the BTA Card endpoint for the counts")
-      val responseFuture = httpClient.url(s"$serviceUrl/bta-card").withHttpHeaders("Authorization" -> "Auth").get()
-      val result         = Await.result(responseFuture, Duration(1000L, "ms"))
+
+      val responseFuture =
+        httpClient
+          .get(url"$serviceUrl/bta-card")
+          .setHeader("Authorization" -> "Auth")
+          .execute[HttpResponse]
+
+      val result = Await.result(responseFuture, Duration(1000L, "ms"))
 
       Then("The response code should be 403")
       result.status shouldEqual FORBIDDEN

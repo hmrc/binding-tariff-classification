@@ -35,7 +35,7 @@ import java.time._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future.{failed, successful}
 
-// scalastyle:off magic.number
+
 class FileStoreCleanupJobTest extends BaseSpec with BeforeAndAfterEach {
 
   private val fixedDate          = ZonedDateTime.of(2021, 2, 15, 12, 0, 0, 0, ZoneOffset.UTC)

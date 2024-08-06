@@ -40,7 +40,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.concurrent.Future.successful
 
-// scalastyle:off magic.number
+
 class ReferredDaysElapsedJobTest extends BaseSpec with BeforeAndAfterEach {
 
   private val caseService           = mock[CaseService]

@@ -25,13 +25,14 @@ import uk.gov.hmrc.bindingtariffclassification.config.AppConfig
 import uk.gov.hmrc.bindingtariffclassification.model.filestore.{FileMetadata, FileSearch, ScanStatus}
 import uk.gov.hmrc.bindingtariffclassification.model.{Paged, Pagination}
 import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.http.test.HttpClientV2Support
 import uk.gov.hmrc.play.bootstrap.http.DefaultHttpClient
 import util.TestMetrics
 
 import java.time.Instant
 import java.util.UUID
 
-class FileStoreConnectorTest extends BaseSpec with WiremockTestServer {
+class FileStoreConnectorTest extends BaseSpec with WiremockTestServer with HttpClientV2Support {
 
   private val config = mock[AppConfig]
 
@@ -39,9 +40,7 @@ class FileStoreConnectorTest extends BaseSpec with WiremockTestServer {
 
   private val appConfig = fakeApplication.injector.instanceOf[AppConfig]
 
-  private val defaultHttpClient: DefaultHttpClient = fakeApplication.injector.instanceOf[DefaultHttpClient]
-
-  private val connector = new FileStoreConnector(config, defaultHttpClient, new TestMetrics)
+  private val connector = new FileStoreConnector(config, httpClientV2, new TestMetrics)
 
   private val maxUriLength = 2048
 

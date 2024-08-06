@@ -42,7 +42,6 @@ class Module extends play.api.inject.Module {
       bind[AesCrypto].to(classOf[LocalCrypto]),
       bind[ScheduledJobs].toProvider[ScheduledJobProvider],
       bind[MigrationJobs].toProvider[MigrationJobProvider],
-      bind[Scheduler].toSelf.eagerly(),
       repositoryBinding
     )
   }
