@@ -33,7 +33,6 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import java.time.{LocalDate, ZoneOffset}
 import scala.concurrent.Future
 
-
 class AmendDateOfExtractMigrationJobTest extends BaseSpec with BeforeAndAfterEach {
 
   private val caseService = mock[CaseService]

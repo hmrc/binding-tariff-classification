@@ -41,7 +41,6 @@ import scala.concurrent.Future
 import scala.concurrent.Future.successful
 import scala.concurrent.duration.Duration
 
-
 class ActiveDaysElapsedJobTest extends BaseSpec with BeforeAndAfterEach {
 
   private val caseService           = mock[CaseService]

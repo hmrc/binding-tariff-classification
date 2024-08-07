@@ -27,7 +27,6 @@ import uk.gov.hmrc.http.HttpReads.Implicits._
 import scala.concurrent.duration.Duration
 import scala.concurrent.Await
 
-
 class BtaCardSpec extends BaseFeatureSpec with IntegrationSpecBase {
 
   protected val serviceUrl = s"http://localhost:$port"

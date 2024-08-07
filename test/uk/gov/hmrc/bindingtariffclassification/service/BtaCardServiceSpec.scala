@@ -24,7 +24,6 @@ import util.CaseData
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-
 class BtaCardServiceSpec extends BaseSpec {
 
   private val caseRepository = mock[CaseRepository]

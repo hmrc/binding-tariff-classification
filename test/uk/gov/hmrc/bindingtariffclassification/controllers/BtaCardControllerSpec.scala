@@ -34,7 +34,6 @@ import uk.gov.hmrc.http.{HeaderCarrier, HttpVerbs}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{ExecutionContext, Future}
 
-
 class BtaCardControllerSpec extends BaseSpec {
 
   private val eori                          = "GB123"

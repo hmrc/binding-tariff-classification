@@ -18,7 +18,6 @@ package uk.gov.hmrc.bindingtariffclassification.model
 
 import uk.gov.hmrc.bindingtariffclassification.base.BaseSpec
 
-
 class PaginationTest extends BaseSpec {
 
   private val pagination = Pagination(

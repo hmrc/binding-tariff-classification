@@ -18,11 +18,11 @@ package uk.gov.hmrc.bindingtariffclassification.component
 
 import play.api.http.Status._
 import uk.gov.hmrc.bindingtariffclassification.component.utils.IntegrationSpecBase
-import uk.gov.hmrc.http.{HttpResponse, StringContextOps}
 import uk.gov.hmrc.http.HttpReads.Implicits._
+import uk.gov.hmrc.http.{HttpResponse, StringContextOps}
 
 import scala.concurrent.Await
-import scala.concurrent.duration.{Duration, DurationInt}
+import scala.concurrent.duration.DurationInt
 
 class AuthSpec extends BaseFeatureSpec with IntegrationSpecBase {
 

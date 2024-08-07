@@ -34,7 +34,6 @@ import util.{EventData, TestMetrics}
 
 import scala.concurrent.Await.result
 
-
 class ActiveDaysElapsedSpec extends BaseFeatureSpec with MockitoSugar with HttpClientV2Support {
 
   protected val serviceUrl = s"http://localhost:$port"

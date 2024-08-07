@@ -31,12 +31,11 @@ import util.TestMetrics
 import java.time.LocalDate
 import scala.concurrent.ExecutionContext.Implicits.global
 
-
 class BankHolidaysConnectorTest extends BaseSpec with WiremockTestServer with HttpClientV2Support {
 
   private val config = mock[AppConfig]
 
-  private implicit val headers: HeaderCarrier   = HeaderCarrier()
+  private implicit val headers: HeaderCarrier = HeaderCarrier()
 
   private val connector = new BankHolidaysConnector(config, httpClientV2, new TestMetrics)
 
