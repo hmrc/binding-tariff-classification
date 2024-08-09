@@ -40,7 +40,6 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.concurrent.Future.successful
 
-// scalastyle:off magic.number
 class ReferredDaysElapsedJobTest extends BaseSpec with BeforeAndAfterEach {
 
   private val caseService           = mock[CaseService]
@@ -371,10 +370,16 @@ class ReferredDaysElapsedJobTest extends BaseSpec with BeforeAndAfterEach {
     new ReferredDaysElapsedJob(caseService, eventService, bankHolidaysConnector, lockRepo, appConfig)
 
   private def givenABankHolidayOn(date: String*): Unit =
-    when(bankHolidaysConnector.get()(any[HeaderCarrier])).thenReturn(successful(date.map(LocalDate.parse).toSet))
+    when(bankHolidaysConnector.get()(any[HeaderCarrier]))
+      .thenReturn(
+        Future.successful(date.map(s => LocalDate.parse(s)).toSet)
+      )
 
   private def givenNoBankHolidays(): Unit =
-    when(bankHolidaysConnector.get()(any[HeaderCarrier])).thenReturn(successful(Set.empty[LocalDate]))
+    when(bankHolidaysConnector.get()(any[HeaderCarrier]))
+      .thenReturn(
+        Future.successful(Set.empty[LocalDate])
+      )
 
   private def givenTodaysDateIs(date: String): Unit = {
     val zone: ZoneId = ZoneOffset.UTC

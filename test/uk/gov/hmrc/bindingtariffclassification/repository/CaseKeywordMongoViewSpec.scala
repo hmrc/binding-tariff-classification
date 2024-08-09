@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.bindingtariffclassification.repository
 
-import org.mongodb.scala.model.Filters
 import org.scalatest.matchers.must.Matchers._
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
 import uk.gov.hmrc.bindingtariffclassification.config.AppConfig
@@ -166,7 +165,9 @@ class CaseKeywordMongoViewSpec
     "fetchKeywordsFromCases should return keywords from the Cases" in {
       await(repo.insert(caseWithKeywordsBTI))
       await(repo.insert(caseWithKeywordsLiability))
+
       collectionSize shouldBe 2
+
       val expected = Seq(caseKeywordBike, caseKeywordTool)
 
       await(view.fetchKeywordsFromCases(pagination)).results contains expected

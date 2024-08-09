@@ -20,32 +20,34 @@ import org.mockito.Mockito.when
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.bindingtariffclassification.base.BaseSpec
-import uk.gov.hmrc.bindingtariffclassification.migrations.{AmendDateOfExtractMigrationJob, MigrationRunner}
+import uk.gov.hmrc.bindingtariffclassification.migrations.{AddKeywordsMigrationJob, AmendDateOfExtractMigrationJob, MigrationRunner, RollbackFailure}
 import uk.gov.hmrc.http.HttpVerbs
 
-import scala.concurrent.Future.{failed, successful}
-
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 
 class MigrationControllerSpec extends BaseSpec {
 
-  private val runner = mock[MigrationRunner]
+  private val runner                             = mock[MigrationRunner]
+  private val mockAddKeywordsMigrationJob        = mock[AddKeywordsMigrationJob]
+  private val mockAmendDateOfExtractMigrationJob = mock[AmendDateOfExtractMigrationJob]
 
   private val fakeRequest = FakeRequest(method = HttpVerbs.PUT, path = "/scheduler/days-elapsed")
 
-  private val controller = new MigrationController(runner, mcc)
+  private val controller =
+    new MigrationController(runner, mcc, mockAddKeywordsMigrationJob, mockAmendDateOfExtractMigrationJob)
 
   "Amend Date Of Extract" should {
 
     "return 204 when the runner executes successfully" in {
-      when(runner.trigger(classOf[AmendDateOfExtractMigrationJob])).thenReturn(successful(()))
+      when(runner.trigger(mockAmendDateOfExtractMigrationJob)).thenReturn(Future.successful(Some(RollbackFailure)))
 
       val result = controller.amendDateOfExtract()(fakeRequest).futureValue
       result.header.status shouldBe NO_CONTENT
     }
 
     "return 500 when an error occurred" in {
-      when(runner.trigger(classOf[AmendDateOfExtractMigrationJob])).thenReturn(failed(new RuntimeException))
+      when(runner.trigger(mockAmendDateOfExtractMigrationJob)).thenReturn(Future.failed(new RuntimeException))
 
       val result = controller.amendDateOfExtract()(fakeRequest)
 

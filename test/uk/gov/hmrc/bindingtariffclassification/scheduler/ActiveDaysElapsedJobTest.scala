@@ -41,7 +41,6 @@ import scala.concurrent.Future
 import scala.concurrent.Future.successful
 import scala.concurrent.duration.Duration
 
-// scalastyle:off magic.number
 class ActiveDaysElapsedJobTest extends BaseSpec with BeforeAndAfterEach {
 
   private val caseService           = mock[CaseService]
@@ -499,10 +498,16 @@ class ActiveDaysElapsedJobTest extends BaseSpec with BeforeAndAfterEach {
     new ActiveDaysElapsedJob(caseService, eventService, bankHolidaysConnector, lockRepo, appConfig)
 
   private def givenABankHolidayOn(date: String*): Unit =
-    when(bankHolidaysConnector.get()(any[HeaderCarrier])).thenReturn(successful(date.map(LocalDate.parse).toSet))
+    when(bankHolidaysConnector.get()(any[HeaderCarrier]))
+      .thenReturn(
+        Future.successful(date.map(s => LocalDate.parse(s)).toSet)
+      )
 
   private def givenNoBankHolidays(): Unit =
-    when(bankHolidaysConnector.get()(any[HeaderCarrier])).thenReturn(successful(Set.empty[LocalDate]))
+    when(bankHolidaysConnector.get()(any[HeaderCarrier]))
+      .thenReturn(
+        Future.successful(Set.empty[LocalDate])
+      )
 
   private def givenTodaysDateIs(date: String): Unit = {
     val zone: ZoneId = ZoneOffset.UTC

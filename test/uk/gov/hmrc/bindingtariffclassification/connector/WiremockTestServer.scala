@@ -24,11 +24,11 @@ import org.scalatest.wordspec.AnyWordSpecLike
 
 trait WiremockTestServer extends AnyWordSpecLike with BeforeAndAfterEach {
 
-  private val wireHost       = "localhost"
+  protected val host         = "localhost"
   protected val wirePort     = 20001
   private val wireMockServer = new WireMockServer(wirePort)
 
-  lazy val wireMockUrl: String = s"http://$wireHost:$wirePort"
+  lazy val wireMockUrl: String = s"http://$host:$wirePort"
 
   protected def stubFor(mappingBuilder: MappingBuilder): StubMapping =
     wireMockServer.stubFor(mappingBuilder)
@@ -36,7 +36,7 @@ trait WiremockTestServer extends AnyWordSpecLike with BeforeAndAfterEach {
   override protected def beforeEach(): Unit = {
     super.beforeEach()
     wireMockServer.start()
-    WireMock.configureFor(wireHost, wirePort)
+    WireMock.configureFor(host, wirePort)
   }
 
   override protected def afterEach(): Unit = {

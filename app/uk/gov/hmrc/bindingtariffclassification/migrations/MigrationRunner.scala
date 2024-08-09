@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.bindingtariffclassification.migrations
 
+import cats.implicits._
 import uk.gov.hmrc.bindingtariffclassification.common.Logging
 import uk.gov.hmrc.bindingtariffclassification.metrics.HasMetrics
 import uk.gov.hmrc.bindingtariffclassification.model.JobRunEvent
@@ -24,8 +25,14 @@ import uk.gov.hmrc.play.bootstrap.metrics.Metrics
 
 import java.time.ZonedDateTime
 import javax.inject.{Inject, Singleton}
-import scala.concurrent.Future.successful
 import scala.concurrent.{ExecutionContext, Future}
+
+sealed trait MigrationResult
+case object DeletedEvent extends MigrationResult
+case object RollbackFailure extends MigrationResult
+case object TimerCompleted extends MigrationResult
+case object JobExecuted extends MigrationResult
+case object AlreadyRanBefore extends MigrationResult
 
 @Singleton
 class MigrationRunner @Inject() (
@@ -35,56 +42,68 @@ class MigrationRunner @Inject() (
 )(implicit ec: ExecutionContext)
     extends Logging
     with HasMetrics {
-  def trigger[T](clazz: Class[T]): Future[Unit] =
-    migrationJobs.jobs.find(clazz.isInstance(_)).map(run).getOrElse(successful(()))
 
-  private def jobNameLog(job: MigrationJob): String = s"Migration Job [${job.name}]"
+  def trigger(migrationJob: MigrationJob): Future[Option[MigrationResult]] =
+    migrationJobs.jobs.find(_ == migrationJob).traverse(run)
 
-  private def run(job: MigrationJob): Future[Unit] = withMetricsTimerAsync(s"migration-job-${job.name}") { timer =>
-    val databasePastJob = migrationLockRepository.findOne(job.name)
+  def jobNameLog(job: MigrationJob): String = s"Migration Job [${job.name}]"
 
-    databasePastJob.map {
-      case Some(dbJob) =>
-        logger.info(s"${jobNameLog(job)}: Job found! Last successful run was on ${dbJob.runDate}, Skip running the job")
-        successful(())
-      case None =>
-        executeJob(job, timer)
+  def run(job: MigrationJob): Future[MigrationResult] =
+    withMetricsTimerAsync(s"migration-job-${job.name}") { timer =>
+      val databasePastJob = migrationLockRepository.findOne(job.name)
+
+      databasePastJob.flatMap {
+        case Some(dbJob) =>
+          logger.info(
+            s"${jobNameLog(job)}: Job found! Last successful run was on ${dbJob.runDate}, Skip running the job"
+          )
+          Future(AlreadyRanBefore)
+        case None =>
+          executeJob(job, timer)
+      }
     }
+
+  def executeJob(job: MigrationJob, timer: MetricsTimer): Future[MigrationResult] = {
+    val event = JobRunEvent(job.name, ZonedDateTime.now())
+    logger.info(s"${jobNameLog(job)}: Acquiring Lock")
+
+    migrationLockRepository
+      .lock(event)
+      .flatMap {
+        case true =>
+          logger.info(s"${jobNameLog(job)}: Successfully acquired lock. Starting Job.")
+          job
+            .execute()
+            .flatMap { _ =>
+              logger.info(s"${jobNameLog(job)}: Completed Successfully")
+              Future(JobExecuted)
+            }
+        case false =>
+          logger.info(s"${jobNameLog(job)}: Failed to acquire Lock. It may have been running already.")
+          timer.completeWithFailure()
+          Future(TimerCompleted)
+      }
+      .recoverWith { case t: Throwable =>
+        logger.error(s"${jobNameLog(job)}: Failed to execute job", t)
+        rollback(job, event, timer)
+      }
   }
 
-  private def rollback(job: MigrationJob, event: JobRunEvent, timer: MetricsTimer): Future[Unit] = {
+  def rollback(job: MigrationJob, event: JobRunEvent, timer: MetricsTimer): Future[MigrationResult] = {
     logger.info(s"${jobNameLog(job)}: Attempting to rollback")
 
     job
       .rollback()
-      .flatMap { _ =>
+      .map { _ =>
         logger.info(s"${jobNameLog(job)}: Rollback Completed Successfully")
         migrationLockRepository.delete(event)
+        DeletedEvent
       }
       .recover { case throwable: Throwable =>
         logger.error(s"${jobNameLog(job)}: Rollback Failed", throwable)
         timer.completeWithFailure()
+        RollbackFailure
       }
-  }
-
-  private def executeJob(job: MigrationJob, timer: MetricsTimer): Future[Unit] = {
-    val event = JobRunEvent(job.name, ZonedDateTime.now())
-
-    logger.info(s"${jobNameLog(job)}: Acquiring Lock")
-    migrationLockRepository.lock(event).flatMap {
-      case true =>
-        logger.info(s"${jobNameLog(job)}: Successfully acquired lock. Starting Job.")
-        job.execute().map { _ =>
-          logger.info(s"${jobNameLog(job)}: Completed Successfully")
-        } recover { case t: Throwable =>
-          logger.error(s"${jobNameLog(job)}: Failed to execute job", t)
-          rollback(job, event, timer).flatMap(_ => successful(()))
-        }
-      case false =>
-        logger.info(s"${jobNameLog(job)}: Failed to acquire Lock. It may have been running already.")
-        timer.completeWithFailure()
-        successful(())
-    }
   }
 
 }

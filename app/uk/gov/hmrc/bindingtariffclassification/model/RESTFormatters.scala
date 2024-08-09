@@ -31,7 +31,7 @@ object RESTFormatters {
   // User formatters
   implicit val formatApplicationType: Format[ApplicationType.Value] = EnumJson.format(ApplicationType)
   implicit val role: Format[Role.Value]                             = EnumJson.format(Role)
-  implicit val formatOperator: OFormat[Operator]                    = Json.using[Json.WithDefaultValues].format[Operator]
+  implicit val formatOperator: OFormat[Operator] = Json.using[Json.WithDefaultValues].format[Operator]
 
   implicit val formatKeyword: OFormat[Keyword] = Json.using[Json.WithDefaultValues].format[Keyword]
   // `Case` formatters
@@ -58,8 +58,8 @@ object RESTFormatters {
   implicit val formatContact: OFormat[Contact]           = Json.format[Contact]
   implicit val messageLoggedFormat: OFormat[Message]     = Json.format[Message]
 
-  implicit val formatLiabilityOrder: OFormat[LiabilityOrder]            = Json.format[LiabilityOrder]
-  implicit val formatBTIApplication: OFormat[BTIApplication]            = Json.using[Json.WithDefaultValues].format[BTIApplication]
+  implicit val formatLiabilityOrder: OFormat[LiabilityOrder] = Json.format[LiabilityOrder]
+  implicit val formatBTIApplication: OFormat[BTIApplication] = Json.using[Json.WithDefaultValues].format[BTIApplication]
   implicit val formatCorrespondence: OFormat[CorrespondenceApplication] = Json.format[CorrespondenceApplication]
   implicit val formatMisc: OFormat[MiscApplication]                     = Json.format[MiscApplication]
 
