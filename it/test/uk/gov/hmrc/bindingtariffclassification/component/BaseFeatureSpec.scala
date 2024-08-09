@@ -28,15 +28,13 @@ import uk.gov.hmrc.bindingtariffclassification.config.AppConfig
 import uk.gov.hmrc.bindingtariffclassification.model.{Case, Event, Sequence}
 import uk.gov.hmrc.bindingtariffclassification.repository.{CaseMongoRepository, EventMongoRepository, SequenceMongoRepository}
 import uk.gov.hmrc.bindingtariffclassification.scheduler.ScheduledJobs
-import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.http.client.HttpClientV2
-import uk.gov.hmrc.http.test.HttpClientV2Support
 import uk.gov.hmrc.mongo.lock.{LockRepository, MongoLockRepository}
 import uk.gov.hmrc.play.bootstrap.metrics.Metrics
 import util.TestMetrics
 
 import scala.concurrent.Await.result
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 import scala.concurrent.duration._
 
 abstract class BaseFeatureSpec
@@ -45,18 +43,12 @@ abstract class BaseFeatureSpec
     with GivenWhenThen
     with GuiceOneServerPerSuite
     with BeforeAndAfterEach
-    with BeforeAndAfterAll
-    with HttpClientV2Support {
-
-  implicit val headers: HeaderCarrier = HeaderCarrier()
+    with BeforeAndAfterAll {
 
   override lazy val app: Application = GuiceApplicationBuilder()
     .configure("mongodb.uri" -> "mongodb://localhost:27017/test-ClassificationMongoRepositoryTest")
     .overrides(bind[Metrics].toInstance(new TestMetrics))
-    .overrides(bind[HttpClientV2].toInstance(httpClientV2))
     .build()
-
-  implicit lazy val ec: ExecutionContext = fakeApplication().injector.instanceOf[ExecutionContext]
 
   protected val timeout: FiniteDuration = 5.seconds
 

@@ -26,15 +26,13 @@ import uk.gov.hmrc.bindingtariffclassification.config.AppConfig
 import uk.gov.hmrc.bindingtariffclassification.model.CaseStatus._
 import uk.gov.hmrc.bindingtariffclassification.model.{Case, Event}
 import uk.gov.hmrc.bindingtariffclassification.scheduler.ActiveDaysElapsedJob
-import uk.gov.hmrc.http.client.HttpClientV2
-import uk.gov.hmrc.http.test.HttpClientV2Support
 import uk.gov.hmrc.play.bootstrap.metrics.Metrics
 import util.CaseData._
 import util.{EventData, TestMetrics}
 
 import scala.concurrent.Await.result
 
-class ActiveDaysElapsedSpec extends BaseFeatureSpec with MockitoSugar with HttpClientV2Support {
+class ActiveDaysElapsedSpec extends BaseFeatureSpec with MockitoSugar {
 
   protected val serviceUrl = s"http://localhost:$port"
 
@@ -43,7 +41,6 @@ class ActiveDaysElapsedSpec extends BaseFeatureSpec with MockitoSugar with HttpC
     .configure("metrics.enabled" -> false)
     .configure("mongodb.uri" -> "mongodb://localhost:27017/test-ClassificationMongoRepositoryTest")
     .overrides(bind[Metrics].toInstance(new TestMetrics))
-    .overrides(bind[HttpClientV2].toInstance(httpClientV2))
     .build()
 
   private val job: ActiveDaysElapsedJob = app.injector.instanceOf[ActiveDaysElapsedJob]
