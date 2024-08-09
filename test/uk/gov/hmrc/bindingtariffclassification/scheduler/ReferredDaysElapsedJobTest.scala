@@ -370,10 +370,12 @@ class ReferredDaysElapsedJobTest extends BaseSpec with BeforeAndAfterEach {
     new ReferredDaysElapsedJob(caseService, eventService, bankHolidaysConnector, lockRepo, appConfig)
 
   private def givenABankHolidayOn(date: String*): Unit =
-    when(bankHolidaysConnector.get()(any[HeaderCarrier])).thenReturn(successful(date.map(LocalDate.parse).toSet))
+    when(bankHolidaysConnector.get()(any[HeaderCarrier]))
+      .thenReturn(successful(BankHolidaysResponse(BankHolidaySet(date.map(s => BankHoliday(LocalDate.parse(s)))))))
 
   private def givenNoBankHolidays(): Unit =
-    when(bankHolidaysConnector.get()(any[HeaderCarrier])).thenReturn(successful(Set.empty[LocalDate]))
+    when(bankHolidaysConnector.get()(any[HeaderCarrier]))
+      .thenReturn(successful(BankHolidaysResponse(BankHolidaySet(Seq.empty[BankHoliday]))))
 
   private def givenTodaysDateIs(date: String): Unit = {
     val zone: ZoneId = ZoneOffset.UTC

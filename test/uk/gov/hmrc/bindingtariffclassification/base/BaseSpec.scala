@@ -59,11 +59,11 @@ abstract class BaseSpec
   implicit val hc: HeaderCarrier              = HeaderCarrier()
   implicit def liftFuture[A](v: A): Future[A] = Future.successful(v)
 
-  lazy val realConfig: Configuration                             = fakeApplication.injector.instanceOf[Configuration]
-  lazy val serviceConfig: ServicesConfig                         = fakeApplication.injector.instanceOf[ServicesConfig]
-  lazy val parser: BodyParsers.Default                           = fakeApplication.injector.instanceOf[BodyParsers.Default]
-  lazy val mcc: MessagesControllerComponents                     = fakeApplication.injector.instanceOf[MessagesControllerComponents]
-  implicit val defaultTimeout: FiniteDuration                    = 5.seconds
+  lazy val realConfig: Configuration          = fakeApplication.injector.instanceOf[Configuration]
+  lazy val serviceConfig: ServicesConfig      = fakeApplication.injector.instanceOf[ServicesConfig]
+  lazy val parser: BodyParsers.Default        = fakeApplication.injector.instanceOf[BodyParsers.Default]
+  lazy val mcc: MessagesControllerComponents  = fakeApplication.injector.instanceOf[MessagesControllerComponents]
+  implicit val defaultTimeout: FiniteDuration = 5.seconds
   def await[A](future: Future[A])(implicit timeout: Duration): A = Await.result(future, timeout)
 
 }

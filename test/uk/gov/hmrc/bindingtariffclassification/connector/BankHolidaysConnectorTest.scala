@@ -17,15 +17,13 @@
 package uk.gov.hmrc.bindingtariffclassification.connector
 
 import com.github.tomakehurst.wiremock.client.WireMock.{aResponse, get}
-import org.apache.pekko.actor.ActorSystem
 import org.mockito.BDDMockito.given
 import play.api.http.Status
-import play.api.libs.ws.WSClient
 import uk.gov.hmrc.bindingtariffclassification.base.BaseSpec
 import uk.gov.hmrc.bindingtariffclassification.config.AppConfig
+import uk.gov.hmrc.bindingtariffclassification.model.{BankHoliday, BankHolidaySet, BankHolidaysResponse}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.test.HttpClientV2Support
-import uk.gov.hmrc.play.audit.http.HttpAuditing
 import util.TestMetrics
 
 import java.time.LocalDate
@@ -54,10 +52,15 @@ class BankHolidaysConnectorTest extends BaseSpec with WiremockTestServer with Ht
           )
       )
 
-      await(connector.get()) shouldBe Set(
-        LocalDate.of(2012, 1, 2),
-        LocalDate.of(2012, 4, 6)
-      )
+      await(connector.get()) shouldBe
+        BankHolidaysResponse(
+          BankHolidaySet(
+            List(
+              BankHoliday(LocalDate.of(2012, 1, 2)),
+              BankHoliday(LocalDate.of(2012, 4, 6))
+            )
+          )
+        )
     }
 
     "Fallback to resources on 4xx" in {
@@ -68,7 +71,7 @@ class BankHolidaysConnectorTest extends BaseSpec with WiremockTestServer with Ht
           )
       )
 
-      await(connector.get()).size shouldBe 67
+      await(connector.get()).`england-and-wales`.events.size shouldBe 67
     }
 
     "Fallback to resources on 5xx" in {
@@ -79,7 +82,7 @@ class BankHolidaysConnectorTest extends BaseSpec with WiremockTestServer with Ht
           )
       )
 
-      await(connector.get()).size shouldBe 67
+      await(connector.get()).`england-and-wales`.events.size shouldBe 67
     }
   }
 
