@@ -37,7 +37,7 @@ class BankHolidaysConnector @Inject() (appConfig: AppConfig, http: HttpClientV2,
   executionContext: ExecutionContext
 ) extends Logging
     with HasMetrics {
-  def get()(implicit headerCarrier: HeaderCarrier): Future[BankHolidaysResponse] =
+  def get()(implicit headerCarrier: HeaderCarrier): Future[Set[LocalDate]] =
     withMetricsTimerAsync("get-bank-holidays") { _ =>
       http
         .get(url"${appConfig.bankHolidaysUrl}")
@@ -45,6 +45,7 @@ class BankHolidaysConnector @Inject() (appConfig: AppConfig, http: HttpClientV2,
         .execute[BankHolidaysResponse]
     }
       .recover(withResourcesFile)
+      .map(_.`england-and-wales`.events.map(_.date).toSet)
 
   private def withResourcesFile: PartialFunction[Throwable, BankHolidaysResponse] = { case t =>
     logger.error("Bank Holidays Request Failed", t)

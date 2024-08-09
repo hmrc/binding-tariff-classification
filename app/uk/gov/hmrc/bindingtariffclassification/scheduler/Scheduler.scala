@@ -57,7 +57,8 @@ class Scheduler @Inject() (
 
     val schedule = CronScheduleBuilder.cronSchedule(job.schedule)
 
-    val trigger = newTrigger()
+    val trigger =
+      newTrigger()
       .forJob(detail)
       .withSchedule(schedule)
       .build()

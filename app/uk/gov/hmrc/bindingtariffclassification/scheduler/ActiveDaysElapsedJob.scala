@@ -59,7 +59,7 @@ class ActiveDaysElapsedJob @Inject() (
 
   override def execute(): Future[Unit] =
     for {
-      bankHolidays <- bankHolidaysConnector.get().map(_.`england-and-wales`.events.map(_.date).toSet)
+      bankHolidays <- bankHolidaysConnector.get()
       _            <- process(1)(bankHolidays)
     } yield ()
 
