@@ -33,8 +33,6 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 class BankHolidaysConnectorTest extends BaseSpec with WiremockTestServer with HttpClientV2Support {
 
-  //updated to test with some sort of proxy
-
   private val config = mock[AppConfig]
 
   private implicit val headers: HeaderCarrier = HeaderCarrier()

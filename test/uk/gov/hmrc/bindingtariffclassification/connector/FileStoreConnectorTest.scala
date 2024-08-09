@@ -123,7 +123,6 @@ class FileStoreConnectorTest extends BaseSpec with WiremockTestServer with HttpC
       )
     }
 
-    // added test to check it behaves as on main which it does now
     "propagate errors" in new Test {
       stubFor(
         delete("/file/id")

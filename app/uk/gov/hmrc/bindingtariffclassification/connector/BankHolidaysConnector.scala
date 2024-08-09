@@ -39,7 +39,6 @@ class BankHolidaysConnector @Inject() (appConfig: AppConfig, http: HttpClientV2,
 ) extends Logging
     with HasMetrics {
 
-  //updated to match code on main
   def get()(implicit headerCarrier: HeaderCarrier): Future[Set[LocalDate]] =
     withMetricsTimerAsync("get-bank-holidays") { _ =>
       http

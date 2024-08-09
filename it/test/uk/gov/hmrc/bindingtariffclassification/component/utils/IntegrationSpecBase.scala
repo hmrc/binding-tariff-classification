@@ -19,11 +19,8 @@ package uk.gov.hmrc.bindingtariffclassification.component.utils
 import org.scalatest._
 import org.scalatest.concurrent.Eventually
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
-import play.api.inject.bind
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.{Application, Environment, Mode}
-import uk.gov.hmrc.http.client.HttpClientV2
-import uk.gov.hmrc.http.test.HttpClientV2Support
 
 trait IntegrationSpecBase
     extends TestSuite
@@ -31,13 +28,11 @@ trait IntegrationSpecBase
     with GuiceOneServerPerSuite
     with BeforeAndAfterEach
     with BeforeAndAfterAll
-    with Eventually
-    with HttpClientV2Support {
+    with Eventually {
 
   override implicit lazy val app: Application = new GuiceApplicationBuilder()
     .in(Environment.simple(mode = Mode.Dev))
     .configure(config)
-    .overrides(bind[HttpClientV2].toInstance(httpClientV2))
     .build()
 
   val mockHost: String = WiremockHelper.wiremockHost
