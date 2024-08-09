@@ -34,7 +34,6 @@ import util.TestMetrics
 
 import scala.concurrent.duration.{Duration, DurationInt, FiniteDuration}
 import scala.concurrent.{Await, Future}
-import scala.language.implicitConversions
 
 abstract class BaseSpec
     extends AnyWordSpecLike

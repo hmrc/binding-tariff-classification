@@ -16,9 +16,12 @@
 
 package uk.gov.hmrc.bindingtariffclassification.connector
 
-import com.github.tomakehurst.wiremock.client.WireMock.{aResponse, get}
+import com.github.tomakehurst.wiremock.WireMockServer
+import com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder
+import com.github.tomakehurst.wiremock.client.WireMock._
+import com.github.tomakehurst.wiremock.core.WireMockConfiguration.options
 import org.mockito.BDDMockito.given
-import play.api.http.Status
+import play.api.http.Status.{BAD_GATEWAY, NOT_FOUND}
 import uk.gov.hmrc.bindingtariffclassification.base.BaseSpec
 import uk.gov.hmrc.bindingtariffclassification.config.AppConfig
 import uk.gov.hmrc.http.HeaderCarrier
@@ -30,27 +33,44 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 class BankHolidaysConnectorTest extends BaseSpec with WiremockTestServer with HttpClientV2Support {
 
+  //updated to test with some sort of proxy
+
   private val config = mock[AppConfig]
 
   private implicit val headers: HeaderCarrier = HeaderCarrier()
 
   private val connector = new BankHolidaysConnector(config, httpClientV2, new TestMetrics)
 
+  private val proxyPort: Int              = 20002
+  private val proxyServer: WireMockServer = new WireMockServer(options().port(proxyPort).enableBrowserProxying(true))
+  private val proxyUrl: String            = s"http://$host:$proxyPort"
+
   override protected def beforeEach(): Unit = {
     super.beforeEach()
-    given(config.bankHolidaysUrl).willReturn(wireMockUrl)
+    proxyServer.start()
   }
 
-  "Connector" should {
-    "GET" in {
-      stubFor(
-        get("/")
-          .willReturn(
-            aResponse()
-              .withBody(fromFile("bank-holidays.json"))
-          )
-      )
+  override protected def afterEach(): Unit = {
+    super.afterEach()
+    proxyServer.stop()
+  }
 
+  private class Test(response: ResponseDefinitionBuilder) {
+    given(config.bankHolidaysUrl).willReturn(s"$proxyUrl/bank-holidays.json")
+
+    proxyServer.stubFor(
+      get(urlEqualTo("/bank-holidays.json"))
+        .willReturn(
+          aResponse()
+            .proxiedFrom(wireMockUrl)
+        )
+    )
+
+    stubFor(get(urlEqualTo("/bank-holidays.json")).willReturn(response))
+  }
+
+  "BankHolidaysConnector" should {
+    "GET bank holidays" in new Test(aResponse().withBody(fromFile("bank-holidays.json"))) {
       await(connector.get()) shouldBe
         Set(
           LocalDate.of(2012, 1, 2),
@@ -58,27 +78,12 @@ class BankHolidaysConnectorTest extends BaseSpec with WiremockTestServer with Ht
         )
     }
 
-    "Fallback to resources on 4xx" in {
-      stubFor(
-        get("/")
-          .willReturn(
-            aResponse().withStatus(Status.NOT_FOUND)
-          )
-      )
-
+    "Fallback to resources on 4xx" in new Test(aResponse().withStatus(NOT_FOUND)) {
       await(connector.get()).size shouldBe 67
     }
 
-    "Fallback to resources on 5xx" in {
-      stubFor(
-        get("/")
-          .willReturn(
-            aResponse().withStatus(Status.BAD_GATEWAY)
-          )
-      )
-
+    "Fallback to resources on 5xx" in new Test(aResponse().withStatus(BAD_GATEWAY)) {
       await(connector.get()).size shouldBe 67
     }
   }
-
 }

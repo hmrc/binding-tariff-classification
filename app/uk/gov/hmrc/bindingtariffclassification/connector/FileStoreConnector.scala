@@ -85,7 +85,7 @@ class FileStoreConnector @Inject() (appConfig: AppConfig, http: HttpClientV2, va
       http
         .delete(url"${appConfig.fileStoreUrl}/file/$id")
         .setHeader(addHeaders: _*)
-        .execute[HttpResponse]
+        .execute[HttpResponse](throwOnFailure(readEitherOf(readRaw)), ec) // Updated to preserve code logic on main
     }
       .map(_ => ())
 

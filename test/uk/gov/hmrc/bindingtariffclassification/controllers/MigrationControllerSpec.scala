@@ -25,7 +25,6 @@ import uk.gov.hmrc.http.HttpVerbs
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
-import scala.concurrent.Future.{failed, successful}
 
 class MigrationControllerSpec extends BaseSpec {
 
@@ -48,7 +47,7 @@ class MigrationControllerSpec extends BaseSpec {
     }
 
     "return 500 when an error occurred" in {
-      when(runner.trigger(mockAmendDateOfExtractMigrationJob)).thenReturn(failed(new RuntimeException))
+      when(runner.trigger(mockAmendDateOfExtractMigrationJob)).thenReturn(Future.failed(new RuntimeException))
 
       val result = controller.amendDateOfExtract()(fakeRequest)
 

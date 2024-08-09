@@ -59,9 +59,9 @@ class Scheduler @Inject() (
 
     val trigger =
       newTrigger()
-      .forJob(detail)
-      .withSchedule(schedule)
-      .build()
+        .forJob(detail)
+        .withSchedule(schedule)
+        .build()
 
     logger.info(s"Scheduling job [${job.name}] with schedule [$scheduleDescription]")
 
