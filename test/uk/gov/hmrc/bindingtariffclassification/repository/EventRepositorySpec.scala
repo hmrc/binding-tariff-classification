@@ -30,7 +30,6 @@ import java.time.temporal.ChronoUnit
 import java.time.{Instant, LocalDate, ZoneOffset}
 import scala.concurrent.ExecutionContext.Implicits.global
 
-// scalastyle:off magic.number
 class EventRepositorySpec
     extends BaseMongoIndexSpec
     with BeforeAndAfterAll

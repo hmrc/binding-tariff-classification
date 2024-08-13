@@ -17,7 +17,7 @@
 package uk.gov.hmrc.bindingtariffclassification.migrations
 
 import org.mockito.ArgumentMatchers.any
-import org.mockito.Mockito.{atLeastOnce, never, verify, when}
+import org.mockito.Mockito.when
 import uk.gov.hmrc.bindingtariffclassification.base.BaseSpec
 import uk.gov.hmrc.bindingtariffclassification.model.JobRunEvent
 import uk.gov.hmrc.bindingtariffclassification.repository.MigrationLockRepository
@@ -25,7 +25,8 @@ import util.TestMetrics
 
 import java.time.ZonedDateTime.now
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future.{failed, successful}
+import scala.concurrent.Future
+import scala.concurrent.Future.failed
 
 class MigrationRunnerTest extends BaseSpec {
 
@@ -38,28 +39,28 @@ class MigrationRunnerTest extends BaseSpec {
 
     def givenThereWasMigrationRan(): Unit =
       when(migrationRepository.findOne(any[String]))
-        .thenReturn(successful(Some(JobRunEvent(jobName, now()))))
+        .thenReturn(Future.successful(Some(JobRunEvent(jobName, now()))))
 
     def givenThereWasNoMigrationRan(): Unit =
-      when(migrationRepository.findOne(any[String])).thenReturn(successful(None))
+      when(migrationRepository.findOne(any[String])).thenReturn(Future.successful(None))
 
     def givenTheLockSucceeds(): Unit =
-      when(migrationRepository.lock(any[JobRunEvent])).thenReturn(successful(true))
+      when(migrationRepository.lock(any[JobRunEvent])).thenReturn(Future.successful(true))
 
     def givenTheLockFails(): Unit =
-      when(migrationRepository.lock(any[JobRunEvent])).thenReturn(successful(false))
+      when(migrationRepository.lock(any[JobRunEvent])).thenReturn(Future.successful(false))
 
     def givenRollbackSucceeds(): Unit =
-      when(migrationRepository.delete(any[JobRunEvent])).thenReturn(successful(()))
+      when(migrationRepository.delete(any[JobRunEvent])).thenReturn(Future.successful(()))
 
     def givenAmendDateOfExtractJobSucceeds(): Unit =
-      when(migrationJob.execute()).thenReturn(successful(()))
+      when(migrationJob.execute()).thenReturn(Future.successful(()))
 
     def givenAmendDateOfExtractJobFails(): Unit =
       when(migrationJob.execute()).thenReturn(failed(new RuntimeException("test execute() failed")))
 
     def givenAmendDateOfExtractJobRollbackSucceeds(): Unit =
-      when(migrationJob.rollback()).thenReturn(successful(()))
+      when(migrationJob.rollback()).thenReturn(Future.successful(()))
 
     def givenAmendDateOfExtractJobRollbackFails(): Unit =
       when(migrationJob.rollback()).thenReturn(failed(new RuntimeException("test rollback() failed")))
@@ -74,20 +75,14 @@ class MigrationRunnerTest extends BaseSpec {
       givenTheLockSucceeds()
       givenAmendDateOfExtractJobSucceeds()
 
-      await(runner.trigger(migrationJob.getClass))
-
-      verify(migrationJob).execute()
-      verify(migrationJob, never()).rollback()
+      await(runner.trigger(migrationJob)) shouldBe Some(JobExecuted)
     }
 
     "not execute the job if the lock fails" in new Test {
       givenThereWasNoMigrationRan()
       givenTheLockFails()
 
-      await(runner.trigger(migrationJob.getClass))
-
-      verify(migrationJob, never()).execute()
-      verify(migrationJob, never()).rollback()
+      await(runner.trigger(migrationJob)) shouldBe Some(TimerCompleted)
     }
 
     "rollback the job on a failure" in new Test {
@@ -97,11 +92,7 @@ class MigrationRunnerTest extends BaseSpec {
       givenAmendDateOfExtractJobFails()
       givenAmendDateOfExtractJobRollbackSucceeds()
 
-      await(runner.trigger(migrationJob.getClass))
-
-      verify(migrationJob, atLeastOnce()).name
-      verify(migrationJob).execute()
-      verify(migrationJob).rollback()
+      await(runner.trigger(migrationJob)) shouldBe Some(DeletedEvent)
     }
 
     "rollback failed when job failed" in new Test {
@@ -111,11 +102,7 @@ class MigrationRunnerTest extends BaseSpec {
       givenAmendDateOfExtractJobFails()
       givenAmendDateOfExtractJobRollbackFails()
 
-      await(runner.trigger(migrationJob.getClass))
-
-      verify(migrationJob, atLeastOnce()).name
-      verify(migrationJob).execute()
-      verify(migrationJob).rollback()
+      await(runner.trigger(migrationJob)) shouldBe Some(RollbackFailure)
     }
 
     "findOne had a job ran before" in new Test {
@@ -123,11 +110,7 @@ class MigrationRunnerTest extends BaseSpec {
       givenTheLockSucceeds()
       givenAmendDateOfExtractJobSucceeds()
 
-      await(runner.trigger(migrationJob.getClass))
-
-      verify(migrationJob, atLeastOnce()).name
-      verify(migrationJob, never()).execute()
-      verify(migrationJob, never()).rollback()
+      await(runner.trigger(migrationJob)) shouldBe Some(AlreadyRanBefore)
     }
 
     "findOne had no job ran before" in new Test {
@@ -135,21 +118,7 @@ class MigrationRunnerTest extends BaseSpec {
       givenTheLockSucceeds()
       givenAmendDateOfExtractJobSucceeds()
 
-      await(runner.trigger(migrationJob.getClass))
-
-      verify(migrationJob, atLeastOnce()).name
-      verify(migrationJob).execute()
-      verify(migrationJob, never()).rollback()
+      await(runner.trigger(migrationJob)) shouldBe Some(JobExecuted)
     }
-
-    "no job found to run" in new Test {
-      await(runner.trigger(classOf[String]))
-
-      verify(migrationJob, never()).name
-      verify(migrationJob, never()).execute()
-      verify(migrationJob, never()).rollback()
-    }
-
   }
-
 }

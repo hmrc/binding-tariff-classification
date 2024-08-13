@@ -26,7 +26,6 @@ import util.CaseData
 import scala.concurrent.duration.Duration
 import scala.concurrent.Await
 
-// scalastyle:off magic.number
 class BtaCardSpec extends BaseFeatureSpec with IntegrationSpecBase {
 
   protected val serviceUrl = s"http://localhost:$port"

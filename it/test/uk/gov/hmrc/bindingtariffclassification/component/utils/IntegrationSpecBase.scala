@@ -34,6 +34,7 @@ trait IntegrationSpecBase
     .in(Environment.simple(mode = Mode.Dev))
     .configure(config)
     .build()
+
   val mockHost: String = WiremockHelper.wiremockHost
   val mockPort: String = WiremockHelper.wiremockPort.toString
   val mockUrl          = s"http://$mockHost:$mockPort"

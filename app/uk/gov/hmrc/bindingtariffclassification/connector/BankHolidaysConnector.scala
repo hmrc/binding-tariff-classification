@@ -19,11 +19,12 @@ package uk.gov.hmrc.bindingtariffclassification.connector
 import play.api.libs.json.Json
 import uk.gov.hmrc.bindingtariffclassification.common.Logging
 import uk.gov.hmrc.bindingtariffclassification.config.AppConfig
-import uk.gov.hmrc.bindingtariffclassification.http.ProxyHttpClient
 import uk.gov.hmrc.bindingtariffclassification.metrics.HasMetrics
 import uk.gov.hmrc.bindingtariffclassification.model.BankHolidaysResponse
 import uk.gov.hmrc.bindingtariffclassification.model.RESTFormatters.formatBankHolidaysResponse
-import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.http.HttpReads.Implicits._
+import uk.gov.hmrc.http.client.HttpClientV2
+import uk.gov.hmrc.http.{HeaderCarrier, StringContextOps}
 import uk.gov.hmrc.play.bootstrap.metrics.Metrics
 
 import java.nio.charset.StandardCharsets
@@ -33,17 +34,20 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.io.Source
 
 @Singleton
-class BankHolidaysConnector @Inject() (appConfig: AppConfig, http: ProxyHttpClient, val metrics: Metrics)(implicit
+class BankHolidaysConnector @Inject() (appConfig: AppConfig, http: HttpClientV2, val metrics: Metrics)(implicit
   executionContext: ExecutionContext
 ) extends Logging
     with HasMetrics {
+
   def get()(implicit headerCarrier: HeaderCarrier): Future[Set[LocalDate]] =
     withMetricsTimerAsync("get-bank-holidays") { _ =>
       http
-        .GET[BankHolidaysResponse](appConfig.bankHolidaysUrl)
-        .recover(withResourcesFile)
-        .map(_.`england-and-wales`.events.map(_.date).toSet)
+        .get(url"${appConfig.bankHolidaysUrl}")
+        .withProxy
+        .execute[BankHolidaysResponse]
     }
+      .recover(withResourcesFile)
+      .map(_.`england-and-wales`.events.map(_.date).toSet)
 
   private def withResourcesFile: PartialFunction[Throwable, BankHolidaysResponse] = { case t =>
     logger.error("Bank Holidays Request Failed", t)

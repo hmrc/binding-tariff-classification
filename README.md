@@ -42,7 +42,7 @@ You can also run the `DIGITAL_TARIFFS` profile using `sm2 --start DIGITAL_TARIFF
 
 ### Testing
 
-Run `./run_all_tests.sh`. This also runs Scalastyle and does coverage testing.
+Run `./run_all_tests.sh`. This also performs coverage testing if all tests pass.
 
 ### License
 

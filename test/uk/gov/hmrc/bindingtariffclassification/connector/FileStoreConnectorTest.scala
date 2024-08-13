@@ -18,20 +18,20 @@ package uk.gov.hmrc.bindingtariffclassification.connector
 
 import com.github.tomakehurst.wiremock.client.WireMock._
 import org.mockito.BDDMockito.given
-import play.api.http.Status
+import play.api.http.Status.{BAD_GATEWAY, NO_CONTENT, OK}
 import play.api.libs.json.Json
 import uk.gov.hmrc.bindingtariffclassification.base.BaseSpec
 import uk.gov.hmrc.bindingtariffclassification.config.AppConfig
 import uk.gov.hmrc.bindingtariffclassification.model.filestore.{FileMetadata, FileSearch, ScanStatus}
 import uk.gov.hmrc.bindingtariffclassification.model.{Paged, Pagination}
-import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.play.bootstrap.http.DefaultHttpClient
+import uk.gov.hmrc.http.{HeaderCarrier, UpstreamErrorResponse}
+import uk.gov.hmrc.http.test.HttpClientV2Support
 import util.TestMetrics
 
 import java.time.Instant
 import java.util.UUID
 
-class FileStoreConnectorTest extends BaseSpec with WiremockTestServer {
+class FileStoreConnectorTest extends BaseSpec with WiremockTestServer with HttpClientV2Support {
 
   private val config = mock[AppConfig]
 
@@ -39,14 +39,11 @@ class FileStoreConnectorTest extends BaseSpec with WiremockTestServer {
 
   private val appConfig = fakeApplication.injector.instanceOf[AppConfig]
 
-  private val defaultHttpClient: DefaultHttpClient = fakeApplication.injector.instanceOf[DefaultHttpClient]
-
-  private val connector = new FileStoreConnector(config, defaultHttpClient, new TestMetrics)
+  private val connector = new FileStoreConnector(config, httpClientV2, new TestMetrics)
 
   private val maxUriLength = 2048
 
-  override protected def beforeEach(): Unit = {
-    super.beforeEach()
+  private trait Test {
     given(config.fileStoreUrl).willReturn(wireMockUrl)
     given(config.maxUriLength).willReturn(maxUriLength)
     given(config.authorization).willReturn(appConfig.authorization)
@@ -67,12 +64,12 @@ class FileStoreConnectorTest extends BaseSpec with WiremockTestServer {
 
   "find" should {
 
-    "GET from the File Store" in {
+    "GET from the File Store" in new Test {
       stubFor(
         get("/file?id=id&page=1&page_size=2")
           .willReturn(
             aResponse()
-              .withStatus(Status.OK)
+              .withStatus(OK)
               .withBody(fileStoreResponse)
           )
       )
@@ -87,7 +84,7 @@ class FileStoreConnectorTest extends BaseSpec with WiremockTestServer {
       )
     }
 
-    "use multiple requests to the File Store" in {
+    "use multiple requests to the File Store" in new Test {
       val batchSize  = 48
       val numBatches = 5
       val ids        = (1 to batchSize * numBatches).map(_ => UUID.randomUUID().toString).toSet
@@ -96,7 +93,7 @@ class FileStoreConnectorTest extends BaseSpec with WiremockTestServer {
         get(urlMatching(s"/file\\?(&?id=[a-f0-9-]+)+&page=1&page_size=2147483647"))
           .willReturn(
             aResponse()
-              .withStatus(Status.OK)
+              .withStatus(OK)
               .withBody(fileStoreResponse)
           )
       )
@@ -109,16 +106,35 @@ class FileStoreConnectorTest extends BaseSpec with WiremockTestServer {
   }
 
   "delete" should {
-    "DELETE from the File Store" in {
+    "DELETE from the File Store" in new Test {
       stubFor(
         delete("/file/id")
           .willReturn(
             aResponse()
-              .withStatus(Status.NO_CONTENT)
+              .withStatus(NO_CONTENT)
           )
       )
 
       await(connector.delete("id"))
+
+      verify(
+        deleteRequestedFor(urlEqualTo("/file/id"))
+          .withHeader("X-Api-Token", equalTo(appConfig.authorization))
+      )
+    }
+
+    "propagate errors" in new Test {
+      stubFor(
+        delete("/file/id")
+          .willReturn(
+            aResponse()
+              .withStatus(BAD_GATEWAY)
+          )
+      )
+
+      intercept[UpstreamErrorResponse] {
+        await(connector.delete("id"))
+      }
 
       verify(
         deleteRequestedFor(urlEqualTo("/file/id"))
