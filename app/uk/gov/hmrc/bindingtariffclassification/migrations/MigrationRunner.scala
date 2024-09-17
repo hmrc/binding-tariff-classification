@@ -55,7 +55,7 @@ class MigrationRunner @Inject() (
       databasePastJob.flatMap {
         case Some(dbJob) =>
           logger.info(
-            s"${jobNameLog(job)}: Job found! Last successful run was on ${dbJob.runDate}, Skip running the job"
+            s"[MigrationRunner][run] ${jobNameLog(job)}: Job found! Last successful run was on ${dbJob.runDate}, Skip running the job"
           )
           Future(AlreadyRanBefore)
         case None =>
@@ -65,42 +65,42 @@ class MigrationRunner @Inject() (
 
   def executeJob(job: MigrationJob, timer: MetricsTimer): Future[MigrationResult] = {
     val event = JobRunEvent(job.name, ZonedDateTime.now())
-    logger.info(s"${jobNameLog(job)}: Acquiring Lock")
+    logger.info(s"[MigrationRunner][executeJob] ${jobNameLog(job)}: Acquiring Lock")
 
     migrationLockRepository
       .lock(event)
       .flatMap {
         case true =>
-          logger.info(s"${jobNameLog(job)}: Successfully acquired lock. Starting Job.")
+          logger.info(s"[MigrationRunner][executeJob] ${jobNameLog(job)}: Successfully acquired lock. Starting Job.")
           job
             .execute()
             .flatMap { _ =>
-              logger.info(s"${jobNameLog(job)}: Completed Successfully")
+              logger.info(s"[MigrationRunner][executeJob] ${jobNameLog(job)}: Completed Successfully")
               Future(JobExecuted)
             }
         case false =>
-          logger.info(s"${jobNameLog(job)}: Failed to acquire Lock. It may have been running already.")
+          logger.info(s"[MigrationRunner][executeJob] ${jobNameLog(job)}: Failed to acquire Lock. It may have been running already.")
           timer.completeWithFailure()
           Future(TimerCompleted)
       }
       .recoverWith { case t: Throwable =>
-        logger.error(s"${jobNameLog(job)}: Failed to execute job", t)
+        logger.error(s"[MigrationRunner][executeJob] ${jobNameLog(job)}: Failed to execute job", t)
         rollback(job, event, timer)
       }
   }
 
   def rollback(job: MigrationJob, event: JobRunEvent, timer: MetricsTimer): Future[MigrationResult] = {
-    logger.info(s"${jobNameLog(job)}: Attempting to rollback")
+    logger.info(s"[MigrationRunner][rollback] ${jobNameLog(job)}: Attempting to rollback")
 
     job
       .rollback()
       .map { _ =>
-        logger.info(s"${jobNameLog(job)}: Rollback Completed Successfully")
+        logger.info(s"[MigrationRunner][rollback] ${jobNameLog(job)}: Rollback Completed Successfully")
         migrationLockRepository.delete(event)
         DeletedEvent
       }
       .recover { case throwable: Throwable =>
-        logger.error(s"${jobNameLog(job)}: Rollback Failed", throwable)
+        logger.error(s"[MigrationRunner][rollback] ${jobNameLog(job)}: Rollback Failed", throwable)
         timer.completeWithFailure()
         RollbackFailure
       }

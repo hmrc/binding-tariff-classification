@@ -50,7 +50,7 @@ class BankHolidaysConnector @Inject() (appConfig: AppConfig, http: HttpClientV2,
       .map(_.`england-and-wales`.events.map(_.date).toSet)
 
   private def withResourcesFile: PartialFunction[Throwable, BankHolidaysResponse] = { case t =>
-    logger.error("Bank Holidays Request Failed", t)
+    logger.error("[BankHolidaysConnector][withResourcesFile] Bank Holidays Request Failed", t)
     val url    = getClass.getClassLoader.getResource("bank-holidays-fallback.json")
     val source = Source.fromURL(url, StandardCharsets.UTF_8.name())
     val content =

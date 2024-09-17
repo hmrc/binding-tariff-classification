@@ -46,7 +46,7 @@ class Scheduler @Inject() (
 
   private val (enabledJobs, disabledJobs) = scheduledJobs.jobs.partition(_.enabled)
 
-  disabledJobs.foreach(job => logger.warn(s"Scheduled job [${job.name}] is disabled"))
+  disabledJobs.foreach(job => logger.warn(s"[Scheduler][disabledJobs] Scheduled job [${job.name}] is disabled"))
 
   enabledJobs.foreach { job =>
     val detail = newJob(job.getClass)
@@ -63,7 +63,7 @@ class Scheduler @Inject() (
         .withSchedule(schedule)
         .build()
 
-    logger.info(s"Scheduling job [${job.name}] with schedule [$scheduleDescription]")
+    logger.info(s"[Scheduler][enabledJobs] Scheduling job [${job.name}] with schedule [$scheduleDescription]")
 
     quartz.scheduleJob(detail, trigger)
   }

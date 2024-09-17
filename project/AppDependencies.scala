@@ -2,12 +2,12 @@ import sbt.*
 
 object AppDependencies {
   private lazy val mongoHmrcVersion = "2.2.0"
-  private lazy val bootstrapVersion = "9.2.0"
+  private lazy val bootstrapVersion = "9.4.0"
   private lazy val pekkoVersion     = "1.0.2"
 
   lazy val compile: Seq[ModuleID] = Seq(
     "uk.gov.hmrc"                  %% "bootstrap-backend-play-30"   % bootstrapVersion,
-    "uk.gov.hmrc"                  %% "play-json-union-formatter"   % "1.21.0",
+    "uk.gov.hmrc"                  %% "play-json-union-formatter"   % "1.22.0",
     "uk.gov.hmrc.mongo"            %% "hmrc-mongo-play-30"          % mongoHmrcVersion,
     "org.apache.pekko"             %% "pekko-connectors-mongodb"    % pekkoVersion,
     "org.apache.pekko"             %% "pekko-stream"                % pekkoVersion,

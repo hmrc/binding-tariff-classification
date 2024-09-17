@@ -59,25 +59,25 @@ class MigrationLockMongoRepository @Inject() (mongoComponent: MongoComponent)(im
 
   override def lock(e: JobRunEvent): Future[Boolean] =
     collection.insertOne(e).toFuture().map { _ =>
-      logger.debug(s"Took Lock for [${e.name}]")
+      logger.debug(s"[MigrationLockMongoRepository][lock] Took Lock for [${e.name}]")
       true
     } recover {
       case error: MongoWriteException if isNotAPrimaryError(error.getCode) =>
         // Do not allow the migration job to proceed due to errors on secondary nodes, and attempt to rollback the changes
-        logger.error(s"Lock failed on secondary node", error)
+        logger.error(s"[MigrationLockMongoRepository][lock] Lock failed on secondary node", error)
         delete(e)
         false
       case error: MongoWriteException if error.getCode == mongoDuplicateKeyErrorCode =>
-        logger.error(s"Lock already exists for [${e.name}]", error)
+        logger.error(s"[MigrationLockMongoRepository][lock] Lock already exists for [${e.name}]", error)
         false
       case NonFatal(error) =>
-        logger.error(s"Unable to take Lock for [${e.name}]", error)
+        logger.error(s"[MigrationLockMongoRepository][lock] Unable to take Lock for [${e.name}]", error)
         false
     }
 
   override def delete(e: JobRunEvent): Future[Unit] =
     collection.deleteOne(equal("name", e.name)).toFuture().flatMap { _ =>
-      logger.debug(s"Removed Lock for [${e.name}]")
+      logger.debug(s"[MigrationLockMongoRepository][delete] Removed Lock for [${e.name}]")
       Future.unit
     }
 

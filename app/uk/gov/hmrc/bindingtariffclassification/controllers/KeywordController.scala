@@ -41,7 +41,7 @@ class KeywordController @Inject() (
         k <- keywordService.addKeyword(keywordRequest.keyword)
       } yield Created(Json.toJson(k)(RESTFormatters.formatKeyword))
     } recover recovery map { result =>
-      logger.debug(s"Keyword added with result : $result")
+      logger.debug(s"[KeywordController][addKeyword] Keyword added with result : $result")
       result
     }
   }
