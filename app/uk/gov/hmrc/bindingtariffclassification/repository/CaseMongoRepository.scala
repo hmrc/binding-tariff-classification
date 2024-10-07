@@ -395,7 +395,7 @@ class CaseMongoRepository @Inject() (
   }
 
   override def summaryReport(report: SummaryReport, pagination: Pagination): Future[Paged[ResultGroup]] = {
-    logger.info(s"Running report: $report with pagination $pagination")
+    logger.info(s"[CaseMongoRepository][summaryReport] Running report: $report with pagination $pagination")
 
     val rest = Seq(groupStage(report), count(countField))
 
@@ -453,7 +453,7 @@ class CaseMongoRepository @Inject() (
     report: CaseReport,
     pagination: Pagination
   ): Future[Paged[Map[String, ReportResultField[_]]]] = {
-    logger.info(s"Running report: $report with pagination $pagination")
+    logger.info(s"[CaseMongoRepository][caseReport] Running report: $report with pagination $pagination")
 
     val futureCount = collection
       .aggregate[BsonDocument] {
@@ -536,7 +536,7 @@ class CaseMongoRepository @Inject() (
     report: QueueReport,
     pagination: Pagination
   ): Future[Paged[QueueResultGroup]] = {
-    logger.info(s"Running report: $report with pagination $pagination")
+    logger.info(s"[CaseMongoRepository][queueReport] Running report: $report with pagination $pagination")
 
     val rest = Seq(queueGroupStage, count(countField))
     val futureCount = collection

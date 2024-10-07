@@ -50,7 +50,7 @@ class UsersController @Inject() (appConfig: AppConfig, usersService: UsersServic
         c <- usersService.insertUser(userRequest.operator)
       } yield Created(Json.toJson(c)(RESTFormatters.formatOperator))
     } recover recovery map { result =>
-      logger.debug(s"User creation Result : $result")
+      logger.debug(s"[UsersController][createUser] User creation Result : $result")
       result
     }
   }

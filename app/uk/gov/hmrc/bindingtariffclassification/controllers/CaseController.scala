@@ -55,7 +55,7 @@ class CaseController @Inject() (
         _ <- caseService.addInitialSampleStatusIfExists(c)
       } yield Created(Json.toJson(c)(RESTFormatters.formatCase))
     } recover recovery map { result =>
-      logger.debug(s"Case creation Result : $result")
+      logger.debug(s"[CaseController][create] Case creation Result : $result")
       result
     }
   }

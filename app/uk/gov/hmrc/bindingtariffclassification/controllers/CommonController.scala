@@ -38,7 +38,7 @@ class CommonController(
     Try(request.body.validate[T]) match {
       case Success(JsSuccess(payload, _)) => f(payload)
       case Success(JsError(errs)) =>
-        logger.debug(s"JSON deserialisation failure : ${JsError.toJson(errs)}")
+        logger.debug(s"[CommonController][withJsonBody] JSON deserialisation failure : ${JsError.toJson(errs)}")
         successful(BadRequest(JsErrorResponse(INVALID_REQUEST_PAYLOAD, JsError.toJson(errs))))
       case Failure(e) => successful(BadRequest(JsErrorResponse(UNKNOWN_ERROR, e.getMessage)))
     }
@@ -48,7 +48,7 @@ class CommonController(
   }
 
   private[controllers] def handleException(e: Throwable) = {
-    logger.error(s"An unexpected error occurred: ${e.getMessage}", e)
+    logger.error(s"[CommonController][handleException] An unexpected error occurred: ${e.getMessage}", e)
     InternalServerError(JsErrorResponse(UNKNOWN_ERROR, "An unexpected error occurred"))
   }
 

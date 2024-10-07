@@ -112,7 +112,7 @@ class ReferredDaysElapsedJob @Inject() (
       referredDaysElapsed = referralStartDate
                               .map(getReferredDaysElapsed)
                               .getOrElse {
-                                logger.warn(s"$name: Unable to find referral event for [${c.reference}]")
+                                logger.warn(s"[ReferredDaysElapsedJob][refreshReferredDaysElapsed] $name: Unable to find referral event for [${c.reference}]")
                                 0L
                               }
 
@@ -125,10 +125,10 @@ class ReferredDaysElapsedJob @Inject() (
     updated match {
       case Some(c) if original.referredDaysElapsed != c.referredDaysElapsed =>
         logger.info(
-          s"$name: Updated Referred Days Elapsed of Case [${original.reference}] from [${original.referredDaysElapsed}] to [${c.referredDaysElapsed}]"
+          s"[ReferredDaysElapsedJob][logResult] $name: Updated Referred Days Elapsed of Case [${original.reference}] from [${original.referredDaysElapsed}] to [${c.referredDaysElapsed}]"
         )
       case None =>
-        logger.warn(s"$name: Failed to update Referred Days Elapsed of Case [${original.reference}]")
+        logger.warn(s"[ReferredDaysElapsedJob][logResult] $name: Failed to update Referred Days Elapsed of Case [${original.reference}]")
       case _ =>
         ()
     }
