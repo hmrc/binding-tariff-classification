@@ -79,7 +79,9 @@ class MigrationRunner @Inject() (
               Future(JobExecuted)
             }
         case false =>
-          logger.info(s"[MigrationRunner][executeJob] ${jobNameLog(job)}: Failed to acquire Lock. It may have been running already.")
+          logger.info(
+            s"[MigrationRunner][executeJob] ${jobNameLog(job)}: Failed to acquire Lock. It may have been running already."
+          )
           timer.completeWithFailure()
           Future(TimerCompleted)
       }

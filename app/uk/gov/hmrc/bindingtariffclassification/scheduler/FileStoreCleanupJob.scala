@@ -84,7 +84,10 @@ class FileStoreCleanupJob @Inject() (
     logger.info(s"[FileStoreCleanupJob][deleteFile] $name: Removing file [${file.fileName}] with id [${file.id}]")
     fileStoreConnector.delete(file.id) recoverWith { case NonFatal(e) =>
       Future {
-        logger.error(s"[FileStoreCleanupJob][deleteFile] $name: Failed to remove file [${file.fileName}] with id [${file.id}]", e)
+        logger.error(
+          s"[FileStoreCleanupJob][deleteFile] $name: Failed to remove file [${file.fileName}] with id [${file.id}]",
+          e
+        )
       }
     }
   }

@@ -78,7 +78,9 @@ class AmendDateOfExtractMigrationJob @Inject() (
           s"[AmendDateOfExtractMigrationJob][logResult] Updated DateOfExtract of Case [${original.reference}] from [${original.dateOfExtract}] to [${c.dateOfExtract}]"
         )
       case None =>
-        logger.warn(s"[AmendDateOfExtractMigrationJob][logResult] Failed to update DateOfExtract of Case [${original.reference}]")
+        logger.warn(
+          s"[AmendDateOfExtractMigrationJob][logResult] Failed to update DateOfExtract of Case [${original.reference}]"
+        )
       case _ =>
         ()
     }
