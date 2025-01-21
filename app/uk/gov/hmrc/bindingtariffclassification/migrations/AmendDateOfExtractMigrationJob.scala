@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 HM Revenue & Customs
+ * Copyright 2025 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -78,7 +78,9 @@ class AmendDateOfExtractMigrationJob @Inject() (
           s"[AmendDateOfExtractMigrationJob][logResult] Updated DateOfExtract of Case [${original.reference}] from [${original.dateOfExtract}] to [${c.dateOfExtract}]"
         )
       case None =>
-        logger.warn(s"[AmendDateOfExtractMigrationJob][logResult] Failed to update DateOfExtract of Case [${original.reference}]")
+        logger.warn(
+          s"[AmendDateOfExtractMigrationJob][logResult] Failed to update DateOfExtract of Case [${original.reference}]"
+        )
       case _ =>
         ()
     }

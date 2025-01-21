@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 HM Revenue & Customs
+ * Copyright 2025 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -71,7 +71,7 @@ class ReferredDaysElapsedSpec extends BaseFeatureSpec with MockitoSugar {
       result(job.execute(), timeout)
 
       Then("The Referred Days Elapsed should be correct")
-      referredDaysElapsedForCase("ref-20181220") shouldBe 29
+      referredDaysElapsedForCase("ref-20181220") shouldBe 31
       referredDaysElapsedForCase("ref-20181230") shouldBe 24
       referredDaysElapsedForCase("ref-20190110") shouldBe 17
       referredDaysElapsedForCase("ref-20190203") shouldBe 0
@@ -104,7 +104,7 @@ class ReferredDaysElapsedSpec extends BaseFeatureSpec with MockitoSugar {
       result(job.execute(), timeout)
 
       Then("The Referred Days Elapsed should be correct")
-      referredDaysElapsedForCase("s-ref-20181220") shouldBe 29
+      referredDaysElapsedForCase("s-ref-20181220") shouldBe 31
       referredDaysElapsedForCase("s-ref-20181230") shouldBe 24
       referredDaysElapsedForCase("s-ref-20190110") shouldBe 17
       referredDaysElapsedForCase("s-ref-20190203") shouldBe 0

@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 HM Revenue & Customs
+ * Copyright 2025 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -79,7 +79,9 @@ class MigrationRunner @Inject() (
               Future(JobExecuted)
             }
         case false =>
-          logger.info(s"[MigrationRunner][executeJob] ${jobNameLog(job)}: Failed to acquire Lock. It may have been running already.")
+          logger.info(
+            s"[MigrationRunner][executeJob] ${jobNameLog(job)}: Failed to acquire Lock. It may have been running already."
+          )
           timer.completeWithFailure()
           Future(TimerCompleted)
       }

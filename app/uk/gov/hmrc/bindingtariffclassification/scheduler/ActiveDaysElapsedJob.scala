@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 HM Revenue & Customs
+ * Copyright 2025 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -142,7 +142,9 @@ class ActiveDaysElapsedJob @Inject() (
           s"[ActiveDaysElapsedJob][logResult] $name: Updated Days Elapsed of Case [${original.reference}] from [${original.daysElapsed}] to [${c.daysElapsed}]"
         )
       case None =>
-        logger.warn(s"[ActiveDaysElapsedJob][logResult] $name: Failed to update Days Elapsed of Case [${original.reference}]")
+        logger.warn(
+          s"[ActiveDaysElapsedJob][logResult] $name: Failed to update Days Elapsed of Case [${original.reference}]"
+        )
       case _ =>
         ()
     }

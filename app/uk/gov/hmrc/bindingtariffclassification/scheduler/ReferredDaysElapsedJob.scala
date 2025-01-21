@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 HM Revenue & Customs
+ * Copyright 2025 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -112,7 +112,9 @@ class ReferredDaysElapsedJob @Inject() (
       referredDaysElapsed = referralStartDate
                               .map(getReferredDaysElapsed)
                               .getOrElse {
-                                logger.warn(s"[ReferredDaysElapsedJob][refreshReferredDaysElapsed] $name: Unable to find referral event for [${c.reference}]")
+                                logger.warn(
+                                  s"[ReferredDaysElapsedJob][refreshReferredDaysElapsed] $name: Unable to find referral event for [${c.reference}]"
+                                )
                                 0L
                               }
 
@@ -128,7 +130,9 @@ class ReferredDaysElapsedJob @Inject() (
           s"[ReferredDaysElapsedJob][logResult] $name: Updated Referred Days Elapsed of Case [${original.reference}] from [${original.referredDaysElapsed}] to [${c.referredDaysElapsed}]"
         )
       case None =>
-        logger.warn(s"[ReferredDaysElapsedJob][logResult] $name: Failed to update Referred Days Elapsed of Case [${original.reference}]")
+        logger.warn(
+          s"[ReferredDaysElapsedJob][logResult] $name: Failed to update Referred Days Elapsed of Case [${original.reference}]"
+        )
       case _ =>
         ()
     }
