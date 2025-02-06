@@ -64,12 +64,14 @@ class CaseSearchMapperSpec extends BaseMongoIndexSpec {
         "$and" -> Json.arr(
           Json.obj(
             "$or" -> Json.arr(
-              Json.obj("application.holder.businessName" -> Json.obj("$regex" -> ".*case_source.*", "$options" -> "i")),
-              Json.obj("application.traderName"          -> Json.obj("$regex" -> ".*case_source.*", "$options" -> "i")),
               Json.obj(
-                "application.correspondenceStarter" -> Json.obj("$regex" -> ".*case_source.*", "$options" -> "i")
+                "application.holder.businessName" -> Json.obj("$regex" -> ".*case\\_source.*", "$options" -> "i")
               ),
-              Json.obj("application.contactName" -> Json.obj("$regex" -> ".*case_source.*", "$options" -> "i"))
+              Json.obj("application.traderName" -> Json.obj("$regex" -> ".*case\\_source.*", "$options" -> "i")),
+              Json.obj(
+                "application.correspondenceStarter" -> Json.obj("$regex" -> ".*case\\_source.*", "$options" -> "i")
+              ),
+              Json.obj("application.contactName" -> Json.obj("$regex" -> ".*case\\_source.*", "$options" -> "i"))
             )
           ),
           Json.obj(
@@ -157,6 +159,10 @@ class CaseSearchMapperSpec extends BaseMongoIndexSpec {
         )
     }
 
+//    {"decision.effectiveStartDate":{"$gte":{"$date":0}},"assignee.id":"valid_assignee","keywords":{"$all":["MTB","BIKE"]},"application.type":{"$in":["BTI","LIABILITY_ORDER"]},"reference":{"$in":["id1","id2"]},"$and":[{"$or":[{"application.holder.businessName":{"$regex":".*case\\_source.*","$options":"i"}},{"application.traderName":{"$regex":".*case\\_source.*","$options":"i"}},{"application.correspondenceStarter":{"$regex":".*case\\_source.*","$options":"i"}},{"application.contactName":{"$regex":".*case\\_source.*","$options":"i"}}]},{"$or":[{"decision.goodsDescription":{"$regex":".*strawberry.*","$options":"i"}},{"decision.methodCommercialDenomination":{"$regex":".*strawberry.*","$options":"i"}},{"decision.justification":{"$regex":".*strawberry.*","$options":"i"}}]},{"$or":[{"application.holder.eori":"eori-number"},{"application.agent.eoriDetails.eori":"eori-number"}]}],"queueId":{"$in":["valid_queue"]},"decision.effectiveEndDate":{"$gte":{"$date":0}},"status":{"$in":["NEW","OPEN"]},"decision.bindingCommodityCode":{"$regex":"^12345\\d*"}}
+//    {"reference":{"$in":["id1","id2"]},"application.type":{"$in":["BTI","LIABILITY_ORDER"]},"queueId":{"$in":["valid_queue"]},"assignee.id":"valid_assignee","status":{"$in":["NEW","OPEN"]},"decision.effectiveStartDate":{"$gte":{"$date":0}},"decision.effectiveEndDate":{"$gte":{"$date":0}},"decision.bindingCommodityCode":{"$regex":"^12345\\d*"},"$and":[{"$or":[{"application.holder.businessName":{"$regex":".*case_source.*","$options":"i"}},{"application.traderName":{"$regex":".*case_source.*","$options":"i"}},{"application.correspondenceStarter":{"$regex":".*case_source.*","$options":"i"}},{"application.contactName":{"$regex":".*case_source.*","$options":"i"}}]},{"$or":[{"decision.goodsDescription":{"$regex":".*strawberry.*","$options":"i"}},{"decision.methodCommercialDenomination":{"$regex":".*strawberry.*","$options":"i"}},{"decision.justification":{"$regex":".*strawberry.*","$options":"i"}}]},{"$or":[{"application.holder.eori":"eori-number"},{"application.agent.eoriDetails.eori":"eori-number"}]}],"keywords":{"$all":["MTB","BIKE"]}}
+//
+
     "filter by 'status' - with status type mix" in {
       given(config.clock) willReturn Clock.fixed(Instant.EPOCH, ZoneOffset.UTC)
 
@@ -198,22 +204,28 @@ class CaseSearchMapperSpec extends BaseMongoIndexSpec {
       jsonMapper.filterBy(CaseFilter(caseSource = Some("case_source"))) shouldBe Json.obj(
         "$or" ->
           Json.arr(
-            Json.obj("application.holder.businessName"   -> Json.obj("$regex" -> ".*case_source.*", "$options" -> "i")),
-            Json.obj("application.traderName"            -> Json.obj("$regex" -> ".*case_source.*", "$options" -> "i")),
-            Json.obj("application.correspondenceStarter" -> Json.obj("$regex" -> ".*case_source.*", "$options" -> "i")),
-            Json.obj("application.contactName"           -> Json.obj("$regex" -> ".*case_source.*", "$options" -> "i"))
+            Json.obj("application.holder.businessName" -> Json.obj("$regex" -> ".*case\\_source.*", "$options" -> "i")),
+            Json.obj("application.traderName"          -> Json.obj("$regex" -> ".*case\\_source.*", "$options" -> "i")),
+            Json.obj(
+              "application.correspondenceStarter" -> Json.obj("$regex" -> ".*case\\_source.*", "$options" -> "i")
+            ),
+            Json.obj("application.contactName" -> Json.obj("$regex" -> ".*case\\_source.*", "$options" -> "i"))
           )
       )
     }
+//    {"$or":[{"application.holder.businessName":{"$regex":".*case\\_source.*","$options":"i"}},{"application.traderName":{"$regex":".*case\\_source.*","$options":"i"}},{"application.correspondenceStarter":{"$regex":".*case\\_source.*","$options":"i"}},{"application.contactName":{"$regex":".*case\\_source.*","$options":"i"}}]}
+//    {"$or":[{"application.goodName":{"$regex":".*case_details.*","$options":"i"}},{"application.summary":{"$regex":".*case_details.*","$options":"i"}},{"application.detailedDescription":{"$regex":".*case_details.*","$options":"i"}},{"application.name":{"$regex":".*case_details.*","$options":"i"}}]}
 
     "filter by 'case details'" in {
       jsonMapper.filterBy(CaseFilter(caseDetails = Some("case_details"))) shouldBe Json.obj(
         "$or" ->
           Json.arr(
-            Json.obj("application.goodName"            -> Json.obj("$regex" -> ".*case_details.*", "$options" -> "i")),
-            Json.obj("application.summary"             -> Json.obj("$regex" -> ".*case_details.*", "$options" -> "i")),
-            Json.obj("application.detailedDescription" -> Json.obj("$regex" -> ".*case_details.*", "$options" -> "i")),
-            Json.obj("application.name"                -> Json.obj("$regex" -> ".*case_details.*", "$options" -> "i"))
+            Json.obj("application.goodName" -> Json.obj("$regex" -> ".*case\\_details.*", "$options" -> "i")),
+            Json.obj("application.summary"  -> Json.obj("$regex" -> ".*case\\_details.*", "$options" -> "i")),
+            Json.obj(
+              "application.detailedDescription" -> Json.obj("$regex" -> ".*case\\_details.*", "$options" -> "i")
+            ),
+            Json.obj("application.name" -> Json.obj("$regex" -> ".*case\\_details.*", "$options" -> "i"))
           )
       )
     }
