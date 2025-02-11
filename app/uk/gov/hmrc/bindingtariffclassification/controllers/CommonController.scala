@@ -32,7 +32,7 @@ class CommonController(
 ) extends BackendController(mcc)
     with Logging {
 
-  override protected def withJsonBody[T](
+  protected def withJsonBody[T](
     f: T => Future[Result]
   )(implicit request: Request[JsValue], m: Manifest[T], reads: Reads[T]): Future[Result] =
     Try(request.body.validate[T]) match {

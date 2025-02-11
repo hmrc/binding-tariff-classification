@@ -150,9 +150,11 @@ class SearchMapper @Inject() (appConfig: AppConfig) extends Mapper {
   )
 
   private def contains(value: String): JsObject = Json.obj(
-    regexFilter(s".*$value.*"),
+    regexFilter(s".*${fixRegexUserInput(value)}.*"),
     caseInsensitiveFilter
   )
+
+  private def fixRegexUserInput(value: String): String = value.replaceAll("[^A-Za-zŽžÀ-ÿ]", "\\\\$0")
 
   private def regexFilter(reg: String): (String, JsValueWrapper) = "$regex" -> reg
 
