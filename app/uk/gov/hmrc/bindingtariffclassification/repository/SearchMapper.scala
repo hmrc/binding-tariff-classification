@@ -28,6 +28,8 @@ import uk.gov.hmrc.bindingtariffclassification.model.PseudoCaseStatus.PseudoCase
 import uk.gov.hmrc.bindingtariffclassification.model.{CaseFilter, CaseSort, CaseStatus, PseudoCaseStatus}
 import uk.gov.hmrc.bindingtariffclassification.sort.CaseSortField._
 
+import java.util.regex.Pattern
+
 @Singleton
 class SearchMapper @Inject() (appConfig: AppConfig) extends Mapper {
 
@@ -150,11 +152,9 @@ class SearchMapper @Inject() (appConfig: AppConfig) extends Mapper {
   )
 
   private def contains(value: String): JsObject = Json.obj(
-    regexFilter(s".*${fixRegexUserInput(value)}.*"),
+    regexFilter(s".*${Pattern.quote(value)}.*"),
     caseInsensitiveFilter
   )
-
-  private def fixRegexUserInput(value: String): String = value.replaceAll("[^A-Za-zŽžÀ-ÿ]", "\\\\$0")
 
   private def regexFilter(reg: String): (String, JsValueWrapper) = "$regex" -> reg
 
