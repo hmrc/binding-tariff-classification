@@ -19,7 +19,7 @@ package uk.gov.hmrc.bindingtariffclassification.model
 import cats.data.NonEmptySeq
 import play.api.libs.json._
 import uk.gov.hmrc.bindingtariffclassification.model.reporting._
-import uk.gov.hmrc.play.json.Union
+import uk.gov.hmrc.bindingtariffclassification.utils.Union
 
 object RESTFormatters {
   // NonEmpty formatters
