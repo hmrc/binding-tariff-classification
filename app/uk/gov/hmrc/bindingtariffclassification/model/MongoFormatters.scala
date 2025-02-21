@@ -17,8 +17,7 @@
 package uk.gov.hmrc.bindingtariffclassification.model
 
 import play.api.libs.json._
-import uk.gov.hmrc.bindingtariffclassification.utils.JsonUtil
-import uk.gov.hmrc.play.json.Union
+import uk.gov.hmrc.bindingtariffclassification.utils.{JsonUtil, Union}
 
 import java.time.{Instant, LocalDateTime, ZoneOffset, ZonedDateTime}
 import scala.util.{Success, Try}
