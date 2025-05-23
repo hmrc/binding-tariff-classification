@@ -23,7 +23,7 @@ import org.mongodb.scala.bson.{BsonDocument, BsonNull, BsonValue}
 import org.mongodb.scala.model.Accumulators.{max, sum}
 import org.mongodb.scala.model.Aggregates._
 import org.mongodb.scala.model.Filters._
-import org.mongodb.scala.model.Indexes.{ascending => asc, descending => desc}
+import org.mongodb.scala.model.Indexes.{ascending => asc, compoundIndex, descending => desc}
 import org.mongodb.scala.model.Sorts.{ascending, descending, orderBy}
 import org.mongodb.scala.model._
 import org.slf4j.{Logger, LoggerFactory}
@@ -54,37 +54,57 @@ class CaseMongoRepository @Inject() (
       collectionName = "cases",
       mongoComponent = mongoComponent,
       domainFormat = MongoFormatters.formatCase,
-      // TODO: We need to add relevant indexes for each possible search
-      // TODO: We should add compound indexes for searches involving multiple fields
       indexes = Seq(
+        // Primary identifier index
         IndexModel(asc("reference"), IndexOptions().unique(true).name("reference_Index")),
-        IndexModel(asc("assignee.id"), IndexOptions().unique(false).name("assignee.id_Index")),
-        IndexModel(asc("queueId"), IndexOptions().unique(false).name("queueId_Index")),
-        IndexModel(asc("status"), IndexOptions().unique(false).name("status_Index")),
-        IndexModel(desc("createdDate"), IndexOptions().unique(false).name("createdDate_Index")),
+
+        // Main search indexes - compound indexes for common query patterns
         IndexModel(
-          asc("application.holder.eori"),
-          IndexOptions().unique(false).name("application.holder.eori_Index")
+          Indexes.compoundIndex(
+            asc("application.type"),
+            asc("status"),
+            asc("decision.bindingCommodityCode")
+          ),
+          IndexOptions().name("search_main_compound_Index")
         ),
+
+        // Decision-related compound index
+        IndexModel(
+          Indexes.compoundIndex(
+            asc("decision.effectiveEndDate"),
+            asc("decision.bindingCommodityCode"),
+            asc("status")
+          ),
+          IndexOptions().name("decision_compound_Index")
+        ),
+
+        // Text search compound index
+        IndexModel(
+          Indexes.compoundIndex(
+            asc("decision.goodsDescription"),
+            asc("decision.methodCommercialDenomination"),
+            asc("decision.justification")
+          ),
+          IndexOptions().name("text_search_compound_Index")
+        ),
+
+        // Individual field indexes for specific queries
+        IndexModel(asc("assignee.id"), IndexOptions().name("assignee_id_Index")),
+        IndexModel(asc("queueId"), IndexOptions().name("queueId_Index")),
+        IndexModel(asc("status"), IndexOptions().name("status_Index")),
+        IndexModel(asc("application.type"), IndexOptions().name("application_type_Index")),
+        IndexModel(desc("createdDate"), IndexOptions().name("createdDate_Index")),
+        IndexModel(desc("decision.effectiveEndDate"), IndexOptions().name("decision_effectiveEndDate_Index")),
+        IndexModel(asc("application.holder.eori"), IndexOptions().name("application_holder_eori_Index")),
         IndexModel(
           asc("application.agent.eoriDetails.eori"),
-          IndexOptions().unique(false).name("application.agent.eoriDetails.eori_Index")
+          IndexOptions().name("application_agent_eoriDetails_eori_Index")
         ),
-        IndexModel(
-          asc("application.type"),
-          IndexOptions().unique(false).name("application.type_Index")
-        ),
-        IndexModel(
-          asc("decision.effectiveEndDate"),
-          IndexOptions().unique(false).name("decision.effectiveEndDate_Index")
-        ),
-        IndexModel(
-          asc("decision.bindingCommodityCode"),
-          IndexOptions().unique(false).name("decision.bindingCommodityCode_Index")
-        ),
-        IndexModel(asc("daysElapsed"), IndexOptions().unique(false).name("daysElapsed_Index")),
-        IndexModel(asc("keywords"), IndexOptions().unique(false).name("keywords_Index"))
-      )
+        IndexModel(asc("daysElapsed"), IndexOptions().name("daysElapsed_Index")),
+        IndexModel(asc("decision.bindingCommodityCode"), IndexOptions().name("decision_bindingCommodityCode_Index")),
+        IndexModel(asc("keywords"), IndexOptions().name("keywords_Index"))
+      ),
+      replaceIndexes = true
     )
     with CaseRepository
     with BaseMongoOperations[Case] {
@@ -264,13 +284,12 @@ class CaseMongoRepository @Inject() (
         )
       }
 
-    val dateFieldFilter = {
+    val dateFieldFilter =
       if (report.dueToExpireRange) {
         ReportField.DateExpired
       } else {
         ReportField.DateCreated
       }
-    }
 
     def minDateFilter(dateField: DateField): Bson =
       if (report.dateRange.min != Instant.MIN) {

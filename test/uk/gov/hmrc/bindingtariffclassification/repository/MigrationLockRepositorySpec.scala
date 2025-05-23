@@ -108,7 +108,7 @@ class MigrationLockRepositorySpec
 
     "have all expected indexes" in {
 
-      val expectedIndexes = List(
+      val expectedIndexes = Seq(
         IndexModel(ascending("name"), IndexOptions().name("name_Index").unique(true)),
         IndexModel(ascending("_id"), IndexOptions().name("_id_"))
       )
@@ -119,7 +119,7 @@ class MigrationLockRepositorySpec
       import scala.concurrent.duration._
 
       eventually(timeout(5.seconds), interval(100.milliseconds)) {
-        assertIndexes(expectedIndexes.sorted, getIndexes(repo.collection).sorted)
+        assertIndexes(expectedIndexes, getIndexes(repo.collection))
       }
 
       await(repo.collection.drop())

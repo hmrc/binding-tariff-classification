@@ -296,7 +296,7 @@ class EventRepositorySpec
 
       import scala.concurrent.duration._
 
-      val expectedIndexes = List(
+      val expectedIndexes = Seq(
         IndexModel(ascending("id"), IndexOptions().name("id_Index").unique(true)),
         IndexModel(ascending("caseReference"), IndexOptions().name("caseReference_Index").unique(false)),
         IndexModel(ascending("type"), IndexOptions().name("type_Index").unique(false)),
@@ -308,7 +308,7 @@ class EventRepositorySpec
       await(repo.ensureIndexes())
 
       eventually(timeout(5.seconds), interval(100.milliseconds)) {
-        assertIndexes(expectedIndexes.sorted, getIndexes(repo.collection).sorted)
+        assertIndexes(expectedIndexes, getIndexes(repo.collection))
       }
 
       await(repo.collection.drop())

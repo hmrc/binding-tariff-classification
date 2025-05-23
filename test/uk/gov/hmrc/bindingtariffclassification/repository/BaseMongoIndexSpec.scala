@@ -44,11 +44,12 @@ trait BaseMongoIndexSpec extends BaseSpec {
         })
     )
 
-  protected def assertIndexes(expectedIndexes: Iterable[IndexModel], actualIndexes: Iterable[IndexModel]): Unit = {
+  protected def assertIndexes(expectedIndexes: Seq[IndexModel], actualIndexes: Seq[IndexModel]): Unit = {
     actualIndexes.size shouldBe expectedIndexes.size
 
     expectedIndexes
-      .zip(actualIndexes)
+      .sortBy(idx => idx.getOptions.getName)
+      .zip(actualIndexes.sortBy(idx => idx.getOptions.getName))
       .foreach { indexTuple =>
         val expectedIndex = indexTuple._1
         val actualIndex   = indexTuple._2

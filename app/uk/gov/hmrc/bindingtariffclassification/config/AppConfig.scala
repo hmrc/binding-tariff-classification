@@ -80,13 +80,12 @@ class AppConfig @Inject() (
 
   lazy val mongoEncryption: MongoEncryption = {
     val encryptionEnabled = getBooleanConfig("mongodb.encryption.enabled")
-    val encryptionKey = {
+    val encryptionKey =
       if (encryptionEnabled) {
         Some(getString("mongodb.encryption.key"))
       } else {
         None
       }
-    }
 
     if (encryptionEnabled && encryptionKey.isDefined) {
       logger.info("[AppConfig][mongoEncryption] Mongo encryption enabled")

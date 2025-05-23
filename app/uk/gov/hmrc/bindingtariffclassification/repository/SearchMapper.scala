@@ -44,7 +44,7 @@ class SearchMapper @Inject() (appConfig: AppConfig) extends Mapper {
       filter.applicationType.map(filteringByApplicationType),
       filter.queueId
         .filterNot(ids => ids.contains("some") && ids.contains("none"))
-        .map("queueId"                    -> inArrayOrNone[String](_)),
+        .map("queueId" -> inArrayOrNone[String](_)),
       filter.assigneeId.map("assignee.id" -> mappingNoneOrSome(_)),
       filter.caseDetails.map(details =>
         either(
@@ -63,8 +63,8 @@ class SearchMapper @Inject() (appConfig: AppConfig) extends Mapper {
         )
       ),
       filter.minDecisionStart.map("decision.effectiveStartDate" -> greaterThan(_)(formatInstant)),
-      filter.minDecisionEnd.map("decision.effectiveEndDate"     -> greaterThan(_)(formatInstant)),
-      filter.commodityCode.map("decision.bindingCommodityCode"  -> numberStartingWith(_)),
+      filter.minDecisionEnd.map("decision.effectiveEndDate" -> greaterThan(_)(formatInstant)),
+      filter.commodityCode.map("decision.bindingCommodityCode" -> numberStartingWith(_)),
       filter.decisionDetails.map(desc =>
         either(
           "decision.goodsDescription"             -> contains(desc),

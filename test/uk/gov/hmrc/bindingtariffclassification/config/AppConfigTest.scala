@@ -36,7 +36,7 @@ class AppConfigTest extends BaseSpec {
     }
 
     "build 'isTestMode'" in {
-      configWith("testMode" -> "true").isTestMode shouldBe true
+      configWith("testMode" -> "true").isTestMode  shouldBe true
       configWith("testMode" -> "false").isTestMode shouldBe false
     }
 
@@ -69,18 +69,18 @@ class AppConfigTest extends BaseSpec {
     }
 
     "build 'fileStoreUrl'" in {
-      //take expected from application.conf
+      // take expected from application.conf
       configWith().fileStoreUrl shouldBe "http://localhost:9583"
     }
 
     "build 'bankHolidaysUrl'" in {
-      //take expected from application.conf
+      // take expected from application.conf
       configWith().bankHolidaysUrl shouldBe "https://www.gov.uk/bank-holidays.json"
     }
 
     "build 'upsert-permitted-agents'" in {
       configWith("upsert-permitted-agents" -> "x,y").upsertAgents shouldBe Seq("x", "y")
-      configWith("upsert-permitted-agents" -> "").upsertAgents shouldBe Seq.empty
+      configWith("upsert-permitted-agents" -> "").upsertAgents    shouldBe Seq.empty
     }
 
     "build 'mongoEncryption' with default" in {
@@ -121,7 +121,7 @@ class AppConfigTest extends BaseSpec {
     }
 
     "build 'case reference configuration" in {
-      configWith("atar-case-reference-offset" -> "10").atarCaseReferenceOffset shouldBe 10
+      configWith("atar-case-reference-offset" -> "10").atarCaseReferenceOffset   shouldBe 10
       configWith("other-case-reference-offset" -> "20").otherCaseReferenceOffset shouldBe 20
     }
   }
