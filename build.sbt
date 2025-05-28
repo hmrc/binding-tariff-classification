@@ -4,7 +4,7 @@ import uk.gov.hmrc.DefaultBuildSettings.itSettings
 val appName = "binding-tariff-classification"
 
 ThisBuild / majorVersion := 0
-ThisBuild / scalaVersion := "2.13.14"
+ThisBuild / scalaVersion := "2.13.16"
 
 lazy val microservice = (project in file("."))
   .enablePlugins(PlayScala, SbtDistributablesPlugin)
