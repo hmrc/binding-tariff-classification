@@ -20,10 +20,11 @@ import cats.data.NonEmptySeq
 import cats.syntax.all._
 import org.mongodb.scala.bson.conversions.Bson
 import org.mongodb.scala.bson.{BsonDocument, BsonNull, BsonValue}
-import org.mongodb.scala.model.Accumulators.{max, sum}
+import org.mongodb.scala.model.Accumulators.{max, push, sum}
 import org.mongodb.scala.model.Aggregates._
 import org.mongodb.scala.model.Filters._
-import org.mongodb.scala.model.Indexes.{ascending => asc, compoundIndex, descending => desc}
+import org.mongodb.scala.model.Indexes.{ascending => asc, descending => desc}
+import org.mongodb.scala.model.Projections.{excludeId, fields, include}
 import org.mongodb.scala.model.Sorts.{ascending, descending, orderBy}
 import org.mongodb.scala.model._
 import org.slf4j.{Logger, LoggerFactory}
@@ -37,7 +38,9 @@ import uk.gov.hmrc.bindingtariffclassification.repository.BaseMongoOperations.pa
 import uk.gov.hmrc.bindingtariffclassification.sort.SortDirection
 import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.play.json.Codecs.toBson
-import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
+import uk.gov.hmrc.mongo.play.json.{Codecs, PlayMongoRepository}
+import org.bson.Document
+import uk.gov.hmrc.bindingtariffclassification.model.LiabilityStatus.LiabilityStatus
 
 import java.time.Instant
 import javax.inject.{Inject, Singleton}
@@ -592,6 +595,107 @@ class CaseMongoRepository @Inject() (
       )
 
     pagedResults(futureCount, runAggregation, pagination)
+  }
+
+  def getGroupedCasesByKeyword(pagination: Pagination): Future[Paged[CaseKeyword]] = {
+    val pipeline: Seq[Bson] = Seq(
+      // First, add the computed fields
+      addFields(
+        Field("team", "$queueId"),
+        Field("goodsName", "$application.goodName"),
+        Field("caseType", "$application.type"),
+        Field("liabilityStatus", "$application.status")
+      ),
+      // Then project the fields we need
+      project(
+        fields(
+          include(
+            "reference",
+            "status",
+            "assignee",
+            "team",
+            "goodsName",
+            "caseType",
+            "keywords",
+            "daysElapsed",
+            "liabilityStatus"
+          )
+        )
+      ),
+      unwind("$keywords"),
+      group(
+        "$keywords",
+        push(
+          "cases",
+          new Document()
+            .append("reference", "$reference")
+            .append("status", "$status")
+            .append("assignee", "$assignee")
+            .append("team", "$team")
+            .append("goodsName", "$goodsName")
+            .append("caseType", "$caseType")
+            .append("daysElapsed", "$daysElapsed")
+            .append("liabilityStatus", "$liabilityStatus")
+        )
+      ),
+      addFields(Field("keyword", new Document("name", "$_id"))),
+      project(fields(excludeId(), include("keyword", "cases"))),
+      skip((pagination.page - 1) * pagination.pageSize),
+      limit(pagination.pageSize)
+    )
+
+    val aggregationFut: Future[Seq[CaseKeyword]] = collection
+      .aggregate[Document](pipeline)
+      .allowDiskUse(true)
+      .toFuture()
+      .map(_.map { doc =>
+        val keywordDoc  = doc.get("keyword").asInstanceOf[Document]
+        val keywordName = keywordDoc.getString("name")
+        println(s"Keyword name: $keywordName")
+        val keyword = Keyword(keywordName)
+
+        val casesJson = Json.parse(doc.toJson) \ "cases"
+        println(s"Cases JSON: $casesJson")
+
+        // Handle missing fields more gracefully
+        val cases = casesJson.validate[Seq[CaseHeader]] match {
+          case JsSuccess(caseHeaders, _) => caseHeaders.toList
+          case JsError(errors) =>
+            println(s"Error parsing cases for keyword $keywordName: $errors")
+            // Try to parse manually with default values
+            casesJson
+              .asOpt[Seq[JsObject]]
+              .getOrElse(Seq.empty)
+              .map { caseObj =>
+                CaseHeader(
+                  reference = (caseObj \ "reference").as[String],
+                  assignee = (caseObj \ "assignee").asOpt[Operator],
+                  team = (caseObj \ "team").asOpt[String],
+                  goodsName = (caseObj \ "goodsName").asOpt[String],
+                  caseType = (caseObj \ "caseType").asOpt[ApplicationType.Value].getOrElse(ApplicationType.BTI),
+                  status = (caseObj \ "status").as[CaseStatus.Value],
+                  daysElapsed = (caseObj \ "daysElapsed").as[Long],
+                  liabilityStatus = (caseObj \ "liabilityStatus").asOpt[LiabilityStatus]
+                )
+              }
+              .toList
+        }
+
+        CaseKeyword(keyword, cases)
+      })
+
+    val countPipeline: Seq[Bson] = Seq(
+      unwind("$keywords"),
+      group("$keywords", push("cases", "$$ROOT")),
+      count("resultCount")
+    )
+
+    val futureCount: Future[Option[BsonDocument]] = collection
+      .aggregate[BsonDocument](countPipeline)
+      .allowDiskUse(true)
+      .headOption()
+
+    pagedResults(futureCount, aggregationFut, pagination)
   }
 }
 

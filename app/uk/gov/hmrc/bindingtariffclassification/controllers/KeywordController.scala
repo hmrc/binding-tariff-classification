@@ -81,8 +81,8 @@ class KeywordController @Inject() (
 
   def fetchCaseKeywords(pagination: Pagination): Action[AnyContent] =
     Action.async {
-      keywordService.fetchCaseKeywords(pagination).map { keywords =>
-        Ok(Json.toJson(keywords))
+      keywordService.fetchCaseKeywords(pagination).map { data =>
+        Ok(Json.toJson(data))
       } recover recovery
     }
 
