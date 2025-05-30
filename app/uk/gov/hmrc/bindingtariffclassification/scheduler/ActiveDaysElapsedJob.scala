@@ -81,7 +81,7 @@ class ActiveDaysElapsedJob @Inject() (
         if (liability.dateOfReceipt.isDefined) {
           LocalDateTime.ofInstant(liability.dateOfReceipt.get, ZoneOffset.UTC).toLocalDate
         } else {
-          //when liability doesn't have date of receipt use case create date
+          // when liability doesn't have date of receipt use case create date
           LocalDateTime.ofInstant(c.createdDate, ZoneOffset.UTC).toLocalDate
         }
       } else {

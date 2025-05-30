@@ -40,6 +40,7 @@ import java.time._
 import java.time.temporal.ChronoUnit
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
+import org.mongodb.scala.model.Indexes
 
 class CaseRepositorySpec
     extends BaseMongoIndexSpec
@@ -2463,42 +2464,57 @@ class CaseRepositorySpec
 
       import scala.concurrent.duration._
 
-      val expectedIndexes = List(
+      val expectedIndexes = Seq(
         IndexModel(ascending("_id"), IndexOptions().name("_id_")),
-        IndexModel(ascending("reference"), IndexOptions().name("reference_Index").unique(true)),
-        IndexModel(ascending("queueId"), IndexOptions().name("queueId_Index").unique(false)),
-        IndexModel(ascending("status"), IndexOptions().name("status_Index").unique(false)),
-        IndexModel(descending("createdDate"), IndexOptions().name("createdDate_Index").unique(false)),
+        IndexModel(ascending("reference"), IndexOptions().unique(true).name("reference_Index")),
         IndexModel(
-          ascending("application.holder.eori"),
-          IndexOptions().name("application.holder.eori_Index").unique(false)
+          Indexes.compoundIndex(
+            ascending("application.type"),
+            ascending("status"),
+            ascending("decision.bindingCommodityCode")
+          ),
+          IndexOptions().name("search_main_compound_Index")
         ),
+        IndexModel(
+          Indexes.compoundIndex(
+            ascending("decision.effectiveEndDate"),
+            ascending("decision.bindingCommodityCode"),
+            ascending("status")
+          ),
+          IndexOptions().name("decision_compound_Index")
+        ),
+        IndexModel(
+          Indexes.compoundIndex(
+            ascending("decision.goodsDescription"),
+            ascending("decision.methodCommercialDenomination"),
+            ascending("decision.justification")
+          ),
+          IndexOptions().name("text_search_compound_Index")
+        ),
+        IndexModel(ascending("assignee.id"), IndexOptions().name("assignee_id_Index")),
+        IndexModel(ascending("queueId"), IndexOptions().name("queueId_Index")),
+        IndexModel(ascending("status"), IndexOptions().name("status_Index")),
+        IndexModel(ascending("application.type"), IndexOptions().name("application_type_Index")),
+        IndexModel(descending("createdDate"), IndexOptions().name("createdDate_Index")),
+        IndexModel(descending("decision.effectiveEndDate"), IndexOptions().name("decision_effectiveEndDate_Index")),
+        IndexModel(ascending("application.holder.eori"), IndexOptions().name("application_holder_eori_Index")),
         IndexModel(
           ascending("application.agent.eoriDetails.eori"),
-          IndexOptions().name("application.agent.eoriDetails.eori_Index").unique(false)
+          IndexOptions().name("application_agent_eoriDetails_eori_Index")
         ),
-        IndexModel(ascending("assignee.id"), IndexOptions().name("assignee.id_Index").unique(false)),
-        IndexModel(
-          ascending("application.type"),
-          IndexOptions().unique(false).name("application.type_Index")
-        ),
-        IndexModel(
-          ascending("decision.effectiveEndDate"),
-          IndexOptions().name("decision.effectiveEndDate_Index").unique(false)
-        ),
+        IndexModel(ascending("daysElapsed"), IndexOptions().name("daysElapsed_Index")),
         IndexModel(
           ascending("decision.bindingCommodityCode"),
-          IndexOptions().name("decision.bindingCommodityCode_Index").unique(false)
+          IndexOptions().name("decision_bindingCommodityCode_Index")
         ),
-        IndexModel(ascending("daysElapsed"), IndexOptions().name("daysElapsed_Index").unique(false)),
-        IndexModel(ascending("keywords"), IndexOptions().name("keywords_Index").unique(false))
+        IndexModel(ascending("keywords"), IndexOptions().name("keywords_Index"))
       )
 
       val repo = newMongoRepository
       await(repo.ensureIndexes())
 
       eventually(timeout(5.seconds), interval(100.milliseconds)) {
-        assertIndexes(expectedIndexes.sorted, getIndexes(repo.collection).sorted)
+        assertIndexes(expectedIndexes, getIndexes(repo.collection))
       }
 
       await(repo.deleteAll())

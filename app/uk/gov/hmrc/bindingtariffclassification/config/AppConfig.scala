@@ -80,13 +80,12 @@ class AppConfig @Inject() (
 
   lazy val mongoEncryption: MongoEncryption = {
     val encryptionEnabled = getBooleanConfig("mongodb.encryption.enabled")
-    val encryptionKey = {
+    val encryptionKey =
       if (encryptionEnabled) {
         Some(getString("mongodb.encryption.key"))
       } else {
         None
       }
-    }
 
     if (encryptionEnabled && encryptionKey.isDefined) {
       logger.info("[AppConfig][mongoEncryption] Mongo encryption enabled")
@@ -99,6 +98,8 @@ class AppConfig @Inject() (
 
   lazy val maxUriLength: Long =
     configuration.underlying.getBytes("pekko.http.parsing.max-uri-length")
+
+  lazy val replaceIndexes: Boolean = configuration.getOptional[Boolean]("mongodb.replace-indexes").getOrElse(false)
 
 }
 

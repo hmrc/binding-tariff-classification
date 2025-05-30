@@ -21,6 +21,7 @@ import org.mongodb.scala.model.Indexes.{ascending, descending}
 import org.mongodb.scala.model.{Filters, IndexModel, IndexOptions}
 import org.scalatest.concurrent.Eventually
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
+import uk.gov.hmrc.bindingtariffclassification.config.AppConfig
 import uk.gov.hmrc.bindingtariffclassification.model._
 import uk.gov.hmrc.bindingtariffclassification.utils.RandomGenerator
 import uk.gov.hmrc.mongo.test.MongoSupport
@@ -41,8 +42,10 @@ class EventRepositorySpec
 
   private val repository = createMongoRepo
 
+  private lazy val appConfig = fakeApplication.injector.instanceOf[AppConfig]
+
   private def createMongoRepo =
-    new EventMongoRepository(mongoComponent)
+    new EventMongoRepository(mongoComponent, appConfig)
 
   private val e: Event = createNoteEventForTest("")
 
@@ -296,7 +299,7 @@ class EventRepositorySpec
 
       import scala.concurrent.duration._
 
-      val expectedIndexes = List(
+      val expectedIndexes = Seq(
         IndexModel(ascending("id"), IndexOptions().name("id_Index").unique(true)),
         IndexModel(ascending("caseReference"), IndexOptions().name("caseReference_Index").unique(false)),
         IndexModel(ascending("type"), IndexOptions().name("type_Index").unique(false)),
@@ -308,7 +311,7 @@ class EventRepositorySpec
       await(repo.ensureIndexes())
 
       eventually(timeout(5.seconds), interval(100.milliseconds)) {
-        assertIndexes(expectedIndexes.sorted, getIndexes(repo.collection).sorted)
+        assertIndexes(expectedIndexes, getIndexes(repo.collection))
       }
 
       await(repo.collection.drop())

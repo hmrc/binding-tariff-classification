@@ -40,7 +40,7 @@ class AuthActionSpec extends BaseSpec with BeforeAndAfterEach {
 
   "AuthAction" should {
 
-    val action = new AuthAction(authConnector, bodyParser)
+    val action                                          = new AuthAction(authConnector, bodyParser)
     val block: BtaRequest[AnyContent] => Future[Result] = { _ => Future.successful(Ok) }
     val atarEnrolment =
       Enrolments(Set(Enrolment("HMRC-ATAR-ORG", Seq(EnrolmentIdentifier("EORINumber", "GB12345678")), "state")))

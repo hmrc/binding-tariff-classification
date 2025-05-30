@@ -71,12 +71,12 @@ class ActiveDaysElapsedSpec extends BaseFeatureSpec with MockitoSugar {
     Scenario("Calculates elapsed days for OPEN & NEW Liability cases") {
       Given("There are cases with mixed statuses in the database")
 
-      //OPEN
-      //without date of receipt will take created date
+      // OPEN
+      // without date of receipt will take created date
       givenThereIs(
         aLiabilityCaseWith(reference = "ref-1", status = OPEN, createdDate = "2018-12-20", dateOfReceipt = None)
       )
-      //with date of receipt will take date of receipt
+      // with date of receipt will take date of receipt
       givenThereIs(
         aLiabilityCaseWith(
           reference = "ref-2",
@@ -86,12 +86,12 @@ class ActiveDaysElapsedSpec extends BaseFeatureSpec with MockitoSugar {
         )
       )
 
-      //NEW
-      //without date of receipt will take created date
+      // NEW
+      // without date of receipt will take created date
       givenThereIs(
         aLiabilityCaseWith(reference = "ref-3", status = NEW, createdDate = "2018-12-10", dateOfReceipt = None)
       )
-      //with date of receipt will take date of receipt
+      // with date of receipt will take date of receipt
       givenThereIs(
         aLiabilityCaseWith(
           reference = "ref-4",

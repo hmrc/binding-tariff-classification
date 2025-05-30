@@ -21,6 +21,7 @@ import org.bson.conversions.Bson
 import org.mongodb.scala.model.Filters.{empty, equal}
 import org.mongodb.scala.model.Indexes._
 import org.mongodb.scala.model.{IndexModel, IndexOptions, ReplaceOptions}
+import uk.gov.hmrc.bindingtariffclassification.config.AppConfig
 import uk.gov.hmrc.bindingtariffclassification.model.MongoFormatters._
 import uk.gov.hmrc.bindingtariffclassification.model.{Keyword, Paged, Pagination}
 import uk.gov.hmrc.mongo.MongoComponent
@@ -43,14 +44,16 @@ trait KeywordsRepository {
 }
 
 @Singleton
-class KeywordsMongoRepository @Inject() (mongoComponent: MongoComponent)(implicit ec: ExecutionContext)
-    extends PlayMongoRepository[Keyword](
+class KeywordsMongoRepository @Inject() (mongoComponent: MongoComponent, appConfig: AppConfig)(implicit
+  ec: ExecutionContext
+) extends PlayMongoRepository[Keyword](
       collectionName = "keywords",
       mongoComponent = mongoComponent,
       domainFormat = formatKeywords,
       indexes = Seq(
         IndexModel(ascending("name"), IndexOptions().unique(true).name("name_Index"))
-      )
+      ),
+      replaceIndexes = appConfig.replaceIndexes
     )
     with KeywordsRepository
     with BaseMongoOperations[Keyword] {

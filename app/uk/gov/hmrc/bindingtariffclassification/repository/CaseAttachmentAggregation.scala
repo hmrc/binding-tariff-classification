@@ -70,7 +70,7 @@ class CaseAttachmentAggregation @Inject() (mongoComponent: MongoComponent)(impli
   private val toRoot        = replaceRoot(Codecs.toBson(Json.obj("$mergeObjects" -> List("$attachment"))))
   private val out           = Aggregates.out("attachments")
 
-  protected val pipeline: List[Bson] = {
+  protected val pipeline: List[Bson] =
     unwindNestedAttachmentArrays ++ List(
       projectAttachments,
       unwindAttachments,
@@ -78,7 +78,6 @@ class CaseAttachmentAggregation @Inject() (mongoComponent: MongoComponent)(impli
       toRoot,
       out
     )
-  }
 
   def refresh(): Future[Unit] =
     mongoComponent.database

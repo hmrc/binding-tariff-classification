@@ -20,6 +20,7 @@ import org.mongodb.scala.MongoWriteException
 import org.mongodb.scala.model.Filters
 import org.scalatest.concurrent.Eventually
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
+import uk.gov.hmrc.bindingtariffclassification.config.AppConfig
 import uk.gov.hmrc.bindingtariffclassification.model._
 import uk.gov.hmrc.mongo.test.MongoSupport
 
@@ -42,8 +43,10 @@ class KeywordRepositorySpec
 
   private val repository = createMongoRepo
 
+  private lazy val appConfig = fakeApplication.injector.instanceOf[AppConfig]
+
   private def createMongoRepo =
-    new KeywordsMongoRepository(mongoComponent)
+    new KeywordsMongoRepository(mongoComponent, appConfig)
 
   override def beforeEach(): Unit = {
     super.beforeEach()

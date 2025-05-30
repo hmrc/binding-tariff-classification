@@ -20,6 +20,7 @@ import com.google.inject.ImplementedBy
 import org.mongodb.scala.bson.conversions.Bson
 import org.mongodb.scala.model.Filters.{and, empty}
 import org.mongodb.scala.model._
+import uk.gov.hmrc.bindingtariffclassification.config.AppConfig
 import uk.gov.hmrc.bindingtariffclassification.model._
 import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
@@ -40,8 +41,9 @@ trait EventRepository {
 }
 
 @Singleton
-class EventMongoRepository @Inject() (mongoComponent: MongoComponent)(implicit ec: ExecutionContext)
-    extends PlayMongoRepository[Event](
+class EventMongoRepository @Inject() (mongoComponent: MongoComponent, appConfig: AppConfig)(implicit
+  ec: ExecutionContext
+) extends PlayMongoRepository[Event](
       collectionName = "events",
       mongoComponent = mongoComponent,
       domainFormat = MongoFormatters.formatEvent,
@@ -50,7 +52,8 @@ class EventMongoRepository @Inject() (mongoComponent: MongoComponent)(implicit e
         IndexModel(Indexes.ascending("caseReference"), IndexOptions().unique(false).name("caseReference_Index")),
         IndexModel(Indexes.ascending("type"), IndexOptions().unique(false).name("type_Index")),
         IndexModel(Indexes.descending("timestamp"), IndexOptions().unique(false).name("timestamp_Index"))
-      )
+      ),
+      replaceIndexes = appConfig.replaceIndexes
     )
     with EventRepository
     with BaseMongoOperations[Event] {
