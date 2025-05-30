@@ -50,7 +50,8 @@ class SequenceMongoRepository @Inject() (mongoComponent: MongoComponent)(implici
       domainFormat = formatSequence,
       indexes = Seq(
         IndexModel(ascending("name"), IndexOptions().unique(true).name("name_Index"))
-      )
+      ),
+      replaceIndexes = true
     )
     with SequenceRepository
     with BaseMongoOperations[Sequence] {

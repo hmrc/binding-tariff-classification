@@ -104,7 +104,7 @@ class CaseMongoRepository @Inject() (
         IndexModel(asc("decision.bindingCommodityCode"), IndexOptions().name("decision_bindingCommodityCode_Index")),
         IndexModel(asc("keywords"), IndexOptions().name("keywords_Index"))
       ),
-      replaceIndexes = true
+      replaceIndexes = appConfig.replaceIndexes
     )
     with CaseRepository
     with BaseMongoOperations[Case] {

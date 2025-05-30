@@ -99,6 +99,8 @@ class AppConfig @Inject() (
   lazy val maxUriLength: Long =
     configuration.underlying.getBytes("pekko.http.parsing.max-uri-length")
 
+  lazy val replaceIndexes: Boolean = configuration.getOptional[Boolean]("mongodb.replace-indexes").getOrElse(false)
+
 }
 
 case class MongoEncryption(enabled: Boolean = false, key: Option[String] = None)

@@ -51,7 +51,8 @@ class MigrationLockMongoRepository @Inject() (mongoComponent: MongoComponent)(im
       domainFormat = MongoFormatters.formatJobRunEvent,
       indexes = Seq(
         IndexModel(ascending("name"), IndexOptions().unique(true).name("name_Index"))
-      )
+      ),
+      replaceIndexes = true
     )
     with MigrationLockRepository {
 

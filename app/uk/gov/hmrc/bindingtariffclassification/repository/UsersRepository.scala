@@ -21,6 +21,7 @@ import org.mongodb.scala.bson.conversions.Bson
 import org.mongodb.scala.model.Filters._
 import org.mongodb.scala.model.Indexes.ascending
 import org.mongodb.scala.model._
+import uk.gov.hmrc.bindingtariffclassification.config.AppConfig
 import uk.gov.hmrc.bindingtariffclassification.model.MongoFormatters._
 import uk.gov.hmrc.bindingtariffclassification.model._
 import uk.gov.hmrc.mongo.MongoComponent
@@ -42,8 +43,9 @@ trait UsersRepository {
 }
 
 @Singleton
-class UsersMongoRepository @Inject() (mongoComponent: MongoComponent)(implicit ec: ExecutionContext)
-    extends PlayMongoRepository[Operator](
+class UsersMongoRepository @Inject() (mongoComponent: MongoComponent, appConfig: AppConfig)(implicit
+  ec: ExecutionContext
+) extends PlayMongoRepository[Operator](
       collectionName = "users",
       mongoComponent = mongoComponent,
       domainFormat = formatOperator,
@@ -51,7 +53,8 @@ class UsersMongoRepository @Inject() (mongoComponent: MongoComponent)(implicit e
         IndexModel(ascending("id"), IndexOptions().unique(true).name("id_Index")),
         IndexModel(ascending("role"), IndexOptions().unique(false).name("role_Index")),
         IndexModel(ascending("memberOfTeams"), IndexOptions().unique(false).name("memberOfTeams_Index"))
-      )
+      ),
+      replaceIndexes = appConfig.replaceIndexes
     )
     with UsersRepository
     with BaseMongoOperations[Operator] {
