@@ -599,14 +599,12 @@ class CaseMongoRepository @Inject() (
 
   def getGroupedCasesByKeyword(pagination: Pagination): Future[Paged[CaseKeyword]] = {
     val pipeline: Seq[Bson] = Seq(
-      // First, add the computed fields
       addFields(
         Field("team", "$queueId"),
         Field("goodsName", "$application.goodName"),
         Field("caseType", "$application.type"),
         Field("liabilityStatus", "$application.status")
       ),
-      // Then project the fields we need
       project(
         fields(
           include(
@@ -651,18 +649,13 @@ class CaseMongoRepository @Inject() (
       .map(_.map { doc =>
         val keywordDoc  = doc.get("keyword").asInstanceOf[Document]
         val keywordName = keywordDoc.getString("name")
-        println(s"Keyword name: $keywordName")
         val keyword = Keyword(keywordName)
 
         val casesJson = Json.parse(doc.toJson) \ "cases"
-        println(s"Cases JSON: $casesJson")
 
-        // Handle missing fields more gracefully
         val cases = casesJson.validate[Seq[CaseHeader]] match {
           case JsSuccess(caseHeaders, _) => caseHeaders.toList
           case JsError(errors) =>
-            println(s"Error parsing cases for keyword $keywordName: $errors")
-            // Try to parse manually with default values
             casesJson
               .asOpt[Seq[JsObject]]
               .getOrElse(Seq.empty)
