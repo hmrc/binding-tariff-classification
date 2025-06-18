@@ -206,7 +206,7 @@ class KeywordControllerSpec extends BaseSpec with BeforeAndAfterEach {
     val manageKeywordsData = ManageKeywordsData(pagedCaseKeywords, pagedKeywords)
 
     "return 200 with the all cases that contain keywords from the collection" in {
-      when(keywordService.fetchCaseKeywords(refEq(pagination)))
+      when(keywordService.loadKeywordManagementData(refEq(pagination)))
         .thenReturn(successful(manageKeywordsData))
 
       val result = controller.fetchCaseKeywords(pagination)(fakeRequest)
@@ -221,7 +221,7 @@ class KeywordControllerSpec extends BaseSpec with BeforeAndAfterEach {
       val emptyPagedCaseKeywords  = Paged.empty[CaseKeyword]
       val emptyPagedKeywords      = Paged.empty[Keyword]
       val emptyManageKeywordsData = ManageKeywordsData(emptyPagedCaseKeywords, emptyPagedKeywords)
-      when(keywordService.fetchCaseKeywords(refEq(pagination)))
+      when(keywordService.loadKeywordManagementData(refEq(pagination)))
         .thenReturn(successful(emptyManageKeywordsData))
 
       val result = controller.fetchCaseKeywords(pagination)(fakeRequest)
@@ -233,7 +233,7 @@ class KeywordControllerSpec extends BaseSpec with BeforeAndAfterEach {
     "return 500 when an error occurred" in {
       val error = new RuntimeException
 
-      when(keywordService.fetchCaseKeywords(refEq(pagination)))
+      when(keywordService.loadKeywordManagementData(refEq(pagination)))
         .thenReturn(failed(error))
 
       val result = controller.fetchCaseKeywords(pagination)(fakeRequest)

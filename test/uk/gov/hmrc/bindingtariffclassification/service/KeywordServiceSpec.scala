@@ -192,7 +192,7 @@ class KeywordServiceSpec extends BaseSpec with BeforeAndAfterEach {
       when(keywordRepository.findAll(any[Pagination])).thenReturn(successful(pagedKeywords))
       when(caseRepository.getGroupedCasesByKeyword(pagination)).thenReturn(successful(pagedCaseKeywords))
 
-      val result = await(service.fetchCaseKeywords(pagination))
+      val result = await(service.loadKeywordManagementData(pagination))
 
       result.pagedKeywords                               shouldBe pagedKeywords
       result.pagedCaseKeywords.results.size              shouldBe 2
@@ -209,7 +209,7 @@ class KeywordServiceSpec extends BaseSpec with BeforeAndAfterEach {
       when(keywordRepository.findAll(any[Pagination])).thenReturn(successful(emptyPagedKeywords))
       when(caseRepository.getGroupedCasesByKeyword(pagination)).thenReturn(successful(emptyPagedCaseKeywords))
 
-      val result = await(service.fetchCaseKeywords(pagination))
+      val result = await(service.loadKeywordManagementData(pagination))
 
       result.pagedKeywords             shouldBe emptyPagedKeywords
       result.pagedCaseKeywords.results shouldBe empty
@@ -219,7 +219,7 @@ class KeywordServiceSpec extends BaseSpec with BeforeAndAfterEach {
       when(keywordRepository.findAll(any[Pagination])).thenReturn(failed(emulatedFailure))
 
       val caught = intercept[RuntimeException] {
-        await(service.fetchCaseKeywords(pagination))
+        await(service.loadKeywordManagementData(pagination))
       }
       caught shouldBe emulatedFailure
     }

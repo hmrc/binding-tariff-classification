@@ -46,7 +46,7 @@ class Module extends play.api.inject.Module {
       bind[Scheduler].toSelf.eagerly(),
       repositoryBinding,
       // THIS NEEDS TO BE TRIGGERED IN ORDER TO RUN MIGRATION JOBS
-      bind[MigrationController].toSelf.eagerly(),
+      bind[MigrationController].toSelf.eagerly()
     )
   }
 

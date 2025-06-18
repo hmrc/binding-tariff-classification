@@ -44,7 +44,7 @@ class KeywordService @Inject() (
   def deleteKeyword(name: String): Future[Unit] =
     keywordRepository.delete(name)
 
-  def fetchCaseKeywords(pagination: Pagination): Future[ManageKeywordsData] =
+  def loadKeywordManagementData(pagination: Pagination): Future[ManageKeywordsData] =
     for {
       caseKeywordsPaged <- caseRepository.getGroupedCasesByKeyword(pagination)
       pagedKeywords <- keywordRepository.findAll(Pagination(pageSize = Int.MaxValue))

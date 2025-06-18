@@ -37,7 +37,7 @@ class AddKeywordsMigrationJob @Inject() (
 
   override def name: String = "AddKeywords"
 
-  override def execute(): Future[Unit] = {
+  override def execute(): Future[Unit] =
     keywordService.findAll(Pagination()).flatMap { page =>
       if (page.resultCount > 0) {
         Future.unit
@@ -48,7 +48,6 @@ class AddKeywordsMigrationJob @Inject() (
         }
       }
     }
-  }
 
   override def rollback(): Future[Unit] =
     Future.unit

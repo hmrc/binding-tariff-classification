@@ -649,7 +649,7 @@ class CaseMongoRepository @Inject() (
       .map(_.map { doc =>
         val keywordDoc  = doc.get("keyword").asInstanceOf[Document]
         val keywordName = keywordDoc.getString("name")
-        val keyword = Keyword(keywordName)
+        val keyword     = Keyword(keywordName)
 
         val casesJson = Json.parse(doc.toJson) \ "cases"
 
