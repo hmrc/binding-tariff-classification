@@ -16,8 +16,7 @@
 
 package uk.gov.hmrc.bindingtariffclassification.model
 
-object RejectReason extends Enumeration {
-  type RejectReason = Value
-  val APPLICATION_WITHDRAWN, ATAR_RULING_ALREADY_EXISTS, DUPLICATE_APPLICATION, NO_INFO_FROM_TRADER, OTHER = Value
-
-}
+case class ManageKeywordsData(
+  pagedCaseKeywords: Paged[CaseKeyword],
+  pagedKeywords: Paged[Keyword]
+)

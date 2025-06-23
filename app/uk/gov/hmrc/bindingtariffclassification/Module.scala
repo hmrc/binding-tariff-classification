@@ -18,6 +18,7 @@ package uk.gov.hmrc.bindingtariffclassification
 
 import play.api.inject.Binding
 import play.api.{Configuration, Environment}
+import uk.gov.hmrc.bindingtariffclassification.controllers.MigrationController
 import uk.gov.hmrc.bindingtariffclassification.crypto.LocalCrypto
 import uk.gov.hmrc.bindingtariffclassification.migrations.{AddKeywordsMigrationJob, AmendDateOfExtractMigrationJob, MigrationJobs}
 import uk.gov.hmrc.bindingtariffclassification.repository.{CaseMongoRepository, CaseRepository, EncryptedCaseMongoRepository}
@@ -43,7 +44,9 @@ class Module extends play.api.inject.Module {
       bind[ScheduledJobs].toProvider[ScheduledJobProvider],
       bind[MigrationJobs].toProvider[MigrationJobProvider],
       bind[Scheduler].toSelf.eagerly(),
-      repositoryBinding
+      repositoryBinding,
+      // THIS NEEDS TO BE TRIGGERED IN ORDER TO RUN MIGRATION JOBS
+      bind[MigrationController].toSelf.eagerly()
     )
   }
 

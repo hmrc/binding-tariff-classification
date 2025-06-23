@@ -280,6 +280,63 @@ class ReferredDaysElapsedJobTest extends BaseSpec with BeforeAndAfterEach {
       theCasesUpdated.referredDaysElapsed shouldBe 3
     }
 
+    "Update Referred Days Elapsed - Completed case" in {
+      givenNoBankHolidays()
+      givenTodaysDateIs("2019-01-05T00:00:00")
+
+      givenUpdatingACaseReturnsItself()
+      givenAPageOfCases(1, 1, 1, aCaseWith(reference = "reference", createdDate = "2019-01-01T00:00:00"))
+      givenAPageOfEventsFor(
+        "reference",
+        1,
+        1,
+        aStatusChangeWith(date = "2019-01-01T00:00:00", status = CaseStatus.OPEN),
+        aStatusChangeWith(date = "2019-01-02T00:00:00", status = CaseStatus.COMPLETED)
+      )
+
+      await(newJob.execute())
+
+      theCasesUpdated.referredDaysElapsed shouldBe 0
+    }
+
+    "Update Referred Days Elapsed - Cancellation case" in {
+      givenNoBankHolidays()
+      givenTodaysDateIs("2019-01-05T00:00:00")
+
+      givenUpdatingACaseReturnsItself()
+      givenAPageOfCases(1, 1, 1, aCaseWith(reference = "reference", createdDate = "2019-01-01T00:00:00"))
+      givenAPageOfEventsFor(
+        "reference",
+        1,
+        1,
+        aStatusChangeWith(date = "2019-01-01T00:00:00", status = CaseStatus.OPEN),
+        aStatusChangeWith(date = "2019-01-02T00:00:00", status = CaseStatus.CANCELLED)
+      )
+
+      await(newJob.execute())
+
+      theCasesUpdated.referredDaysElapsed shouldBe 0
+    }
+
+    "Update Referred Days Elapsed - Reject case" in {
+      givenNoBankHolidays()
+      givenTodaysDateIs("2019-01-05T00:00:00")
+
+      givenUpdatingACaseReturnsItself()
+      givenAPageOfCases(1, 1, 1, aCaseWith(reference = "reference", createdDate = "2019-01-01T00:00:00"))
+      givenAPageOfEventsFor(
+        "reference",
+        1,
+        1,
+        aStatusChangeWith(date = "2019-01-01T00:00:00", status = CaseStatus.OPEN),
+        aStatusChangeWith(date = "2019-01-02T00:00:00", status = CaseStatus.REJECTED)
+      )
+
+      await(newJob.execute())
+
+      theCasesUpdated.referredDaysElapsed shouldBe 0
+    }
+
     "Update Referred Days Elapsed - for multiple cases" in {
       givenNoBankHolidays()
       givenTodaysDateIs("2019-01-01T00:00:00")
