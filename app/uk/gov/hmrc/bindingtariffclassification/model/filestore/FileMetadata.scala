@@ -33,5 +33,5 @@ case class FileMetadata(
 )
 
 object FileMetadata {
-  implicit val format: OFormat[FileMetadata] = Json.format[FileMetadata]
+  given format: OFormat[FileMetadata] = Json.format[FileMetadata]
 }

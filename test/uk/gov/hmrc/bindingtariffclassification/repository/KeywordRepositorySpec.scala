@@ -23,6 +23,7 @@ import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
 import uk.gov.hmrc.bindingtariffclassification.config.AppConfig
 import uk.gov.hmrc.bindingtariffclassification.model._
 import uk.gov.hmrc.mongo.test.MongoSupport
+import org.mongodb.scala.ObservableFuture
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -43,7 +44,7 @@ class KeywordRepositorySpec
 
   private val repository = createMongoRepo
 
-  private lazy val appConfig = fakeApplication.injector.instanceOf[AppConfig]
+  private lazy val appConfig = fakeApplication().injector.instanceOf[AppConfig]
 
   private def createMongoRepo =
     new KeywordsMongoRepository(mongoComponent, appConfig)
@@ -53,11 +54,13 @@ class KeywordRepositorySpec
     await(repository.collection.deleteMany(Filters.empty()).toFuture())
     await(repository.ensureIndexes())
     collectionSize shouldBe 0
+    ()
   }
 
   override def afterAll(): Unit = {
     super.afterAll()
     await(repository.collection.deleteMany(Filters.empty()).toFuture())
+    ()
   }
 
   private def collectionSize: Int =
@@ -65,8 +68,7 @@ class KeywordRepositorySpec
       repository.collection
         .countDocuments()
         .toFuture()
-        .map(_.toInt)
-    )
+    ).head.toInt
 
   "insert" should {
     "insert a new document in the collection" in {

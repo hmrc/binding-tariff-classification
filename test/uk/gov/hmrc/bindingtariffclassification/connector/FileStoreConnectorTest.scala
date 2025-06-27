@@ -16,8 +16,8 @@
 
 package uk.gov.hmrc.bindingtariffclassification.connector
 
-import com.github.tomakehurst.wiremock.client.WireMock._
-import org.mockito.BDDMockito.given
+import com.github.tomakehurst.wiremock.client.WireMock.*
+import org.mockito.Mockito.when
 import play.api.http.Status.{BAD_GATEWAY, NO_CONTENT, OK}
 import play.api.libs.json.Json
 import uk.gov.hmrc.bindingtariffclassification.base.BaseSpec
@@ -35,18 +35,18 @@ class FileStoreConnectorTest extends BaseSpec with WiremockTestServer with HttpC
 
   private val config = mock[AppConfig]
 
-  private implicit val headers: HeaderCarrier = HeaderCarrier()
+  private given headers: HeaderCarrier = HeaderCarrier()
 
-  private val appConfig = fakeApplication.injector.instanceOf[AppConfig]
+  private val appConfig = fakeApplication().injector.instanceOf[AppConfig]
 
-  private val connector = new FileStoreConnector(config, httpClientV2, new TestMetrics)
+  private val connector = new FileStoreConnector(config, httpClientV2, (new TestMetrics).defaultRegistry)
 
-  private val maxUriLength = 2048
+  private val maxUriLength = 2048L
 
   private trait Test {
-    given(config.fileStoreUrl).willReturn(wireMockUrl)
-    given(config.maxUriLength).willReturn(maxUriLength)
-    given(config.authorization).willReturn(appConfig.authorization)
+    when(config.fileStoreUrl).thenReturn(wireMockUrl)
+    when(config.maxUriLength).thenReturn(maxUriLength)
+    when(config.authorization).thenReturn(appConfig.authorization)
   }
 
   private val uploadedFile: FileMetadata = FileMetadata(

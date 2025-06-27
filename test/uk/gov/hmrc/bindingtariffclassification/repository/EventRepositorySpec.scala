@@ -26,6 +26,7 @@ import uk.gov.hmrc.bindingtariffclassification.model._
 import uk.gov.hmrc.bindingtariffclassification.utils.RandomGenerator
 import uk.gov.hmrc.mongo.test.MongoSupport
 import util.EventData._
+import org.mongodb.scala.SingleObservableFuture
 
 import java.time.temporal.ChronoUnit
 import java.time.{Instant, LocalDate, ZoneOffset}
@@ -42,7 +43,7 @@ class EventRepositorySpec
 
   private val repository = createMongoRepo
 
-  private lazy val appConfig = fakeApplication.injector.instanceOf[AppConfig]
+  private lazy val appConfig = fakeApplication().injector.instanceOf[AppConfig]
 
   private def createMongoRepo =
     new EventMongoRepository(mongoComponent, appConfig)
@@ -52,7 +53,8 @@ class EventRepositorySpec
   override def beforeEach(): Unit = {
     super.beforeEach()
     await(repository.deleteAll())
-    await(repository.ensureIndexes)
+    await(repository.ensureIndexes())
+    ()
   }
 
   override def afterAll(): Unit = {
