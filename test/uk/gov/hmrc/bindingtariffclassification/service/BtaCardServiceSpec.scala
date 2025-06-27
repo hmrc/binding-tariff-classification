@@ -51,11 +51,11 @@ class BtaCardServiceSpec extends BaseSpec {
           )
 
         whenReady(service.generateBtaCard(eori)) { res =>
-          res.eori                        shouldBe eori
-          res.applications.get.total      shouldBe 4
-          res.applications.get.actionable shouldBe 2
-          res.rulings.get.total           shouldBe 8
-          res.rulings.get.expiring        shouldBe 6
+          res.eori.shouldBe(eori)
+          res.applications.get.total.shouldBe(4)
+          res.applications.get.actionable.shouldBe(2)
+          res.rulings.get.total.shouldBe(8)
+          res.rulings.get.expiring.shouldBe(6)
         }
       }
 
@@ -75,11 +75,11 @@ class BtaCardServiceSpec extends BaseSpec {
           )
 
         whenReady(service.generateBtaCard(eori)) { res =>
-          res.eori                        shouldBe eori
-          res.applications.get.total      shouldBe 5
-          res.applications.get.actionable shouldBe 5
-          res.rulings.get.total           shouldBe 1
-          res.rulings.get.expiring        shouldBe 1
+          res.eori.shouldBe(eori)
+          res.applications.get.total.shouldBe(5)
+          res.applications.get.actionable.shouldBe(5)
+          res.rulings.get.total.shouldBe(1)
+          res.rulings.get.expiring.shouldBe(1)
         }
       }
 
@@ -99,11 +99,11 @@ class BtaCardServiceSpec extends BaseSpec {
           )
 
         whenReady(service.generateBtaCard(eori)) { res =>
-          res.eori                        shouldBe eori
-          res.applications.get.total      shouldBe 1
-          res.applications.get.actionable shouldBe 0
-          res.rulings.get.total           shouldBe 1
-          res.rulings.get.expiring        shouldBe 1
+          res.eori.shouldBe(eori)
+          res.applications.get.total.shouldBe(1)
+          res.applications.get.actionable.shouldBe(0)
+          res.rulings.get.total.shouldBe(1)
+          res.rulings.get.expiring.shouldBe(1)
         }
       }
 
@@ -123,11 +123,11 @@ class BtaCardServiceSpec extends BaseSpec {
           )
 
         whenReady(service.generateBtaCard(eori)) { res =>
-          res.eori                        shouldBe eori
-          res.applications.get.total      shouldBe 1
-          res.applications.get.actionable shouldBe 0
-          res.rulings.get.total           shouldBe 1
-          res.rulings.get.expiring        shouldBe 0
+          res.eori.shouldBe(eori)
+          res.applications.get.total.shouldBe(1)
+          res.applications.get.actionable.shouldBe(0)
+          res.rulings.get.total.shouldBe(1)
+          res.rulings.get.expiring.shouldBe(0)
         }
       }
     }
@@ -148,10 +148,10 @@ class BtaCardServiceSpec extends BaseSpec {
         )
 
       whenReady(service.generateBtaCard(eori)) { res =>
-        res.eori                        shouldBe eori
-        res.applications.get.total      shouldBe 5
-        res.applications.get.actionable shouldBe 5
-        res.rulings                     shouldBe None
+        res.eori.shouldBe(eori)
+        res.applications.get.total.shouldBe(5)
+        res.applications.get.actionable.shouldBe(5)
+        res.rulings.shouldBe(None)
       }
     }
 
@@ -171,10 +171,10 @@ class BtaCardServiceSpec extends BaseSpec {
         )
 
       whenReady(service.generateBtaCard(eori)) { res =>
-        res.eori                 shouldBe eori
-        res.applications         shouldBe None
-        res.rulings.get.total    shouldBe 1
-        res.rulings.get.expiring shouldBe 1
+        res.eori.shouldBe(eori)
+        res.applications.shouldBe(None)
+        res.rulings.get.total.shouldBe(1)
+        res.rulings.get.expiring.shouldBe(1)
       }
     }
 
@@ -194,9 +194,9 @@ class BtaCardServiceSpec extends BaseSpec {
         )
 
       whenReady(service.generateBtaCard(eori)) { res =>
-        res.eori         shouldBe eori
-        res.applications shouldBe None
-        res.rulings      shouldBe None
+        res.eori.shouldBe(eori)
+        res.applications.shouldBe(None)
+        res.rulings.shouldBe(None)
       }
     }
 
@@ -217,10 +217,10 @@ class BtaCardServiceSpec extends BaseSpec {
         )
 
       whenReady(service.generateBtaCard(eori)) { res =>
-        res.eori                 shouldBe eori
-        res.applications         shouldBe None
-        res.rulings.get.total    shouldBe 3
-        res.rulings.get.expiring shouldBe 1
+        res.eori.shouldBe(eori)
+        res.applications.shouldBe(None)
+        res.rulings.get.total.shouldBe(3)
+        res.rulings.get.expiring.shouldBe(1)
       }
     }
 
@@ -242,10 +242,10 @@ class BtaCardServiceSpec extends BaseSpec {
         )
 
       whenReady(service.generateBtaCard(eori)) { res =>
-        res.eori                 shouldBe eori
-        res.applications         shouldBe None
-        res.rulings.get.total    shouldBe 3
-        res.rulings.get.expiring shouldBe 0
+        res.eori.shouldBe(eori)
+        res.applications.shouldBe(None)
+        res.rulings.get.total.shouldBe(3)
+        res.rulings.get.expiring.shouldBe(0)
       }
     }
   }

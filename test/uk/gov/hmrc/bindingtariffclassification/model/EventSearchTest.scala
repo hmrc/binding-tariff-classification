@@ -20,7 +20,6 @@ import uk.gov.hmrc.bindingtariffclassification.base.BaseSpec
 
 import java.net.URLDecoder
 import java.time.Instant
-import scala.concurrent.ExecutionContext.Implicits.global
 
 class EventSearchTest extends BaseSpec {
 

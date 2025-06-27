@@ -38,7 +38,7 @@ trait WiremockHelper {
   lazy val wmConfig: WireMockConfiguration = wireMockConfig().port(wiremockPort)
   val wireMockServer                       = new WireMockServer(wmConfig)
 
-  implicit val system: ActorSystem = ActorSystem("my-system")
+  given system: ActorSystem = ActorSystem("my-system")
 
   def startWiremock(): Unit = {
     WireMock.configureFor(wiremockHost, wiremockPort)
