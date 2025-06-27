@@ -34,7 +34,7 @@ class ModuleTest extends BaseSpec with BeforeAndAfterEach with PlayRunners {
     new GuiceApplicationBuilder()
       .bindings(new Module)
       .overrides(bind[Metrics].toInstance(new TestMetrics))
-      .configure(conf: _*)
+      .configure(conf*)
       .build()
 
   "Module 'bind" should {

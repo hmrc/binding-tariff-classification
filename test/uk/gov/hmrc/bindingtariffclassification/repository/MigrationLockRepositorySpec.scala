@@ -22,6 +22,7 @@ import org.scalatest.concurrent.Eventually
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
 import uk.gov.hmrc.bindingtariffclassification.model._
 import uk.gov.hmrc.mongo.test.MongoSupport
+import org.mongodb.scala.SingleObservableFuture
 
 import java.time.{LocalDate, ZoneOffset, ZonedDateTime}
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -41,8 +42,9 @@ class MigrationLockRepositorySpec
   override def beforeEach(): Unit = {
     super.beforeEach()
     await(repository.deleteAll())
-    await(repository.ensureIndexes)
+    await(repository.ensureIndexes())
     collectionSize shouldBe 0
+    ()
   }
 
   override def afterAll(): Unit = {

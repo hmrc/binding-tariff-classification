@@ -36,7 +36,7 @@ object CaseSort {
 
       override def bind(key: String, requestParams: Map[String, Seq[String]]): Option[Either[String, CaseSort]] = {
         import uk.gov.hmrc.bindingtariffclassification.model.utils.BinderUtil._
-        implicit val rp: Map[String, Seq[String]] = requestParams
+        given rp: Map[String, Seq[String]] = requestParams
 
         val field: Option[Set[CaseSortField]] =
           params(sortByKey).map(_.map(bindSortField).filter(_.isDefined).map(_.get))

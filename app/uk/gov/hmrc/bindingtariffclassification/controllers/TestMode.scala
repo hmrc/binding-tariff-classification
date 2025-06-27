@@ -26,7 +26,7 @@ object TestMode {
 
   def actionFilter(appConfig: AppConfig, bodyParser: BodyParsers.Default)(implicit
     ec: ExecutionContext
-  ): ActionBuilder[Request, AnyContent] with ActionFilter[Request] =
+  ): ActionBuilder[Request, AnyContent] & ActionFilter[Request] =
     new ActionBuilder[Request, AnyContent] with ActionFilter[Request] {
 
       override protected def filter[A](request: Request[A]): Future[Option[Result]] = Future.successful {

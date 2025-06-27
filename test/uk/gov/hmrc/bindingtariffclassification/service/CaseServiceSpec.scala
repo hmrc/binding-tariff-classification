@@ -65,14 +65,14 @@ class CaseServiceSpec extends BaseSpec with BeforeAndAfterEach {
       "Case is an ATaR" in {
         when(sequenceRepository.incrementAndGetByName("ATaR Case Reference"))
           .thenReturn(successful(Sequence("ATaR Case Reference", 10)))
-        when(appConfig.atarCaseReferenceOffset).thenReturn(1000)
+        when(appConfig.atarCaseReferenceOffset).thenReturn(1000L)
         await(service.nextCaseReference(ApplicationType.BTI)) shouldBe "1010"
       }
 
       "Case is a Liability" in {
         when(sequenceRepository.incrementAndGetByName("Other Case Reference"))
           .thenReturn(successful(Sequence("Other Case Reference", 5)))
-        when(appConfig.otherCaseReferenceOffset).thenReturn(2000)
+        when(appConfig.otherCaseReferenceOffset).thenReturn(2000L)
         await(service.nextCaseReference(ApplicationType.LIABILITY_ORDER)) shouldBe "2005"
       }
     }

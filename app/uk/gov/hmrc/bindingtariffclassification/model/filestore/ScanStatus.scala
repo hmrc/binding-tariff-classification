@@ -23,5 +23,5 @@ object ScanStatus extends Enumeration {
   type ScanStatus = Value
   val READY, FAILED = Value
 
-  implicit val format: Format[ScanStatus.Value] = EnumJson.format(ScanStatus)
+  given format: Format[ScanStatus.Value] = EnumJson.format(ScanStatus)
 }

@@ -49,7 +49,7 @@ class FileStoreCleanupJob @Inject() (
   override val lockId: String                 = "filestore_cleanup"
   override val ttl: duration.Duration         = 5.minutes
 
-  private implicit val carrier: HeaderCarrier = HeaderCarrier()
+  private given carrier: HeaderCarrier = HeaderCarrier()
   private lazy val criteria = FileSearch(
     published = Some(true)
   )

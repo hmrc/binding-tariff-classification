@@ -212,6 +212,8 @@ object CaseData {
     goodsDescription = "desc"
   )
 
+  private def dateToInstant(localDate: LocalDate) = localDate.atStartOfDay(ZoneId.systemDefault()).toInstant
+
   def createBtaCardData(
     eori: String,
     totalApplications: Int,
@@ -224,8 +226,7 @@ object CaseData {
     if (actionableApplications > totalApplications || expiringRulings > totalRulings) {
       List.empty
     } else {
-      def dateToInstant(localDate: LocalDate) = localDate.atStartOfDay(ZoneId.systemDefault()).toInstant
-      val now                                 = LocalDate.now()
+      val now         = LocalDate.now()
       val actionableA = (1 to actionableApplications).map(_ => createCase(status = CaseStatus.REFERRED))
       val totalA = (1 to (totalApplications - actionableApplications)).map(_ => createCase(status = CaseStatus.OPEN))
       val expiringR = (1 to expiringRulings).map { _ =>
