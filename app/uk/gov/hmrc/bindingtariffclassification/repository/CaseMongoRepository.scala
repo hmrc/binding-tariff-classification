@@ -600,7 +600,7 @@ class CaseMongoRepository @Inject() (
     pagedResults(futureCount, runAggregation, pagination)
   }
 
-  override def getGroupedCasesByKeyword(pagination: Pagination): Future[Paged[CaseKeyword]] = {
+  def getGroupedCasesByKeyword(pagination: Pagination): Future[Paged[CaseKeyword]] = {
     val pipeline: Seq[Bson] = Seq(
       addFields(
         Field("team", "$queueId"),
