@@ -38,16 +38,14 @@ import uk.gov.hmrc.bindingtariffclassification.repository.BaseMongoOperations.pa
 import uk.gov.hmrc.bindingtariffclassification.sort.SortDirection
 import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.play.json.Codecs.toBson
-import uk.gov.hmrc.mongo.play.json.{Codecs, PlayMongoRepository}
+import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
 import org.bson.{BsonInvalidOperationException, Document}
 import uk.gov.hmrc.bindingtariffclassification.model.LiabilityStatus.LiabilityStatus
 
 import java.time.Instant
+import java.util
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
-import java.util.Arrays
-import scala.jdk.CollectionConverters._
-import com.mongodb.client.model.Sorts
 
 @Singleton
 class CaseMongoRepository @Inject() (
@@ -624,11 +622,6 @@ class CaseMongoRepository @Inject() (
         )
       ),
       unwind("$keywords"),
-      sort(
-        Sorts.orderBy(
-          Sorts.ascending("keywords")
-        )
-      ),
       group(
         "$keywords",
         push(
@@ -645,8 +638,13 @@ class CaseMongoRepository @Inject() (
         ),
         sum("caseCount", 1)
       ),
-      addFields(Field("keyword", new Document("name", "$_id"))),
-      project(fields(excludeId(), include("keyword", "cases", "caseCount")))
+      addFields(
+        Field("cases", new Document("$slice", util.Arrays.asList("$cases", 1000))),
+        Field("keyword", new Document("name", "$_id"))
+      ),
+      project(fields(excludeId(), include("keyword", "cases", "caseCount"))),
+      skip((pagination.page - 1) * pagination.pageSize),
+      limit(pagination.pageSize)
     )
 
     val countPipeline: Seq[Bson] = Seq(
