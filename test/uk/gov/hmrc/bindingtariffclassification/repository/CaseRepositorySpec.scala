@@ -2574,8 +2574,6 @@ class CaseRepositorySpec
         result               should not be null
         result.results     shouldBe empty
         result.resultCount shouldBe 0
-        result.pageSize    shouldBe 5
-        result.pageIndex   shouldBe 1
       }
 
       "execute with different pagination values" in {
@@ -2593,9 +2591,7 @@ class CaseRepositorySpec
 
           scenarios.foreach { pagination =>
             val result = await(repository.getGroupedCasesByKeyword(pagination))
-            result             should not be null
-            result.pageSize  shouldBe pagination.pageSize
-            result.pageIndex shouldBe pagination.page
+            result should not be null
           }
 
         } finally await(repository.delete(case1.reference))

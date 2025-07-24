@@ -47,7 +47,7 @@ class KeywordService @Inject() (
   def loadKeywordManagementData(pagination: Pagination): Future[ManageKeywordsData] =
     for {
       caseKeywordsPaged <- caseRepository.getGroupedCasesByKeyword(pagination)
-      pagedKeywords <- keywordRepository.findAll(Pagination(pageSize = Int.MaxValue))
+      pagedKeywords     <- keywordRepository.findAll(Pagination(pageSize = Int.MaxValue))
     } yield ManageKeywordsData(
       pagedCaseKeywords = caseKeywordsPaged,
       pagedKeywords = pagedKeywords

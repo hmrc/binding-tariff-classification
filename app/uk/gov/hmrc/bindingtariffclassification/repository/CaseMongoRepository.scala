@@ -38,11 +38,12 @@ import uk.gov.hmrc.bindingtariffclassification.repository.BaseMongoOperations.pa
 import uk.gov.hmrc.bindingtariffclassification.sort.SortDirection
 import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.play.json.Codecs.toBson
-import uk.gov.hmrc.mongo.play.json.{Codecs, PlayMongoRepository}
-import org.bson.Document
+import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
+import org.bson.{BsonInvalidOperationException, Document}
 import uk.gov.hmrc.bindingtariffclassification.model.LiabilityStatus.LiabilityStatus
 
 import java.time.Instant
+import java.util
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -634,62 +635,82 @@ class CaseMongoRepository @Inject() (
             .append("caseType", "$caseType")
             .append("daysElapsed", "$daysElapsed")
             .append("liabilityStatus", "$liabilityStatus")
-        )
+        ),
+        sum("caseCount", 1)
       ),
-      addFields(Field("keyword", new Document("name", "$_id"))),
-      project(fields(excludeId(), include("keyword", "cases"))),
+      addFields(
+        Field("cases", new Document("$slice", util.Arrays.asList("$cases", 1000))),
+        Field("keyword", new Document("name", "$_id"))
+      ),
+      project(fields(excludeId(), include("keyword", "cases", "caseCount"))),
       skip((pagination.page - 1) * pagination.pageSize),
       limit(pagination.pageSize)
     )
 
-    val aggregationFut: Future[Seq[CaseKeyword]] = collection
-      .aggregate[Document](pipeline)
-      .allowDiskUse(true)
-      .toFuture()
-      .map(_.map { doc =>
-        val keywordDoc  = doc.get("keyword").asInstanceOf[Document]
-        val keywordName = keywordDoc.getString("name")
-        val keyword     = Keyword(keywordName)
-
-        val casesJson = Json.parse(doc.toJson) \ "cases"
-
-        val cases = casesJson.validate[Seq[CaseHeader]] match {
-          case JsSuccess(caseHeaders, _) => caseHeaders.toList
-          case JsError(errors) =>
-            casesJson
-              .asOpt[Seq[JsObject]]
-              .getOrElse(Seq.empty)
-              .map { caseObj =>
-                CaseHeader(
-                  reference = (caseObj \ "reference").as[String],
-                  assignee = (caseObj \ "assignee").asOpt[Operator],
-                  team = (caseObj \ "team").asOpt[String],
-                  goodsName = (caseObj \ "goodsName").asOpt[String],
-                  caseType = (caseObj \ "caseType").asOpt[ApplicationType.Value].getOrElse(ApplicationType.BTI),
-                  status = (caseObj \ "status").as[CaseStatus.Value],
-                  daysElapsed = (caseObj \ "daysElapsed").as[Long],
-                  liabilityStatus = (caseObj \ "liabilityStatus").asOpt[LiabilityStatus]
-                )
-              }
-              .toList
-        }
-
-        CaseKeyword(keyword, cases)
-      })
-
     val countPipeline: Seq[Bson] = Seq(
       unwind("$keywords"),
-      group("$keywords", push("cases", "$$ROOT")),
+      group("$keywords"),
       count("resultCount")
     )
 
-    val futureCount: Future[Option[BsonDocument]] = collection
+    val aggregationFuture: Future[Seq[CaseKeyword]] = collection
+      .aggregate[Document](pipeline)
+      .allowDiskUse(true)
+      .toFuture()
+      .map(_.map(convertDocumentToCaseKeyword))
+
+    val countFuture: Future[Option[BsonDocument]] = collection
       .aggregate[BsonDocument](countPipeline)
       .allowDiskUse(true)
       .headOption()
 
-    pagedResults(futureCount, aggregationFut, pagination)
+    for {
+      caseKeywords <- aggregationFuture
+      totalCount   <- countFuture
+    } yield {
+      val total = totalCount
+        .map { doc =>
+          try
+            doc.getInt64("resultCount").getValue
+          catch {
+            case _: BsonInvalidOperationException => doc.getInt32("resultCount").getValue.toLong
+          }
+        }
+        .getOrElse(0L)
+      Paged(caseKeywords, pagination.page, caseKeywords.size, total)
+    }
   }
+
+  def convertDocumentToCaseKeyword(doc: Document): CaseKeyword = {
+    val keywordDoc  = doc.get("keyword").asInstanceOf[Document]
+    val keywordName = keywordDoc.getString("name")
+    val keyword     = Keyword(keywordName)
+
+    val casesJson = Json.parse(doc.toJson) \ "cases"
+    val cases = casesJson.validate[Seq[CaseHeader]] match {
+      case JsSuccess(caseHeaders, _) => caseHeaders.toList
+      case JsError(errors) =>
+        casesJson
+          .asOpt[Seq[JsObject]]
+          .getOrElse(Seq.empty)
+          .map(convertJsObjectToCaseHeader)
+          .toList
+    }
+
+    CaseKeyword(keyword, cases)
+  }
+
+  def convertJsObjectToCaseHeader(caseObj: JsObject): CaseHeader =
+    CaseHeader(
+      reference = (caseObj \ "reference").as[String],
+      assignee = (caseObj \ "assignee").asOpt[Operator],
+      team = (caseObj \ "team").asOpt[String],
+      goodsName = (caseObj \ "goodsName").asOpt[String],
+      caseType = (caseObj \ "caseType").asOpt[ApplicationType.Value].getOrElse(ApplicationType.BTI),
+      status = (caseObj \ "status").as[CaseStatus.Value],
+      daysElapsed = (caseObj \ "daysElapsed").as[Long],
+      liabilityStatus = (caseObj \ "liabilityStatus").asOpt[LiabilityStatus]
+    )
 }
 
 object CaseMongoRepository {
