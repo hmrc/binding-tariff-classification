@@ -41,12 +41,13 @@ trait BaseMongoOperations[T] {
     ec: ExecutionContext,
     ct: ClassTag[T]
   ): Future[Paged[T]] = {
-    val count = countDocument(filter)
+    val count        = countDocument(filter)
+    val safePageSize = if (pagination.pageSize == Integer.MAX_VALUE) Integer.MAX_VALUE - 1 else pagination.pageSize
     val results = collection
       .find(filter)
       .sort(sort)
       .skip((pagination.page - 1) * pagination.pageSize)
-      .limit(pagination.pageSize)
+      .limit(safePageSize)
       .toFuture()
 
     (count, results).mapN { case (resultsSize, events) =>
