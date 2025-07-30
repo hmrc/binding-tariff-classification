@@ -17,10 +17,8 @@
 package uk.gov.hmrc.bindingtariffclassification.migrations
 
 import org.mockito.ArgumentMatchers._
-import org.mockito.BDDMockito._
 import org.mockito.Mockito._
 import org.scalatest.BeforeAndAfterEach
-import play.api.test.Helpers._
 import uk.gov.hmrc.bindingtariffclassification.base.BaseSpec
 import uk.gov.hmrc.bindingtariffclassification.model._
 import uk.gov.hmrc.bindingtariffclassification.service.KeywordService
@@ -40,8 +38,10 @@ class AddKeywordsMigrationJobSpec extends BaseSpec with BeforeAndAfterEach {
     val addKeywordsJob = new AddKeywordsMigrationJob(keywordService)
 
     "not add keywords if any already exist" in {
-      given(keywordService.findAll(any[Pagination])) willReturn Future.successful(
-        Paged(Seq(Keyword("FOR STORAGE OF GOODS", approved = true)))
+      when(keywordService.findAll(any[Pagination])).thenReturn(
+        Future.successful(
+          Paged(Seq(Keyword("FOR STORAGE OF GOODS", approved = true)))
+        )
       )
 
       await(addKeywordsJob.execute())
@@ -51,8 +51,8 @@ class AddKeywordsMigrationJobSpec extends BaseSpec with BeforeAndAfterEach {
 
     "add keywords if they are missing" in {
       val noOfInvocations: Int = 10752
-      given(keywordService.findAll(any[Pagination])) willReturn Future.successful(Paged.empty[Keyword])
-      given(keywordService.addKeyword(any[Keyword])) willReturn Future.successful(Keyword("foo"))
+      when(keywordService.findAll(any[Pagination])).thenReturn(Future.successful(Paged.empty[Keyword]))
+      when(keywordService.addKeyword(any[Keyword])).thenReturn(Future.successful(Keyword("foo")))
 
       await(addKeywordsJob.execute())
 

@@ -58,9 +58,6 @@ class KeywordServiceSpec extends BaseSpec with BeforeAndAfterEach {
     None
   )
 
-  private val caseKeyword  = CaseKeyword(Keyword("tool"), List(caseHeader))
-  private val caseKeyword2 = CaseKeyword(Keyword("bike"), List(caseHeader))
-
   private val service =
     new KeywordService(keywordRepository, caseRepository)
 
@@ -156,10 +153,7 @@ class KeywordServiceSpec extends BaseSpec with BeforeAndAfterEach {
   }
 
   "fetchCaseKeywordAlternative" should {
-    val keyword1      = Keyword("KEYWORD1", approved = true)
-    val keyword2      = Keyword("KEYWORD2", approved = true)
-    val pagination    = Pagination()
-    val pagedKeywords = Paged(Seq(keyword1, keyword2), pagination, 2)
+    val pagination = Pagination()
 
     val btApplication = mock[BTIApplication]
     when(btApplication.goodName).thenReturn("Goods1")
@@ -169,7 +163,7 @@ class KeywordServiceSpec extends BaseSpec with BeforeAndAfterEach {
     when(case1.assignee).thenReturn(Some(Operator("op1", Option("name1"))))
     when(case1.queueId).thenReturn(Some("queue1"))
     when(case1.status).thenReturn(CaseStatus.OPEN)
-    when(case1.daysElapsed).thenReturn(10)
+    when(case1.daysElapsed).thenReturn(10L)
     when(case1.application).thenReturn(btApplication)
 
     val case2 = mock[Case]
@@ -177,10 +171,8 @@ class KeywordServiceSpec extends BaseSpec with BeforeAndAfterEach {
     when(case2.assignee).thenReturn(Some(Operator("op2", Option("name2"))))
     when(case2.queueId).thenReturn(Some("queue2"))
     when(case2.status).thenReturn(CaseStatus.COMPLETED)
-    when(case2.daysElapsed).thenReturn(20)
+    when(case2.daysElapsed).thenReturn(20L)
     when(case2.application).thenReturn(btApplication)
-
-    val serviceWithSpy = spy(service)
 
     "fetch keywords and their associated cases" in {
       val pagedKeywords = Paged(Seq(Keyword("KEYWORD1"), Keyword("KEYWORD2")), pagination, 2)

@@ -25,6 +25,7 @@ import play.api.i18n.Lang.logger
 import uk.gov.hmrc.bindingtariffclassification.model.{JobRunEvent, MongoFormatters}
 import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
+import org.mongodb.scala.SingleObservableFuture
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}

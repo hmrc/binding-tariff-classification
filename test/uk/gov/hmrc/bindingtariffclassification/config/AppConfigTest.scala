@@ -121,8 +121,8 @@ class AppConfigTest extends BaseSpec {
     }
 
     "build 'case reference configuration" in {
-      configWith("atar-case-reference-offset" -> "10").atarCaseReferenceOffset   shouldBe 10
-      configWith("other-case-reference-offset" -> "20").otherCaseReferenceOffset shouldBe 20
+      configWith("atar-case-reference-offset" -> "10").atarCaseReferenceOffset   shouldBe 10L
+      configWith("other-case-reference-offset" -> "20").otherCaseReferenceOffset shouldBe 20L
     }
   }
 }

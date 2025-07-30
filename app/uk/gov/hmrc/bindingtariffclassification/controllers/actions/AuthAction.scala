@@ -42,7 +42,7 @@ class AuthAction @Inject() (override val authConnector: AuthConnector, val parse
   override def invokeBlock[A](request: Request[A], block: BtaRequest[A] => Future[Result]): Future[Result] =
     request.headers.get(HeaderNames.authorisation) match {
       case Some(authHeader) =>
-        implicit val hc: HeaderCarrier = HeaderCarrierConverter
+        given hc: HeaderCarrier = HeaderCarrierConverter
           .fromRequestAndSession(request, request.session)
           .copy(authorization = Some(Authorization(authHeader)))
         retrievalData(request, block)

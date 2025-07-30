@@ -42,7 +42,7 @@ trait CaseRepository {
 
   def summaryReport(report: SummaryReport, pagination: Pagination): Future[Paged[ResultGroup]]
 
-  def caseReport(report: CaseReport, pagination: Pagination): Future[Paged[Map[String, ReportResultField[_]]]]
+  def caseReport(report: CaseReport, pagination: Pagination): Future[Paged[Map[String, ReportResultField[?]]]]
 
   def queueReport(report: QueueReport, pagination: Pagination): Future[Paged[QueueResultGroup]]
 }
