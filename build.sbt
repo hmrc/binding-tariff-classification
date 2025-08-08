@@ -18,7 +18,7 @@ lazy val microservice = (project in file("."))
   .settings(scalacSettings)
 
 lazy val scalacSettings = Def.settings(
-  scalacOptions ++= Seq("-Wconf:src=routes/.*:s", "-Wconf:msg=Flag.*repeatedly:s"),
+  scalacOptions ++= Seq("-Wconf:src=routes/.*:s", "-Wconf:msg=Flag.*repeatedly:s", "-Xno-enrich-error-messages"),
   scalacOptions ~= { opts =>
     opts.filterNot(
       Set(
