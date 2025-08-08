@@ -31,8 +31,8 @@ class KeywordServiceSpec extends BaseSpec with BeforeAndAfterEach {
   private val keyword      = mock[Keyword]
   private val addedKeyword = mock[Keyword]
 
-  private val keywordRepository = mock[KeywordsRepository]
-  private val caseRepository    = mock[CaseRepository]
+  private val keywordRepository      = mock[KeywordsRepository]
+  private val caseKeywordAggregation = mock[CaseKeywordMongoView]
 
   private val pagination = mock[Pagination]
 
@@ -47,19 +47,11 @@ class KeywordServiceSpec extends BaseSpec with BeforeAndAfterEach {
     None
   )
 
-  private val caseHeader2 = CaseHeader(
-    reference = "8888888888",
-    Some(Operator("1", None, None, CLASSIFICATION_OFFICER, List(), List())),
-    Some("4"),
-    Some("Bicycle"),
-    ApplicationType.BTI,
-    CaseStatus.COMPLETED,
-    0,
-    None
-  )
+  private val caseKeyword  = CaseKeyword(Keyword("tool"), List(caseHeader))
+  private val caseKeyword2 = CaseKeyword(Keyword("bike"), List(caseHeader))
 
   private val service =
-    new KeywordService(keywordRepository, caseRepository)
+    new KeywordService(keywordRepository, caseKeywordAggregation)
 
   private final val emulatedFailure = new RuntimeException("Emulated failure.")
 
@@ -152,66 +144,20 @@ class KeywordServiceSpec extends BaseSpec with BeforeAndAfterEach {
     }
   }
 
-  "fetchCaseKeywordAlternative" should {
-    val pagination = Pagination()
+  "fetchCaseKeywords" should {
+    "run the aggregation and return the results" in {
+      when(caseKeywordAggregation.fetchKeywordsFromCases(pagination))
+        .thenReturn(successful(Paged(Seq(caseKeyword, caseKeyword2))))
 
-    val btApplication = mock[BTIApplication]
-    when(btApplication.goodName).thenReturn("Goods1")
-
-    val case1 = mock[Case]
-    when(case1.reference).thenReturn("REF1")
-    when(case1.assignee).thenReturn(Some(Operator("op1", Option("name1"))))
-    when(case1.queueId).thenReturn(Some("queue1"))
-    when(case1.status).thenReturn(CaseStatus.OPEN)
-    when(case1.daysElapsed).thenReturn(10L)
-    when(case1.application).thenReturn(btApplication)
-
-    val case2 = mock[Case]
-    when(case2.reference).thenReturn("REF2")
-    when(case2.assignee).thenReturn(Some(Operator("op2", Option("name2"))))
-    when(case2.queueId).thenReturn(Some("queue2"))
-    when(case2.status).thenReturn(CaseStatus.COMPLETED)
-    when(case2.daysElapsed).thenReturn(20L)
-    when(case2.application).thenReturn(btApplication)
-
-    "fetch keywords and their associated cases" in {
-      val pagedKeywords = Paged(Seq(Keyword("KEYWORD1"), Keyword("KEYWORD2")), pagination, 2)
-
-      val caseKeyword1      = CaseKeyword(Keyword("KEYWORD1"), List(caseHeader))
-      val caseKeyword2      = CaseKeyword(Keyword("KEYWORD2"), List(caseHeader2))
-      val pagedCaseKeywords = Paged(Seq(caseKeyword1, caseKeyword2), pagination, 2)
-
-      when(keywordRepository.findAll(any[Pagination])).thenReturn(successful(pagedKeywords))
-      when(caseRepository.getGroupedCasesByKeyword(pagination)).thenReturn(successful(pagedCaseKeywords))
-
-      val result = await(service.loadKeywordManagementData(pagination))
-
-      result.pagedKeywords                               shouldBe pagedKeywords
-      result.pagedCaseKeywords.results.size              shouldBe 2
-      result.pagedCaseKeywords.results.map(_.keyword.name) should contain allOf ("KEYWORD1", "KEYWORD2")
-
-      verify(keywordRepository).findAll(any[Pagination])
-      verify(caseRepository).getGroupedCasesByKeyword(pagination)
+      await(service.fetchCaseKeywords(pagination)) shouldBe Paged(Seq(caseKeyword, caseKeyword2))
     }
 
-    "handle empty keyword list" in {
-      val emptyPagedKeywords     = Paged(Seq.empty[Keyword], pagination, 0)
-      val emptyPagedCaseKeywords = Paged(Seq.empty[CaseKeyword], pagination, 0)
-
-      when(keywordRepository.findAll(any[Pagination])).thenReturn(successful(emptyPagedKeywords))
-      when(caseRepository.getGroupedCasesByKeyword(pagination)).thenReturn(successful(emptyPagedCaseKeywords))
-
-      val result = await(service.loadKeywordManagementData(pagination))
-
-      result.pagedKeywords             shouldBe emptyPagedKeywords
-      result.pagedCaseKeywords.results shouldBe empty
-    }
-
-    "propagate keyword repository errors" in {
-      when(keywordRepository.findAll(any[Pagination])).thenReturn(failed(emulatedFailure))
+    "propagate any error" in {
+      when(caseKeywordAggregation.fetchKeywordsFromCases(pagination))
+        .thenThrow(emulatedFailure)
 
       val caught = intercept[RuntimeException] {
-        await(service.loadKeywordManagementData(pagination))
+        await(service.fetchCaseKeywords(pagination))
       }
       caught shouldBe emulatedFailure
     }
