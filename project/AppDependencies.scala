@@ -2,7 +2,7 @@ import sbt.*
 
 object AppDependencies {
   private lazy val mongoHmrcVersion = "2.7.0"
-  private lazy val bootstrapVersion = "9.19.0"
+  private lazy val bootstrapVersion = "10.1.0"
   private lazy val pekkoVersion     = "1.1.5"
 
   lazy val compile: Seq[ModuleID] = Seq(
