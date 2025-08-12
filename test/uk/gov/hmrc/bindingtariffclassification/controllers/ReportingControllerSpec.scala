@@ -16,8 +16,8 @@
 
 package uk.gov.hmrc.bindingtariffclassification.controllers
 
-import org.mockito.BDDMockito.given
 import org.mockito.Mockito
+import org.mockito.Mockito.*
 import org.scalatest.BeforeAndAfterEach
 import play.api.http.Status._
 import play.api.test.FakeRequest
@@ -47,7 +47,7 @@ class ReportingControllerSpec extends BaseSpec with BeforeAndAfterEach {
     "delegate to service" in {
       val report = mock[SummaryReport]
 
-      given(reportService.summaryReport(report, Pagination())) willReturn Future.successful(Paged.empty[ResultGroup])
+      when(reportService.summaryReport(report, Pagination())).thenReturn(Future.successful(Paged.empty[ResultGroup]))
 
       val result = controller.summaryReport(report, Pagination())(fakeRequest).futureValue
 
@@ -59,8 +59,10 @@ class ReportingControllerSpec extends BaseSpec with BeforeAndAfterEach {
     "delegate to service" in {
       val report = mock[CaseReport]
 
-      given(reportService.caseReport(report, Pagination())) willReturn Future.successful(
-        Paged.empty[Map[String, ReportResultField[_]]]
+      when(reportService.caseReport(report, Pagination())).thenReturn(
+        Future.successful(
+          Paged.empty[Map[String, ReportResultField[?]]]
+        )
       )
 
       val result = controller.caseReport(report, Pagination())(fakeRequest).futureValue
@@ -73,7 +75,7 @@ class ReportingControllerSpec extends BaseSpec with BeforeAndAfterEach {
     "delegate to service" in {
       val report = mock[QueueReport]
 
-      given(reportService.queueReport(report, Pagination())) willReturn Future.successful(Paged.empty[QueueResultGroup])
+      when(reportService.queueReport(report, Pagination())).thenReturn(Future.successful(Paged.empty[QueueResultGroup]))
 
       val result = controller.queueReport(report, Pagination())(fakeRequest).futureValue
 

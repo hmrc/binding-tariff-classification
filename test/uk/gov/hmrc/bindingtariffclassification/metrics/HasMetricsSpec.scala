@@ -16,10 +16,10 @@
 
 package uk.gov.hmrc.bindingtariffclassification.metrics
 
-import com.codahale.metrics.Timer
-import org.mockito.ArgumentMatchers._
+import com.codahale.metrics.{MetricRegistry, Timer}
+import org.mockito.ArgumentMatchers.*
 import org.mockito.Mockito
-import org.mockito.Mockito._
+import org.mockito.Mockito.*
 import org.scalatest.compatible.Assertion
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AsyncWordSpecLike
@@ -28,7 +28,6 @@ import org.scalatestplus.mockito.MockitoSugar
 import play.api.mvc.{AnyContentAsEmpty, Results}
 import play.api.test.{FakeRequest, Helpers}
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
-import uk.gov.hmrc.play.bootstrap.metrics.Metrics
 
 import scala.concurrent.Future
 
@@ -39,12 +38,11 @@ class HasMetricsSpec
     with MockitoSugar
     with BeforeAndAfterAll {
 
-  trait MockHasMetrics {
-    self: HasMetrics =>
+  trait MockHasMetrics { self: HasMetrics =>
     val timer: Timer.Context                = mock[Timer.Context]
-    val metrics: Metrics                    = mock[Metrics]
+    val metrics: MetricRegistry             = mock[MetricRegistry]
     override val localMetrics: LocalMetrics = mock[LocalMetrics]
-    when(localMetrics.startTimer(anyString())) thenReturn timer
+    when(localMetrics.startTimer(anyString())).thenReturn(timer)
   }
 
   class TestHasMetrics extends HasMetrics with MockHasMetrics

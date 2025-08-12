@@ -16,12 +16,12 @@
 
 package uk.gov.hmrc.bindingtariffclassification.migrations
 
-import cats.implicits._
+import cats.implicits.*
+import com.codahale.metrics.MetricRegistry
 import uk.gov.hmrc.bindingtariffclassification.common.Logging
 import uk.gov.hmrc.bindingtariffclassification.metrics.HasMetrics
 import uk.gov.hmrc.bindingtariffclassification.model.JobRunEvent
 import uk.gov.hmrc.bindingtariffclassification.repository.MigrationLockRepository
-import uk.gov.hmrc.play.bootstrap.metrics.Metrics
 
 import java.time.ZonedDateTime
 import javax.inject.{Inject, Singleton}
@@ -38,7 +38,7 @@ case object AlreadyRanBefore extends MigrationResult
 class MigrationRunner @Inject() (
   migrationLockRepository: MigrationLockRepository,
   migrationJobs: MigrationJobs,
-  val metrics: Metrics
+  val metrics: MetricRegistry
 )(implicit ec: ExecutionContext)
     extends Logging
     with HasMetrics {

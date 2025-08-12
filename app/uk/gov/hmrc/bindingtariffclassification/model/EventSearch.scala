@@ -42,7 +42,7 @@ object EventSearch {
 
       override def bind(key: String, requestParams: Map[String, Seq[String]]): Option[Either[String, EventSearch]] = {
         import uk.gov.hmrc.bindingtariffclassification.model.utils.BinderUtil._
-        implicit val rp: Map[String, Seq[String]] = requestParams
+        given rp: Map[String, Seq[String]] = requestParams
 
         Some(
           Right(

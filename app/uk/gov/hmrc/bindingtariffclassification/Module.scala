@@ -32,7 +32,7 @@ class Module extends play.api.inject.Module {
   private def isMongoEncryptionEnabled(configuration: Configuration): Boolean =
     configuration.get[Boolean]("mongodb.encryption.enabled")
 
-  override def bindings(environment: Environment, configuration: Configuration): Seq[Binding[_]] = {
+  override def bindings(environment: Environment, configuration: Configuration): Seq[Binding[?]] = {
     val repositoryBinding: Binding[CaseRepository] = if (isMongoEncryptionEnabled(configuration)) {
       bind[CaseRepository].to[EncryptedCaseMongoRepository]
     } else {

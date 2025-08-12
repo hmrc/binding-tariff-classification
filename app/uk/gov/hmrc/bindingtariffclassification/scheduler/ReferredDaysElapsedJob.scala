@@ -51,7 +51,7 @@ class ReferredDaysElapsedJob @Inject() (
   override val lockId: String                 = "referred_days_elapsed"
   override val ttl: duration.Duration         = 5.minutes
 
-  private implicit val carrier: HeaderCarrier = HeaderCarrier()
+  private given carrier: HeaderCarrier = HeaderCarrier()
   private lazy val criteria = CaseSearch(
     filter = CaseFilter(statuses = Some(Set(PseudoCaseStatus.REFERRED, PseudoCaseStatus.SUSPENDED))),
     sort = Some(CaseSort(Set(CaseSortField.REFERENCE)))
@@ -82,10 +82,15 @@ class ReferredDaysElapsedJob @Inject() (
                      )
 
       startTimestamp = eventSearch.results
-                         .filter(_.details.isInstanceOf[FieldChange[CaseStatus]])
+                         .filter(_.details match {
+                           case _: CaseStatusChange | _: RejectCaseStatusChange | _: CancellationCaseStatusChange |
+                               _: ReferralCaseStatusChange | _: CompletedCaseStatusChange =>
+                             true
+                           case _ => false
+                         })
                          .sortBy(_.timestamp)(Ordering[Instant].reverse)
                          .headOption
-                         .filter(event =>
+                         .filter((event: Event) =>
                            Set(CaseStatus.REFERRED, CaseStatus.SUSPENDED)
                              .contains(event.details.asInstanceOf[FieldChange[CaseStatus]].to)
                          )

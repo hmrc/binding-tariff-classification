@@ -38,6 +38,6 @@ class UpdateMapper @Inject() extends Mapper {
       .map(updateApplication)
       .getOrElse(Seq.empty)
 
-    updateFields(applicationFields: _*)
+    updateFields(applicationFields*)
   }
 }

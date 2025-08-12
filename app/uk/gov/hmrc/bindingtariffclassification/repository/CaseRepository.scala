@@ -32,8 +32,6 @@ trait CaseRepository {
 
   def get(search: CaseSearch, pagination: Pagination): Future[Paged[Case]]
 
-  def getGroupedCasesByKeyword(pagination: Pagination): Future[Paged[CaseKeyword]]
-
   def getAllByEori(eori: String): Future[List[Case]]
 
   def deleteAll(): Future[Unit]
@@ -42,7 +40,7 @@ trait CaseRepository {
 
   def summaryReport(report: SummaryReport, pagination: Pagination): Future[Paged[ResultGroup]]
 
-  def caseReport(report: CaseReport, pagination: Pagination): Future[Paged[Map[String, ReportResultField[_]]]]
+  def caseReport(report: CaseReport, pagination: Pagination): Future[Paged[Map[String, ReportResultField[?]]]]
 
   def queueReport(report: QueueReport, pagination: Pagination): Future[Paged[QueueResultGroup]]
 }

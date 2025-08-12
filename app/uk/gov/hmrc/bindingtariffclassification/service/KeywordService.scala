@@ -17,7 +17,6 @@
 package uk.gov.hmrc.bindingtariffclassification.service
 
 import org.apache.pekko.stream.Materializer
-import org.bson.Document
 import uk.gov.hmrc.bindingtariffclassification.model._
 import uk.gov.hmrc.bindingtariffclassification.repository._
 
@@ -27,10 +26,10 @@ import scala.concurrent.{ExecutionContext, Future}
 @Singleton
 class KeywordService @Inject() (
   keywordRepository: KeywordsRepository,
-  caseRepository: CaseRepository
+  caseKeywordAggregation: CaseKeywordMongoView
 )(implicit mat: Materializer) {
 
-  implicit val ec: ExecutionContext = mat.executionContext
+  given ec: ExecutionContext = mat.executionContext
 
   def addKeyword(keyword: Keyword): Future[Keyword] =
     keywordRepository.insert(keyword)
@@ -44,12 +43,7 @@ class KeywordService @Inject() (
   def deleteKeyword(name: String): Future[Unit] =
     keywordRepository.delete(name)
 
-  def loadKeywordManagementData(pagination: Pagination): Future[ManageKeywordsData] =
-    for {
-      caseKeywordsPaged <- caseRepository.getGroupedCasesByKeyword(pagination)
-      pagedKeywords     <- keywordRepository.findAll(Pagination(pageSize = Int.MaxValue))
-    } yield ManageKeywordsData(
-      pagedCaseKeywords = caseKeywordsPaged,
-      pagedKeywords = pagedKeywords
-    )
+  def fetchCaseKeywords(pagination: Pagination): Future[Paged[CaseKeyword]] =
+    caseKeywordAggregation.fetchKeywordsFromCases(pagination)
+
 }

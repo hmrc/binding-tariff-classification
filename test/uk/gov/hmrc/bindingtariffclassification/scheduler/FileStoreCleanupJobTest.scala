@@ -18,8 +18,8 @@ package uk.gov.hmrc.bindingtariffclassification.scheduler
 
 import org.mockito.ArgumentCaptor
 import org.mockito.ArgumentMatchers.{any, refEq}
-import org.mockito.BDDMockito.given
-import org.mockito.Mockito._
+import org.mockito.Mockito.*
+import org.mockito.stubbing.OngoingStubbing
 import org.quartz.CronExpression
 import org.scalatest.BeforeAndAfterEach
 import uk.gov.hmrc.bindingtariffclassification.base.BaseSpec
@@ -31,8 +31,9 @@ import uk.gov.hmrc.bindingtariffclassification.service.CaseService
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mongo.lock.LockRepository
 
-import java.time._
+import java.time.*
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 import scala.concurrent.Future.{failed, successful}
 
 class FileStoreCleanupJobTest extends BaseSpec with BeforeAndAfterEach {
@@ -58,12 +59,13 @@ class FileStoreCleanupJobTest extends BaseSpec with BeforeAndAfterEach {
 
   override def beforeEach(): Unit = {
     super.beforeEach()
-    given(appConfig.clock).willReturn(clock)
-    given(appConfig.fileStoreCleanup).willReturn(jobConfig)
-    given(caseService.refreshAttachments()).willReturn(successful(()))
-    given(caseService.attachmentExists(any[String])).willReturn(successful(false))
-    given(lockRepo.takeLock(any[String], any[String], any[scala.concurrent.duration.Duration]))
-      .willReturn(successful(None))
+    when(appConfig.clock).thenReturn(clock)
+    when(appConfig.fileStoreCleanup).thenReturn(jobConfig)
+    when(caseService.refreshAttachments()).thenReturn(successful(()))
+    when(caseService.attachmentExists(any[String])).thenReturn(successful(false))
+    when(lockRepo.takeLock(any[String], any[String], any[scala.concurrent.duration.Duration]))
+      .thenReturn(successful(None))
+    ()
   }
 
   "Scheduled Job" should {
@@ -83,11 +85,11 @@ class FileStoreCleanupJobTest extends BaseSpec with BeforeAndAfterEach {
 
   "Scheduled Job 'Execute'" should {
     "Do nothing if no files are found" in {
-      givenNoUploadedFiles()
+      givenNoUploadedFiles
 
       await(newJob.execute())
 
-      verifyNoFilesDeleted()
+      verifyNoFilesDeleted
     }
 
     "Do nothing if all files are attached to a case" in {
@@ -96,7 +98,7 @@ class FileStoreCleanupJobTest extends BaseSpec with BeforeAndAfterEach {
 
       await(newJob.execute())
 
-      verifyNoFilesDeleted()
+      verifyNoFilesDeleted
     }
 
     "Delete files that are not attached to a case" in {
@@ -134,15 +136,15 @@ class FileStoreCleanupJobTest extends BaseSpec with BeforeAndAfterEach {
   private def newJob: FileStoreCleanupJob =
     new FileStoreCleanupJob(caseService, fileStoreConnector, lockRepo, appConfig)
 
-  private def givenNoUploadedFiles(): Unit =
-    given(fileStoreConnector.find(refEq(fileSearch), refEq(Pagination()))(any[HeaderCarrier]))
-      .willReturn(successful(Paged(Seq.empty[FileMetadata], Pagination(), 0)))
+  private def givenNoUploadedFiles: OngoingStubbing[Future[Paged[FileMetadata]]] =
+    when(fileStoreConnector.find(refEq(fileSearch), refEq(Pagination()))(any[HeaderCarrier]))
+      .thenReturn(successful(Paged(Seq.empty[FileMetadata], Pagination(), 0)))
 
   private def givenUploadedFiles(ids: Set[String], pageSize: Int = pageSize): Unit =
     ids.grouped(pageSize).zipWithIndex.foreach { case (idSubset, index) =>
       val page = index + 1
-      given(fileStoreConnector.find(refEq(fileSearch), refEq(Pagination(page = page)))(any[HeaderCarrier]))
-        .willReturn(
+      when(fileStoreConnector.find(refEq(fileSearch), refEq(Pagination(page = page)))(any[HeaderCarrier]))
+        .thenReturn(
           successful(
             Paged(
               idSubset
@@ -166,16 +168,16 @@ class FileStoreCleanupJobTest extends BaseSpec with BeforeAndAfterEach {
         )
     }
 
-  private def givenCaseFiles(ids: Set[String]): Unit =
-    ids.map(id => given(caseService.attachmentExists(refEq(id))).willReturn(successful(true)))
+  private def givenCaseFiles(ids: Set[String]): Set[OngoingStubbing[Future[Boolean]]] =
+    ids.map(id => when(caseService.attachmentExists(refEq(id))).thenReturn(successful(true)))
 
-  private def givenFilesDeleteSuccessfully(ids: Set[String]): Unit =
-    ids.map(id => given(fileStoreConnector.delete(refEq(id))(any[HeaderCarrier])).willReturn(successful(())))
+  private def givenFilesDeleteSuccessfully(ids: Set[String]): Set[OngoingStubbing[Future[Unit]]] =
+    ids.map(id => when(fileStoreConnector.delete(refEq(id))(any[HeaderCarrier])).thenReturn(successful(())))
 
-  private def givenFilesDeleteUnsuccessfully(ids: Set[String]): Unit =
-    ids.map(id => given(fileStoreConnector.delete(refEq(id))(any[HeaderCarrier])).willReturn(failed(emulatedFailure)))
+  private def givenFilesDeleteUnsuccessfully(ids: Set[String]): Set[OngoingStubbing[Future[Unit]]] =
+    ids.map(id => when(fileStoreConnector.delete(refEq(id))(any[HeaderCarrier])).thenReturn(failed(emulatedFailure)))
 
-  private def verifyNoFilesDeleted(): Unit =
+  private def verifyNoFilesDeleted: Future[Unit] =
     verify(fileStoreConnector, never()).delete(any[String])(any[HeaderCarrier])
 
   private def theFilesDeleted: List[String] = {

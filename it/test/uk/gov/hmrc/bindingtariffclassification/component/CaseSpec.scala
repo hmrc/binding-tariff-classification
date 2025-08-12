@@ -25,10 +25,12 @@ import play.api.http.HeaderNames.CONTENT_TYPE
 import play.api.http.Status._
 import play.api.libs.json.Json
 import play.api.libs.ws.ahc.StandaloneAhcWSClient
-import uk.gov.hmrc.bindingtariffclassification.model.RESTFormatters._
 import uk.gov.hmrc.bindingtariffclassification.model._
 import util.CaseData._
 import util.Matchers.roughlyBe
+import play.api.libs.ws.DefaultBodyWritables.writeableOf_String
+import uk.gov.hmrc.bindingtariffclassification.model.RESTFormatters.{formatCase, formatCorrespondence, formatNewCase}
+import play.api.libs.ws.DefaultBodyReadables.readableAsString
 
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
@@ -37,7 +39,7 @@ class CaseSpec extends BaseFeatureSpec {
 
   protected val serviceUrl = s"http://localhost:$port"
 
-  implicit val mat: Materializer        = app.materializer
+  given mat: Materializer               = app.materializer
   val httpClient: StandaloneAhcWSClient = StandaloneAhcWSClient()
 
   private val clock = Clock.systemUTC()
@@ -157,13 +159,13 @@ class CaseSpec extends BaseFeatureSpec {
       val deleteResult = Await.result(responseFuture, Duration(1000L, "ms"))
 
       Then("The response code should be 204")
-      deleteResult.status.intValue() shouldEqual NO_CONTENT
+      deleteResult.status.intValue().shouldEqual(NO_CONTENT)
 
       And("The response body is empty")
-      deleteResult.body shouldBe ""
+      deleteResult.body.shouldBe("")
 
       And("No documents exist in the mongo collection")
-      caseStoreSize shouldBe 0
+      caseStoreSize.shouldBe(0)
     }
 
   }
@@ -180,12 +182,12 @@ class CaseSpec extends BaseFeatureSpec {
       val result = Await.result(responseFuture, Duration(1000L, "ms"))
 
       Then("The response code should be created")
-      result.status.intValue() shouldEqual CREATED
+      result.status.intValue().shouldEqual(CREATED)
 
       And("The case is returned in the JSON response")
       val responseCase = Json.parse(result.body).as[Case]
-      responseCase.reference shouldBe "600000001"
-      responseCase.status    shouldBe CaseStatus.NEW
+      responseCase.reference.shouldBe("600000001")
+      responseCase.status.shouldBe(CaseStatus.NEW)
     }
 
     Scenario("Extra fields are ignored when creating a case") {
@@ -197,16 +199,16 @@ class CaseSpec extends BaseFeatureSpec {
       val result = Await.result(responseFuture, Duration(1000L, "ms"))
 
       Then("The response code should be created")
-      result.status.intValue() shouldEqual CREATED
+      result.status.intValue().shouldEqual(CREATED)
 
       And("The case is returned in the JSON response")
       val responseCase = Json.parse(result.body).as[Case]
-      responseCase.reference shouldBe "600000001"
-      responseCase.status    shouldBe CaseStatus.NEW
-      responseCase.createdDate should roughlyBe(Instant.now())
-      responseCase.assignee  shouldBe None
-      responseCase.queueId   shouldBe None
-      responseCase.decision  shouldBe None
+      responseCase.reference.shouldBe("600000001")
+      responseCase.status.shouldBe(CaseStatus.NEW)
+      responseCase.createdDate.should(roughlyBe(Instant.now()))
+      responseCase.assignee.shouldBe(None)
+      responseCase.queueId.shouldBe(None)
+      responseCase.decision.shouldBe(None)
     }
 
     Scenario("Create a new case with all fields") {
@@ -219,12 +221,12 @@ class CaseSpec extends BaseFeatureSpec {
       val result = Await.result(responseFuture, Duration(1000L, "ms"))
 
       Then("The response code should be created")
-      result.status.intValue() shouldEqual CREATED
+      result.status.intValue().shouldEqual(CREATED)
 
       And("The case is returned in the JSON response")
       val responseCase = Json.parse(result.body).as[Case]
-      responseCase.reference shouldBe "600000001"
-      responseCase.status    shouldBe CaseStatus.NEW
+      responseCase.reference.shouldBe("600000001")
+      responseCase.status.shouldBe(CaseStatus.NEW)
     }
 
     Scenario("Create a new liability case with new fields DIT-1962") {
@@ -237,26 +239,27 @@ class CaseSpec extends BaseFeatureSpec {
       val result = Await.result(responseFuture, Duration(1000L, "ms"))
 
       Then("The response code should be created")
-      result.status.intValue() shouldEqual CREATED
+      result.status.intValue().shouldEqual(CREATED)
 
       And("The case is returned in the JSON response")
       val responseCase = Json.parse(result.body).as[Case]
-      responseCase.reference                                                          shouldBe "800000001"
-      responseCase.status                                                             shouldBe CaseStatus.NEW
-      responseCase.application.asLiabilityOrder.btiReference                          shouldBe Some("BTI-REFERENCE")
-      responseCase.application.asLiabilityOrder.repaymentClaim.get.dvrNumber          shouldBe Some("DVR-123456")
-      responseCase.application.asLiabilityOrder.repaymentClaim.get.dateForRepayment.get should roughlyBe(Instant.now())
-      responseCase.application.asLiabilityOrder.dateOfReceipt.get                       should roughlyBe(Instant.now())
+      responseCase.reference.shouldBe("800000001")
+      responseCase.status.shouldBe(CaseStatus.NEW)
+      responseCase.application.asLiabilityOrder.btiReference.shouldBe(Some("BTI-REFERENCE"))
+      responseCase.application.asLiabilityOrder.repaymentClaim.get.dvrNumber.shouldBe(Some("DVR-123456"))
+      responseCase.application.asLiabilityOrder.repaymentClaim.get.dateForRepayment.get.should(roughlyBe(Instant.now()))
+      responseCase.application.asLiabilityOrder.dateOfReceipt.get.should(roughlyBe(Instant.now()))
 
-      responseCase.application.asLiabilityOrder.traderContactDetails.get shouldBe
+      responseCase.application.asLiabilityOrder.traderContactDetails.get.shouldBe(
         TraderContactDetails(
           Some("email"),
           Some("phone"),
           Some(Address("Street Name", "Town", Some("County"), Some("P0ST C05E")))
         )
+      )
 
-      responseCase.application.asLiabilityOrder.agentName shouldBe Some("agent")
-      responseCase.application.asLiabilityOrder.port      shouldBe Some("port")
+      responseCase.application.asLiabilityOrder.agentName.shouldBe(Some("agent"))
+      responseCase.application.asLiabilityOrder.port.shouldBe(Some("port"))
     }
 
     Scenario("Create a new Correspondence case") {
@@ -269,28 +272,32 @@ class CaseSpec extends BaseFeatureSpec {
       val result = Await.result(responseFuture, Duration(1000L, "ms"))
 
       Then("The response code should be created")
-      result.status.intValue() shouldEqual CREATED
+      result.status.intValue().shouldEqual(CREATED)
 
       And("The case is returned in the JSON response")
       val responseCase = Json.parse(result.body).as[Case]
-      responseCase.reference                                        shouldBe "800000001"
-      responseCase.status                                           shouldBe CaseStatus.NEW
-      responseCase.application.asCorrespondence.summary             shouldBe "Laptop"
-      responseCase.application.asCorrespondence.detailedDescription shouldBe "Personal Computer"
-      responseCase.application.asCorrespondence.address shouldBe Address(
-        "23, Leyton St",
-        "Leeds",
-        Some("West Yorkshire"),
-        Some("LS4 99AA")
+      responseCase.reference.shouldBe("800000001")
+      responseCase.status.shouldBe(CaseStatus.NEW)
+      responseCase.application.asCorrespondence.summary.shouldBe("Laptop")
+      responseCase.application.asCorrespondence.detailedDescription.shouldBe("Personal Computer")
+      responseCase.application.asCorrespondence.address.shouldBe(
+        Address(
+          "23, Leyton St",
+          "Leeds",
+          Some("West Yorkshire"),
+          Some("LS4 99AA")
+        )
       )
-      responseCase.application.asCorrespondence.contact shouldBe Contact(
-        "Maurizio",
-        "maurizio@me.com",
-        Some("0123456789")
+      responseCase.application.asCorrespondence.contact.shouldBe(
+        Contact(
+          "Maurizio",
+          "maurizio@me.com",
+          Some("0123456789")
+        )
       )
-      responseCase.application.asCorrespondence.agentName          shouldBe Some("agent")
-      responseCase.application.asCorrespondence.sampleToBeProvided shouldBe false
-      responseCase.application.asCorrespondence.sampleToBeReturned shouldBe false
+      responseCase.application.asCorrespondence.agentName.shouldBe(Some("agent"))
+      responseCase.application.asCorrespondence.sampleToBeProvided.shouldBe(false)
+      responseCase.application.asCorrespondence.sampleToBeReturned.shouldBe(false)
     }
 
     Scenario("Create a new Misc case") {
@@ -303,18 +310,18 @@ class CaseSpec extends BaseFeatureSpec {
       val result = Await.result(responseFuture, Duration(1000L, "ms"))
 
       Then("The response code should be created")
-      result.status.intValue() shouldEqual CREATED
+      result.status.intValue().shouldEqual(CREATED)
 
       And("The case is returned in the JSON response")
       val responseCase = Json.parse(result.body).as[Case]
-      responseCase.reference                      shouldBe "800000001"
-      responseCase.status                         shouldBe CaseStatus.NEW
-      responseCase.application.asMisc.name        shouldBe "name"
-      responseCase.application.asMisc.contactName shouldBe Some("contactName")
-      responseCase.application.asMisc.caseType    shouldBe MiscCaseType.HARMONISED
-      responseCase.application.asMisc.contact     shouldBe Contact("Maurizio", "maurizio@me.com", Some("0123456789"))
-      responseCase.application.asMisc.sampleToBeProvided shouldBe false
-      responseCase.application.asMisc.sampleToBeReturned shouldBe false
+      responseCase.reference.shouldBe("800000001")
+      responseCase.status.shouldBe(CaseStatus.NEW)
+      responseCase.application.asMisc.name.shouldBe("name")
+      responseCase.application.asMisc.contactName.shouldBe(Some("contactName"))
+      responseCase.application.asMisc.caseType.shouldBe(MiscCaseType.HARMONISED)
+      responseCase.application.asMisc.contact.shouldBe(Contact("Maurizio",     "maurizio@me.com", Some("0123456789")))
+      responseCase.application.asMisc.sampleToBeProvided.shouldBe(false)
+      responseCase.application.asMisc.sampleToBeReturned.shouldBe(false)
     }
   }
 
@@ -330,7 +337,7 @@ class CaseSpec extends BaseFeatureSpec {
       val result = Await.result(responseFuture, Duration(1000L, "ms"))
 
       Then("The response code should be NOT FOUND")
-      result.status.intValue() shouldEqual NOT_FOUND
+      result.status.intValue().shouldEqual(NOT_FOUND)
     }
 
     Scenario("Update an existing case") {
@@ -346,10 +353,10 @@ class CaseSpec extends BaseFeatureSpec {
       val result = Await.result(responseFuture, Duration(1000L, "ms"))
 
       Then("The response code should be OK")
-      result.status.intValue shouldEqual OK
+      result.status.intValue.shouldEqual(OK)
 
       And("The case is returned in the JSON response")
-      Json.parse(result.body) shouldBe c1UpdatedJson
+      Json.parse(result.body).shouldBe(c1UpdatedJson)
     }
 
     Scenario("Update an existing case with new fields DIT-1962") {
@@ -365,10 +372,10 @@ class CaseSpec extends BaseFeatureSpec {
       val result = Await.result(responseFuture, Duration(1000L, "ms"))
 
       Then("Response should be OK")
-      result.status.intValue shouldEqual OK
+      result.status.intValue.shouldEqual(OK)
 
       And("The case is returned in the JSON response")
-      Json.parse(result.body) shouldBe c2WithExtraFieldsJson
+      Json.parse(result.body).shouldBe(c2WithExtraFieldsJson)
     }
   }
 
@@ -1611,6 +1618,56 @@ class CaseSpec extends BaseFeatureSpec {
       Json.parse(result.body) shouldBe Json.toJson(Paged(Seq(caseD0, caseD1, caseD2, caseD3)))
     }
 
+  }
+
+  Feature("Check Cases Serialization") {
+    val contact = Contact("Charles", "test@test.com", None)
+
+    val address = Address(
+      buildingAndStreet = "Evergreen 305",
+      townOrCity = "Springfield",
+      county = Option("TX"),
+      postCode = Option("E123123")
+    )
+
+    val message = Message("Charles", Instant.EPOCH, "running out of fuel")
+
+    val app = CorrespondenceApplication(
+      correspondenceStarter = Option("starter"),
+      agentName = Option("Sean"),
+      address = address,
+      contact = contact,
+      fax = Option("fax"),
+      summary = "no comments",
+      detailedDescription = "same",
+      relatedBTIReference = Option("n.a"),
+      relatedBTIReferences = List("n.a"),
+      sampleToBeProvided = true,
+      sampleToBeReturned = false,
+      messagesLogged = List(message)
+    )
+
+    Scenario("on CorrespondenceApplication fields") {
+      Given("CorrespondenceApplication")
+      val json         = Json.toJson(app)
+      val deserialized = json.as[CorrespondenceApplication]
+
+      deserialized.shouldBe(app)
+    }
+
+    Scenario("on Case with default values") {
+      val caseWithDefaults: Case = Case(
+        reference = "ref1",
+        status = CaseStatus.NEW,
+        application = app
+      )
+
+      val json         = Json.toJson(caseWithDefaults)
+      val deserialized = json.as[Case]
+
+      deserialized.shouldBe(caseWithDefaults)
+      deserialized.attachments.shouldBe(Seq.empty)
+    }
   }
 
   private def adaptCaseInstantFormat(_case: Case): Case = {
