@@ -18,7 +18,6 @@ package uk.gov.hmrc.bindingtariffclassification.migrations
 
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito.when
-import org.mockito.stubbing.OngoingStubbing
 import uk.gov.hmrc.bindingtariffclassification.base.BaseSpec
 import uk.gov.hmrc.bindingtariffclassification.model.JobRunEvent
 import uk.gov.hmrc.bindingtariffclassification.repository.MigrationLockRepository
@@ -38,87 +37,86 @@ class MigrationRunnerTest extends BaseSpec {
 
     when(migrationJob.name).thenReturn(jobName)
 
-    def givenThereWasMigrationRan: OngoingStubbing[Future[Option[JobRunEvent]]] =
+    def givenThereWasMigrationRan(): Unit =
       when(migrationRepository.findOne(any[String]))
         .thenReturn(Future.successful(Some(JobRunEvent(jobName, now()))))
 
-    def givenThereWasNoMigrationRan: OngoingStubbing[Future[Option[JobRunEvent]]] =
+    def givenThereWasNoMigrationRan(): Unit =
       when(migrationRepository.findOne(any[String])).thenReturn(Future.successful(None))
 
-    def givenTheLockSucceeds: OngoingStubbing[Future[Boolean]] =
+    def givenTheLockSucceeds(): Unit =
       when(migrationRepository.lock(any[JobRunEvent])).thenReturn(Future.successful(true))
 
-    def givenTheLockFails: OngoingStubbing[Future[Boolean]] =
+    def givenTheLockFails(): Unit =
       when(migrationRepository.lock(any[JobRunEvent])).thenReturn(Future.successful(false))
 
-    def givenRollbackSucceeds: OngoingStubbing[Future[Unit]] =
+    def givenRollbackSucceeds(): Unit =
       when(migrationRepository.delete(any[JobRunEvent])).thenReturn(Future.successful(()))
 
-    def givenAmendDateOfExtractJobSucceeds: OngoingStubbing[Future[Unit]] =
+    def givenAmendDateOfExtractJobSucceeds(): Unit =
       when(migrationJob.execute()).thenReturn(Future.successful(()))
 
-    def givenAmendDateOfExtractJobFails: OngoingStubbing[Future[Unit]] =
+    def givenAmendDateOfExtractJobFails(): Unit =
       when(migrationJob.execute()).thenReturn(failed(new RuntimeException("test execute() failed")))
 
-    def givenAmendDateOfExtractJobRollbackSucceeds: OngoingStubbing[Future[Unit]] =
+    def givenAmendDateOfExtractJobRollbackSucceeds(): Unit =
       when(migrationJob.rollback()).thenReturn(Future.successful(()))
 
-    def givenAmendDateOfExtractJobRollbackFails: OngoingStubbing[Future[Unit]] =
+    def givenAmendDateOfExtractJobRollbackFails(): Unit =
       when(migrationJob.rollback()).thenReturn(failed(new RuntimeException("test rollback() failed")))
 
-    val runner =
-      new MigrationRunner(migrationRepository, MigrationJobs(Set(migrationJob)), (new TestMetrics).defaultRegistry)
+    val runner = new MigrationRunner(migrationRepository, MigrationJobs(Set(migrationJob)), new TestMetrics)
   }
 
   "MigrationRunner" should {
 
     "execute the job by class" in new Test {
-      givenThereWasNoMigrationRan
-      givenTheLockSucceeds
-      givenAmendDateOfExtractJobSucceeds
+      givenThereWasNoMigrationRan()
+      givenTheLockSucceeds()
+      givenAmendDateOfExtractJobSucceeds()
 
       await(runner.trigger(migrationJob)) shouldBe Some(JobExecuted)
     }
 
     "not execute the job if the lock fails" in new Test {
-      givenThereWasNoMigrationRan
-      givenTheLockFails
+      givenThereWasNoMigrationRan()
+      givenTheLockFails()
 
       await(runner.trigger(migrationJob)) shouldBe Some(TimerCompleted)
     }
 
     "rollback the job on a failure" in new Test {
-      givenThereWasNoMigrationRan
-      givenTheLockSucceeds
-      givenRollbackSucceeds
-      givenAmendDateOfExtractJobFails
-      givenAmendDateOfExtractJobRollbackSucceeds
+      givenThereWasNoMigrationRan()
+      givenTheLockSucceeds()
+      givenRollbackSucceeds()
+      givenAmendDateOfExtractJobFails()
+      givenAmendDateOfExtractJobRollbackSucceeds()
 
       await(runner.trigger(migrationJob)) shouldBe Some(DeletedEvent)
     }
 
     "rollback failed when job failed" in new Test {
-      givenThereWasNoMigrationRan
-      givenTheLockSucceeds
-      givenRollbackSucceeds
-      givenAmendDateOfExtractJobFails
-      givenAmendDateOfExtractJobRollbackFails
+      givenThereWasNoMigrationRan()
+      givenTheLockSucceeds()
+      givenRollbackSucceeds()
+      givenAmendDateOfExtractJobFails()
+      givenAmendDateOfExtractJobRollbackFails()
 
       await(runner.trigger(migrationJob)) shouldBe Some(RollbackFailure)
     }
 
     "findOne had a job ran before" in new Test {
-      givenThereWasMigrationRan
-      givenTheLockSucceeds
-      givenAmendDateOfExtractJobSucceeds
+      givenThereWasMigrationRan()
+      givenTheLockSucceeds()
+      givenAmendDateOfExtractJobSucceeds()
 
       await(runner.trigger(migrationJob)) shouldBe Some(AlreadyRanBefore)
     }
 
     "findOne had no job ran before" in new Test {
-      givenThereWasNoMigrationRan
-      givenTheLockSucceeds
-      givenAmendDateOfExtractJobSucceeds
+      givenThereWasNoMigrationRan()
+      givenTheLockSucceeds()
+      givenAmendDateOfExtractJobSucceeds()
 
       await(runner.trigger(migrationJob)) shouldBe Some(JobExecuted)
     }

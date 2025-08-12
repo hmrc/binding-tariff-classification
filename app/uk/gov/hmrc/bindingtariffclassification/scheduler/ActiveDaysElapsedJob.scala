@@ -50,7 +50,7 @@ class ActiveDaysElapsedJob @Inject() (
   override val lockId: String                 = "active_days_elapsed"
   override val ttl: duration.Duration         = 5.minutes
 
-  private given carrier: HeaderCarrier = HeaderCarrier()
+  private implicit val carrier: HeaderCarrier = HeaderCarrier()
 
   private lazy val criteria = CaseSearch(
     filter = CaseFilter(statuses = Some(Set(PseudoCaseStatus.OPEN, PseudoCaseStatus.NEW))),

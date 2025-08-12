@@ -251,19 +251,6 @@ class CaseControllerSpec extends BaseSpec with BeforeAndAfterEach {
       contentAsJson(result) shouldBe toJson(c1)
     }
 
-    "return 200 when the case has no change" in {
-      val applicationPdfUpdated = Some(Attachment("id", public = true, None, Instant.now, None))
-        .map(_ => NoChange)
-        .getOrElse(NoChange)
-      val caseUpdate = CaseUpdate(application = Some(BTIUpdate(applicationPdfUpdated)))
-      when(caseService.update(c1.reference, caseUpdate)).thenReturn(successful(Some(c1)))
-
-      val result = controller.update(c1.reference)(fakeRequest.withBody(toJson(caseUpdate)))
-
-      status(result)        shouldBe OK
-      contentAsJson(result) shouldBe toJson(c1)
-    }
-
     "return 400 when the JSON request payload is not a case" in {
       val body   = """{"a":"b"}"""
       val result = controller.update("")(fakeRequest.withBody(toJson(body))).futureValue
@@ -295,6 +282,8 @@ class CaseControllerSpec extends BaseSpec with BeforeAndAfterEach {
   }
 
   "get()" should {
+
+    // TODO: test all possible combinations
 
     val queueId    = Some(Set("valid_queueId"))
     val assigneeId = Some("valid_assigneeId")

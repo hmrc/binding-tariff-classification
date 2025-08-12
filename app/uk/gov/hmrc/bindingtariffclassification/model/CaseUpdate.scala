@@ -40,15 +40,66 @@ sealed abstract class ApplicationUpdate {
 }
 
 case class BTIUpdate(
+  // holder: Option[EORIDetails]                     = None,
+  // contact: Option[Contact]                        = None,
+  // agent: Option[Option[AgentDetails]]             = None,
+  // offline: Option[Boolean]                        = None,
+  // goodName: Option[String]                        = None,
+  // goodDescription: Option[String]                 = None,
+  // confidentialInformation: Option[Option[String]] = None,
+  // otherInformation: Option[Option[String]]        = None,
+  // reissuedBTIReference: Option[Option[String]]    = None,
+  // relatedBTIReferences: Option[List[String]]      = None,
+  // knownLegalProceedings: Option[Option[String]]   = None,
+  // envisagedCommodityCode: Option[Option[String]]  = None,
+  // sampleToBeProvided: Option[Boolean]             = None,
+  // sampleIsHazardous: Option[Option[Boolean]]      = None,
+  // sampleToBeReturned: Option[Boolean]             = None,
   applicationPdf: Update[Option[Attachment]] = NoChange
 ) extends ApplicationUpdate {
   val `type`: ApplicationType.Value = ApplicationType.BTI
 }
 
 case class LiabilityUpdate(
+  // contact: Option[Contact]                                   = None,
+  // goodName: Option[Option[String]]                           = None,
+  // status: Option[LiabilityStatus.Value]                      = None,
   traderName: Update[String] = NoChange
+  // entryDate: Option[Option[Instant]]                         = None,
+  // entryNumber: Option[Option[String]]                        = None,
+  // traderCommodityCode: Option[Option[String]]                = None,
+  // officerCommodityCode: Option[Option[String]]               = None,
+  // btiReference: Option[Option[String]]                       = None,
+  // repaymentClaim: Option[Option[RepaymentClaim]]             = None,
+  // dateOfReceipt: Option[Option[Instant]]                     = None,
+  // traderContactDetails: Option[Option[TraderContactDetails]] = None,
+  // agentName: Option[Option[String]]                          = None,
+  // port: Option[Option[String]]                               = None
 ) extends ApplicationUpdate {
   val `type`: ApplicationType.Value = ApplicationType.LIABILITY_ORDER
 }
 
-case class CaseUpdate(application: Option[ApplicationUpdate] = None)
+// case class CorrespondenceUpdate(
+//   ) extends ApplicationUpdate {
+//   val `type`: ApplicationType.Value = ApplicationType.CORRESPONDENCE
+// }
+
+// case class MiscUpdate(
+//   ) extends ApplicationUpdate {
+//   val `type`: ApplicationType.Value = ApplicationType.MISCELLANEOUS
+// }
+
+case class CaseUpdate(
+  // status: Option[CaseStatus.Value]             = None,
+  // createdDate: Option[Instant]                 = None,
+  // caseBoardsFileNumber: Option[Option[String]] = None,
+  // assignee: Option[Option[Operator]]           = None,
+  // queueId: Option[Option[String]]              = None,
+  application: Option[ApplicationUpdate] = None
+  // decision: Option[Option[DecisionUpdate]]     = None,
+  // attachments: Option[Seq[Attachment]]         = None,
+  // keywords: Option[Set[String]]                = None,
+  // sample: Option[Sample]                       = None,
+  // dateOfExtract: Option[Option[Instant]]       = None,
+  // migratedDaysElapsed: Option[Option[Long]]    = None
+)

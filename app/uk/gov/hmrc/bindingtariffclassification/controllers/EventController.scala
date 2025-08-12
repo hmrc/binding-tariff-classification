@@ -47,13 +47,13 @@ class EventController @Inject() (
   }
 
   def search(search: EventSearch, pagination: Pagination): Action[AnyContent] = Action.async {
-    eventService.search(search, pagination) map { (events: Paged[Event]) =>
+    eventService.search(search, pagination) map { events: Paged[Event] =>
       Ok(Json.toJson(events))
     } recover recovery
   }
 
   def getByCaseReference(caseRef: String, pagination: Pagination): Action[AnyContent] = Action.async {
-    eventService.search(EventSearch(Some(Set(caseRef))), pagination) map { (events: Paged[Event]) =>
+    eventService.search(EventSearch(Some(Set(caseRef))), pagination) map { events: Paged[Event] =>
       Ok(Json.toJson(events))
     } recover recovery
   }

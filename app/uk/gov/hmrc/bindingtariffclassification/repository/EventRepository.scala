@@ -24,7 +24,6 @@ import uk.gov.hmrc.bindingtariffclassification.config.AppConfig
 import uk.gov.hmrc.bindingtariffclassification.model._
 import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
-import org.mongodb.scala.SingleObservableFuture
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
@@ -76,15 +75,15 @@ class EventMongoRepository @Inject() (mongoComponent: MongoComponent, appConfig:
 
   private def selector(search: EventSearch): Bson = {
     val queries = Seq[Bson]()
-      .++(search.caseReference.map(r => Filters.in("caseReference", r.toList*)))
-      .++(search.`type`.map(t => Filters.in("details.type", t.map(_.toString).toList*)))
+      .++(search.caseReference.map(r => Filters.in("caseReference", r.toList: _*)))
+      .++(search.`type`.map(t => Filters.in("details.type", t.map(_.toString).toList: _*)))
       .++(search.timestampMin.map(t => Filters.gte("timestamp", t)))
       .++(search.timestampMax.map(t => Filters.lte("timestamp", t)))
 
     queries match {
       case Nil           => empty()
       case single :: Nil => single
-      case many          => and(many*)
+      case many          => and(many: _*)
     }
   }
 

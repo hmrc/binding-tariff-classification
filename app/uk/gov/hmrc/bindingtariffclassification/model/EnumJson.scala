@@ -22,22 +22,19 @@ import scala.util.Try
 
 object EnumJson {
 
-  implicit def format[E <: Enumeration](customEnum: E): Format[customEnum.Value] =
-    Format(enumReads(customEnum), enumWrites[E, customEnum.Value])
+  implicit def format[E <: Enumeration](enumeration: E): Format[E#Value] =
+    Format(enumReads(enumeration), Writes.enumNameWrites)
 
-  private def enumReads[E <: Enumeration](customEnum: E): Reads[customEnum.Value] = {
+  private def enumReads[E <: Enumeration](`enum`: E): Reads[E#Value] = {
     case JsString(s) =>
-      Try(JsSuccess(customEnum.withName(s))).recover { case _: NoSuchElementException =>
+      Try(JsSuccess(enum.withName(s))).recover { case _: NoSuchElementException =>
         JsError(
-          s"Expected an enumeration of type: '${customEnum.getClass.getSimpleName}', but it does not contain the name: '$s'"
+          s"Expected an enumeration of type: '${enum.getClass.getSimpleName}', but it does not contain the name: '$s'"
         )
       }.get
 
     case _ => JsError("String value is expected")
   }
-
-  private def enumWrites[E <: Enumeration, V <: Enumeration#Value]: Writes[V] =
-    Writes((v: V) => JsString(v.toString))
 
   private def readsMap[E, B](implicit erds: Reads[E], brds: Reads[B]): JsValue => JsResult[Map[E, B]] =
     (js: JsValue) => {
@@ -49,7 +46,7 @@ object EnumJson {
         })
     }
 
-  private def writesMap[E, B](implicit bwrts: Writes[B]): Map[E, B] => JsObject =
+  private def writesMap[E, B](implicit ewrts: Writes[E], bwrts: Writes[B]): Map[E, B] => JsObject =
     (map: Map[E, B]) =>
       Json
         .toJson(map.map { case (group, value) =>
@@ -59,7 +56,7 @@ object EnumJson {
 
   def formatMap[E, B](implicit efmt: Format[E], bfmt: Format[B]): OFormat[Map[E, B]] = OFormat(
     read = readsMap(efmt, bfmt),
-    write = writesMap(bfmt)
+    write = writesMap(efmt, bfmt)
   )
 
 }

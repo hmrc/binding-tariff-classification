@@ -31,7 +31,6 @@ import uk.gov.hmrc.bindingtariffclassification.scheduler.ScheduledJobs
 import uk.gov.hmrc.mongo.lock.{LockRepository, MongoLockRepository}
 import uk.gov.hmrc.play.bootstrap.metrics.Metrics
 import util.TestMetrics
-import org.mongodb.scala.SingleObservableFuture
 
 import scala.concurrent.Await.result
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -82,7 +81,7 @@ abstract class BaseFeatureSpec
   }
 
   protected def storeCases(cases: Case*): Seq[Case] =
-    cases.map { (c: Case) =>
+    cases.map { c: Case =>
       // for simplicity encryption is not tested here (because disabled in application.conf)
       result(caseStore.insert(c), timeout)
     }

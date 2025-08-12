@@ -27,18 +27,18 @@ class UnionSpec extends AnyWordSpec with Matchers {
   case class MemberOne(fieldOne: Int) extends UnionedType
 
   object MemberOne {
-    given format: OFormat[MemberOne] = Json.format[MemberOne]
+    implicit val format: OFormat[MemberOne] = Json.format[MemberOne]
   }
 
   case class MemberTwo(fieldTwo: String) extends UnionedType
 
   object MemberTwo {
-    given format: OFormat[MemberTwo] = Json.format[MemberTwo]
+    implicit val format: OFormat[MemberTwo] = Json.format[MemberTwo]
   }
 
   case object MemberThree extends UnionedType
 
-  given format: OFormat[UnionedType] =
+  implicit val format: OFormat[UnionedType] =
     Union
       .from[UnionedType]("typeField")
       .and[MemberOne]("ONE")
@@ -53,7 +53,7 @@ class UnionSpec extends AnyWordSpec with Matchers {
   ) extends RecursiveUnion
 
   object Recursive {
-    given format: OFormat[Recursive] = Json.format[Recursive]
+    implicit val format: OFormat[Recursive] = Json.format[Recursive]
   }
 
   case class NonRecursive(fieldTwo: Int) extends RecursiveUnion

@@ -25,7 +25,7 @@ GET           /users/:id                        @uk.gov.hmrc.bindingtariffclassi
 PUT           /mark-deleted/users/:id           @uk.gov.hmrc.bindingtariffclassification.controllers.UsersController.markDeleted(id: String)
 
 # keyword endpoints
-POST          /keyword                          @uk.gov.hmrc.bindingtariffclassification.controllers.KeywordController.addKeyword()
+POST          /keyword                          @uk.gov.hmrc.bindingtariffclassification.controllers.KeywordController.addKeyword
 DELETE        /keyword/:name                    @uk.gov.hmrc.bindingtariffclassification.controllers.KeywordController.deleteKeyword(name: String)
 POST          /keyword/:name/approve            @uk.gov.hmrc.bindingtariffclassification.controllers.KeywordController.approveKeyword(name: String)
 GET           /keywords                         @uk.gov.hmrc.bindingtariffclassification.controllers.KeywordController.getAllKeywords(pagination: uk.gov.hmrc.bindingtariffclassification.model.Pagination ?= uk.gov.hmrc.bindingtariffclassification.model.Pagination())

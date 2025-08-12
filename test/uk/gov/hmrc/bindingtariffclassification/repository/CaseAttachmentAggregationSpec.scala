@@ -21,7 +21,6 @@ import uk.gov.hmrc.bindingtariffclassification.config.AppConfig
 import uk.gov.hmrc.bindingtariffclassification.model.Case
 import uk.gov.hmrc.mongo.test.MongoSupport
 import util.CaseData.{createAttachment, createBTIApplicationWithAllFields, createCase, createDecision}
-import org.mongodb.scala.SingleObservableFuture
 
 import java.time.temporal.ChronoUnit
 import scala.concurrent.ExecutionContext.Implicits.global

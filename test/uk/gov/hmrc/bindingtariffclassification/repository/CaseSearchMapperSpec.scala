@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.bindingtariffclassification.repository
 
+import org.mockito.BDDMockito._
 import org.mongodb.scala.model.Filters
 import org.mongodb.scala.model.Updates.set
 import play.api.libs.json._
@@ -23,7 +24,6 @@ import uk.gov.hmrc.bindingtariffclassification.config.AppConfig
 import uk.gov.hmrc.bindingtariffclassification.model._
 import uk.gov.hmrc.bindingtariffclassification.sort.{CaseSortField, SortDirection}
 import uk.gov.hmrc.mongo.play.json.Codecs
-import org.mockito.Mockito.when
 
 import java.time.{Clock, Instant, ZoneOffset}
 
@@ -143,7 +143,7 @@ class CaseSearchMapperSpec extends BaseMongoIndexSpec {
     }
 
     "filter by 'status' - with pseudo statuses only" in {
-      when(config.clock).thenReturn(Clock.fixed(Instant.EPOCH, ZoneOffset.UTC))
+      given(config.clock) willReturn Clock.fixed(Instant.EPOCH, ZoneOffset.UTC)
 
       jsonMapper.filterBy(
         CaseFilter(statuses = Some(Set(PseudoCaseStatus.LIVE, PseudoCaseStatus.EXPIRED)))
@@ -162,8 +162,12 @@ class CaseSearchMapperSpec extends BaseMongoIndexSpec {
         )
     }
 
+//    {"decision.effectiveStartDate":{"$gte":{"$date":0}},"assignee.id":"valid_assignee","keywords":{"$all":["MTB","BIKE"]},"application.type":{"$in":["BTI","LIABILITY_ORDER"]},"reference":{"$in":["id1","id2"]},"$and":[{"$or":[{"application.holder.businessName":{"$regex":".*case\\_source.*","$options":"i"}},{"application.traderName":{"$regex":".*case\\_source.*","$options":"i"}},{"application.correspondenceStarter":{"$regex":".*case\\_source.*","$options":"i"}},{"application.contactName":{"$regex":".*case\\_source.*","$options":"i"}}]},{"$or":[{"decision.goodsDescription":{"$regex":".*strawberry.*","$options":"i"}},{"decision.methodCommercialDenomination":{"$regex":".*strawberry.*","$options":"i"}},{"decision.justification":{"$regex":".*strawberry.*","$options":"i"}}]},{"$or":[{"application.holder.eori":"eori-number"},{"application.agent.eoriDetails.eori":"eori-number"}]}],"queueId":{"$in":["valid_queue"]},"decision.effectiveEndDate":{"$gte":{"$date":0}},"status":{"$in":["NEW","OPEN"]},"decision.bindingCommodityCode":{"$regex":"^12345\\d*"}}
+//    {"reference":{"$in":["id1","id2"]},"application.type":{"$in":["BTI","LIABILITY_ORDER"]},"queueId":{"$in":["valid_queue"]},"assignee.id":"valid_assignee","status":{"$in":["NEW","OPEN"]},"decision.effectiveStartDate":{"$gte":{"$date":0}},"decision.effectiveEndDate":{"$gte":{"$date":0}},"decision.bindingCommodityCode":{"$regex":"^12345\\d*"},"$and":[{"$or":[{"application.holder.businessName":{"$regex":".*case_source.*","$options":"i"}},{"application.traderName":{"$regex":".*case_source.*","$options":"i"}},{"application.correspondenceStarter":{"$regex":".*case_source.*","$options":"i"}},{"application.contactName":{"$regex":".*case_source.*","$options":"i"}}]},{"$or":[{"decision.goodsDescription":{"$regex":".*strawberry.*","$options":"i"}},{"decision.methodCommercialDenomination":{"$regex":".*strawberry.*","$options":"i"}},{"decision.justification":{"$regex":".*strawberry.*","$options":"i"}}]},{"$or":[{"application.holder.eori":"eori-number"},{"application.agent.eoriDetails.eori":"eori-number"}]}],"keywords":{"$all":["MTB","BIKE"]}}
+//
+
     "filter by 'status' - with status type mix" in {
-      when(config.clock).thenReturn(Clock.fixed(Instant.EPOCH, ZoneOffset.UTC))
+      given(config.clock) willReturn Clock.fixed(Instant.EPOCH, ZoneOffset.UTC)
 
       val filter = jsonMapper.filterBy(
         CaseFilter(

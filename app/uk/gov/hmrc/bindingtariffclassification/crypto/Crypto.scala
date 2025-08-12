@@ -30,9 +30,9 @@ class Crypto @Inject() (crypto: AesCrypto) {
   def decrypt(c: Case): Case =
     applyCrypto(c)(decryptString)
 
-  def encryptString: String => String = { (s: String) => crypto.encrypt(PlainText(s)).value }
+  def encryptString: String => String = { s: String => crypto.encrypt(PlainText(s)).value }
 
-  def decryptString: String => String = { (s: String) => crypto.decrypt(Crypted(s)).value }
+  def decryptString: String => String = { s: String => crypto.decrypt(Crypted(s)).value }
 
   private def applyCrypto(c: Contact)(f: String => String): Contact =
     c.copy(

@@ -37,7 +37,7 @@ object InstantRange {
 
       override def bind(key: String, requestParams: Map[String, Seq[String]]): Option[Either[String, InstantRange]] = {
         import uk.gov.hmrc.bindingtariffclassification.model.utils.BinderUtil._
-        given rp: Map[String, Seq[String]] = requestParams
+        implicit val rp: Map[String, Seq[String]] = requestParams
 
         val minValue: Instant = param(min(key)).flatMap(bindInstant).getOrElse(Instant.MIN)
         val maxValue: Instant = param(max(key)).flatMap(bindInstant).getOrElse(Instant.MAX)

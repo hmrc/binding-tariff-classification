@@ -18,15 +18,14 @@ package uk.gov.hmrc.bindingtariffclassification.repository
 
 import com.google.inject.ImplementedBy
 import org.mongodb.scala.bson.conversions.Bson
-import org.mongodb.scala.model.Filters.*
+import org.mongodb.scala.model.Filters._
 import org.mongodb.scala.model.Indexes.ascending
-import org.mongodb.scala.model.*
+import org.mongodb.scala.model._
 import uk.gov.hmrc.bindingtariffclassification.config.AppConfig
-import uk.gov.hmrc.bindingtariffclassification.model.MongoFormatters.formatOperator
-import uk.gov.hmrc.bindingtariffclassification.model.*
+import uk.gov.hmrc.bindingtariffclassification.model.MongoFormatters._
+import uk.gov.hmrc.bindingtariffclassification.model._
 import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
-import org.mongodb.scala.SingleObservableFuture
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
@@ -83,10 +82,10 @@ class UsersMongoRepository @Inject() (mongoComponent: MongoComponent, appConfig:
   private def selector(search: UserSearch): Bson = {
     val notDeletedFilter = equal("deleted", false)
 
-    val optionalRoleFilter = search.role.map(r => in("role", r.map(_.toString).toSeq*))
-    val optionalTeamFilter = search.team.map(t => in("memberOfTeams", Seq(t)*))
+    val optionalRoleFilter = search.role.map(r => in("role", r.map(_.toString).toSeq: _*))
+    val optionalTeamFilter = search.team.map(t => in("memberOfTeams", Seq(t): _*))
     val filters            = List(Some(notDeletedFilter), optionalRoleFilter, optionalTeamFilter).flatten
-    Filters.and(filters*)
+    Filters.and(filters: _*)
   }
 
 }

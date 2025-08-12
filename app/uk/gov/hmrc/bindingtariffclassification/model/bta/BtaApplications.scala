@@ -16,14 +16,10 @@
 
 package uk.gov.hmrc.bindingtariffclassification.model.bta
 
-import play.api.libs.json.*
-import play.api.libs.functional.syntax.toFunctionalBuilderOps
+import play.api.libs.json.{Json, OFormat}
 
 case class BtaApplications(total: Int, actionable: Int)
 
 object BtaApplications {
-  implicit val format: Format[BtaApplications] = (
-    (JsPath \ "total").format[Int] and
-      (JsPath \ "actionable").format[Int]
-  )(BtaApplications.apply, o => Tuple.fromProductTyped(o))
+  implicit val format: OFormat[BtaApplications] = Json.format[BtaApplications]
 }

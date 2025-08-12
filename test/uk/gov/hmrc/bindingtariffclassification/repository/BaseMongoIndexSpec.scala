@@ -22,15 +22,13 @@ import org.scalatest.Assertion
 import uk.gov.hmrc.bindingtariffclassification.base.BaseSpec
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.jdk.CollectionConverters.*
-import org.mongodb.scala.ObservableFuture
-import org.mongodb.scala.documentToUntypedDocument
+import scala.jdk.CollectionConverters.{IterableHasAsScala, SetHasAsScala}
 
 trait BaseMongoIndexSpec extends BaseSpec {
 
-  protected given ordering: Ordering[IndexModel] = Ordering.by((i: IndexModel) => i.toString)
+  protected implicit val ordering: Ordering[IndexModel] = Ordering.by { i: IndexModel => i.toString }
 
-  protected def getIndexes(collection: MongoCollection[?]): Seq[IndexModel] =
+  protected def getIndexes(collection: MongoCollection[_]): Seq[IndexModel] =
     await(
       collection
         .listIndexes()
@@ -41,7 +39,7 @@ trait BaseMongoIndexSpec extends BaseSpec {
           val isUnique    = document.getBoolean("unique", false)
           val sorting =
             document.get("key").map(_.asDocument().values().asScala.head.asInt32().getValue.toString).getOrElse("1")
-          val indexes = if (sorting == "1") Indexes.ascending(indexFields*) else Indexes.descending(indexFields*)
+          val indexes = if (sorting == "1") Indexes.ascending(indexFields: _*) else Indexes.descending(indexFields: _*)
           IndexModel(indexes, IndexOptions().name(name).unique(isUnique))
         })
     )

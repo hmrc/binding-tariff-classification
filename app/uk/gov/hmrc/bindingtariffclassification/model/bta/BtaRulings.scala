@@ -16,14 +16,10 @@
 
 package uk.gov.hmrc.bindingtariffclassification.model.bta
 
-import play.api.libs.functional.syntax.toFunctionalBuilderOps
-import play.api.libs.json.{Format, JsPath}
+import play.api.libs.json.{Json, OFormat}
 
 case class BtaRulings(total: Int, expiring: Int)
 
 object BtaRulings {
-  given format: Format[BtaRulings] = (
-    (JsPath \ "total").format[Int] and
-      (JsPath \ "expiring").format[Int]
-  )(BtaRulings.apply, o => Tuple.fromProductTyped(o))
+  implicit val format: OFormat[BtaRulings] = Json.format[BtaRulings]
 }
