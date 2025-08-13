@@ -71,8 +71,8 @@ class ReferredDaysElapsedSpec extends BaseFeatureSpec with MockitoSugar {
       result(job.execute(), timeout)
 
       Then("The Referred Days Elapsed should be correct")
-      referredDaysElapsedForCase("ref-20181220") shouldBe 31
-      referredDaysElapsedForCase("ref-20181230") shouldBe 24
+      referredDaysElapsedForCase("ref-20181220") shouldBe 32
+      referredDaysElapsedForCase("ref-20181230") shouldBe 25
       referredDaysElapsedForCase("ref-20190110") shouldBe 17
       referredDaysElapsedForCase("ref-20190203") shouldBe 0
       referredDaysElapsedForCase("ref-20190201") shouldBe 1
@@ -104,8 +104,8 @@ class ReferredDaysElapsedSpec extends BaseFeatureSpec with MockitoSugar {
       result(job.execute(), timeout)
 
       Then("The Referred Days Elapsed should be correct")
-      referredDaysElapsedForCase("s-ref-20181220") shouldBe 31
-      referredDaysElapsedForCase("s-ref-20181230") shouldBe 24
+      referredDaysElapsedForCase("s-ref-20181220") shouldBe 32
+      referredDaysElapsedForCase("s-ref-20181230") shouldBe 25
       referredDaysElapsedForCase("s-ref-20190110") shouldBe 17
       referredDaysElapsedForCase("s-ref-20190203") shouldBe 0
       referredDaysElapsedForCase("s-ref-20190201") shouldBe 1

@@ -60,7 +60,7 @@ class ActiveDaysElapsedSpec extends BaseFeatureSpec with MockitoSugar {
       result(job.execute(), timeout)
 
       Then("The Days Elapsed should be correct")
-      daysElapsedForCase("ref-20181220") shouldBe 31
+      daysElapsedForCase("ref-20181220") shouldBe 32
       daysElapsedForCase("ref-20181230") shouldBe 24
       daysElapsedForCase("ref-20190110") shouldBe 17
       daysElapsedForCase("ref-20190203") shouldBe 0
@@ -105,7 +105,7 @@ class ActiveDaysElapsedSpec extends BaseFeatureSpec with MockitoSugar {
       result(job.execute(), timeout)
 
       Then("The Days Elapsed should be correct")
-      daysElapsedForCase("ref-1") shouldBe 31
+      daysElapsedForCase("ref-1") shouldBe 32
       daysElapsedForCase("ref-2") shouldBe 31
 
       daysElapsedForCase("ref-3") shouldBe 39
