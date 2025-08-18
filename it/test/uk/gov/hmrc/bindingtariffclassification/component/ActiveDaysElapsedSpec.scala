@@ -116,7 +116,7 @@ class ActiveDaysElapsedSpec extends BaseFeatureSpec with MockitoSugar {
       val expectedCase1 = calculateExpectedWorkingDays(testDates("case1"), currentDate)
       val expectedCase2 = calculateExpectedWorkingDays(testDates("case2"), currentDate)
       val expectedCase3 = calculateExpectedWorkingDays(testDates("case3"), currentDate)
-      val expectedCase4 = 0L
+      val expectedCase4 = calculateExpectedWorkingDays(testDates("case4"), currentDate)
       val expectedCase5 = calculateExpectedWorkingDays(testDates("case5"), currentDate)
 
       daysElapsedForCase("ref-case1") shouldBe expectedCase1
