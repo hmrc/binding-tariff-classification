@@ -17,7 +17,6 @@
 package uk.gov.hmrc.bindingtariffclassification.component
 
 import java.time._
-import java.time.temporal.ChronoUnit
 import org.scalatestplus.mockito.MockitoSugar
 import play.api.Application
 import play.api.inject.bind
@@ -28,7 +27,6 @@ import uk.gov.hmrc.bindingtariffclassification.model.CaseStatus._
 import uk.gov.hmrc.bindingtariffclassification.model.{Case, Event}
 import uk.gov.hmrc.bindingtariffclassification.scheduler.ActiveDaysElapsedJob
 import uk.gov.hmrc.play.bootstrap.metrics.Metrics
-import uk.gov.hmrc.http.HeaderCarrier
 import util.CaseData._
 import util.{EventData, TestMetrics}
 
@@ -47,183 +45,89 @@ class ActiveDaysElapsedSpec extends BaseFeatureSpec with MockitoSugar {
 
   private val job: ActiveDaysElapsedJob = app.injector.instanceOf[ActiveDaysElapsedJob]
 
-  // Get the current year dynamically from the test clock
-  private val appConfig    = app.injector.instanceOf[AppConfig]
-  private val currentDate  = LocalDate.now(appConfig.clock)
-  private val currentYear  = currentDate.getYear
-  private val previousYear = currentYear - 1
-
-  private val testDates = Map(
-    "case1"      -> s"$previousYear-12-20",
-    "case2"      -> s"$previousYear-12-30",
-    "case3"      -> s"$currentYear-01-10",
-    "case4"      -> s"$currentYear-02-03",
-    "case5"      -> s"$currentYear-02-01",
-    "liability1" -> s"$previousYear-12-20",
-    "liability2" -> s"$previousYear-12-30",
-    "liability3" -> s"$previousYear-12-10",
-    "liability4" -> s"$previousYear-12-20",
-    "migrated1"  -> s"$previousYear-12-20",
-    "migrated2"  -> s"$previousYear-12-30",
-    "migrated3"  -> s"$previousYear-12-31",
-    "migrated4"  -> s"$currentYear-01-10",
-    "migrated5"  -> s"$currentYear-01-15",
-    "migrated6"  -> s"$currentYear-01-20"
-  )
-
-  private def calculateExpectedWorkingDays(
-    startDateStr: String,
-    endDate: LocalDate,
-    excludeDates: Set[LocalDate] = Set.empty
-  ): Long = {
-    val startDate = LocalDate.parse(startDateStr)
-
-    implicit val headerCarrier: HeaderCarrier = HeaderCarrier()
-    val bankHolidaysConnector =
-      app.injector.instanceOf[uk.gov.hmrc.bindingtariffclassification.connector.BankHolidaysConnector]
-    val allBankHolidays = result(bankHolidaysConnector.get(), timeout)
-
-    val relevantBankHolidays =
-      allBankHolidays.filter(holiday => !holiday.isBefore(startDate) && holiday.isBefore(endDate))
-
-    val totalDays = ChronoUnit.DAYS.between(startDate, endDate)
-    val workingDays = (0L until totalDays)
-      .map(startDate.plusDays)
-      .filterNot(relevantBankHolidays.contains)
-      .filterNot(excludeDates.contains)
-      .filterNot(date => date.getDayOfWeek == DayOfWeek.SATURDAY || date.getDayOfWeek == DayOfWeek.SUNDAY)
-      .length
-
-    workingDays.toLong
-  }
-
   Feature("Days Elapsed Job") {
-    Scenario("Calculates elapsed days for OPEN & NEW cases with dynamic dates") {
-      Given("There are cases with mixed statuses in the database using dynamic dates")
+    Scenario("Calculates elapsed days for OPEN & NEW cases") {
+      Given("There are cases with mixed statuses in the database")
 
-      givenThereIs(aCaseWith(reference = "ref-case1", status = OPEN, createdDate = testDates("case1")))
-      givenThereIs(aCaseWith(reference = "ref-case2", status = NEW, createdDate = testDates("case2")))
-      givenThereIs(aCaseWith(reference = "ref-case3", status = OPEN, createdDate = testDates("case3")))
-      givenThereIs(aCaseWith(reference = "ref-case4", status = NEW, createdDate = testDates("case4")))
-      givenThereIs(aCaseWith(reference = "ref-case5", status = NEW, createdDate = testDates("case5")))
-      givenThereIs(aCaseWith(reference = "completed", status = COMPLETED, createdDate = testDates("case5")))
+      givenThereIs(aCaseWith(reference = "ref-20181220", status = OPEN, createdDate = "2018-12-20"))
+      givenThereIs(aCaseWith(reference = "ref-20181230", status = NEW, createdDate = "2018-12-30"))
+      givenThereIs(aCaseWith(reference = "ref-20190110", status = OPEN, createdDate = "2019-01-10"))
+      givenThereIs(aCaseWith(reference = "ref-20190203", status = NEW, createdDate = "2019-02-03"))
+      givenThereIs(aCaseWith(reference = "ref-20190201", status = NEW, createdDate = "2019-02-01"))
+      givenThereIs(aCaseWith(reference = "completed", status = COMPLETED, createdDate = "2019-02-01"))
 
       When("The job runs")
       result(job.execute(), timeout)
 
-      Then("The Days Elapsed should be correct based on dynamic calculation")
-
-      val expectedCase1 = calculateExpectedWorkingDays(testDates("case1"), currentDate)
-      val expectedCase2 = calculateExpectedWorkingDays(testDates("case2"), currentDate)
-      val expectedCase3 = calculateExpectedWorkingDays(testDates("case3"), currentDate)
-      val expectedCase4 = calculateExpectedWorkingDays(testDates("case4"), currentDate)
-      val expectedCase5 = calculateExpectedWorkingDays(testDates("case5"), currentDate)
-
-      daysElapsedForCase("ref-case1") shouldBe expectedCase1
-      daysElapsedForCase("ref-case2") shouldBe expectedCase2
-      daysElapsedForCase("ref-case3") shouldBe expectedCase3
-      daysElapsedForCase("ref-case4") shouldBe expectedCase4
-      daysElapsedForCase("ref-case5") shouldBe expectedCase5
-      daysElapsedForCase("completed") shouldBe -1 // Unchanged
+      Then("The Days Elapsed should be correct")
+      daysElapsedForCase("ref-20181220") shouldBe 31
+      daysElapsedForCase("ref-20181230") shouldBe 24
+      daysElapsedForCase("ref-20190110") shouldBe 17
+      daysElapsedForCase("ref-20190203") shouldBe 0
+      daysElapsedForCase("ref-20190201") shouldBe 1
+      daysElapsedForCase("completed")    shouldBe -1 // Unchanged
     }
 
-    Scenario("Calculates elapsed days for OPEN & NEW Liability cases with dynamic dates") {
-      Given("There are liability cases with mixed statuses in the database using dynamic dates")
+    Scenario("Calculates elapsed days for OPEN & NEW Liability cases") {
+      Given("There are cases with mixed statuses in the database")
 
-      // OPEN without date of receipt will take created date
+      // OPEN
+      // without date of receipt will take created date
       givenThereIs(
-        aLiabilityCaseWith(
-          reference = "ref-1",
-          status = OPEN,
-          createdDate = testDates("liability1"),
-          dateOfReceipt = None
-        )
+        aLiabilityCaseWith(reference = "ref-1", status = OPEN, createdDate = "2018-12-20", dateOfReceipt = None)
       )
+      // with date of receipt will take date of receipt
       givenThereIs(
         aLiabilityCaseWith(
           reference = "ref-2",
           status = OPEN,
-          createdDate = testDates("liability2"),
-          dateOfReceipt = Some(testDates("liability1"))
+          createdDate = "2018-12-30",
+          dateOfReceipt = Some("2018-12-20")
         )
       )
 
+      // NEW
+      // without date of receipt will take created date
       givenThereIs(
-        aLiabilityCaseWith(
-          reference = "ref-3",
-          status = NEW,
-          createdDate = testDates("liability3"),
-          dateOfReceipt = None
-        )
+        aLiabilityCaseWith(reference = "ref-3", status = NEW, createdDate = "2018-12-10", dateOfReceipt = None)
       )
+      // with date of receipt will take date of receipt
       givenThereIs(
         aLiabilityCaseWith(
           reference = "ref-4",
           status = NEW,
-          createdDate = testDates("liability4"),
-          dateOfReceipt = Some(testDates("liability3"))
+          createdDate = "2018-12-20",
+          dateOfReceipt = Some("2018-12-10")
         )
       )
 
       When("The job runs")
       result(job.execute(), timeout)
 
-      Then("The Days Elapsed should be correct based on dynamic calculation")
+      Then("The Days Elapsed should be correct")
+      daysElapsedForCase("ref-1") shouldBe 31
+      daysElapsedForCase("ref-2") shouldBe 31
 
-      val expectedRef1 = calculateExpectedWorkingDays(testDates("liability1"), currentDate)
-      val expectedRef2 = calculateExpectedWorkingDays(testDates("liability1"), currentDate)
-      val expectedRef3 = calculateExpectedWorkingDays(testDates("liability3"), currentDate)
-      val expectedRef4 = calculateExpectedWorkingDays(testDates("liability3"), currentDate)
-
-      daysElapsedForCase("ref-1") shouldBe expectedRef1
-      daysElapsedForCase("ref-2") shouldBe expectedRef2
-      daysElapsedForCase("ref-3") shouldBe expectedRef3
-      daysElapsedForCase("ref-4") shouldBe expectedRef4
+      daysElapsedForCase("ref-3") shouldBe 39
+      daysElapsedForCase("ref-4") shouldBe 39
     }
 
-    Scenario("Calculates elapsed days for a referred case with dynamic dates") {
-      Given("A Case which was REFERRED in the past using dynamic dates")
-
-      val referredDate = s"$currentYear-01-15"
-
-      givenThereIs(aCaseWith(reference = "valid-ref", status = OPEN, createdDate = testDates("case3")))
-      givenThereIs(aStatusChangeWith(caseReference = "valid-ref", status = REFERRED, date = referredDate))
-
-      When("The job runs")
-      result(job.execute(), timeout)
-
-      Then("The Days Elapsed should be correct based on dynamic calculation")
-
-      val referralStart = LocalDate.parse(referredDate)
-      val daysToExclude = (0L until ChronoUnit.DAYS.between(referralStart, currentDate))
-        .map(referralStart.plusDays)
-        .toSet
-
-      val expectedDays = calculateExpectedWorkingDays(testDates("case3"), currentDate, daysToExclude)
-
-      daysElapsedForCase("valid-ref") shouldBe expectedDays
-    }
-
-    Scenario("Calculates elapsed days for a case created & referred on the same day with dynamic dates") {
-      Given("There is case which was REFERRED the day it was created using dynamic dates")
-
-      givenThereIs(aCaseWith(reference = "valid-ref", status = OPEN, createdDate = testDates("case5")))
-      givenThereIs(aStatusChangeWith(caseReference = "valid-ref", status = REFERRED, date = testDates("case5")))
+    Scenario("Calculates elapsed days for a referred case") {
+      Given("A Case which was REFERRED in the past")
+      givenThereIs(aCaseWith(reference = "valid-ref", status = OPEN, createdDate = "2019-01-10"))
+      givenThereIs(aStatusChangeWith(caseReference = "valid-ref", status = REFERRED, date = "2019-01-15"))
 
       When("The job runs")
       result(job.execute(), timeout)
 
       Then("The Days Elapsed should be correct")
-
-      val expectedDays = calculateExpectedWorkingDays(testDates("case5"), currentDate)
-      daysElapsedForCase("valid-ref") shouldBe expectedDays
+      daysElapsedForCase("valid-ref") shouldBe 3
     }
 
-    Scenario("Calculates elapsed days for a case referred today with dynamic dates") {
-      Given("There is case with a referred case using dynamic dates")
-
-      givenThereIs(aCaseWith(reference = "valid-ref", status = OPEN, createdDate = testDates("case4")))
-      givenThereIs(aStatusChangeWith(caseReference = "valid-ref", status = REFERRED, date = testDates("case4")))
+    Scenario("Calculates elapsed days for a case created & referred on the same day") {
+      Given("There is case which was REFERRED the day it was created")
+      givenThereIs(aCaseWith(reference = "valid-ref", status = OPEN, createdDate = "2019-02-01"))
+      givenThereIs(aStatusChangeWith(caseReference = "valid-ref", status = REFERRED, date = "2019-02-01"))
 
       When("The job runs")
       result(job.execute(), timeout)
@@ -232,49 +136,10 @@ class ActiveDaysElapsedSpec extends BaseFeatureSpec with MockitoSugar {
       daysElapsedForCase("valid-ref") shouldBe 0
     }
 
-    Scenario("Calculates elapsed days for a suspended case with dynamic dates") {
-      Given("A Case which was SUSPENDED in the past using dynamic dates")
-
-      val suspendedDate = s"$currentYear-01-15"
-
-      givenThereIs(aCaseWith(reference = "valid-ref", status = OPEN, createdDate = testDates("case3")))
-      givenThereIs(aStatusChangeWith(caseReference = "valid-ref", status = SUSPENDED, date = suspendedDate))
-
-      When("The job runs")
-      result(job.execute(), timeout)
-
-      Then("The Days Elapsed should be correct based on dynamic calculation")
-
-      val suspensionStart = LocalDate.parse(suspendedDate)
-      val daysToExclude = (0L until ChronoUnit.DAYS.between(suspensionStart, currentDate))
-        .map(suspensionStart.plusDays)
-        .toSet
-
-      val expectedDays = calculateExpectedWorkingDays(testDates("case3"), currentDate, daysToExclude)
-
-      daysElapsedForCase("valid-ref") shouldBe expectedDays
-    }
-
-    Scenario("Calculates elapsed days for a case created & suspended on the same day with dynamic dates") {
-      Given("There is case which was SUSPENDED the day it was created using dynamic dates")
-
-      givenThereIs(aCaseWith(reference = "valid-ref", status = OPEN, createdDate = testDates("case5")))
-      givenThereIs(aStatusChangeWith(caseReference = "valid-ref", status = SUSPENDED, date = testDates("case5")))
-
-      When("The job runs")
-      result(job.execute(), timeout)
-
-      Then("The Days Elapsed should be correct")
-
-      val expectedDays = calculateExpectedWorkingDays(testDates("case5"), currentDate)
-      daysElapsedForCase("valid-ref") shouldBe expectedDays
-    }
-
-    Scenario("Calculates elapsed days for a case suspended today with dynamic dates") {
-      Given("There is case with a suspended case using dynamic dates")
-
-      givenThereIs(aCaseWith(reference = "valid-ref", status = OPEN, createdDate = testDates("case4")))
-      givenThereIs(aStatusChangeWith(caseReference = "valid-ref", status = SUSPENDED, date = testDates("case4")))
+    Scenario("Calculates elapsed days for a case referred today") {
+      Given("There is case with a referred case")
+      givenThereIs(aCaseWith(reference = "valid-ref", status = OPEN, createdDate = "2019-02-03"))
+      givenThereIs(aStatusChangeWith(caseReference = "valid-ref", status = REFERRED, date = "2019-02-03"))
 
       When("The job runs")
       result(job.execute(), timeout)
@@ -283,55 +148,87 @@ class ActiveDaysElapsedSpec extends BaseFeatureSpec with MockitoSugar {
       daysElapsedForCase("valid-ref") shouldBe 0
     }
 
-    Scenario("Calculates elapsed days for migrated cases with dynamic dates") {
-      Given("There are migrated cases with mixed statuses in the database using dynamic dates")
+    Scenario("Calculates elapsed days for a suspended case") {
+      Given("A Case which was SUSPENDED in the past")
+      givenThereIs(aCaseWith(reference = "valid-ref", status = OPEN, createdDate = "2019-01-10"))
+      givenThereIs(aStatusChangeWith(caseReference = "valid-ref", status = SUSPENDED, date = "2019-01-15"))
 
-      val extractDate1 = s"$currentYear-01-21"
-      val extractDate2 = s"$currentYear-01-30"
-      val extractDate3 = testDates("case4") // Current date
+      When("The job runs")
+      result(job.execute(), timeout)
+
+      Then("The Days Elapsed should be correct")
+      daysElapsedForCase("valid-ref") shouldBe 3
+    }
+
+    Scenario("Calculates elapsed days for a case created & suspended on the same day") {
+      Given("There is case which was REFERRED the day it was created")
+      givenThereIs(aCaseWith(reference = "valid-ref", status = OPEN, createdDate = "2019-02-01"))
+      givenThereIs(aStatusChangeWith(caseReference = "valid-ref", status = SUSPENDED, date = "2019-02-01"))
+
+      When("The job runs")
+      result(job.execute(), timeout)
+
+      Then("The Days Elapsed should be correct")
+      daysElapsedForCase("valid-ref") shouldBe 0
+    }
+
+    Scenario("Calculates elapsed days for a case suspended today") {
+      Given("There is case with a referred case")
+      givenThereIs(aCaseWith(reference = "valid-ref", status = OPEN, createdDate = "2019-02-03"))
+      givenThereIs(aStatusChangeWith(caseReference = "valid-ref", status = SUSPENDED, date = "2019-02-03"))
+
+      When("The job runs")
+      result(job.execute(), timeout)
+
+      Then("The Days Elapsed should be correct")
+      daysElapsedForCase("valid-ref") shouldBe 0
+    }
+
+    Scenario("Calculates elapsed days for migrated cases") {
+      Given("There are migrated cases with mixed statuses in the database")
 
       givenThereIs(
         aMigratedCaseWith(
-          reference = "mref-case1",
+          reference = "mref-20181220",
           status = OPEN,
-          createdDate = testDates("migrated1"),
-          dateOfExtract = extractDate1,
+          createdDate = "2018-12-20",
+          dateOfExtract = "2019-01-21",
           migratedDaysElapsed = 19L
         )
       )
       givenThereIs(
         aMigratedCaseWith(
-          reference = "mref-case2",
+          reference = "mref-20181230",
           status = NEW,
-          createdDate = testDates("migrated2"),
-          dateOfExtract = extractDate1,
+          createdDate = "2018-12-30",
+          dateOfExtract = "2019-01-21",
           migratedDaysElapsed = 10L
         )
       )
       givenThereIs(
         aMigratedCaseWith(
-          reference = "mref-case3",
+          reference = "mref-20181231",
           status = OPEN,
-          createdDate = testDates("migrated3"),
-          dateOfExtract = extractDate2,
+          createdDate = "2018-12-31",
+          dateOfExtract = "2019-01-30",
           migratedDaysElapsed = 8L
         )
       )
       givenThereIs(
         aMigratedCaseWith(
-          reference = "mref-case4",
+          reference = "mref-20190110",
           status = NEW,
-          createdDate = testDates("migrated4"),
-          dateOfExtract = extractDate2,
+          createdDate = "2019-01-10",
+          dateOfExtract = "2019-01-30",
           migratedDaysElapsed = 5L
         )
       )
       givenThereIs(
         aMigratedCaseWith(
-          reference = "mref-case5",
+          reference = "mref-20190115",
           status = NEW,
-          createdDate = testDates("migrated5"),
-          dateOfExtract = extractDate3,
+          createdDate = "2019-01-15",
+          dateOfExtract = "2019-02-03",
           migratedDaysElapsed = 1L
         )
       )
@@ -339,8 +236,8 @@ class ActiveDaysElapsedSpec extends BaseFeatureSpec with MockitoSugar {
         aMigratedCaseWith(
           reference = "mcompleted",
           status = COMPLETED,
-          createdDate = testDates("migrated6"),
-          dateOfExtract = extractDate2,
+          createdDate = "2019-01-20",
+          dateOfExtract = "2019-01-30",
           migratedDaysElapsed = 1L
         )
       )
@@ -348,18 +245,13 @@ class ActiveDaysElapsedSpec extends BaseFeatureSpec with MockitoSugar {
       When("The job runs")
       result(job.execute(), timeout)
 
-      Then("The Days Elapsed should be correct based on dynamic calculation")
-
-      val trackingDays1 = calculateExpectedWorkingDays(extractDate1, currentDate)
-      val trackingDays2 = calculateExpectedWorkingDays(extractDate2, currentDate)
-      val trackingDays3 = calculateExpectedWorkingDays(extractDate3, currentDate)
-
-      daysElapsedForCase("mref-case1") shouldBe (19L + trackingDays1)
-      daysElapsedForCase("mref-case2") shouldBe (10L + trackingDays1)
-      daysElapsedForCase("mref-case3") shouldBe (8L + trackingDays2)
-      daysElapsedForCase("mref-case4") shouldBe (5L + trackingDays2)
-      daysElapsedForCase("mref-case5") shouldBe (1L + trackingDays3)
-      daysElapsedForCase("mcompleted") shouldBe -1 // Unchanged
+      Then("The Days Elapsed should be correct")
+      daysElapsedForCase("mref-20181220") shouldBe 29
+      daysElapsedForCase("mref-20181230") shouldBe 20
+      daysElapsedForCase("mref-20181231") shouldBe 11
+      daysElapsedForCase("mref-20190110") shouldBe 8
+      daysElapsedForCase("mref-20190115") shouldBe 1
+      daysElapsedForCase("mcompleted")    shouldBe -1 // Unchanged
     }
   }
 

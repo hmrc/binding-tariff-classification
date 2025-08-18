@@ -77,11 +77,11 @@ class BankHolidaysConnectorTest extends BaseSpec with WiremockTestServer with Ht
     }
 
     "Fallback to resources on 4xx" in new Test(aResponse().withStatus(NOT_FOUND)) {
-      await(connector.get()).size shouldBe 83
+      await(connector.get()).size shouldBe 67
     }
 
     "Fallback to resources on 5xx" in new Test(aResponse().withStatus(BAD_GATEWAY)) {
-      await(connector.get()).size shouldBe 83
+      await(connector.get()).size shouldBe 67
     }
   }
 }

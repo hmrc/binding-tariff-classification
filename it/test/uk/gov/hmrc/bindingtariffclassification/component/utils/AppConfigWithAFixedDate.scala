@@ -25,12 +25,7 @@ import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 class AppConfigWithAFixedDate @Inject() (runModeConfiguration: Configuration, config: ServicesConfig)
     extends AppConfig(runModeConfiguration, config) {
-
-  // Get current year dynamically
-  private val currentYear = Year.now().getValue
-
-  // Build the fixed date dynamically: February 3rd of current year
-  private val defaultSystemDate: Instant = LocalDate.of(currentYear, 2, 3).atStartOfDay().toInstant(ZoneOffset.UTC)
-  private val defaultZoneId              = ZoneOffset.UTC
+  private val defaultSystemDate: Instant = LocalDate.parse("2019-02-03").atStartOfDay().toInstant(ZoneOffset.UTC)
+  private val defaultZoneId              = ZoneId.systemDefault()
   override lazy val clock: Clock         = Clock.fixed(defaultSystemDate, defaultZoneId)
 }
