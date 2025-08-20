@@ -22,7 +22,6 @@ import uk.gov.hmrc.bindingtariffclassification.common.Logging
 import uk.gov.hmrc.bindingtariffclassification.model.ErrorCode._
 import uk.gov.hmrc.bindingtariffclassification.model.JsErrorResponse
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
-import scala.reflect.ClassTag
 
 import scala.concurrent.Future
 import scala.concurrent.Future.successful
@@ -33,9 +32,9 @@ class CommonController(
 ) extends BackendController(mcc)
     with Logging {
 
-  protected override def withJsonBody[T](
+  protected def withJsonBody[T](
     f: T => Future[Result]
-  )(implicit request: Request[JsValue], ct: ClassTag[T], reads: Reads[T]): Future[Result] =
+  )(implicit request: Request[JsValue], m: Manifest[T], reads: Reads[T]): Future[Result] =
     Try(request.body.validate[T]) match {
       case Success(JsSuccess(payload, _)) => f(payload)
       case Success(JsError(errs)) =>

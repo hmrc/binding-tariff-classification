@@ -28,9 +28,6 @@ import uk.gov.hmrc.bindingtariffclassification.model.RESTFormatters.{formatEvent
 import uk.gov.hmrc.bindingtariffclassification.model._
 import util.CaseData.createCase
 import util.EventData._
-import play.api.libs.ws.DefaultBodyWritables.writeableOf_String
-
-import play.api.libs.ws.DefaultBodyReadables.readableAsString
 
 import java.time.temporal.ChronoUnit
 import scala.concurrent.Await
@@ -40,7 +37,7 @@ class EventSpec extends BaseFeatureSpec {
 
   protected val serviceUrl = s"http://localhost:$port"
 
-  given mat: Materializer               = app.materializer
+  implicit val mat: Materializer        = app.materializer
   val httpClient: StandaloneAhcWSClient = StandaloneAhcWSClient()
 
   private val caseRef = UUID.randomUUID().toString
@@ -65,13 +62,13 @@ class EventSpec extends BaseFeatureSpec {
       val deleteResult = Await.result(responseFuture, Duration(1000L, "ms"))
 
       Then("The response code should be 204")
-      deleteResult.status.intValue().shouldEqual(NO_CONTENT)
+      deleteResult.status.intValue() shouldEqual NO_CONTENT
 
       And("The response body is empty")
-      deleteResult.body.shouldBe("")
+      deleteResult.body shouldBe ""
 
       And("No documents exist in the mongo collection")
-      eventStoreSize.shouldBe(0)
+      eventStoreSize shouldBe 0
     }
 
   }
@@ -209,15 +206,15 @@ class EventSpec extends BaseFeatureSpec {
       val responseFuture = httpClient
         .url(s"$serviceUrl/cases/$caseRef/events")
         .withHttpHeaders(apiTokenKey -> appConfig.authorization, CONTENT_TYPE -> ContentTypes.JSON)
-        .post(Json.toJson(payload).toString)
+        .post(Json.toJson(payload).toString())
       val result = Await.result(responseFuture, Duration(1000L, "ms"))
 
       Then("The response code should be created")
-      result.status.intValue().shouldEqual(Status.CREATED)
+      result.status.intValue() shouldEqual Status.CREATED
 
       And("The event is returned in the JSON response")
       val responseEvent = Json.parse(result.body).as[Event]
-      responseEvent.caseReference.shouldBe(caseRef)
+      responseEvent.caseReference shouldBe caseRef
     }
 
   }
@@ -233,18 +230,18 @@ class EventSpec extends BaseFeatureSpec {
       val responseFuture = httpClient
         .url(s"$serviceUrl/cases/$caseRef/events")
         .withHttpHeaders(apiTokenKey -> appConfig.authorization, CONTENT_TYPE -> ContentTypes.JSON)
-        .post(Json.toJson(payload).toString)
+        .post(Json.toJson(payload).toString())
       val result = Await.result(responseFuture, Duration(1000L, "ms"))
 
       Then("The response code should be CREATED")
-      result.status.intValue().shouldEqual(Status.CREATED)
+      result.status.intValue() shouldEqual Status.CREATED
 
       And("The event is returned in the JSON response")
       val responseEvent = Json.parse(result.body).as[Event]
-      responseEvent.caseReference.shouldBe(caseRef)
+      responseEvent.caseReference shouldBe caseRef
 
       val caseCreatedEvent = responseEvent.details.asInstanceOf[CaseCreated]
-      caseCreatedEvent.comment.shouldBe("Liability case created")
+      caseCreatedEvent.comment shouldBe "Liability case created"
     }
   }
   private def adaptCaseInstantFormat(_case: Case): Case = {

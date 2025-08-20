@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.bindingtariffclassification.model
 
+import org.scalatest.wordspec.AnyWordSpec
 import play.api.libs.json.{Format, JsError, JsNumber, JsString, JsSuccess, Json}
 import uk.gov.hmrc.bindingtariffclassification.base.BaseSpec
 
@@ -43,7 +44,7 @@ class EnumJsonSpec extends BaseSpec {
     }
 
     "EnumJson.readsMap should read Map[CaseStatus, Int] from JSON" in {
-      given caseStatusFormat: Format[CaseStatus.Value] = EnumJson.format(CaseStatus)
+      implicit val caseStatusFormat: Format[CaseStatus.Value] = EnumJson.format(CaseStatus)
 
       val json = Json.parse(
         """{
@@ -63,7 +64,7 @@ class EnumJsonSpec extends BaseSpec {
     }
 
     "EnumJson.writesMap should write Map[CaseStatus, Int] as JSON" in {
-      given caseStatusFormat: Format[CaseStatus.Value] = EnumJson.format(CaseStatus)
+      implicit val caseStatusFormat: Format[CaseStatus.Value] = EnumJson.format(CaseStatus)
 
       val map = Map(
         CaseStatus.DRAFT    -> 5,

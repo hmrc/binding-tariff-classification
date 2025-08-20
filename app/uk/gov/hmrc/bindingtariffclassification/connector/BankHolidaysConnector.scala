@@ -16,16 +16,16 @@
 
 package uk.gov.hmrc.bindingtariffclassification.connector
 
-import com.codahale.metrics.MetricRegistry
 import play.api.libs.json.Json
 import uk.gov.hmrc.bindingtariffclassification.common.Logging
 import uk.gov.hmrc.bindingtariffclassification.config.AppConfig
 import uk.gov.hmrc.bindingtariffclassification.metrics.HasMetrics
 import uk.gov.hmrc.bindingtariffclassification.model.BankHolidaysResponse
 import uk.gov.hmrc.bindingtariffclassification.model.RESTFormatters.formatBankHolidaysResponse
-import uk.gov.hmrc.http.HttpReads.Implicits.*
+import uk.gov.hmrc.http.HttpReads.Implicits._
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.{HeaderCarrier, StringContextOps}
+import uk.gov.hmrc.play.bootstrap.metrics.Metrics
 
 import java.nio.charset.StandardCharsets
 import java.time.LocalDate
@@ -34,7 +34,7 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.io.Source
 
 @Singleton
-class BankHolidaysConnector @Inject() (appConfig: AppConfig, http: HttpClientV2, val metrics: MetricRegistry)(implicit
+class BankHolidaysConnector @Inject() (appConfig: AppConfig, http: HttpClientV2, val metrics: Metrics)(implicit
   executionContext: ExecutionContext
 ) extends Logging
     with HasMetrics {

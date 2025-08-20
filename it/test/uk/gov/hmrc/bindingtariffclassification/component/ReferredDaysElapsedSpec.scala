@@ -48,7 +48,6 @@ class ReferredDaysElapsedSpec extends BaseFeatureSpec with MockitoSugar {
   private val job: ReferredDaysElapsedJob = app.injector.instanceOf[ReferredDaysElapsedJob]
 
   // Get the current year dynamically from the test clock
-  private val appConfig    = app.injector.instanceOf[AppConfig]
   private val currentDate  = LocalDate.now(appConfig.clock)
   private val currentYear  = currentDate.getYear
   private val previousYear = currentYear - 1

@@ -17,6 +17,6 @@
 package uk.gov.hmrc.bindingtariffclassification.model
 
 case class ManageKeywordsData(
-                               pagedCaseKeywords: Paged[CaseKeyword],
-                               pagedKeywords: Paged[Keyword]
-                             )
+  pagedCaseKeywords: Paged[CaseKeyword],
+  pagedKeywords: Paged[Keyword]
+)

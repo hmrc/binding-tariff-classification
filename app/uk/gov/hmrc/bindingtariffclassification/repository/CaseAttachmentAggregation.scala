@@ -25,8 +25,6 @@ import play.api.libs.json.Json
 import uk.gov.hmrc.bindingtariffclassification.model.{Attachment, MongoCodecs}
 import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.play.json.Codecs
-import org.mongodb.scala.SingleObservableFuture
-import org.mongodb.scala.ObservableFuture
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
@@ -34,7 +32,7 @@ import scala.concurrent.{ExecutionContext, Future}
 @Singleton
 class CaseAttachmentAggregation @Inject() (mongoComponent: MongoComponent)(implicit mat: Materializer) {
 
-  given ec: ExecutionContext = mat.executionContext
+  implicit val ec: ExecutionContext = mat.executionContext
 
   private val attachmentArrayFields: Set[String] = Set(
     "attachments"

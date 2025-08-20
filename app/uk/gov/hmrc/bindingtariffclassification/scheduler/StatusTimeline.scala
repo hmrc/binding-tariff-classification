@@ -23,7 +23,7 @@ import java.time.Instant
 import scala.collection.immutable.SortedMap
 
 class StatusTimeline(statusChanges: Seq[(Instant, CaseStatus)]) {
-  private lazy val timeline: SortedMap[Instant, CaseStatus] = SortedMap[Instant, CaseStatus](statusChanges*)
+  private lazy val timeline: SortedMap[Instant, CaseStatus] = SortedMap[Instant, CaseStatus](statusChanges: _*)
 
   def statusOn(date: Instant): Option[CaseStatus] =
     if (timeline.contains(date)) {

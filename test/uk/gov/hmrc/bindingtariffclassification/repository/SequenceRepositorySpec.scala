@@ -23,7 +23,6 @@ import org.scalatest.concurrent.Eventually
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
 import uk.gov.hmrc.bindingtariffclassification.model._
 import uk.gov.hmrc.mongo.test.MongoSupport
-import org.mongodb.scala.SingleObservableFuture
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.DurationInt
@@ -44,13 +43,11 @@ class SequenceRepositorySpec
     super.beforeEach()
     await(repository.collection.deleteMany(Filters.empty()).toFuture())
     collectionSize shouldBe 0
-    ()
   }
 
   override def afterAll(): Unit = {
     super.afterAll()
     await(repository.collection.deleteMany(Filters.empty()).toFuture())
-    ()
   }
 
   private def collectionSize: Int =

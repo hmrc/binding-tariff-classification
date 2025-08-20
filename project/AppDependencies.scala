@@ -8,6 +8,7 @@ object AppDependencies {
   lazy val compile: Seq[ModuleID] = Seq(
     "uk.gov.hmrc"                  %% "bootstrap-backend-play-30"   % bootstrapVersion,
     "uk.gov.hmrc.mongo"            %% "hmrc-mongo-play-30"          % mongoHmrcVersion,
+    "org.apache.pekko"             %% "pekko-connectors-mongodb"    % "1.1.0",
     "org.apache.pekko"             %% "pekko-stream"                % pekkoVersion,
     "org.apache.pekko"             %% "pekko-actor-typed"           % pekkoVersion,
     "org.apache.pekko"             %% "pekko-serialization-jackson" % pekkoVersion,

@@ -17,6 +17,7 @@
 package uk.gov.hmrc.bindingtariffclassification.service
 
 import org.apache.pekko.stream.Materializer
+import org.bson.Document
 import uk.gov.hmrc.bindingtariffclassification.model._
 import uk.gov.hmrc.bindingtariffclassification.repository._
 
@@ -29,7 +30,7 @@ class KeywordService @Inject() (
   caseRepository: CaseRepository
 )(implicit mat: Materializer) {
 
-  given ec: ExecutionContext = mat.executionContext
+  implicit val ec: ExecutionContext = mat.executionContext
 
   def addKeyword(keyword: Keyword): Future[Keyword] =
     keywordRepository.insert(keyword)

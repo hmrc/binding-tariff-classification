@@ -23,7 +23,6 @@ import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
 import uk.gov.hmrc.bindingtariffclassification.config.AppConfig
 import uk.gov.hmrc.bindingtariffclassification.model._
 import uk.gov.hmrc.mongo.test.MongoSupport
-import org.mongodb.scala.SingleObservableFuture
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -38,7 +37,7 @@ class UsersRepositorySpec
 
   private val repository = createMongoRepo
 
-  private lazy val appConfig = fakeApplication().injector.instanceOf[AppConfig]
+  private lazy val appConfig = fakeApplication.injector.instanceOf[AppConfig]
 
   private def createMongoRepo =
     new UsersMongoRepository(mongoComponent, appConfig)
@@ -46,15 +45,13 @@ class UsersRepositorySpec
   override def beforeEach(): Unit = {
     super.beforeEach()
     await(repository.collection.deleteMany(Filters.empty()).toFuture())
-    await(repository.ensureIndexes())
+    await(repository.ensureIndexes)
     collectionSize shouldBe 0
-    ()
   }
 
   override def afterAll(): Unit = {
     super.afterAll()
     await(repository.collection.deleteMany(Filters.empty()).toFuture())
-    ()
   }
 
   private def collectionSize: Int =

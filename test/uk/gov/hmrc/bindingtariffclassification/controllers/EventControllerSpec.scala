@@ -65,10 +65,9 @@ class EventControllerSpec extends BaseSpec with BeforeAndAfterEach {
       when(appConfig.isTestMode).thenReturn(false)
       val result = controller.deleteAll()(req)
 
-      status(result).shouldBe(FORBIDDEN)
+      status(result) shouldBe FORBIDDEN
       contentAsJson(result)
-        .toString()
-        .shouldBe(s"""{"code":"FORBIDDEN","message":"You are not allowed to call ${req.method} ${req.path}"}""")
+        .toString() shouldBe s"""{"code":"FORBIDDEN","message":"You are not allowed to call ${req.method} ${req.path}"}"""
     }
 
     "return 204 if the test mode is enabled" in {
@@ -77,7 +76,7 @@ class EventControllerSpec extends BaseSpec with BeforeAndAfterEach {
 
       val result = controller.deleteAll()(req).futureValue
 
-      result.header.status.shouldBe(NO_CONTENT)
+      result.header.status shouldBe NO_CONTENT
     }
 
     "return 500 when an error occurred" in {
@@ -88,8 +87,8 @@ class EventControllerSpec extends BaseSpec with BeforeAndAfterEach {
 
       val result = controller.deleteAll()(req)
 
-      status(result).shouldBe(INTERNAL_SERVER_ERROR)
-      contentAsJson(result).toString().shouldBe("""{"code":"UNKNOWN_ERROR","message":"An unexpected error occurred"}""")
+      status(result)                   shouldBe INTERNAL_SERVER_ERROR
+      contentAsJson(result).toString() shouldBe """{"code":"UNKNOWN_ERROR","message":"An unexpected error occurred"}"""
     }
 
   }
@@ -102,10 +101,9 @@ class EventControllerSpec extends BaseSpec with BeforeAndAfterEach {
       when(appConfig.isTestMode).thenReturn(false)
       val result = controller.deleteCaseEvents("ref")(req)
 
-      status(result).shouldBe(FORBIDDEN)
+      status(result) shouldBe FORBIDDEN
       contentAsJson(result)
-        .toString()
-        .shouldBe(s"""{"code":"FORBIDDEN","message":"You are not allowed to call ${req.method} ${req.path}"}""")
+        .toString() shouldBe s"""{"code":"FORBIDDEN","message":"You are not allowed to call ${req.method} ${req.path}"}"""
     }
 
     "return 204 if the test mode is enabled" in {
@@ -114,7 +112,7 @@ class EventControllerSpec extends BaseSpec with BeforeAndAfterEach {
 
       val result = controller.deleteCaseEvents("ref")(req).futureValue
 
-      result.header.status.shouldBe(NO_CONTENT)
+      result.header.status shouldBe NO_CONTENT
     }
 
     "return 500 when an error occurred" in {
@@ -125,8 +123,8 @@ class EventControllerSpec extends BaseSpec with BeforeAndAfterEach {
 
       val result = controller.deleteCaseEvents("ref")(req)
 
-      status(result).shouldBe(INTERNAL_SERVER_ERROR)
-      contentAsJson(result).toString().shouldBe("""{"code":"UNKNOWN_ERROR","message":"An unexpected error occurred"}""")
+      status(result)                   shouldBe INTERNAL_SERVER_ERROR
+      contentAsJson(result).toString() shouldBe """{"code":"UNKNOWN_ERROR","message":"An unexpected error occurred"}"""
     }
 
   }
@@ -139,8 +137,8 @@ class EventControllerSpec extends BaseSpec with BeforeAndAfterEach {
 
       val result = controller.getByCaseReference(caseReference, Pagination())(fakeRequest)
 
-      status(result).shouldBe(OK)
-      contentAsJson(result).shouldBe(toJson(Paged(Seq(e1, e2))))
+      status(result)        shouldBe OK
+      contentAsJson(result) shouldBe toJson(Paged(Seq(e1, e2)))
     }
 
     "return 200 with an empty sequence when there are no events for a specific case" in {
@@ -149,8 +147,8 @@ class EventControllerSpec extends BaseSpec with BeforeAndAfterEach {
 
       val result = controller.getByCaseReference(caseReference, Pagination())(fakeRequest)
 
-      status(result).shouldBe(OK)
-      contentAsJson(result).shouldBe(toJson(Paged.empty[Event]))
+      status(result)        shouldBe OK
+      contentAsJson(result) shouldBe toJson(Paged.empty[Event])
     }
 
     "return 500 when an error occurred" in {
@@ -160,8 +158,8 @@ class EventControllerSpec extends BaseSpec with BeforeAndAfterEach {
 
       val result = controller.getByCaseReference(caseReference, Pagination())(fakeRequest)
 
-      status(result).shouldBe(INTERNAL_SERVER_ERROR)
-      contentAsJson(result).toString().shouldBe("""{"code":"UNKNOWN_ERROR","message":"An unexpected error occurred"}""")
+      status(result)                   shouldBe INTERNAL_SERVER_ERROR
+      contentAsJson(result).toString() shouldBe """{"code":"UNKNOWN_ERROR","message":"An unexpected error occurred"}"""
     }
   }
 
@@ -172,8 +170,8 @@ class EventControllerSpec extends BaseSpec with BeforeAndAfterEach {
 
       val result = controller.search(EventSearch(), Pagination())(fakeRequest)
 
-      status(result).shouldBe(OK)
-      contentAsJson(result).shouldBe(toJson(Paged(Seq(e1, e2))))
+      status(result)        shouldBe OK
+      contentAsJson(result) shouldBe toJson(Paged(Seq(e1, e2)))
     }
 
     "return 500 when an error occurred" in {
@@ -183,8 +181,8 @@ class EventControllerSpec extends BaseSpec with BeforeAndAfterEach {
 
       val result = controller.search(EventSearch(), Pagination())(fakeRequest)
 
-      status(result).shouldBe(INTERNAL_SERVER_ERROR)
-      contentAsJson(result).toString().shouldBe("""{"code":"UNKNOWN_ERROR","message":"An unexpected error occurred"}""")
+      status(result)                   shouldBe INTERNAL_SERVER_ERROR
+      contentAsJson(result).toString() shouldBe """{"code":"UNKNOWN_ERROR","message":"An unexpected error occurred"}"""
     }
   }
 
@@ -210,8 +208,8 @@ class EventControllerSpec extends BaseSpec with BeforeAndAfterEach {
       val request = fakeRequest.withBody(toJson(newEvent))
       val result  = controller.create(caseReference)(request)
 
-      status(result).shouldBe(CREATED)
-      contentAsJson(result).shouldBe(toJson(event))
+      status(result)        shouldBe CREATED
+      contentAsJson(result) shouldBe toJson(event)
     }
 
     "return 404 Not Found for invalid Reference" in {
@@ -221,8 +219,8 @@ class EventControllerSpec extends BaseSpec with BeforeAndAfterEach {
       val result  = controller.create(caseReference)(request)
 
       verifyNoMoreInteractions(eventService)
-      status(result).shouldBe(NOT_FOUND)
-      contentAsJson(result).toString().shouldBe("{\"code\":\"NOT_FOUND\",\"message\":\"Case not found\"}")
+      status(result)                   shouldBe NOT_FOUND
+      contentAsJson(result).toString() shouldBe "{\"code\":\"NOT_FOUND\",\"message\":\"Case not found\"}"
     }
   }
 

@@ -36,17 +36,18 @@ class CaseService @Inject() (
   eventService: EventService
 )(implicit mat: Materializer) {
 
-  given ec: ExecutionContext = mat.executionContext
+  implicit val ec: ExecutionContext = mat.executionContext
 
   def insert(c: Case): Future[Case] =
     caseRepository.insert(c)
 
   def addInitialSampleStatusIfExists(c: Case): Future[Unit] = {
-    c.sample.status.map { sampleStatus =>
+    if (c.sample.status.nonEmpty) {
+      val details = SampleStatusChange(None, c.sample.status, None)
       eventService.insert(
         Event(
           UUID.randomUUID().toString,
-          SampleStatusChange(None, Option(sampleStatus), None),
+          details,
           Operator("-1", Some(c.application.contact.name)),
           c.reference,
           Instant.now()

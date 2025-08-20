@@ -41,7 +41,7 @@ class BtaCardSpec extends BaseFeatureSpec with IntegrationSpecBase {
 
       AuthStub.authorised()
       dropStores()
-      storeCases(CaseData.createBtaCardData(eori, 2, 1, 6, 3)*)
+      storeCases(CaseData.createBtaCardData(eori, 2, 1, 6, 3): _*)
 
       When("I call the BTA Card endpoint for the counts")
 
@@ -50,16 +50,16 @@ class BtaCardSpec extends BaseFeatureSpec with IntegrationSpecBase {
       val result = Await.result(responseFuture, Duration(1000L, "ms"))
 
       Then("The response code should be 200")
-      result.status.shouldEqual(OK)
+      result.status shouldEqual OK
 
       And("The EORI should be present")
-      Json.parse(result.body).as[BtaCard].eori.shouldBe(eori)
+      Json.parse(result.body).as[BtaCard].eori shouldBe eori
 
       And("The Applications counts should be correct")
-      Json.parse(result.body).as[BtaCard].applications.shouldBe(Some(BtaApplications(2, 1)))
+      Json.parse(result.body).as[BtaCard].applications shouldBe Some(BtaApplications(2, 1))
 
       And("The Rulings counts should be correct")
-      Json.parse(result.body).as[BtaCard].rulings.shouldBe(Some(BtaRulings(6, 3)))
+      Json.parse(result.body).as[BtaCard].rulings shouldBe Some(BtaRulings(6, 3))
     }
 
     Scenario("BTA Card counts where only Rulings are present") {
@@ -68,7 +68,7 @@ class BtaCardSpec extends BaseFeatureSpec with IntegrationSpecBase {
 
       AuthStub.authorised()
       dropStores()
-      storeCases(CaseData.createBtaCardData(eori, 0, 0, 2, 2)*)
+      storeCases(CaseData.createBtaCardData(eori, 0, 0, 2, 2): _*)
 
       When("I call the BTA Card endpoint for the counts")
 
@@ -76,13 +76,13 @@ class BtaCardSpec extends BaseFeatureSpec with IntegrationSpecBase {
       val result         = Await.result(responseFuture, Duration(1000L, "ms"))
 
       Then("The response code should be 200")
-      result.status.shouldEqual(OK)
+      result.status shouldEqual OK
 
       And("The EORI should be present")
-      Json.parse(result.body).as[BtaCard].eori.shouldBe(eori)
+      Json.parse(result.body).as[BtaCard].eori shouldBe eori
 
       And("The Applications counts should be None")
-      Json.parse(result.body).as[BtaCard].applications.shouldBe(None)
+      Json.parse(result.body).as[BtaCard].applications shouldBe None
 
       And("The Rulings counts should be correct")
       Json.parse(result.body).as[BtaCard].rulings.shouldBe(Some(BtaRulings(2, 2)))
@@ -94,7 +94,7 @@ class BtaCardSpec extends BaseFeatureSpec with IntegrationSpecBase {
 
       AuthStub.authorised()
       dropStores()
-      storeCases(CaseData.createBtaCardData(eori, 10, 9, 0, 0)*)
+      storeCases(CaseData.createBtaCardData(eori, 10, 9, 0, 0): _*)
 
       When("I call the BTA Card endpoint for the counts")
       val responseFuture = httpClient.url(s"$serviceUrl/bta-card").withHttpHeaders("Authorization" -> "Auth").get()

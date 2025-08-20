@@ -201,8 +201,8 @@ class KeywordControllerSpec extends BaseSpec with BeforeAndAfterEach {
   }
 
   "fetchCaseKeywords" should {
-    val pagedCaseKeywords = Paged(Seq(caseKeyword, caseKeyword2), pagination, 2)
-    val pagedKeywords = Paged(Seq(keyword1, keyword2), pagination, 2)
+    val pagedCaseKeywords  = Paged(Seq(caseKeyword, caseKeyword2), pagination, 2)
+    val pagedKeywords      = Paged(Seq(keyword1, keyword2), pagination, 2)
     val manageKeywordsData = ManageKeywordsData(pagedCaseKeywords, pagedKeywords)
 
     "return 200 with the all cases that contain keywords from the collection" in {
