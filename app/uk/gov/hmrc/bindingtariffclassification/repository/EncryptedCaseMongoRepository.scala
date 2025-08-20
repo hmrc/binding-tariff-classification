@@ -90,4 +90,7 @@ class EncryptedCaseMongoRepository @Inject() (repository: CaseMongoRepository, c
     pagination: Pagination
   ): Future[Paged[QueueResultGroup]] =
     repository.queueReport(report, pagination)
+
+  override def getGroupedCasesByKeyword(pagination: Pagination): Future[Paged[CaseKeyword]] =
+    repository.getGroupedCasesByKeyword(pagination)
 }

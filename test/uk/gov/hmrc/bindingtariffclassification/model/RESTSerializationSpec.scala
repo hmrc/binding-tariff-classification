@@ -19,7 +19,7 @@ package uk.gov.hmrc.bindingtariffclassification.model
 import cats.data.NonEmptySeq
 import play.api.libs.json.Json
 import uk.gov.hmrc.bindingtariffclassification.base.BaseSpec
-import uk.gov.hmrc.bindingtariffclassification.model.RESTFormatters.{formatAgentDetails, formatAppeal, formatAppealAdded, formatAppealStatusChange, formatAssignmentChange, formatAttachment, formatBTIApplication, formatCancellation, formatCancellationCaseStatusChange, formatCaseHeader, formatCaseKeyword, formatCaseResultGroup, formatCaseStatusChange, formatCaseTypeField, formatCaseTypeResultField, formatChapterField, formatCompletedCaseStatusChange, formatContact, formatCorrespondence, formatDateField, formatDateResultField, formatDaysSinceField, formatEORIDetails, formatEvent, formatExtendedUseStatusChange, formatLiabilityOrder, formatLiabilityStatusField, formatLiabilityStatusResultField, formatMisc, formatNote, formatNumberField, formatNumberResultField, formatOperator, formatQueueChange, formatQueueResultGroup, formatReferralCaseStatusChange, formatRejectCaseStatusChange, formatSample, formatSampleReturnChange, formatSampleSendChange, formatSampleStatusChange, formatSimpleResultGroup, formatStatusField, formatStatusResultField, formatStringField, formatStringResultField, messageLoggedFormat}
+import uk.gov.hmrc.bindingtariffclassification.model.RESTFormatters.{formatAgentDetails, formatAppeal, formatAppealAdded, formatAppealStatusChange, formatAssignmentChange, formatAttachment, formatBTIApplication, formatCancellation, formatCancellationCaseStatusChange, formatCaseHeader, formatCaseKeyword, formatCaseResultGroup, formatCaseStatusChange, formatCaseTypeField, formatCaseTypeResultField, formatChapterField, formatCompletedCaseStatusChange, formatContact, formatCorrespondence, formatDateField, formatDateResultField, formatDaysSinceField, formatEORIDetails, formatEvent, formatExtendedUseStatusChange, formatLiabilityOrder, formatLiabilityStatusField, formatLiabilityStatusResultField, formatManageKeywordsData, formatMisc, formatNote, formatNumberField, formatNumberResultField, formatOperator, formatQueueChange, formatQueueResultGroup, formatReferralCaseStatusChange, formatRejectCaseStatusChange, formatSample, formatSampleReturnChange, formatSampleSendChange, formatSampleStatusChange, formatSimpleResultGroup, formatStatusField, formatStatusResultField, formatStringField, formatStringResultField, messageLoggedFormat}
 import uk.gov.hmrc.bindingtariffclassification.model.reporting.{CaseResultGroup, CaseTypeField, CaseTypeResultField, ChapterField, DateField, DateResultField, DaysSinceField, LiabilityStatusField, LiabilityStatusResultField, NumberField, NumberResultField, QueueResultGroup, SimpleResultGroup, StatusField, StatusResultField, StringField, StringResultField}
 import util.Cases.btiCaseForFormatters
 
@@ -480,6 +480,17 @@ class RESTSerializationSpec extends BaseSpec {
       val deserialized = json.as[CaseKeyword]
 
       deserialized.shouldBe(caseK)
+    }
+
+    "Serialize and Deserialize JSON for ManageKeywordsData" in {
+      val kData = ManageKeywordsData(
+        pagedCaseKeywords = Paged(Seq(caseK)),
+        pagedKeywords = Paged(Seq(Keyword(name = "Tom", approved = true)))
+      )
+      val json = Json.toJson(kData)
+      val deserialized = json.as[ManageKeywordsData]
+
+      deserialized.shouldBe(kData)
     }
 
     "Serialize and Deserialize JSON for CancellationCaseStatusChange" in {

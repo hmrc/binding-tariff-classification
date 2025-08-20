@@ -18,7 +18,7 @@ package uk.gov.hmrc.bindingtariffclassification.model
 
 import play.api.libs.json.Json
 import uk.gov.hmrc.bindingtariffclassification.base.BaseSpec
-import uk.gov.hmrc.bindingtariffclassification.model.MongoFormatters.{formatAgentDetails, formatAppeal, formatAppealAdded, formatAssignmentChange, formatAttachment, formatBTIApplication, formatCancellation, formatCancellationCaseStatusChange, formatCaseHeader, formatCaseKeyword, formatCaseStatusChange, formatCompletedCaseStatusChange, formatContact, formatCorrespondence, formatEORIDetails, formatEvent, formatExtendedUseStatusChange, formatLiabilityOrder, formatMisc, formatNote, formatOperator, formatQueueChange, formatReferralCaseStatusChange, formatRejectCaseStatusChange, formatSample, formatSampleReturnChange, formatSampleSendChange, formatSampleStatusChange, messageLoggedFormat}
+import uk.gov.hmrc.bindingtariffclassification.model.MongoFormatters.{formatAgentDetails, formatAppeal, formatAppealAdded, formatAssignmentChange, formatAttachment, formatBTIApplication, formatCancellation, formatCancellationCaseStatusChange, formatCaseHeader, formatCaseKeyword, formatCaseStatusChange, formatCompletedCaseStatusChange, formatContact, formatCorrespondence, formatEORIDetails, formatEvent, formatExtendedUseStatusChange, formatLiabilityOrder, formatManageKeywordsData, formatMisc, formatNote, formatOperator, formatQueueChange, formatReferralCaseStatusChange, formatRejectCaseStatusChange, formatSample, formatSampleReturnChange, formatSampleSendChange, formatSampleStatusChange, messageLoggedFormat}
 import uk.gov.hmrc.bindingtariffclassification.model.bta.BtaApplications.format
 import uk.gov.hmrc.bindingtariffclassification.model.bta.{BtaApplications, BtaCard, BtaRulings}
 import uk.gov.hmrc.bindingtariffclassification.model.bta.BtaCard.format
@@ -388,6 +388,17 @@ class SerializationSpec extends BaseSpec {
       val deserialized = json.as[CaseKeyword]
 
       deserialized.shouldBe(caseK)
+    }
+
+    "Serialize and Deserialize JSON for ManageKeywordsData" in {
+      val kData = ManageKeywordsData(
+        pagedCaseKeywords = Paged(Seq(caseK)),
+        pagedKeywords = Paged(Seq(Keyword(name = "Tom", approved = true)))
+      )
+      val json = Json.toJson(kData)
+      val deserialized = json.as[ManageKeywordsData]
+
+      deserialized.shouldBe(kData)
     }
 
     "Serialize and Deserialize JSON for CancellationCaseStatusChange" in {

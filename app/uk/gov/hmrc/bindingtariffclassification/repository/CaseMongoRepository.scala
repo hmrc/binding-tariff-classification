@@ -115,6 +115,8 @@ class CaseMongoRepository @Inject() (
     with CaseRepository
     with BaseMongoOperations[Case] {
 
+  import CaseMongoRepository._
+
   protected val logger: Logger = LoggerFactory.getLogger(this.getClass)
 
   override def insert(c: Case): Future[Case] = createOne(c)
@@ -586,7 +588,6 @@ class CaseMongoRepository @Inject() (
           .map { bsonDocument =>
             def wrapAsOptionOfString(field: BsonValue): Option[String] =
               if (field.isNull) None else Some(field.asString().getValue)
-
             QueueResultGroup(
               count = bsonDocument.getInt32(ReportField.Count.fieldName).getValue,
               team = wrapAsOptionOfString(bsonDocument.getDocument("_id").get(ReportField.Team.fieldName, BsonNull())),
@@ -598,6 +599,123 @@ class CaseMongoRepository @Inject() (
 
     pagedResults(futureCount, runAggregation, pagination)
   }
+
+  def getGroupedCasesByKeyword(pagination: Pagination): Future[Paged[CaseKeyword]] = {
+    val pipeline: Seq[Bson] = Seq(
+      addFields(
+        Field("team", "$queueId"),
+        Field("goodsName", "$application.goodName"),
+        Field("caseType", "$application.type"),
+        Field("liabilityStatus", "$application.status")
+      ),
+      project(
+        fields(
+          include(
+            "reference",
+            "status",
+            "assignee",
+            "team",
+            "goodsName",
+            "caseType",
+            "keywords",
+            "daysElapsed",
+            "liabilityStatus"
+          )
+        )
+      ),
+      unwind("$keywords"),
+      group(
+        "$keywords",
+        push(
+          "cases",
+          new Document()
+            .append("reference", "$reference")
+            .append("status", "$status")
+            .append("assignee", "$assignee")
+            .append("team", "$team")
+            .append("goodsName", "$goodsName")
+            .append("caseType", "$caseType")
+            .append("daysElapsed", "$daysElapsed")
+            .append("liabilityStatus", "$liabilityStatus")
+        ),
+        sum("caseCount", 1)
+      ),
+      addFields(
+        Field("cases", new Document("$slice", util.Arrays.asList("$cases", 1000))),
+        Field("keyword", new Document("name", "$_id"))
+      ),
+      project(fields(excludeId(), include("keyword", "cases", "caseCount"))),
+      skip((pagination.page - 1) * pagination.pageSize),
+      limit(pagination.pageSize)
+    )
+
+    val countPipeline: Seq[Bson] = Seq(
+      unwind("$keywords"),
+      group("$keywords"),
+      count("resultCount")
+    )
+
+    val aggregationFuture: Future[Seq[CaseKeyword]] = collection
+      .aggregate[Document](pipeline)
+      .allowDiskUse(true)
+      .toFuture()
+      .map(_.map(convertDocumentToCaseKeyword))
+
+    val countFuture: Future[Option[BsonDocument]] = collection
+      .aggregate[BsonDocument](countPipeline)
+      .allowDiskUse(true)
+      .headOption()
+
+    for {
+      caseKeywords <- aggregationFuture
+      totalCount <- countFuture
+    } yield {
+      val total = totalCount
+        .map { doc =>
+          try
+            doc.getInt64("resultCount").getValue
+          catch {
+            case _: BsonInvalidOperationException => doc.getInt32("resultCount").getValue.toLong
+          }
+        }
+        .getOrElse(0L)
+      Paged(caseKeywords, pagination.page, caseKeywords.size, total)
+    }
+  }
+
+  def convertDocumentToCaseKeyword(doc: Document): CaseKeyword = {
+    val keywordDoc = doc.get("keyword").asInstanceOf[Document]
+    val keywordName = keywordDoc.getString("name")
+    val keyword = Keyword(keywordName)
+
+    val casesJson = Json.parse(doc.toJson) \ "cases"
+    val cases = casesJson.validate[Seq[CaseHeader]] match {
+      case JsSuccess(caseHeaders, _) => caseHeaders.toList
+      case JsError(errors) =>
+        casesJson
+          .asOpt[Seq[JsObject]]
+          .getOrElse(Seq.empty)
+          .map(convertJsObjectToCaseHeader)
+          .toList
+    }
+
+    CaseKeyword(keyword, cases)
+  }
+
+  def convertJsObjectToCaseHeader(caseObj: JsObject): CaseHeader =
+    CaseHeader(
+      reference = (caseObj \ "reference").as[String],
+      assignee = (caseObj \ "assignee").asOpt[Operator],
+      team = (caseObj \ "team").asOpt[String],
+      goodsName = (caseObj \ "goodsName").asOpt[String],
+      caseType = (caseObj \ "caseType").asOpt[ApplicationType.Value].getOrElse(ApplicationType.BTI),
+      status = (caseObj \ "status").as[CaseStatus.Value],
+      daysElapsed = (caseObj \ "daysElapsed").as[Long],
+      liabilityStatus = (caseObj \ "liabilityStatus").asOpt[LiabilityStatus]
+    )
+}
+
+object CaseMongoRepository {
 
   private def greaterThan(json: JsValueWrapper): JsObject =
     Json.obj("$gte" -> json)
@@ -631,5 +749,4 @@ class CaseMongoRepository @Inject() (
 
   private def notNull(operandExpr: JsValueWrapper): JsValue =
     Json.obj("$gt" -> Json.arr(operandExpr, JsNull))
-
 }

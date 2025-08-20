@@ -201,30 +201,39 @@ class KeywordControllerSpec extends BaseSpec with BeforeAndAfterEach {
   }
 
   "fetchCaseKeywords" should {
+    val pagedCaseKeywords = Paged(Seq(caseKeyword, caseKeyword2), pagination, 2)
+    val pagedKeywords = Paged(Seq(keyword1, keyword2), pagination, 2)
+    val manageKeywordsData = ManageKeywordsData(pagedCaseKeywords, pagedKeywords)
+
     "return 200 with the all cases that contain keywords from the collection" in {
-      when(keywordService.fetchCaseKeywords(refEq(pagination)))
-        .thenReturn(successful(Paged(Seq(caseKeyword, caseKeyword2))))
+      when(keywordService.loadKeywordManagementData(refEq(pagination)))
+        .thenReturn(successful(manageKeywordsData))
 
       val result = controller.fetchCaseKeywords(pagination)(fakeRequest)
 
       status(result)        shouldBe OK
-      contentAsJson(result) shouldBe toJson(Paged(Seq(caseKeyword, caseKeyword2)))
+      contentAsJson(result) shouldBe toJson(manageKeywordsData)
+      status(result)        shouldBe OK
+
     }
 
     "return 200 with an empty sequence if there are no cases containing keywords" in {
-      when(keywordService.fetchCaseKeywords(refEq(pagination)))
-        .thenReturn(successful(Paged.empty[CaseKeyword]))
+      val emptyPagedCaseKeywords  = Paged.empty[CaseKeyword]
+      val emptyPagedKeywords      = Paged.empty[Keyword]
+      val emptyManageKeywordsData = ManageKeywordsData(emptyPagedCaseKeywords, emptyPagedKeywords)
+      when(keywordService.loadKeywordManagementData(refEq(pagination)))
+        .thenReturn(successful(emptyManageKeywordsData))
 
       val result = controller.fetchCaseKeywords(pagination)(fakeRequest)
 
       status(result)        shouldBe OK
-      contentAsJson(result) shouldBe toJson(Paged.empty[CaseKeyword])
+      contentAsJson(result) shouldBe toJson(emptyManageKeywordsData)
     }
 
     "return 500 when an error occurred" in {
       val error = new RuntimeException
 
-      when(keywordService.fetchCaseKeywords(refEq(pagination)))
+      when(keywordService.loadKeywordManagementData(refEq(pagination)))
         .thenReturn(failed(error))
 
       val result = controller.fetchCaseKeywords(pagination)(fakeRequest)

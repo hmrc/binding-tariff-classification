@@ -263,7 +263,10 @@ object MongoFormatters {
     (JsPath \ "keyword").format[Keyword] and
       (JsPath \ "cases").format[List[CaseHeader]]
   )(CaseKeyword.apply, o => Tuple.fromProductTyped(o))
-
+  implicit val formatManageKeywordsData: Format[ManageKeywordsData] = (
+    (JsPath \ "pagedCaseKeywords").format[Paged[CaseKeyword]] and
+      (JsPath \ "pagedKeywords").format[Paged[Keyword]]
+    )(ManageKeywordsData.apply, o => Tuple.fromProductTyped(o))
   implicit val formatEventType: Format[EventType.Value] = EnumJson.format(EventType)
 
   // `Event` formatters
