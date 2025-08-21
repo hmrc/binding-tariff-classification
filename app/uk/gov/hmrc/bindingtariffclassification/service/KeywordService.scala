@@ -27,7 +27,7 @@ import scala.concurrent.{ExecutionContext, Future}
 @Singleton
 class KeywordService @Inject() (
   keywordRepository: KeywordsRepository,
-  caseRepository: CaseRepository
+  caseKeywordAggregation: CaseKeywordMongoView
 )(implicit mat: Materializer) {
 
   implicit val ec: ExecutionContext = mat.executionContext
@@ -44,13 +44,7 @@ class KeywordService @Inject() (
   def deleteKeyword(name: String): Future[Unit] =
     keywordRepository.delete(name)
 
-  def loadKeywordManagementData(pagination: Pagination): Future[ManageKeywordsData] =
-    for {
-      caseKeywordsPaged <- caseRepository.getGroupedCasesByKeyword(pagination)
-      pagedKeywords     <- keywordRepository.findAll(Pagination(pageSize = Int.MaxValue))
-    } yield ManageKeywordsData(
-      pagedCaseKeywords = caseKeywordsPaged,
-      pagedKeywords = pagedKeywords
-    )
+  def fetchCaseKeywords(pagination: Pagination): Future[Paged[CaseKeyword]] =
+    caseKeywordAggregation.fetchKeywordsFromCases(pagination)
 
 }
