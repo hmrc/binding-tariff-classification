@@ -348,7 +348,7 @@ class CaseMongoRepository @Inject() (
   }
 
   private def sortStage(
-    sortBy: ReportField[?],
+    sortBy: ReportField[_],
     sortOrder: SortDirection.Value
   ) =
     // If not sorting by reference, add it as a secondary sort field to ensure stable sorting
@@ -400,7 +400,7 @@ class CaseMongoRepository @Inject() (
     group(toBson(groupBy), Seq(countField) ++ maxFields ++ casesField: _*)
   }
 
-  private def getFieldValue(field: ReportField[?], json: Option[JsValue]): ReportResultField[?] = field match {
+  private def getFieldValue(field: ReportField[_], json: Option[JsValue]): ReportResultField[_] = field match {
     case field @ CaseTypeField(_, _)        => field.withValue(json.flatMap(_.asOpt[ApplicationType.Value]))
     case field @ ChapterField(_, _)         => field.withValue(json.flatMap(_.asOpt[String].filterNot(_.isEmpty)))
     case field @ DateField(_, _)            => field.withValue(json.flatMap(_.asOpt[Instant]))
@@ -475,7 +475,7 @@ class CaseMongoRepository @Inject() (
   override def caseReport(
     report: CaseReport,
     pagination: Pagination
-  ): Future[Paged[Map[String, ReportResultField[?]]]] = {
+  ): Future[Paged[Map[String, ReportResultField[_]]]] = {
     logger.info(s"[CaseMongoRepository][caseReport] Running report: $report with pagination $pagination")
 
     val futureCount = collection
@@ -518,7 +518,7 @@ class CaseMongoRepository @Inject() (
           .map { json =>
             report.fields.toSeq
               .map(field => field.fieldName -> getFieldValue(field, json.value.get(field.fieldName)))
-              .toMap[String, ReportResultField[?]]
+              .toMap[String, ReportResultField[_]]
           }
       )
 
