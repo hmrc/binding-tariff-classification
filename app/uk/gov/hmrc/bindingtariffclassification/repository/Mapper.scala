@@ -34,8 +34,8 @@ trait Mapper {
     set(fieldName, fieldValue)
 
   def updateField[A: Writes](fieldName: String, fieldValue: A): Bson =
-    Codecs.toBson(Json.obj("$set" -> Json.obj(field(fieldName, fieldValue)*))).asDocument()
+    Codecs.toBson(Json.obj("$set" -> Json.obj(field(fieldName, fieldValue): _*))).asDocument()
 
   def updateFields(fields: (String, JsValueWrapper)*): Bson =
-    Codecs.toBson(Json.obj("$set" -> Json.obj(fields*))).asDocument()
+    Codecs.toBson(Json.obj("$set" -> Json.obj(fields: _*))).asDocument()
 }

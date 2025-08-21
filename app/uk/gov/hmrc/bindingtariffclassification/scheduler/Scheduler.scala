@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.bindingtariffclassification.scheduler
 
-import com.codahale.metrics.MetricRegistry
 import org.quartz.CronScheduleBuilder
 import org.quartz.JobBuilder.newJob
 import org.quartz.TriggerBuilder.newTrigger
@@ -24,6 +23,7 @@ import org.quartz.impl.StdSchedulerFactory
 import play.api.inject.ApplicationLifecycle
 import uk.gov.hmrc.bindingtariffclassification.common.Logging
 import uk.gov.hmrc.bindingtariffclassification.metrics.HasMetrics
+import uk.gov.hmrc.play.bootstrap.metrics.Metrics
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
@@ -33,7 +33,7 @@ class Scheduler @Inject() (
   lifecycle: ApplicationLifecycle,
   jobFactory: ScheduledJobFactory,
   scheduledJobs: ScheduledJobs,
-  val metrics: MetricRegistry
+  val metrics: Metrics
 )(implicit ec: ExecutionContext)
     extends Logging
     with HasMetrics {

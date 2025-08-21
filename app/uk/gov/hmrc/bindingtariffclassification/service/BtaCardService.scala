@@ -22,8 +22,6 @@ import uk.gov.hmrc.bindingtariffclassification.model.CaseStatus._
 import uk.gov.hmrc.bindingtariffclassification.model.bta.{BtaApplications, BtaCard, BtaRulings}
 import uk.gov.hmrc.bindingtariffclassification.repository.CaseRepository
 
-import uk.gov.hmrc.bindingtariffclassification.model.bta.BtaCard.format
-
 import java.time.{LocalDateTime, ZoneOffset}
 import javax.inject._
 import scala.concurrent.{ExecutionContext, Future}

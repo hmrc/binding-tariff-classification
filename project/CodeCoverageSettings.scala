@@ -3,19 +3,13 @@ import scoverage.ScoverageKeys.*
 
 object CodeCoverageSettings {
   private val excludedPackages: Seq[String] = Seq(
-    "prod.*;testOnlyDoNotUseInAppConf.*;app.*;.*(Routes).*;.*(JobFactory).*;.*Event.*;.*RepaymentClaim.*;.*Cancellation.*;.*CaseUpdate.*;.*ScheduledJob.*;.*$anon.*;.*Application.*",
-    ".*\\$anonfun\\$.*",
-    ".*\\$anon\\$.*",
-    ".*\\$anon.*",
-    ".*\\$.*\\$\\$.*" // Add this pattern to catch more anonymous function variants
+    "prod.*;testOnlyDoNotUseInAppConf.*;app.*;.*(Routes).*"
   )
 
-  private val settings: Seq[Setting[?]] = Seq(
+  val settings: Seq[Setting[?]] = Seq(
     coverageExcludedFiles := excludedPackages.mkString(";"),
-    coverageMinimumStmtTotal := 92,
+    coverageMinimumStmtTotal := 95,
     coverageFailOnMinimum := true,
     coverageHighlighting := true
   )
-
-  def apply(): Seq[Setting[?]] = settings
 }

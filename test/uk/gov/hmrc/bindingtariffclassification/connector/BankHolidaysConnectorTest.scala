@@ -20,13 +20,13 @@ import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder
 import com.github.tomakehurst.wiremock.client.WireMock._
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration.options
+import org.mockito.BDDMockito.given
 import play.api.http.Status.{BAD_GATEWAY, NOT_FOUND}
 import uk.gov.hmrc.bindingtariffclassification.base.BaseSpec
 import uk.gov.hmrc.bindingtariffclassification.config.AppConfig
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.test.HttpClientV2Support
 import util.TestMetrics
-import org.mockito.Mockito.*
 
 import java.time.LocalDate
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -35,9 +35,9 @@ class BankHolidaysConnectorTest extends BaseSpec with WiremockTestServer with Ht
 
   private val config = mock[AppConfig]
 
-  private given headers: HeaderCarrier = HeaderCarrier()
+  private implicit val headers: HeaderCarrier = HeaderCarrier()
 
-  private val connector = new BankHolidaysConnector(config, httpClientV2, (new TestMetrics).defaultRegistry)
+  private val connector = new BankHolidaysConnector(config, httpClientV2, new TestMetrics)
 
   private val proxyPort: Int              = 20002
   private val proxyServer: WireMockServer = new WireMockServer(options().port(proxyPort).enableBrowserProxying(true))
@@ -54,7 +54,7 @@ class BankHolidaysConnectorTest extends BaseSpec with WiremockTestServer with Ht
   }
 
   private class Test(response: ResponseDefinitionBuilder) {
-    when(config.bankHolidaysUrl).thenReturn(s"$proxyUrl/bank-holidays.json")
+    given(config.bankHolidaysUrl).willReturn(s"$proxyUrl/bank-holidays.json")
 
     proxyServer.stubFor(
       get(urlEqualTo("/bank-holidays.json"))

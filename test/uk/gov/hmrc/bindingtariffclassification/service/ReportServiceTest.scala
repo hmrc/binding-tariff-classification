@@ -17,6 +17,7 @@
 package uk.gov.hmrc.bindingtariffclassification.service
 
 import cats.data.NonEmptySeq
+import org.mockito.BDDMockito._
 import org.mockito.Mockito._
 import org.scalatest.BeforeAndAfterEach
 import uk.gov.hmrc.bindingtariffclassification.base.BaseSpec
@@ -43,10 +44,8 @@ class ReportServiceTest extends BaseSpec with BeforeAndAfterEach {
         fields = NonEmptySeq.of(ReportField.Reference, ReportField.Status)
       )
 
-      when(caseRepository.caseReport(report, Pagination())).thenReturn(
-        Future.successful(
-          Paged.empty[Map[String, ReportResultField[?]]]
-        )
+      given(caseRepository.caseReport(report, Pagination())) willReturn Future.successful(
+        Paged.empty[Map[String, ReportResultField[_]]]
       )
 
       await(service.caseReport(report, Pagination())) shouldBe Paged.empty
@@ -60,7 +59,7 @@ class ReportServiceTest extends BaseSpec with BeforeAndAfterEach {
         sortBy = ReportField.Count
       )
 
-      when(caseRepository.summaryReport(report, Pagination())).thenReturn(Future.successful(Paged.empty[ResultGroup]))
+      given(caseRepository.summaryReport(report, Pagination())) willReturn Future.successful(Paged.empty[ResultGroup])
 
       await(service.summaryReport(report, Pagination())) shouldBe Paged.empty
     }
@@ -72,10 +71,8 @@ class ReportServiceTest extends BaseSpec with BeforeAndAfterEach {
         sortBy = ReportField.Count
       )
 
-      when(caseRepository.queueReport(report, Pagination())).thenReturn(
-        Future.successful(
-          Paged.empty[QueueResultGroup]
-        )
+      given(caseRepository.queueReport(report, Pagination())) willReturn Future.successful(
+        Paged.empty[QueueResultGroup]
       )
 
       await(service.queueReport(report, Pagination())) shouldBe Paged.empty

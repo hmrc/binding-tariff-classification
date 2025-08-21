@@ -17,24 +17,9 @@
 package uk.gov.hmrc.bindingtariffclassification.model
 
 import cats.data.NonEmptySeq
-import play.api.libs.json.*
-import uk.gov.hmrc.bindingtariffclassification.model.CaseStatus.CaseStatus
-import uk.gov.hmrc.bindingtariffclassification.model.reporting.*
+import play.api.libs.json._
+import uk.gov.hmrc.bindingtariffclassification.model.reporting._
 import uk.gov.hmrc.bindingtariffclassification.utils.Union
-import play.api.libs.functional.syntax.toFunctionalBuilderOps
-import uk.gov.hmrc.bindingtariffclassification.model.AppealStatus.AppealStatus
-import uk.gov.hmrc.bindingtariffclassification.model.AppealType.AppealType
-import uk.gov.hmrc.bindingtariffclassification.model.CancelReason.CancelReason
-import uk.gov.hmrc.bindingtariffclassification.model.LiabilityStatus.LiabilityStatus
-import uk.gov.hmrc.bindingtariffclassification.model.MiscCaseType.MiscCaseType
-import uk.gov.hmrc.bindingtariffclassification.model.ReferralReason.ReferralReason
-import uk.gov.hmrc.bindingtariffclassification.model.SampleReturn.SampleReturn
-import uk.gov.hmrc.bindingtariffclassification.model.SampleSend.SampleSend
-import uk.gov.hmrc.bindingtariffclassification.model.SampleStatus.SampleStatus
-import uk.gov.hmrc.bindingtariffclassification.model.RejectReason.RejectReason
-import uk.gov.hmrc.bindingtariffclassification.model.Role.Role
-
-import java.time.Instant
 
 object RESTFormatters {
   // NonEmpty formatters
@@ -46,38 +31,13 @@ object RESTFormatters {
   // User formatters
   implicit val formatApplicationType: Format[ApplicationType.Value] = EnumJson.format(ApplicationType)
   implicit val role: Format[Role.Value]                             = EnumJson.format(Role)
+  implicit val formatOperator: OFormat[Operator] = Json.using[Json.WithDefaultValues].format[Operator]
 
-  implicit val formatOperator: Format[Operator] = (
-    (JsPath \ "id").format[String] and
-      (JsPath \ "name").formatNullable[String] and
-      (JsPath \ "email").formatNullable[String] and
-      (JsPath \ "role").format[Role] and
-      (JsPath \ "memberOfTeams").format[List[String]] and
-      (JsPath \ "managerOfTeams").format[List[String]] and
-      (JsPath \ "deleted").format[Boolean]
-  )(Operator.apply, o => Tuple.fromProductTyped(o))
-
-  implicit val formatKeyword: Format[Keyword] = (
-    (JsPath \ "name").format[String] and
-      (JsPath \ "approved").format[Boolean]
-  )(Keyword.apply, o => Tuple.fromProductTyped(o))
-
+  implicit val formatKeyword: OFormat[Keyword] = Json.using[Json.WithDefaultValues].format[Keyword]
   // `Case` formatters
-  implicit val formatRepaymentClaim: Format[RepaymentClaim] = (
-    (JsPath \ "dvrNumber").formatNullable[String] and
-      (JsPath \ "dateForRepayment").formatNullable[Instant]
-  )(RepaymentClaim.apply, o => Tuple.fromProductTyped(o))
-  implicit val formatAddress: Format[Address] = (
-    (JsPath \ "buildingAndStreet").format[String] and
-      (JsPath \ "townOrCity").format[String] and
-      (JsPath \ "county").formatNullable[String] and
-      (JsPath \ "postCode").formatNullable[String]
-  )(Address.apply, o => Tuple.fromProductTyped(o))
-  implicit val formatTraderContactDetails: Format[TraderContactDetails] = (
-    (JsPath \ "email").formatNullable[String] and
-      (JsPath \ "phone").formatNullable[String] and
-      (JsPath \ "address").formatNullable[Address]
-  )(TraderContactDetails.apply, o => Tuple.fromProductTyped(o))
+  implicit val formatRepaymentClaim: OFormat[RepaymentClaim]             = Json.format[RepaymentClaim]
+  implicit val formatAddress: OFormat[Address]                           = Json.format[Address]
+  implicit val formatTraderContactDetails: OFormat[TraderContactDetails] = Json.format[TraderContactDetails]
 
   implicit val formatCaseStatus: Format[CaseStatus.Value]             = EnumJson.format(CaseStatus)
   implicit val formatPseudoCaseStatus: Format[PseudoCaseStatus.Value] = EnumJson.format(PseudoCaseStatus)
@@ -92,58 +52,14 @@ object RESTFormatters {
   implicit val formatRejectedReason: Format[RejectReason.Value]       = EnumJson.format(RejectReason)
   implicit val miscCaseType: Format[MiscCaseType.Value]               = EnumJson.format(MiscCaseType)
 
-  implicit val formatEORIDetails: Format[EORIDetails] = (
-    (JsPath \ "eori").format[String] and
-      (JsPath \ "businessName").format[String] and
-      (JsPath \ "addressLine1").format[String] and
-      (JsPath \ "addressLine2").format[String] and
-      (JsPath \ "addressLine3").format[String] and
-      (JsPath \ "postcode").format[String] and
-      (JsPath \ "country").format[String]
-  )(EORIDetails.apply, o => Tuple.fromProductTyped(o))
-  implicit val formatAttachment: Format[Attachment] = (
-    (JsPath \ "id").format[String] and
-      (JsPath \ "public").format[Boolean] and
-      (JsPath \ "operator").formatNullable[Operator] and
-      (JsPath \ "timestamp").format[Instant] and
-      (JsPath \ "description").formatNullable[String] and
-      (JsPath \ "shouldPublishToRulings").format[Boolean]
-  )(Attachment.apply, o => Tuple.fromProductTyped(o))
+  implicit val formatEORIDetails: OFormat[EORIDetails]   = Json.format[EORIDetails]
+  implicit val formatAttachment: OFormat[Attachment]     = Json.using[Json.WithDefaultValues].format[Attachment]
+  implicit val formatAgentDetails: OFormat[AgentDetails] = Json.format[AgentDetails]
+  implicit val formatContact: OFormat[Contact]           = Json.format[Contact]
+  implicit val messageLoggedFormat: OFormat[Message]     = Json.format[Message]
 
-  implicit val formatAgentDetails: Format[AgentDetails] = (
-    (JsPath \ "eoriDetails").format[EORIDetails] and
-      (JsPath \ "letterOfAuthorisation").formatNullable[Attachment]
-  )(AgentDetails.apply, o => Tuple.fromProductTyped(o))
-  implicit val formatContact: Format[Contact] = (
-    (JsPath \ "name").format[String] and
-      (JsPath \ "email").format[String] and
-      (JsPath \ "phone").formatNullable[String]
-  )(Contact.apply, o => Tuple.fromProductTyped(o))
-  implicit val messageLoggedFormat: Format[Message] = (
-    (JsPath \ "name").format[String] and
-      (JsPath \ "date").format[Instant] and
-      (JsPath \ "message").format[String]
-  )(Message.apply, o => Tuple.fromProductTyped(o))
-
-  implicit val formatLiabilityOrder: Format[LiabilityOrder] = (
-    (JsPath \ "contact").format[Contact] and
-      (JsPath \ "goodName").formatNullable[String] and
-      (JsPath \ "status").format[LiabilityStatus] and
-      (JsPath \ "traderName").format[String] and
-      (JsPath \ "entryDate").formatNullable[Instant] and
-      (JsPath \ "entryNumber").formatNullable[String] and
-      (JsPath \ "traderCommodityCode").formatNullable[String] and
-      (JsPath \ "officerCommodityCode").formatNullable[String] and
-      (JsPath \ "btiReference").formatNullable[String] and
-      (JsPath \ "repaymentClaim").formatNullable[RepaymentClaim] and
-      (JsPath \ "dateOfReceipt").formatNullable[Instant] and
-      (JsPath \ "traderContactDetails").formatNullable[TraderContactDetails] and
-      (JsPath \ "agentName").formatNullable[String] and
-      (JsPath \ "port").formatNullable[String]
-  )(LiabilityOrder.apply, o => Tuple.fromProductTyped(o))
-  implicit val formatLiabilityOrderWrites: OWrites[LiabilityOrder] =
-    Json.writes[LiabilityOrder]
-  implicit val formatBTIApplication: OFormat[BTIApplication]            = Json.format[BTIApplication]
+  implicit val formatLiabilityOrder: OFormat[LiabilityOrder] = Json.format[LiabilityOrder]
+  implicit val formatBTIApplication: OFormat[BTIApplication] = Json.using[Json.WithDefaultValues].format[BTIApplication]
   implicit val formatCorrespondence: OFormat[CorrespondenceApplication] = Json.format[CorrespondenceApplication]
   implicit val formatMisc: OFormat[MiscApplication]                     = Json.format[MiscApplication]
 
@@ -155,40 +71,19 @@ object RESTFormatters {
     .and[MiscApplication](ApplicationType.MISCELLANEOUS.toString)
     .format
 
-  implicit val formatAppeal: OFormat[Appeal] = Json.format[Appeal]
-  implicit val formatCancellation: Format[Cancellation] = (
-    (JsPath \ "reason").format[CancelReason] and
-      (JsPath \ "applicationForExtendedUse").format[Boolean]
-  )(Cancellation.apply, o => Tuple.fromProductTyped(o))
-  implicit val formatDecision: OFormat[Decision] = Json.format[Decision]
-  implicit val formatSample: OFormat[Sample]     = Json.format[Sample]
+  implicit val formatAppeal: OFormat[Appeal]             = Json.format[Appeal]
+  implicit val formatCancellation: OFormat[Cancellation] = Json.format[Cancellation]
+  implicit val formatDecision: OFormat[Decision]         = Json.format[Decision]
+  implicit val formatSample: OFormat[Sample]             = Json.format[Sample]
 
-  implicit val formatCase: OFormat[Case]              = Json.using[Json.WithDefaultValues].format[Case]
-  implicit val formatNewCase: OFormat[NewCaseRequest] = Json.format[NewCaseRequest]
-  implicit val formatCaseHeader: Format[CaseHeader] = (
-    (JsPath \ "reference").format[String] and
-      (JsPath \ "assignee").formatNullable[Operator] and
-      (JsPath \ "team").formatNullable[String] and
-      (JsPath \ "goodsName").formatNullable[String] and
-      (JsPath \ "caseType").format[ApplicationType.Value] and
-      (JsPath \ "status").format[CaseStatus.Value] and
-      (JsPath \ "daysElapsed").format[Long] and
-      (JsPath \ "liabilityStatus").formatNullable[LiabilityStatus]
-  )(CaseHeader.apply, o => Tuple.fromProductTyped(o))
-  implicit val formatCaseKeyword: Format[CaseKeyword] = (
-    (JsPath \ "keyword").format[Keyword] and
-      (JsPath \ "cases").format[List[CaseHeader]]
-  )(CaseKeyword.apply, o => Tuple.fromProductTyped(o))
+  implicit val formatCase: OFormat[Case]                             = Json.using[Json.WithDefaultValues].format[Case]
+  implicit val formatNewCase: OFormat[NewCaseRequest]                = Json.format[NewCaseRequest]
+  implicit val formatCaseHeader: OFormat[CaseHeader]                 = Json.format[CaseHeader]
+  implicit val formatCaseKeyword: OFormat[CaseKeyword]               = Json.format[CaseKeyword]
+  implicit val formatManageKeywordsData: OFormat[ManageKeywordsData] = Json.format[ManageKeywordsData]
 
   // `Event` formatters
-  implicit val formatCaseStatusChange: Format[CaseStatusChange] = (
-    (JsPath \ "from").format[CaseStatus] and
-      (JsPath \ "to").format[CaseStatus] and
-      (JsPath \ "comment").formatNullable[String] and
-      (JsPath \ "attachmentId").formatNullable[String]
-  )(CaseStatusChange.apply, o => Tuple.fromProductTyped(o))
-  implicit val formatCaseStatusChangeWrites: OWrites[CaseStatusChange] =
-    Json.writes[CaseStatusChange]
+  implicit val formatCaseStatusChange: OFormat[CaseStatusChange] = Json.format[CaseStatusChange]
   implicit val formatCancellationCaseStatusChange: OFormat[CancellationCaseStatusChange] =
     Json.format[CancellationCaseStatusChange]
   implicit val formatCompletedCaseStatusChange: OFormat[CompletedCaseStatusChange] =
@@ -202,17 +97,9 @@ object RESTFormatters {
   implicit val formatSampleSendChange: OFormat[SampleSendChange]                 = Json.format[SampleSendChange]
   implicit val formatExtendedUseStatusChange: OFormat[ExtendedUseStatusChange]   = Json.format[ExtendedUseStatusChange]
   implicit val formatAssignmentChange: OFormat[AssignmentChange]                 = Json.format[AssignmentChange]
-
-  implicit val formatQueueChange: Format[QueueChange] = (
-    (JsPath \ "from").formatNullable[String] and
-      (JsPath \ "to").formatNullable[String] and
-      (JsPath \ "comment").formatNullable[String]
-  )(QueueChange.apply, o => Tuple.fromProductTyped(o))
-  implicit val formatQueueChangeWrites: OWrites[QueueChange] =
-    Json.writes[QueueChange]
-
-  implicit val formatCaseCreated: OFormat[CaseCreated]                   = Json.format[CaseCreated]
-  implicit val formatExpertAdviceReceived: OFormat[ExpertAdviceReceived] = Json.format[ExpertAdviceReceived]
+  implicit val formatQueueChange: OFormat[QueueChange]                           = Json.format[QueueChange]
+  implicit val formatCaseCreated: OFormat[CaseCreated]                           = Json.format[CaseCreated]
+  implicit val formatExpertAdviceReceived: OFormat[ExpertAdviceReceived]         = Json.format[ExpertAdviceReceived]
 
   implicit val formatNote: OFormat[Note] = Json.format[Note]
 
@@ -283,8 +170,8 @@ object RESTFormatters {
   implicit val formatStringField: OFormat[StringField]                   = Json.format[StringField]
   implicit val formatDaysSinceField: OFormat[DaysSinceField]             = Json.format[DaysSinceField]
 
-  implicit val formatReportField: Format[ReportField[?]] = Union
-    .from[ReportField[?]]("type")
+  implicit val formatReportField: Format[ReportField[_]] = Union
+    .from[ReportField[_]]("type")
     .and[NumberField](ReportFieldType.Number.name)
     .and[StatusField](ReportFieldType.Status.name)
     .and[LiabilityStatusField](ReportFieldType.LiabilityStatus.name)
@@ -296,7 +183,6 @@ object RESTFormatters {
     .format
 
   implicit val formatNumberResultField: OFormat[NumberResultField] = Json.format[NumberResultField]
-
   implicit val formatStatusResultField: OFormat[StatusResultField] = Json.format[StatusResultField]
   implicit val formatLiabilityStatusResultField: OFormat[LiabilityStatusResultField] =
     Json.format[LiabilityStatusResultField]
@@ -304,8 +190,8 @@ object RESTFormatters {
   implicit val formatDateResultField: OFormat[DateResultField]         = Json.format[DateResultField]
   implicit val formatStringResultField: OFormat[StringResultField]     = Json.format[StringResultField]
 
-  implicit val formatReportResultField: Format[ReportResultField[?]] = Union
-    .from[ReportResultField[?]]("type")
+  implicit val formatReportResultField: Format[ReportResultField[_]] = Union
+    .from[ReportResultField[_]]("type")
     .and[NumberResultField](ReportFieldType.Number.name)
     .and[StatusResultField](ReportFieldType.Status.name)
     .and[LiabilityStatusResultField](ReportFieldType.LiabilityStatus.name)
@@ -315,16 +201,7 @@ object RESTFormatters {
     .format
 
   implicit val formatSimpleResultGroup: OFormat[SimpleResultGroup] = Json.format[SimpleResultGroup]
-
-  implicit val numberResultFieldListWrites: Writes[List[NumberResultField]] =
-    Writes.list[NumberResultField].contramap(identity)
-
-  implicit val formatCaseResultGroup: Format[CaseResultGroup] = (
-    (JsPath \ "count").format[Long] and
-      (JsPath \ "groupKey").format[NonEmptySeq[ReportResultField[?]]] and
-      (JsPath \ "maxFields").format[List[NumberResultField]] and
-      (JsPath \ "cases").format[List[Case]]
-  )(CaseResultGroup.apply, o => Tuple.fromProductTyped(o))
+  implicit val formatCaseResultGroup: OFormat[CaseResultGroup]     = Json.format[CaseResultGroup]
 
   implicit val readResultGroup: Reads[ResultGroup] =
     (__ \ "cases").readNullable[List[Case]].flatMap {
@@ -333,15 +210,11 @@ object RESTFormatters {
     }
 
   implicit val writeResultGroup: OWrites[ResultGroup] = OWrites[ResultGroup] {
-    case caseResult: CaseResultGroup     => Json.writes[CaseResultGroup].writes(caseResult)
-    case simpleResult: SimpleResultGroup => Json.writes[SimpleResultGroup].writes(simpleResult)
+    case caseResult: CaseResultGroup     => formatCaseResultGroup.writes(caseResult)
+    case simpleResult: SimpleResultGroup => formatSimpleResultGroup.writes(simpleResult)
   }
 
   implicit val formatResultGroup: OFormat[ResultGroup] = OFormat(readResultGroup, writeResultGroup)
 
-  implicit val formatQueueResultGroup: Format[QueueResultGroup] = (
-    (JsPath \ "count").format[Int] and
-      (JsPath \ "team").formatNullable[String] and
-      (JsPath \ "caseType").format[ApplicationType.Value]
-  )(QueueResultGroup.apply, o => Tuple.fromProductTyped(o))
+  implicit val formatQueueResultGroup: OFormat[QueueResultGroup] = Json.format[QueueResultGroup]
 }

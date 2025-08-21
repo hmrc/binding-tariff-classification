@@ -23,7 +23,7 @@ import uk.gov.hmrc.bindingtariffclassification.model.{ApplicationType, Liability
 import uk.gov.hmrc.bindingtariffclassification.sort.SortDirection
 
 sealed abstract class Report extends Product with Serializable {
-  def sortBy: ReportField[?]
+  def sortBy: ReportField[_]
   def sortOrder: SortDirection.Value
   def caseTypes: Set[ApplicationType.Value]
   def statuses: Set[PseudoCaseStatus.Value]
@@ -35,8 +35,8 @@ sealed abstract class Report extends Product with Serializable {
 }
 
 case class SummaryReport(
-  groupBy: NonEmptySeq[ReportField[?]],
-  sortBy: ReportField[?],
+  groupBy: NonEmptySeq[ReportField[_]],
+  sortBy: ReportField[_],
   sortOrder: SortDirection.Value = SortDirection.ASCENDING,
   caseTypes: Set[ApplicationType.Value] = Set.empty,
   statuses: Set[PseudoCaseStatus.Value] = Set.empty,
@@ -128,8 +128,8 @@ object SummaryReport {
 }
 
 case class CaseReport(
-  fields: NonEmptySeq[ReportField[?]],
-  sortBy: ReportField[?] = ReportField.Reference,
+  fields: NonEmptySeq[ReportField[_]],
+  sortBy: ReportField[_] = ReportField.Reference,
   sortOrder: SortDirection.Value = SortDirection.ASCENDING,
   caseTypes: Set[ApplicationType.Value] = Set.empty,
   statuses: Set[PseudoCaseStatus.Value] = Set.empty,
@@ -210,7 +210,7 @@ object CaseReport {
 }
 
 case class QueueReport(
-  sortBy: ReportField[?] = ReportField.Team,
+  sortBy: ReportField[_] = ReportField.Team,
   sortOrder: SortDirection.Value = SortDirection.ASCENDING,
   caseTypes: Set[ApplicationType.Value] = Set.empty,
   statuses: Set[PseudoCaseStatus.Value] = Set.empty,

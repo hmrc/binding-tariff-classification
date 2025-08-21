@@ -21,19 +21,19 @@ import uk.gov.hmrc.bindingtariffclassification.model.Case
 
 sealed abstract class ResultGroup {
   def count: Long
-  def groupKey: NonEmptySeq[ReportResultField[?]]
+  def groupKey: NonEmptySeq[ReportResultField[_]]
   def maxFields: List[NumberResultField]
 }
 
 case class SimpleResultGroup(
   count: Long,
-  groupKey: NonEmptySeq[ReportResultField[?]],
+  groupKey: NonEmptySeq[ReportResultField[_]],
   maxFields: List[NumberResultField] = List.empty
 ) extends ResultGroup
 
 case class CaseResultGroup(
   count: Long,
-  groupKey: NonEmptySeq[ReportResultField[?]],
+  groupKey: NonEmptySeq[ReportResultField[_]],
   maxFields: List[NumberResultField] = List.empty,
-  cases: List[Case]
+  cases: List[Case] = List.empty
 ) extends ResultGroup

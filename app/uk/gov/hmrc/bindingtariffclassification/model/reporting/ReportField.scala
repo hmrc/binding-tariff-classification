@@ -89,7 +89,7 @@ object ReportField {
   val ContactName: StringField              = StringField("contact_name", "application.contact.name")
   val ContactEmail: StringField             = StringField("contact_email", "application.contact.email")
 
-  val fields: Map[String, ReportField[?]] = List(
+  val fields: Map[String, ReportField[_]] = List(
     Count,
     Reference,
     Description,
@@ -113,5 +113,5 @@ object ReportField {
     ContactEmail
   ).map(field => field.fieldName -> field).toMap
 
-  val encryptedFields: Seq[ReportField[?]] = Seq(ContactName, ContactEmail)
+  val encryptedFields: Seq[ReportField[_]] = Seq(ContactName, ContactEmail)
 }

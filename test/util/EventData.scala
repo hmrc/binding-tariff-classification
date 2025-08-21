@@ -27,6 +27,7 @@ object EventData {
 
   private def createEvent(caseRef: String, details: Details, date: Instant = Instant.now()): Event =
     Event(
+      id = RandomGenerator.randomUUID(),
       details = details,
       operator = Operator(RandomGenerator.randomUUID(), Some("user name")),
       caseReference = caseRef,

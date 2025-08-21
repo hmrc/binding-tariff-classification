@@ -22,8 +22,6 @@ import org.mongodb.scala.bson.BsonDocument
 import org.mongodb.scala.bson.conversions.Bson
 import org.mongodb.scala.model.Sorts
 import uk.gov.hmrc.bindingtariffclassification.model.{Paged, Pagination}
-import org.mongodb.scala.SingleObservableFuture
-import org.mongodb.scala.ObservableFuture
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.reflect.ClassTag
@@ -34,7 +32,7 @@ trait BaseMongoOperations[T] {
   protected val _id                 = "_id"
   protected val defaultSortBy: Bson = Sorts.orderBy(Sorts.ascending(_id))
 
-  protected lazy val collection: MongoCollection[T]
+  protected val collection: MongoCollection[T]
 
   private def countDocument(filter: Bson): Future[Long] =
     collection.countDocuments(filter).toFuture()
