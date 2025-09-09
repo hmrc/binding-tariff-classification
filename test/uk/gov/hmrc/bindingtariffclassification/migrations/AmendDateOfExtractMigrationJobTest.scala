@@ -18,12 +18,12 @@ package uk.gov.hmrc.bindingtariffclassification.migrations
 
 import org.mockito.ArgumentCaptor
 import org.mockito.ArgumentMatchers.{any, refEq}
-import org.mockito.BDDMockito.`given`
-import org.mockito.Mockito.{never, reset, times, verify}
+import org.mockito.Mockito.*
 import org.mockito.invocation.InvocationOnMock
+import org.mockito.stubbing.OngoingStubbing
 import org.scalatest.BeforeAndAfterEach
 import uk.gov.hmrc.bindingtariffclassification.base.BaseSpec
-import uk.gov.hmrc.bindingtariffclassification.model._
+import uk.gov.hmrc.bindingtariffclassification.model.*
 import uk.gov.hmrc.bindingtariffclassification.service.CaseService
 import uk.gov.hmrc.bindingtariffclassification.sort.CaseSortField
 import util.CaseData
@@ -66,7 +66,7 @@ class AmendDateOfExtractMigrationJobTest extends BaseSpec with BeforeAndAfterEac
     }
 
     "Update Date Of Extract - for case extracted on 02/10/2018" in {
-      givenUpdatingACaseReturnsItself()
+      givenUpdatingACaseReturnsItself
       givenAPageOfCases(1, 1, 1, aMigratedCaseWith(reference = "reference", dateOfExtract = LocalDate.of(2018, 10, 2)))
 
       await(migrationJob.execute())
@@ -75,7 +75,7 @@ class AmendDateOfExtractMigrationJobTest extends BaseSpec with BeforeAndAfterEac
     }
 
     "Update Date Of Extract - for case extracted on 01/01/2021" in {
-      givenUpdatingACaseReturnsItself()
+      givenUpdatingACaseReturnsItself
       givenAPageOfCases(1, 1, 1, aMigratedCaseWith(reference = "reference", dateOfExtract = LocalDate.of(2021, 1, 1)))
 
       await(migrationJob.execute())
@@ -84,7 +84,7 @@ class AmendDateOfExtractMigrationJobTest extends BaseSpec with BeforeAndAfterEac
     }
 
     "Update Date Of Extract - for multiple pages of cases" in {
-      givenUpdatingACaseReturnsItself()
+      givenUpdatingACaseReturnsItself
       givenPagesOfCases(
         Seq(
           aMigratedCaseWith(reference = "reference-1", dateOfExtract = LocalDate.of(2018, 10, 2)),
@@ -112,7 +112,7 @@ class AmendDateOfExtractMigrationJobTest extends BaseSpec with BeforeAndAfterEac
     }
 
     "Update Date Of Extract - for case extracted on 02/10/2018" in {
-      givenUpdatingACaseReturnsItself()
+      givenUpdatingACaseReturnsItself
       givenAPageOfCases(1, 1, 1, aMigratedCaseWith(reference = "reference", dateOfExtract = LocalDate.of(2018, 10, 2)))
 
       await(migrationJob.rollback())
@@ -121,7 +121,7 @@ class AmendDateOfExtractMigrationJobTest extends BaseSpec with BeforeAndAfterEac
     }
 
     "Update Date Of Extract - for case extracted on 01/01/2021" in {
-      givenUpdatingACaseReturnsItself()
+      givenUpdatingACaseReturnsItself
       givenAPageOfCases(1, 1, 1, aMigratedCaseWith(reference = "reference", dateOfExtract = LocalDate.of(2021, 1, 1)))
 
       await(migrationJob.rollback())
@@ -130,7 +130,7 @@ class AmendDateOfExtractMigrationJobTest extends BaseSpec with BeforeAndAfterEac
     }
 
     "Update Date Of Extract - for case extracted on 31/12/2020" in {
-      givenUpdatingACaseReturnsItself()
+      givenUpdatingACaseReturnsItself
       givenAPageOfCases(1, 1, 1, aMigratedCaseWith(reference = "reference", dateOfExtract = LocalDate.of(2020, 12, 31)))
 
       await(migrationJob.rollback())
@@ -139,7 +139,7 @@ class AmendDateOfExtractMigrationJobTest extends BaseSpec with BeforeAndAfterEac
     }
 
     "Update Date Of Extract - for multiple pages of cases" in {
-      givenUpdatingACaseReturnsItself()
+      givenUpdatingACaseReturnsItself
       givenPagesOfCases(
         Seq(
           aMigratedCaseWith(reference = "reference-1", dateOfExtract = LocalDate.of(2018, 10, 2)),
@@ -166,10 +166,16 @@ class AmendDateOfExtractMigrationJobTest extends BaseSpec with BeforeAndAfterEac
     captor.getValue
   }
 
-  private def givenAPageOfCases(page: Int, pageSize: Int, totalCases: Int, cases: Case*): Unit = {
+  private def givenAPageOfCases(
+    page: Int,
+    pageSize: Int,
+    totalCases: Int,
+    cases: Case*
+  ): OngoingStubbing[Future[Paged[Case]]] = {
     val pagination = Pagination(page = page)
-    given(caseService.get(caseSearch, pagination)) willReturn
+    when(caseService.get(caseSearch, pagination)).thenReturn(
       Future.successful(Paged(cases, Pagination(page = page, pageSize = pageSize), totalCases))
+    )
   }
 
   private def givenPagesOfCases(cases: Seq[Case]): Unit =
@@ -185,8 +191,8 @@ class AmendDateOfExtractMigrationJobTest extends BaseSpec with BeforeAndAfterEac
         dateOfExtract = Some(dateOfExtract.atStartOfDay(ZoneOffset.UTC).toInstant)
       )
 
-  private def givenUpdatingACaseReturnsItself(): Unit =
-    given(caseService.update(any[Case], any[Boolean])).will((invocation: InvocationOnMock) =>
+  private def givenUpdatingACaseReturnsItself: OngoingStubbing[Future[Option[Case]]] =
+    when(caseService.update(any[Case], any[Boolean])).thenAnswer((invocation: InvocationOnMock) =>
       Future.successful(Option(invocation.getArgument[Case](0)))
     )
 }

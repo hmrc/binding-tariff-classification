@@ -19,6 +19,7 @@ package uk.gov.hmrc.bindingtariffclassification.component
 import play.api.http.Status._
 import play.api.libs.ws.ahc.StandaloneAhcWSClient
 import uk.gov.hmrc.bindingtariffclassification.component.utils.IntegrationSpecBase
+import play.api.libs.ws.DefaultBodyReadables.readableAsString
 
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
@@ -49,8 +50,8 @@ class AuthSpec extends BaseFeatureSpec with IntegrationSpecBase {
       val result         = Await.result(responseFuture, Duration(1000L, "ms"))
 
       Then("The response code should be 403")
-      result.status shouldEqual FORBIDDEN
-      result.body shouldBe "Missing or invalid 'X-Api-Token'"
+      result.status.shouldEqual(FORBIDDEN)
+      result.body.shouldBe("Missing or invalid 'X-Api-Token'")
     }
 
     Scenario("Auth header not present") {
@@ -60,8 +61,8 @@ class AuthSpec extends BaseFeatureSpec with IntegrationSpecBase {
       val result         = Await.result(responseFuture, Duration(1000L, "ms"))
 
       Then("The response code should be 403")
-      result.status shouldEqual FORBIDDEN
-      result.body shouldBe "Missing or invalid 'X-Api-Token'"
+      result.status.shouldEqual(FORBIDDEN)
+      result.body.shouldBe("Missing or invalid 'X-Api-Token'")
     }
 
     Scenario("Calls to the health endpoint do not require auth token") {

@@ -17,17 +17,17 @@
 package uk.gov.hmrc.bindingtariffclassification.scheduler
 
 import org.mockito.ArgumentCaptor
-import org.mockito.ArgumentMatchers._
-import org.mockito.BDDMockito.given
-import org.mockito.Mockito._
+import org.mockito.ArgumentMatchers.*
+import org.mockito.Mockito.*
 import org.mockito.invocation.InvocationOnMock
+import org.mockito.stubbing.OngoingStubbing
 import org.quartz.CronExpression
 import org.scalatest.BeforeAndAfterEach
 import uk.gov.hmrc.bindingtariffclassification.base.BaseSpec
 import uk.gov.hmrc.bindingtariffclassification.config.{AppConfig, JobConfig}
 import uk.gov.hmrc.bindingtariffclassification.connector.BankHolidaysConnector
 import uk.gov.hmrc.bindingtariffclassification.model.CaseStatus.CaseStatus
-import uk.gov.hmrc.bindingtariffclassification.model._
+import uk.gov.hmrc.bindingtariffclassification.model.*
 import uk.gov.hmrc.bindingtariffclassification.service.{CaseService, EventService}
 import uk.gov.hmrc.bindingtariffclassification.sort.CaseSortField
 import uk.gov.hmrc.http.HeaderCarrier
@@ -35,10 +35,9 @@ import uk.gov.hmrc.mongo.lock.LockRepository
 import util.CaseData
 import util.EventData.createCaseStatusChangeEventDetails
 
-import java.time._
+import java.time.*
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
-import scala.concurrent.Future.successful
 import scala.concurrent.duration.Duration
 
 class ActiveDaysElapsedJobTest extends BaseSpec with BeforeAndAfterEach {
@@ -65,9 +64,10 @@ class ActiveDaysElapsedJobTest extends BaseSpec with BeforeAndAfterEach {
   }
 
   override protected def beforeEach(): Unit = {
-    given(appConfig.clock).willReturn(clock)
-    given(appConfig.activeDaysElapsed).willReturn(jobConfig)
-    given(lockRepo.takeLock(any[String], any[String], any[Duration])).willReturn(Future.successful(None))
+    when(appConfig.clock).thenReturn(clock)
+    when(appConfig.activeDaysElapsed).thenReturn(jobConfig)
+    when(lockRepo.takeLock(any[String], any[String], any[Duration])).thenReturn(Future.successful(None))
+    ()
   }
 
   "Scheduled Job" should {
@@ -87,7 +87,7 @@ class ActiveDaysElapsedJobTest extends BaseSpec with BeforeAndAfterEach {
   "Scheduled Job 'Execute'" should {
 
     "Update Days Elapsed - for no cases" in {
-      givenNoBankHolidays()
+      givenNoBankHolidays
       givenTodaysDateIs("2019-01-01T00:00:00")
 
       givenAPageOfCases(1, 1, 0)
@@ -96,10 +96,10 @@ class ActiveDaysElapsedJobTest extends BaseSpec with BeforeAndAfterEach {
     }
 
     "Update Days Elapsed - for case created today" in {
-      givenNoBankHolidays()
+      givenNoBankHolidays
       givenTodaysDateIs("2019-01-01T00:00:00")
 
-      givenUpdatingACaseReturnsItself()
+      givenUpdatingACaseReturnsItself
       givenAPageOfCases(1, 1, 1, aCaseWith(reference = "reference", createdDate = "2019-01-01T00:00:00"))
       givenThereAreNoEventsFor("reference")
 
@@ -109,10 +109,10 @@ class ActiveDaysElapsedJobTest extends BaseSpec with BeforeAndAfterEach {
     }
 
     "Update Days Elapsed - for case created one working day ago" in {
-      givenNoBankHolidays()
+      givenNoBankHolidays
       givenTodaysDateIs("2019-01-02T00:00:00")
 
-      givenUpdatingACaseReturnsItself()
+      givenUpdatingACaseReturnsItself
       givenAPageOfCases(1, 1, 1, aCaseWith(reference = "reference", createdDate = "2019-01-01T00:00:00"))
       givenThereAreNoEventsFor("reference")
 
@@ -122,10 +122,10 @@ class ActiveDaysElapsedJobTest extends BaseSpec with BeforeAndAfterEach {
     }
 
     "Update Days Elapsed - for case created multiple working days ago" in {
-      givenNoBankHolidays()
+      givenNoBankHolidays
       givenTodaysDateIs("2019-01-04T00:00:00")
 
-      givenUpdatingACaseReturnsItself()
+      givenUpdatingACaseReturnsItself
       givenAPageOfCases(1, 1, 1, aCaseWith(reference = "reference", createdDate = "2019-01-01T00:00:00"))
       givenThereAreNoEventsFor("reference")
 
@@ -135,10 +135,10 @@ class ActiveDaysElapsedJobTest extends BaseSpec with BeforeAndAfterEach {
     }
 
     "Update Days Elapsed - excluding weekends" in {
-      givenNoBankHolidays()
+      givenNoBankHolidays
       givenTodaysDateIs("2019-01-07T00:00:00")
 
-      givenUpdatingACaseReturnsItself()
+      givenUpdatingACaseReturnsItself
       givenAPageOfCases(1, 1, 1, aCaseWith(reference = "reference", createdDate = "2019-01-05T00:00:00"))
       givenThereAreNoEventsFor("reference")
 
@@ -151,7 +151,7 @@ class ActiveDaysElapsedJobTest extends BaseSpec with BeforeAndAfterEach {
       givenABankHolidayOn("2019-01-01")
       givenTodaysDateIs("2019-01-02T00:00:00")
 
-      givenUpdatingACaseReturnsItself()
+      givenUpdatingACaseReturnsItself
       givenAPageOfCases(1, 1, 1, aCaseWith(reference = "reference", createdDate = "2019-01-01T00:00:00"))
       givenThereAreNoEventsFor("reference")
 
@@ -161,10 +161,10 @@ class ActiveDaysElapsedJobTest extends BaseSpec with BeforeAndAfterEach {
     }
 
     "Update Days Elapsed - excluding referred days" in {
-      givenNoBankHolidays()
+      givenNoBankHolidays
       givenTodaysDateIs("2019-01-04T00:00:00")
 
-      givenUpdatingACaseReturnsItself()
+      givenUpdatingACaseReturnsItself
       givenAPageOfCases(1, 1, 1, aCaseWith(reference = "reference", createdDate = "2019-01-01T00:00:00"))
       givenAPageOfEventsFor(
         "reference",
@@ -179,10 +179,10 @@ class ActiveDaysElapsedJobTest extends BaseSpec with BeforeAndAfterEach {
     }
 
     "Update Days Elapsed - excluding multiple referred days" in {
-      givenNoBankHolidays()
+      givenNoBankHolidays
       givenTodaysDateIs("2019-01-04T00:00:00")
 
-      givenUpdatingACaseReturnsItself()
+      givenUpdatingACaseReturnsItself
       givenAPageOfCases(1, 1, 1, aCaseWith(reference = "reference", createdDate = "2019-01-01T00:00:00"))
       givenAPageOfEventsFor(
         "reference",
@@ -190,7 +190,8 @@ class ActiveDaysElapsedJobTest extends BaseSpec with BeforeAndAfterEach {
         1,
         aStatusChangeWith(date = "2019-01-01T00:00:00", status = CaseStatus.REFERRED),
         aStatusChangeWith(date = "2019-01-02T00:00:00", status = CaseStatus.OPEN),
-        aStatusChangeWith(date = "2019-01-03T00:00:00", status = CaseStatus.REFERRED)
+        aStatusChangeWith(date = "2019-01-03T00:00:00", status = CaseStatus.REFERRED),
+        aStatusChangeWith(date = "2019-01-04T00:00:00", status = CaseStatus.CANCELLED)
       )
 
       await(newJob.execute())
@@ -199,10 +200,10 @@ class ActiveDaysElapsedJobTest extends BaseSpec with BeforeAndAfterEach {
     }
 
     "Update Days Elapsed - excluding multiple referred events on the same day" in {
-      givenNoBankHolidays()
+      givenNoBankHolidays
       givenTodaysDateIs("2019-01-04T00:00:00")
 
-      givenUpdatingACaseReturnsItself()
+      givenUpdatingACaseReturnsItself
       givenAPageOfCases(1, 1, 1, aCaseWith(reference = "reference", createdDate = "2019-01-01T00:00:00"))
       givenAPageOfEventsFor(
         "reference",
@@ -218,10 +219,10 @@ class ActiveDaysElapsedJobTest extends BaseSpec with BeforeAndAfterEach {
     }
 
     "Update Days Elapsed - excluding suspended days" in {
-      givenNoBankHolidays()
+      givenNoBankHolidays
       givenTodaysDateIs("2019-01-04T00:00:00")
 
-      givenUpdatingACaseReturnsItself()
+      givenUpdatingACaseReturnsItself
       givenAPageOfCases(1, 1, 1, aCaseWith(reference = "reference", createdDate = "2019-01-01T00:00:00"))
       givenAPageOfEventsFor(
         "reference",
@@ -236,10 +237,10 @@ class ActiveDaysElapsedJobTest extends BaseSpec with BeforeAndAfterEach {
     }
 
     "Update Days Elapsed - excluding multiple suspended days" in {
-      givenNoBankHolidays()
+      givenNoBankHolidays
       givenTodaysDateIs("2019-01-04T00:00:00")
 
-      givenUpdatingACaseReturnsItself()
+      givenUpdatingACaseReturnsItself
       givenAPageOfCases(1, 1, 1, aCaseWith(reference = "reference", createdDate = "2019-01-01T00:00:00"))
       givenAPageOfEventsFor(
         "reference",
@@ -256,10 +257,10 @@ class ActiveDaysElapsedJobTest extends BaseSpec with BeforeAndAfterEach {
     }
 
     "Update Days Elapsed - excluding multiple suspended events on the same day" in {
-      givenNoBankHolidays()
+      givenNoBankHolidays
       givenTodaysDateIs("2019-01-04T00:00:00")
 
-      givenUpdatingACaseReturnsItself()
+      givenUpdatingACaseReturnsItself
       givenAPageOfCases(1, 1, 1, aCaseWith(reference = "reference", createdDate = "2019-01-01T00:00:00"))
       givenAPageOfEventsFor(
         "reference",
@@ -275,10 +276,10 @@ class ActiveDaysElapsedJobTest extends BaseSpec with BeforeAndAfterEach {
     }
 
     "Update Days Elapsed - for multiple cases" in {
-      givenNoBankHolidays()
+      givenNoBankHolidays
       givenTodaysDateIs("2019-01-01T00:00:00")
 
-      givenUpdatingACaseReturnsItself()
+      givenUpdatingACaseReturnsItself
       givenAPageOfCases(
         1,
         2,
@@ -295,10 +296,10 @@ class ActiveDaysElapsedJobTest extends BaseSpec with BeforeAndAfterEach {
     }
 
     "Update Days Elapsed - for multiple pages of cases" in {
-      givenNoBankHolidays()
+      givenNoBankHolidays
       givenTodaysDateIs("2019-01-01T00:00:00")
 
-      givenUpdatingACaseReturnsItself()
+      givenUpdatingACaseReturnsItself
       givenAPageOfCases(1, 1, 2, aCaseWith(reference = "reference-1", createdDate = "2019-01-01T00:00:00"))
       givenAPageOfCases(2, 1, 2, aCaseWith(reference = "reference-2", createdDate = "2019-01-02T00:00:00"))
       givenThereAreNoEventsFor("reference-1")
@@ -310,10 +311,10 @@ class ActiveDaysElapsedJobTest extends BaseSpec with BeforeAndAfterEach {
     }
 
     "Update Days Elapsed - for a migrated case extracted today with zero migrated days elapsed" in {
-      givenNoBankHolidays()
+      givenNoBankHolidays
       givenTodaysDateIs("2020-07-03T00:00:00")
 
-      givenUpdatingACaseReturnsItself()
+      givenUpdatingACaseReturnsItself
       givenAPageOfCases(
         1,
         1,
@@ -333,10 +334,10 @@ class ActiveDaysElapsedJobTest extends BaseSpec with BeforeAndAfterEach {
     }
 
     "Update Days Elapsed - for a migrated case extracted today with a non-zero migrated days elapsed" in {
-      givenNoBankHolidays()
+      givenNoBankHolidays
       givenTodaysDateIs("2020-07-03T00:00:00")
 
-      givenUpdatingACaseReturnsItself()
+      givenUpdatingACaseReturnsItself
       givenAPageOfCases(
         1,
         1,
@@ -356,10 +357,10 @@ class ActiveDaysElapsedJobTest extends BaseSpec with BeforeAndAfterEach {
     }
 
     "Update Days Elapsed - for a migrated case extracted 2 days ago with a zero migrated days elapsed" in {
-      givenNoBankHolidays()
+      givenNoBankHolidays
       givenTodaysDateIs("2020-07-03T00:00:00")
 
-      givenUpdatingACaseReturnsItself()
+      givenUpdatingACaseReturnsItself
       givenAPageOfCases(
         1,
         1,
@@ -379,10 +380,10 @@ class ActiveDaysElapsedJobTest extends BaseSpec with BeforeAndAfterEach {
     }
 
     "Update Days Elapsed - for a migrated case extracted 2 days ago with a non-zero migrated days elapsed" in {
-      givenNoBankHolidays()
+      givenNoBankHolidays
       givenTodaysDateIs("2020-07-03T00:00:00")
 
-      givenUpdatingACaseReturnsItself()
+      givenUpdatingACaseReturnsItself
       givenAPageOfCases(
         1,
         1,
@@ -402,10 +403,10 @@ class ActiveDaysElapsedJobTest extends BaseSpec with BeforeAndAfterEach {
     }
 
     "Update Days Elapsed - for a migrated referred case" in {
-      givenNoBankHolidays()
+      givenNoBankHolidays
       givenTodaysDateIs("2020-07-03T00:00:00")
 
-      givenUpdatingACaseReturnsItself()
+      givenUpdatingACaseReturnsItself
       givenAPageOfCases(
         1,
         1,
@@ -436,10 +437,16 @@ class ActiveDaysElapsedJobTest extends BaseSpec with BeforeAndAfterEach {
     captor.getValue
   }
 
-  private def givenAPageOfCases(page: Int, pageSize: Int, totalCases: Int, cases: Case*): Unit = {
+  private def givenAPageOfCases(
+    page: Int,
+    pageSize: Int,
+    totalCases: Int,
+    cases: Case*
+  ): OngoingStubbing[Future[Paged[Case]]] = {
     val pagination = Pagination(page = page)
-    given(caseService.get(caseSearch, pagination)) willReturn
+    when(caseService.get(caseSearch, pagination)).thenReturn(
       Future.successful(Paged(cases, Pagination(page = page, pageSize = pageSize), totalCases))
+    )
   }
 
   private val caseStatusChangeEventTypes =
@@ -451,20 +458,27 @@ class ActiveDaysElapsedJobTest extends BaseSpec with BeforeAndAfterEach {
       EventType.CASE_CANCELLATION
     )
 
-  private def givenAPageOfEventsFor(reference: String, page: Int, totalEvents: Int, events: Event*): Unit = {
+  private def givenAPageOfEventsFor(
+    reference: String,
+    page: Int,
+    totalEvents: Int,
+    events: Event*
+  ): OngoingStubbing[Future[Paged[Event]]] = {
     val pagination = Pagination(page = page, pageSize = Integer.MAX_VALUE)
-    given(
+    when(
       eventService.search(EventSearch(Some(Set(reference)), Some(caseStatusChangeEventTypes)), pagination)
-    ) willReturn
+    ).thenReturn(
       Future.successful(Paged(events, pagination, totalEvents))
+    )
   }
 
-  private def givenThereAreNoEventsFor(reference: String): Unit = {
+  private def givenThereAreNoEventsFor(reference: String): OngoingStubbing[Future[Paged[Event]]] = {
     val pagination = Pagination(pageSize = Integer.MAX_VALUE)
-    given(
+    when(
       eventService.search(EventSearch(Some(Set(reference)), Some(caseStatusChangeEventTypes)), pagination)
-    ) willReturn
+    ).thenReturn(
       Future.successful(Paged.empty[Event])
+    )
   }
 
   private def aCaseWith(reference: String, createdDate: String): Case =
@@ -489,34 +503,34 @@ class ActiveDaysElapsedJobTest extends BaseSpec with BeforeAndAfterEach {
 
   private def aStatusChangeWith(date: String, status: CaseStatus): Event = {
     val e = mock[Event]
-    given(e.details) willReturn createCaseStatusChangeEventDetails(mock[CaseStatus], status)
-    given(e.timestamp) willReturn LocalDateTime.parse(date).toInstant(ZoneOffset.UTC)
+    when(e.details).thenReturn(createCaseStatusChangeEventDetails(mock[CaseStatus], status))
+    when(e.timestamp).thenReturn(LocalDateTime.parse(date).toInstant(ZoneOffset.UTC))
     e
   }
 
   private def newJob: ActiveDaysElapsedJob =
     new ActiveDaysElapsedJob(caseService, eventService, bankHolidaysConnector, lockRepo, appConfig)
 
-  private def givenABankHolidayOn(date: String*): Unit =
+  private def givenABankHolidayOn(date: String*): OngoingStubbing[Future[Set[LocalDate]]] =
     when(bankHolidaysConnector.get()(any[HeaderCarrier]))
       .thenReturn(
         Future.successful(date.map(s => LocalDate.parse(s)).toSet)
       )
 
-  private def givenNoBankHolidays(): Unit =
+  private def givenNoBankHolidays: OngoingStubbing[Future[Set[LocalDate]]] =
     when(bankHolidaysConnector.get()(any[HeaderCarrier]))
       .thenReturn(
         Future.successful(Set.empty[LocalDate])
       )
 
-  private def givenTodaysDateIs(date: String): Unit = {
+  private def givenTodaysDateIs(date: String): OngoingStubbing[Clock] = {
     val zone: ZoneId = ZoneOffset.UTC
     val instant      = LocalDateTime.parse(date).atZone(zone).toInstant
-    given(appConfig.clock).willReturn(Clock.fixed(instant, zone))
+    when(appConfig.clock).thenReturn(Clock.fixed(instant, zone))
   }
 
-  private def givenUpdatingACaseReturnsItself(): Unit =
-    given(caseService.update(any[Case], any[Boolean])).will((invocation: InvocationOnMock) =>
+  private def givenUpdatingACaseReturnsItself: OngoingStubbing[Future[Option[Case]]] =
+    when(caseService.update(any[Case], any[Boolean])).thenAnswer((invocation: InvocationOnMock) =>
       Future.successful(Option(invocation.getArgument[Case](0)))
     )
 }

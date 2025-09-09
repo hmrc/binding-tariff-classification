@@ -24,6 +24,7 @@ import uk.gov.hmrc.bindingtariffclassification.model.ErrorCode.NOTFOUND
 import uk.gov.hmrc.bindingtariffclassification.model.RESTFormatters._
 import uk.gov.hmrc.bindingtariffclassification.model.{Operator, _}
 import uk.gov.hmrc.bindingtariffclassification.service.UsersService
+import uk.gov.hmrc.bindingtariffclassification.model.RESTFormatters.formatOperator
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future.successful
@@ -39,13 +40,13 @@ class UsersController @Inject() (appConfig: AppConfig, usersService: UsersServic
 
   def allUsers(search: UserSearch, pagination: Pagination): Action[AnyContent] =
     Action.async {
-      usersService.search(search, pagination) map { users: Paged[Operator] =>
+      usersService.search(search, pagination) map { (users: Paged[Operator]) =>
         Ok(Json.toJson(users))
       } recover recovery
     }
 
   def createUser: Action[JsValue] = Action.async(parse.json) { implicit request =>
-    withJsonBody[NewUserRequest] { userRequest: NewUserRequest =>
+    withJsonBody[NewUserRequest] { (userRequest: NewUserRequest) =>
       for {
         c <- usersService.insertUser(userRequest.operator)
       } yield Created(Json.toJson(c)(RESTFormatters.formatOperator))
@@ -57,7 +58,7 @@ class UsersController @Inject() (appConfig: AppConfig, usersService: UsersServic
 
   def updateUser(id: String): Action[JsValue] =
     Action.async(parse.json) { implicit request =>
-      withJsonBody[Operator] { user: Operator =>
+      withJsonBody[Operator] { (user: Operator) =>
         if (user.id == id) {
           val upsert = request.headers.get(USER_AGENT) match {
             case Some(agent) => appConfig.upsertAgents.contains(agent)
@@ -79,7 +80,7 @@ class UsersController @Inject() (appConfig: AppConfig, usersService: UsersServic
 
   def markDeleted(id: String): Action[JsValue] =
     Action.async(parse.json) { implicit request =>
-      withJsonBody[Operator] { user: Operator =>
+      withJsonBody[Operator] { (user: Operator) =>
         if (user.id == id) {
           val upsert = request.headers.get(USER_AGENT) match {
             case Some(agent) => appConfig.upsertAgents.contains(agent)

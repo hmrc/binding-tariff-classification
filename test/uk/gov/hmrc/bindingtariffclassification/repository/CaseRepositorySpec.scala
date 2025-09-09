@@ -18,12 +18,8 @@ package uk.gov.hmrc.bindingtariffclassification.repository
 
 import cats.data.NonEmptySeq
 import cats.syntax.all._
-import org.apache.pekko.stream.scaladsl.Sink.collection
-import org.bson.Document
-import org.mockito.ArgumentMatchers.any
-import org.mockito.BDDMockito.given
-import org.mockito.Mockito.{doReturn, spy, times, verify, when}
-import org.mongodb.scala.{AggregateObservable, MongoCollection, MongoWriteException, SingleObservable}
+import org.mockito.Mockito.when
+import org.mongodb.scala.MongoWriteException
 import org.mongodb.scala.bson.conversions.Bson
 import org.mongodb.scala.bson.{BsonDocument, BsonInt32}
 import org.mongodb.scala.model.Indexes.{ascending, descending}
@@ -39,6 +35,8 @@ import uk.gov.hmrc.bindingtariffclassification.utils.RandomGenerator
 import uk.gov.hmrc.mongo.test.MongoSupport
 import util.CaseData._
 import util.Cases._
+import org.mongodb.scala.SingleObservableFuture
+import org.mongodb.scala.ObservableFuture
 
 import java.time._
 import java.time.temporal.ChronoUnit
@@ -69,14 +67,15 @@ class CaseRepositorySpec
 
   override def beforeEach(): Unit = {
     super.beforeEach()
-    given(config.clock) willReturn Clock
-      .fixed(Instant.parse("2021-02-01T09:00:00.00Z").truncatedTo(ChronoUnit.MILLIS), ZoneOffset.UTC)
+    when(config.clock).thenReturn(
+      Clock
+        .fixed(Instant.parse("2021-02-01T09:00:00.00Z").truncatedTo(ChronoUnit.MILLIS), ZoneOffset.UTC)
+    )
     await(repository.deleteAll())
   }
 
   override def afterAll(): Unit =
     super.afterAll()
-  // await(repository.deleteAll())
 
   private def collectionSize: Int =
     await(
@@ -422,7 +421,7 @@ class CaseRepositorySpec
     )
 
     "return an empty sequence when there are no matches" in {
-      given(config.clock) willReturn Clock.fixed(effectiveEndDateTime, ZoneOffset.UTC)
+      when(config.clock).thenReturn(Clock.fixed(effectiveEndDateTime, ZoneOffset.UTC))
 
       store(newCase)
       val search = CaseSearch(CaseFilter(statuses = Some(Set(PseudoCaseStatus.LIVE))))
@@ -430,7 +429,7 @@ class CaseRepositorySpec
     }
 
     "return the expected document when there is one match" in {
-      given(config.clock) willReturn Clock.fixed(effectiveEndDateTime, ZoneOffset.UTC)
+      when(config.clock).thenReturn(Clock.fixed(effectiveEndDateTime, ZoneOffset.UTC))
 
       store(newCase, liveCase, expiredCase)
       val search = CaseSearch(CaseFilter(statuses = Some(Set(PseudoCaseStatus.LIVE))))
@@ -438,7 +437,7 @@ class CaseRepositorySpec
     }
 
     "return the expected documents when there are multiple matches" in {
-      given(config.clock) willReturn Clock.fixed(effectiveEndDateTime, ZoneOffset.UTC)
+      when(config.clock).thenReturn(Clock.fixed(effectiveEndDateTime, ZoneOffset.UTC))
 
       store(newCase, liveCase, expiredCase)
       val search = CaseSearch(CaseFilter(statuses = Some(Set(PseudoCaseStatus.LIVE, PseudoCaseStatus.EXPIRED))))
@@ -1111,7 +1110,7 @@ class CaseRepositorySpec
     val corresMiscCases = List(c18, c19)
 
     "group by pseudo status" in {
-      given(config.clock) willReturn Clock.fixed(Instant.parse("2021-02-01T09:00:00.00Z"), ZoneOffset.UTC)
+      when(config.clock).thenReturn(Clock.fixed(Instant.parse("2021-02-01T09:00:00.00Z"), ZoneOffset.UTC))
 
       await(cases.traverse(repository.insert))
       await(liveCases.traverse(repository.insert))
@@ -1214,7 +1213,7 @@ class CaseRepositorySpec
     }
 
     "group by liability status" in {
-      given(config.clock) willReturn Clock.fixed(Instant.parse("2021-02-01T09:00:00.00Z"), ZoneOffset.UTC)
+      when(config.clock).thenReturn(Clock.fixed(Instant.parse("2021-02-01T09:00:00.00Z"), ZoneOffset.UTC))
 
       await(liabilities.traverse(repository.insert))
       collectionSize shouldBe 5
@@ -1319,7 +1318,7 @@ class CaseRepositorySpec
     }
 
     "group by assignee" in {
-      given(config.clock) willReturn Clock.fixed(Instant.parse("2021-02-01T09:00:00.00Z"), ZoneOffset.UTC)
+      when(config.clock).thenReturn(Clock.fixed(Instant.parse("2021-02-01T09:00:00.00Z"), ZoneOffset.UTC))
 
       await(cases.traverse(repository.insert))
       collectionSize shouldBe 6
@@ -2367,7 +2366,7 @@ class CaseRepositorySpec
     val expiredCases = List(c9, c10)
 
     "group unassigned cases by team and case type" in {
-      given(config.clock) willReturn Clock.fixed(Instant.parse("2021-02-01T09:00:00.00Z"), ZoneOffset.UTC)
+      when(config.clock).thenReturn(Clock.fixed(Instant.parse("2021-02-01T09:00:00.00Z"), ZoneOffset.UTC))
 
       await(cases.traverse(repository.insert))
       await(liveCases.traverse(repository.insert))
@@ -2388,7 +2387,7 @@ class CaseRepositorySpec
     }
 
     "sort unassigned cases by count" in {
-      given(config.clock) willReturn Clock.fixed(Instant.parse("2021-02-01T09:00:00.00Z"), ZoneOffset.UTC)
+      when(config.clock).thenReturn(Clock.fixed(Instant.parse("2021-02-01T09:00:00.00Z"), ZoneOffset.UTC))
 
       await(cases.traverse(repository.insert))
       await(liveCases.traverse(repository.insert))
@@ -2409,7 +2408,7 @@ class CaseRepositorySpec
     }
 
     "filter by assignee" in {
-      given(config.clock) willReturn Clock.fixed(Instant.parse("2021-02-01T09:00:00.00Z"), ZoneOffset.UTC)
+      when(config.clock).thenReturn(Clock.fixed(Instant.parse("2021-02-01T09:00:00.00Z"), ZoneOffset.UTC))
 
       await(cases.traverse(repository.insert))
       await(liveCases.traverse(repository.insert))
@@ -2536,7 +2535,7 @@ class CaseRepositorySpec
     Filters.equal("reference", c.reference)
 
   private def store(cases: Case*): Unit =
-    cases.foreach { c: Case => await(repository.insert(c)) }
+    cases.foreach((c: Case) => await(repository.insert(c)))
 
   private def createCaseForTest(
     app: Application = createBasicBTIApplication,

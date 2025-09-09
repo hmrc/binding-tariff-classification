@@ -36,11 +36,11 @@ class KeywordController @Inject() (
     extends CommonController(mcc) {
 
   def addKeyword(): Action[JsValue] = Action.async(parse.json) { implicit request =>
-    withJsonBody[NewKeywordRequest] { keywordRequest: NewKeywordRequest =>
+    withJsonBody[NewKeywordRequest] { (keywordRequest: NewKeywordRequest) =>
       for {
         k <- keywordService.addKeyword(keywordRequest.keyword)
       } yield Created(Json.toJson(k)(RESTFormatters.formatKeyword))
-    } recover recovery map { result =>
+    }.recover(recovery) map { result =>
       logger.debug(s"[KeywordController][addKeyword] Keyword added with result : $result")
       result
     }
@@ -52,7 +52,7 @@ class KeywordController @Inject() (
 
   def approveKeyword(name: String): Action[JsValue] =
     Action.async(parse.json) { implicit request =>
-      withJsonBody[Keyword] { keyword: Keyword =>
+      withJsonBody[Keyword] { (keyword: Keyword) =>
         if (keyword.name == name) {
           val upsert = request.headers.get(USER_AGENT) match {
             case Some(agent) => appConfig.upsertAgents.contains(agent)
@@ -69,14 +69,17 @@ class KeywordController @Inject() (
             )
           )
         }
-      } recover recovery
+      }.recover(recovery)
     }
 
   def getAllKeywords(pagination: Pagination): Action[AnyContent] =
     Action.async {
-      keywordService.findAll(pagination).map { allKeywords =>
-        Ok(Json.toJson(allKeywords))
-      } recover recovery
+      keywordService
+        .findAll(pagination)
+        .map { allKeywords =>
+          Ok(Json.toJson(allKeywords))
+        }
+        .recover(recovery)
     }
 
   def fetchCaseKeywords(pagination: Pagination): Action[AnyContent] =
