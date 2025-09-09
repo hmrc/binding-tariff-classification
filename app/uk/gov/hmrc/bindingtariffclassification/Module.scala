@@ -18,6 +18,7 @@ package uk.gov.hmrc.bindingtariffclassification
 
 import play.api.inject.Binding
 import play.api.{Configuration, Environment}
+import uk.gov.hmrc.bindingtariffclassification.config.AppConfig
 import uk.gov.hmrc.bindingtariffclassification.controllers.MigrationController
 import uk.gov.hmrc.bindingtariffclassification.crypto.LocalCrypto
 import uk.gov.hmrc.bindingtariffclassification.migrations.{AddKeywordsMigrationJob, AmendDateOfExtractMigrationJob, MigrationJobs}
@@ -32,7 +33,7 @@ class Module extends play.api.inject.Module {
   private def isMongoEncryptionEnabled(configuration: Configuration): Boolean =
     configuration.get[Boolean]("mongodb.encryption.enabled")
 
-  override def bindings(environment: Environment, configuration: Configuration): Seq[Binding[_]] = {
+  override def bindings(environment: Environment, configuration: Configuration): Seq[Binding[?]] = {
     val repositoryBinding: Binding[CaseRepository] = if (isMongoEncryptionEnabled(configuration)) {
       bind[CaseRepository].to[EncryptedCaseMongoRepository]
     } else {
@@ -40,7 +41,7 @@ class Module extends play.api.inject.Module {
     }
 
     Seq(
-      bind[AesCrypto].to(classOf[LocalCrypto]),
+      bind[AesCrypto].toProvider[CryptoProvider],
       bind[ScheduledJobs].toProvider[ScheduledJobProvider],
       bind[MigrationJobs].toProvider[MigrationJobProvider],
       bind[Scheduler].toSelf.eagerly(),
@@ -66,4 +67,8 @@ class MigrationJobProvider @Inject() (
   addKeywordsMigration: AddKeywordsMigrationJob
 ) extends Provider[MigrationJobs] {
   override def get(): MigrationJobs = MigrationJobs(Set(amendDateOfExtractMigration, addKeywordsMigration))
+}
+
+class CryptoProvider @Inject() (appConfig: AppConfig) extends Provider[AesCrypto] {
+  override def get(): AesCrypto = new LocalCrypto(appConfig)
 }
