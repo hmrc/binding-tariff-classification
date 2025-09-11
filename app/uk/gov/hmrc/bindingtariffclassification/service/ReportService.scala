@@ -28,7 +28,7 @@ class ReportService @Inject() (caseRepository: CaseRepository) {
   def summaryReport(report: SummaryReport, pagination: Pagination): Future[Paged[ResultGroup]] =
     caseRepository.summaryReport(report, pagination)
 
-  def caseReport(report: CaseReport, pagination: Pagination): Future[Paged[Map[String, ReportResultField[_]]]] =
+  def caseReport(report: CaseReport, pagination: Pagination): Future[Paged[Map[String, ReportResultField[?]]]] =
     caseRepository.caseReport(report, pagination)
 
   def queueReport(report: QueueReport, pagination: Pagination): Future[Paged[QueueResultGroup]] =

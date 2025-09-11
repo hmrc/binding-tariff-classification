@@ -17,7 +17,6 @@
 package uk.gov.hmrc.bindingtariffclassification.service
 
 import org.apache.pekko.stream.Materializer
-import org.bson.Document
 import uk.gov.hmrc.bindingtariffclassification.model._
 import uk.gov.hmrc.bindingtariffclassification.repository._
 

@@ -24,7 +24,6 @@ import org.mongodb.scala.model.Accumulators.{max, push, sum}
 import org.mongodb.scala.model.Aggregates._
 import org.mongodb.scala.model.Filters._
 import org.mongodb.scala.model.Indexes.{ascending => asc, descending => desc}
-import org.mongodb.scala.model.Projections.{excludeId, fields, include}
 import org.mongodb.scala.model.Sorts.{ascending, descending, orderBy}
 import org.mongodb.scala.model._
 import org.slf4j.{Logger, LoggerFactory}
@@ -39,13 +38,11 @@ import uk.gov.hmrc.bindingtariffclassification.sort.SortDirection
 import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.play.json.Codecs.toBson
 import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
-import org.bson.{BsonInvalidOperationException, Document}
 import uk.gov.hmrc.bindingtariffclassification.model.LiabilityStatus.LiabilityStatus
 import org.mongodb.scala.SingleObservableFuture
 import org.mongodb.scala.ObservableFuture
 
 import java.time.Instant
-import java.util
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -586,7 +583,6 @@ class CaseMongoRepository @Inject() (
           .map { bsonDocument =>
             def wrapAsOptionOfString(field: BsonValue): Option[String] =
               if (field.isNull) None else Some(field.asString().getValue)
-
             QueueResultGroup(
               count = bsonDocument.getInt32(ReportField.Count.fieldName).getValue,
               team = wrapAsOptionOfString(bsonDocument.getDocument("_id").get(ReportField.Team.fieldName, BsonNull())),

@@ -184,8 +184,8 @@ object RESTFormatters {
   implicit val formatStringField: OFormat[StringField]                   = Json.format[StringField]
   implicit val formatDaysSinceField: OFormat[DaysSinceField]             = Json.format[DaysSinceField]
 
-  implicit val formatReportField: Format[ReportField[_]] = Union
-    .from[ReportField[_]]("type")
+  implicit val formatReportField: Format[ReportField[?]] = Union
+    .from[ReportField[?]]("type")
     .and[NumberField](ReportFieldType.Number.name)
     .and[StatusField](ReportFieldType.Status.name)
     .and[LiabilityStatusField](ReportFieldType.LiabilityStatus.name)
@@ -204,8 +204,8 @@ object RESTFormatters {
   implicit val formatDateResultField: OFormat[DateResultField]         = Json.format[DateResultField]
   implicit val formatStringResultField: OFormat[StringResultField]     = Json.format[StringResultField]
 
-  implicit val formatReportResultField: Format[ReportResultField[_]] = Union
-    .from[ReportResultField[_]]("type")
+  implicit val formatReportResultField: Format[ReportResultField[?]] = Union
+    .from[ReportResultField[?]]("type")
     .and[NumberResultField](ReportFieldType.Number.name)
     .and[StatusResultField](ReportFieldType.Status.name)
     .and[LiabilityStatusResultField](ReportFieldType.LiabilityStatus.name)
