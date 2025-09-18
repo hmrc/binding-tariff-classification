@@ -24,7 +24,6 @@ import org.mongodb.scala.model.Accumulators.{max, push, sum}
 import org.mongodb.scala.model.Aggregates._
 import org.mongodb.scala.model.Filters._
 import org.mongodb.scala.model.Indexes.{ascending => asc, descending => desc}
-import org.mongodb.scala.model.Projections.{excludeId, fields, include}
 import org.mongodb.scala.model.Sorts.{ascending, descending, orderBy}
 import org.mongodb.scala.model._
 import org.slf4j.{Logger, LoggerFactory}
@@ -39,13 +38,11 @@ import uk.gov.hmrc.bindingtariffclassification.sort.SortDirection
 import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.play.json.Codecs.toBson
 import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
-import org.bson.{BsonInvalidOperationException, Document}
 import uk.gov.hmrc.bindingtariffclassification.model.LiabilityStatus.LiabilityStatus
 import org.mongodb.scala.SingleObservableFuture
 import org.mongodb.scala.ObservableFuture
 
 import java.time.Instant
-import java.util
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -232,7 +229,7 @@ class CaseMongoRepository @Inject() (
       if (report.caseTypes.isEmpty) {
         empty()
       } else {
-        in(ReportField.CaseType.underlyingField, report.caseTypes.map(_.toString).toSeq: _*)
+        in(ReportField.CaseType.underlyingField, report.caseTypes.map(_.toString).toSeq*)
       }
 
     val statusFilter =
@@ -242,7 +239,7 @@ class CaseMongoRepository @Inject() (
         val (concreteStatuses, pseudoStatuses) = report.statuses.partition(p => CaseStatus.fromPseudoStatus(p).nonEmpty)
 
         val concreteFilter =
-          in(ReportField.Status.underlyingField, concreteStatuses.map(_.toString).toSeq: _*)
+          in(ReportField.Status.underlyingField, concreteStatuses.map(_.toString).toSeq*)
 
         val pseudoFilters =
           pseudoStatuses.collect {
@@ -255,25 +252,25 @@ class CaseMongoRepository @Inject() (
             case PseudoCaseStatus.UNDER_APPEAL =>
               and(
                 equal(ReportField.Status.underlyingField, PseudoCaseStatus.COMPLETED.toString),
-                elemMatch("decision.appeal", in("type", AppealType.appealTypes.map(_.toString).toSeq: _*))
+                elemMatch("decision.appeal", in("type", AppealType.appealTypes.map(_.toString).toSeq*))
               )
             case PseudoCaseStatus.UNDER_REVIEW =>
               and(
                 equal(ReportField.Status.underlyingField, PseudoCaseStatus.COMPLETED.toString),
                 and(
-                  not(elemMatch("decision.appeal", in("type", AppealType.appealTypes.map(_.toString).toSeq: _*))),
-                  elemMatch("decision.appeal", in("type", AppealType.reviewTypes.map(_.toString).toSeq: _*))
+                  not(elemMatch("decision.appeal", in("type", AppealType.appealTypes.map(_.toString).toSeq*))),
+                  elemMatch("decision.appeal", in("type", AppealType.reviewTypes.map(_.toString).toSeq*))
                 )
               )
           }
-        or(Seq(concreteFilter) ++ pseudoFilters.toSeq: _*)
+        or(Seq(concreteFilter) ++ pseudoFilters.toSeq*)
       }
 
     val liabilityStatusesFilter =
       if (report.liabilityStatuses.isEmpty) {
         empty()
       } else {
-        in(ReportField.LiabilityStatus.underlyingField, report.liabilityStatuses.map(_.toString).toSeq: _*)
+        in(ReportField.LiabilityStatus.underlyingField, report.liabilityStatuses.map(_.toString).toSeq*)
       }
 
     val teamFilter =
@@ -284,7 +281,7 @@ class CaseMongoRepository @Inject() (
           ReportField.Team.underlyingField,
           report.teams
             .map(teamId => if (teamId == GatewayTeamId) null else teamId)
-            .toSeq: _*
+            .toSeq*
         )
       }
 
@@ -348,7 +345,7 @@ class CaseMongoRepository @Inject() (
   }
 
   private def sortStage(
-    sortBy: ReportField[_],
+    sortBy: ReportField[?],
     sortOrder: SortDirection.Value
   ) =
     // If not sorting by reference, add it as a secondary sort field to ensure stable sorting
@@ -395,12 +392,12 @@ class CaseMongoRepository @Inject() (
         fieldName -> (coalesce(fieldChoices): JsValueWrapper)
       case field =>
         field.fieldName -> (JsString(s"$$${field.underlyingField}"): JsValueWrapper)
-    }.toSeq: _*)
+    }.toSeq*)
 
-    group(toBson(groupBy), Seq(countField) ++ maxFields ++ casesField: _*)
+    group(toBson(groupBy), Seq(countField) ++ maxFields ++ casesField*)
   }
 
-  private def getFieldValue(field: ReportField[_], json: Option[JsValue]): ReportResultField[_] = field match {
+  private def getFieldValue(field: ReportField[?], json: Option[JsValue]): ReportResultField[?] = field match {
     case field @ CaseTypeField(_, _)        => field.withValue(json.flatMap(_.asOpt[ApplicationType.Value]))
     case field @ ChapterField(_, _)         => field.withValue(json.flatMap(_.asOpt[String].filterNot(_.isEmpty)))
     case field @ DateField(_, _)            => field.withValue(json.flatMap(_.asOpt[Instant]))
@@ -475,7 +472,7 @@ class CaseMongoRepository @Inject() (
   override def caseReport(
     report: CaseReport,
     pagination: Pagination
-  ): Future[Paged[Map[String, ReportResultField[_]]]] = {
+  ): Future[Paged[Map[String, ReportResultField[?]]]] = {
     logger.info(s"[CaseMongoRepository][caseReport] Running report: $report with pagination $pagination")
 
     val futureCount = collection
@@ -504,7 +501,7 @@ class CaseMongoRepository @Inject() (
         Seq(matchStage(report)) ++
           Seq(
             sortStage(report.sortBy, report.sortOrder),
-            addFields(fields: _*),
+            addFields(fields*),
             project(equal("_id", 0)),
             skip((pagination.page - 1) * pagination.pageSize),
             limit(pagination.pageSize)
@@ -518,7 +515,7 @@ class CaseMongoRepository @Inject() (
           .map { json =>
             report.fields.toSeq
               .map(field => field.fieldName -> getFieldValue(field, json.value.get(field.fieldName)))
-              .toMap[String, ReportResultField[_]]
+              .toMap[String, ReportResultField[?]]
           }
       )
 
@@ -549,9 +546,9 @@ class CaseMongoRepository @Inject() (
 
     // Ideally we want to sort by both parts of the grouping key to improve sort stability
     (report.sortBy: @unchecked) match {
-      case ReportField.Count    => sort(orderBy(countThenTeamThenCaseType: _*))
-      case ReportField.CaseType => sort(orderBy(caseTypeThenTeam: _*))
-      case ReportField.Team     => sort(orderBy(teamThenCaseType: _*))
+      case ReportField.Count    => sort(orderBy(countThenTeamThenCaseType*))
+      case ReportField.CaseType => sort(orderBy(caseTypeThenTeam*))
+      case ReportField.Team     => sort(orderBy(teamThenCaseType*))
     }
   }
 
@@ -586,7 +583,6 @@ class CaseMongoRepository @Inject() (
           .map { bsonDocument =>
             def wrapAsOptionOfString(field: BsonValue): Option[String] =
               if (field.isNull) None else Some(field.asString().getValue)
-
             QueueResultGroup(
               count = bsonDocument.getInt32(ReportField.Count.fieldName).getValue,
               team = wrapAsOptionOfString(bsonDocument.getDocument("_id").get(ReportField.Team.fieldName, BsonNull())),
@@ -615,7 +611,7 @@ class CaseMongoRepository @Inject() (
     Json.obj("$substrBytes" -> Json.arr(operand, offset, length))
 
   private def andQ(operands: JsValueWrapper*): JsObject =
-    Json.obj("$and" -> Json.arr(operands: _*))
+    Json.obj("$and" -> Json.arr(operands*))
 
   private def eqQ(lExpr: JsValueWrapper, rExpr: JsValueWrapper): JsObject =
     Json.obj("$eq" -> Json.arr(lExpr, rExpr))
@@ -631,5 +627,4 @@ class CaseMongoRepository @Inject() (
 
   private def notNull(operandExpr: JsValueWrapper): JsValue =
     Json.obj("$gt" -> Json.arr(operandExpr, JsNull))
-
 }

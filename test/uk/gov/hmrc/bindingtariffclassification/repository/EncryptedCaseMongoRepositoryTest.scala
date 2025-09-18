@@ -18,7 +18,6 @@ package uk.gov.hmrc.bindingtariffclassification.repository
 
 import cats.data.NonEmptySeq
 import org.mockito.Mockito
-import org.mockito.BDDMockito.given
 import org.mockito.Mockito.{verify, when}
 import org.scalatest.BeforeAndAfterEach
 import uk.gov.hmrc.bindingtariffclassification.crypto.Crypto
@@ -43,8 +42,9 @@ class EncryptedCaseMongoRepositoryTest extends BaseMongoIndexSpec with BeforeAnd
 
   override protected def beforeEach(): Unit = {
     super.beforeEach()
-    given(crypto.encrypt(rawCase)) willReturn encryptedCase
-    given(crypto.decrypt(encryptedCaseSaved)) willReturn rawCaseSaved
+    when(crypto.encrypt(rawCase)).thenReturn(encryptedCase)
+    when(crypto.decrypt(encryptedCaseSaved)).thenReturn(rawCaseSaved)
+    ()
   }
 
   override protected def afterEach(): Unit = {
@@ -54,34 +54,34 @@ class EncryptedCaseMongoRepositoryTest extends BaseMongoIndexSpec with BeforeAnd
 
   "Insert" should {
     "Encrypt and delegate to Repository" in {
-      given(underlyingRepo.insert(encryptedCase)) willReturn successful(encryptedCaseSaved)
+      when(underlyingRepo.insert(encryptedCase)).thenReturn(successful(encryptedCaseSaved))
       await(repo.insert(rawCase)) shouldBe rawCaseSaved
     }
   }
 
   "Update" should {
     "Encrypt and delegate to Repository" in {
-      given(underlyingRepo.update(encryptedCase, upsert = true)) willReturn successful(Some(encryptedCaseSaved))
+      when(underlyingRepo.update(encryptedCase, upsert = true)).thenReturn(successful(Some(encryptedCaseSaved)))
       await(repo.update(rawCase, upsert = true)) shouldBe Some(rawCaseSaved)
     }
 
     "By reference should encrypt and delegate to Repository" in {
       val caseReferenceField = "reference"
-      given(underlyingRepo.update(caseReferenceField, CaseUpdate())) willReturn successful(Some(encryptedCaseSaved))
+      when(underlyingRepo.update(caseReferenceField, CaseUpdate())).thenReturn(successful(Some(encryptedCaseSaved)))
       await(repo.update(caseReferenceField, CaseUpdate())) shouldBe Some(rawCaseSaved)
     }
   }
 
   "Get By Reference" should {
     "Encrypt and delegate to Repository" in {
-      given(underlyingRepo.getByReference("ref")) willReturn successful(Some(encryptedCaseSaved))
+      when(underlyingRepo.getByReference("ref")).thenReturn(successful(Some(encryptedCaseSaved)))
       await(repo.getByReference("ref")) shouldBe Some(rawCaseSaved)
     }
   }
 
   "Get" should {
     "Encrypt and delegate to Repository" in {
-      given(underlyingRepo.get(search, pagination)) willReturn successful(Paged(Seq(encryptedCaseSaved)))
+      when(underlyingRepo.get(search, pagination)).thenReturn(successful(Paged(Seq(encryptedCaseSaved))))
       await(repo.get(search, pagination)) shouldBe Paged(Seq(rawCaseSaved))
     }
 
@@ -89,20 +89,20 @@ class EncryptedCaseMongoRepositoryTest extends BaseMongoIndexSpec with BeforeAnd
       val eori          = "eori"
       val encryptedEori = "eoriEncrypted"
       when(crypto.encryptString).thenReturn(_ => encryptedEori)
-      given(underlyingRepo.getAllByEori(encryptedEori)) willReturn successful(List(encryptedCaseSaved))
+      when(underlyingRepo.getAllByEori(encryptedEori)).thenReturn(successful(List(encryptedCaseSaved)))
       await(repo.getAllByEori(eori)) shouldBe List(rawCaseSaved)
     }
   }
 
   "Delete" should {
     "Delete All will delegate to Repository" in {
-      given(underlyingRepo.deleteAll()) willReturn successful((): Unit)
+      when(underlyingRepo.deleteAll()).thenReturn(successful((): Unit))
       await(repo.deleteAll())
       verify(underlyingRepo).deleteAll()
     }
     "Delete By Reference will delegate to Repository" in {
       val reference = "reference"
-      given(underlyingRepo.delete(reference)) willReturn successful((): Unit)
+      when(underlyingRepo.delete(reference)).thenReturn(successful((): Unit))
       await(repo.delete(reference))
       verify(underlyingRepo).delete(reference)
     }
@@ -116,13 +116,15 @@ class EncryptedCaseMongoRepositoryTest extends BaseMongoIndexSpec with BeforeAnd
         groupBy = NonEmptySeq.one(ReportField.Status),
         sortBy = ReportField.Count
       )
-      given(underlyingRepo.summaryReport(summaryReport, pagination)) willReturn successful(
-        Paged[ResultGroup](
-          Seq(
-            SimpleResultGroup(
-              count = 2,
-              groupKey = NonEmptySeq.one(ReportField.Status.withValue(Some(PseudoCaseStatus.COMPLETED))),
-              maxFields = List(ReportField.ElapsedDays.withValue(Some(elapsedDays)))
+      when(underlyingRepo.summaryReport(summaryReport, pagination)).thenReturn(
+        successful(
+          Paged[ResultGroup](
+            Seq(
+              SimpleResultGroup(
+                count = 2,
+                groupKey = NonEmptySeq.one(ReportField.Status.withValue(Some(PseudoCaseStatus.COMPLETED))),
+                maxFields = List(ReportField.ElapsedDays.withValue(Some(elapsedDays)))
+              )
             )
           )
         )
@@ -138,19 +140,21 @@ class EncryptedCaseMongoRepositoryTest extends BaseMongoIndexSpec with BeforeAnd
         fields = NonEmptySeq.of(ReportField.Status, ReportField.ContactName, ReportField.ContactEmail),
         sortBy = ReportField.Count
       )
-      given(underlyingRepo.caseReport(caseReport, pagination)) willReturn successful(
-        Paged[Map[String, ReportResultField[_]]](
-          Seq(
-            Map(
-              "field1" -> NumberResultField(
-                "field",
-                None
-              )
-            ),
-            Map(
-              "contact-name" -> StringResultField(
-                "contact-name",
-                Option("raw field")
+      when(underlyingRepo.caseReport(caseReport, pagination)).thenReturn(
+        successful(
+          Paged[Map[String, ReportResultField[?]]](
+            Seq(
+              Map(
+                "field1" -> NumberResultField(
+                  "field",
+                  None
+                )
+              ),
+              Map(
+                "contact-name" -> StringResultField(
+                  "contact-name",
+                  Option("raw field")
+                )
               )
             )
           )
@@ -162,8 +166,10 @@ class EncryptedCaseMongoRepositoryTest extends BaseMongoIndexSpec with BeforeAnd
 
     "Queue Report delegate to repository" in {
       val queueReport = QueueReport()
-      given(underlyingRepo.queueReport(queueReport, pagination)) willReturn successful(
-        Paged[QueueResultGroup](Seq(QueueResultGroup(1, None, BTI)))
+      when(underlyingRepo.queueReport(queueReport, pagination)).thenReturn(
+        successful(
+          Paged[QueueResultGroup](Seq(QueueResultGroup(1, None, BTI)))
+        )
       )
       await(repo.queueReport(queueReport, pagination))
       verify(underlyingRepo).queueReport(queueReport, pagination)

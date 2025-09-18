@@ -17,9 +17,24 @@
 package uk.gov.hmrc.bindingtariffclassification.model
 
 import cats.data.NonEmptySeq
-import play.api.libs.json._
-import uk.gov.hmrc.bindingtariffclassification.model.reporting._
+import play.api.libs.json.*
+import uk.gov.hmrc.bindingtariffclassification.model.CaseStatus.CaseStatus
+import uk.gov.hmrc.bindingtariffclassification.model.reporting.*
 import uk.gov.hmrc.bindingtariffclassification.utils.Union
+import play.api.libs.functional.syntax.toFunctionalBuilderOps
+import uk.gov.hmrc.bindingtariffclassification.model.AppealStatus.AppealStatus
+import uk.gov.hmrc.bindingtariffclassification.model.AppealType.AppealType
+import uk.gov.hmrc.bindingtariffclassification.model.CancelReason.CancelReason
+import uk.gov.hmrc.bindingtariffclassification.model.LiabilityStatus.LiabilityStatus
+import uk.gov.hmrc.bindingtariffclassification.model.MiscCaseType.MiscCaseType
+import uk.gov.hmrc.bindingtariffclassification.model.ReferralReason.ReferralReason
+import uk.gov.hmrc.bindingtariffclassification.model.SampleReturn.SampleReturn
+import uk.gov.hmrc.bindingtariffclassification.model.SampleSend.SampleSend
+import uk.gov.hmrc.bindingtariffclassification.model.SampleStatus.SampleStatus
+import uk.gov.hmrc.bindingtariffclassification.model.RejectReason.RejectReason
+import uk.gov.hmrc.bindingtariffclassification.model.Role.Role
+
+import java.time.Instant
 
 object RESTFormatters {
   // NonEmpty formatters
@@ -169,8 +184,8 @@ object RESTFormatters {
   implicit val formatStringField: OFormat[StringField]                   = Json.format[StringField]
   implicit val formatDaysSinceField: OFormat[DaysSinceField]             = Json.format[DaysSinceField]
 
-  implicit val formatReportField: Format[ReportField[_]] = Union
-    .from[ReportField[_]]("type")
+  implicit val formatReportField: Format[ReportField[?]] = Union
+    .from[ReportField[?]]("type")
     .and[NumberField](ReportFieldType.Number.name)
     .and[StatusField](ReportFieldType.Status.name)
     .and[LiabilityStatusField](ReportFieldType.LiabilityStatus.name)
@@ -189,8 +204,8 @@ object RESTFormatters {
   implicit val formatDateResultField: OFormat[DateResultField]         = Json.format[DateResultField]
   implicit val formatStringResultField: OFormat[StringResultField]     = Json.format[StringResultField]
 
-  implicit val formatReportResultField: Format[ReportResultField[_]] = Union
-    .from[ReportResultField[_]]("type")
+  implicit val formatReportResultField: Format[ReportResultField[?]] = Union
+    .from[ReportResultField[?]]("type")
     .and[NumberResultField](ReportFieldType.Number.name)
     .and[StatusResultField](ReportFieldType.Status.name)
     .and[LiabilityStatusResultField](ReportFieldType.LiabilityStatus.name)
@@ -198,6 +213,9 @@ object RESTFormatters {
     .and[DateResultField](ReportFieldType.Date.name)
     .and[StringResultField](ReportFieldType.String.name)
     .format
+
+  implicit val numberResultFieldListWrites: Writes[List[NumberResultField]] =
+    Writes.list[NumberResultField].contramap(identity)
 
   implicit val formatSimpleResultGroup: OFormat[SimpleResultGroup] = Json.format[SimpleResultGroup]
   implicit val formatCaseResultGroup: OFormat[CaseResultGroup]     = Json.format[CaseResultGroup]

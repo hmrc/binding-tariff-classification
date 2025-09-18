@@ -42,12 +42,11 @@ class CaseService @Inject() (
     caseRepository.insert(c)
 
   def addInitialSampleStatusIfExists(c: Case): Future[Unit] = {
-    if (c.sample.status.nonEmpty) {
-      val details = SampleStatusChange(None, c.sample.status, None)
+    c.sample.status.map { sampleStatus =>
       eventService.insert(
         Event(
           UUID.randomUUID().toString,
-          details,
+          SampleStatusChange(None, Option(sampleStatus), None),
           Operator("-1", Some(c.application.contact.name)),
           c.reference,
           Instant.now()

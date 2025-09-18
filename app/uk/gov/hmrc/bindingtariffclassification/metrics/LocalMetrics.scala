@@ -14,20 +14,16 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.bindingtariffclassification.crypto
+package uk.gov.hmrc.bindingtariffclassification.metrics
 
-import uk.gov.hmrc.bindingtariffclassification.config.AppConfig
-import uk.gov.hmrc.crypto.AesCrypto
+import com.codahale.metrics.{MetricRegistry, Timer}
 
-import javax.inject.{Inject, Singleton}
+class LocalMetrics(val registry: MetricRegistry) {
+  def startTimer(metric: String): Timer.Context = registry.timer(s"$metric-timer").time()
 
-@Singleton
-class LocalCrypto @Inject() (appConfig: AppConfig) extends AesCrypto {
+  def stopTimer(context: Timer.Context): Long = context.stop()
 
-  override protected val encryptionKey: String =
-    appConfig.mongoEncryption.key match {
-      case Some(k) if appConfig.mongoEncryption.enabled => k
-      case _ => throw new RuntimeException("Missing config: 'mongodb.encryption.enabled'")
-    }
+  def incrementSuccessCounter(metric: String): Unit = registry.counter(s"$metric-success-counter").inc()
 
+  def incrementFailedCounter(metric: String): Unit = registry.counter(s"$metric-failed-counter").inc()
 }

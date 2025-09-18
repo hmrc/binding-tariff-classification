@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.bindingtariffclassification.repository
 
-import org.mongodb.scala.model.{Filters, Projections}
 import uk.gov.hmrc.bindingtariffclassification.crypto.Crypto
 import uk.gov.hmrc.bindingtariffclassification.model._
 import uk.gov.hmrc.bindingtariffclassification.model.reporting._
@@ -65,13 +64,13 @@ class EncryptedCaseMongoRepository @Inject() (repository: CaseMongoRepository, c
   override def caseReport(
     report: CaseReport,
     pagination: Pagination
-  ): Future[Paged[Map[String, ReportResultField[_]]]] = {
+  ): Future[Paged[Map[String, ReportResultField[?]]]] = {
     val fReport = repository.caseReport(report, pagination)
 
     val encryptedFieldNames = ReportField.encryptedFields.map(_.fieldName)
 
     fReport.map { pagedResult =>
-      val result: Seq[Map[String, ReportResultField[_]]] = pagedResult.results.map(casesResult =>
+      val result: Seq[Map[String, ReportResultField[?]]] = pagedResult.results.map(casesResult =>
         casesResult.map { case (fieldName, fieldValue) =>
           fieldValue match {
             case _ @StringResultField(_, data) if encryptedFieldNames.contains(fieldName) =>

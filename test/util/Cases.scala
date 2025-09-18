@@ -91,6 +91,20 @@ object Cases {
     Seq()
   )
 
+  val btiCaseForFormatters = Case(
+    UUID.randomUUID().toString,
+    CaseStatus.OPEN,
+    Instant.now(),
+    0,
+    0,
+    None,
+    None,
+    None,
+    btiApplicationExample,
+    Some(decision),
+    Seq()
+  )
+
   def aCase(withModifier: (Case => Case)*): Case =
     withModifier.foldLeft(btiCaseExample.copy(reference = UUID.randomUUID().toString))((current: Case, modifier) =>
       modifier.apply(current)

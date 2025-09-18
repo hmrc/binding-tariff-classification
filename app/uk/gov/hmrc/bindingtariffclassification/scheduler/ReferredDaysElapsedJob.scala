@@ -85,7 +85,7 @@ class ReferredDaysElapsedJob @Inject() (
                          .filter(_.details.isInstanceOf[FieldChange[CaseStatus]])
                          .sortBy(_.timestamp)(Ordering[Instant].reverse)
                          .headOption
-                         .filter(event =>
+                         .filter((event: Event) =>
                            Set(CaseStatus.REFERRED, CaseStatus.SUSPENDED)
                              .contains(event.details.asInstanceOf[FieldChange[CaseStatus]].to)
                          )

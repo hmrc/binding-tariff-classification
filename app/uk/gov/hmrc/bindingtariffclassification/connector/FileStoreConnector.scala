@@ -16,21 +16,21 @@
 
 package uk.gov.hmrc.bindingtariffclassification.connector
 
+import com.codahale.metrics.MetricRegistry
 import org.apache.pekko.stream.Materializer
 import org.apache.pekko.stream.scaladsl.Source
 import uk.gov.hmrc.bindingtariffclassification.config.AppConfig
 import uk.gov.hmrc.bindingtariffclassification.metrics.HasMetrics
 import uk.gov.hmrc.bindingtariffclassification.model.filestore.{FileMetadata, FileSearch}
 import uk.gov.hmrc.bindingtariffclassification.model.{Paged, Pagination}
-import uk.gov.hmrc.http.HttpReads.Implicits._
+import uk.gov.hmrc.http.HttpReads.Implicits.*
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, StringContextOps}
-import uk.gov.hmrc.play.bootstrap.metrics.Metrics
 
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
-class FileStoreConnector @Inject() (appConfig: AppConfig, http: HttpClientV2, val metrics: Metrics)(implicit
+class FileStoreConnector @Inject() (appConfig: AppConfig, http: HttpClientV2, val metrics: MetricRegistry)(implicit
   mat: Materializer
 ) extends HasMetrics {
 
@@ -64,7 +64,7 @@ class FileStoreConnector @Inject() (appConfig: AppConfig, http: HttpClientV2, va
             http
               .get(url"${findQueryUri(search.copy(ids = Some(idBatch.toSet)), Pagination.max)}")
               .setHeader(
-                addHeaders: _*
+                addHeaders*
               )
               .execute[Paged[FileMetadata]]
           }
@@ -75,7 +75,7 @@ class FileStoreConnector @Inject() (appConfig: AppConfig, http: HttpClientV2, va
       } else {
         http
           .get(url"${findQueryUri(search, pagination)}")
-          .setHeader(addHeaders: _*)
+          .setHeader(addHeaders*)
           .execute[Paged[FileMetadata]]
       }
     }
@@ -84,8 +84,8 @@ class FileStoreConnector @Inject() (appConfig: AppConfig, http: HttpClientV2, va
     withMetricsTimerAsync("delete-attachment") { _ =>
       http
         .delete(url"${appConfig.fileStoreUrl}/file/$id")
-        .setHeader(addHeaders: _*)
-        .execute[HttpResponse](throwOnFailure(readEitherOf(readRaw)), ec)
+        .setHeader(addHeaders*)
+        .execute[HttpResponse](using throwOnFailure(readEitherOf(using readRaw)), ec)
     }
       .map(_ => ())
 
