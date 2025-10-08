@@ -167,7 +167,25 @@ class SearchMapper @Inject() (appConfig: AppConfig) extends Mapper {
 
     search.partition(status => concreteStatuses.contains(status.toString)) match {
       case (concrete: Set[PseudoCaseStatus], pseudo: Set[PseudoCaseStatus]) if pseudo.isEmpty =>
-        "status" -> inArray(concrete)
+        val completedOnlySet = concrete.filter(_.toString == "COMPLETED")
+        val otherSet         = concrete -- completedOnlySet
+
+        // Looking for LIVE-COMPLETED cases:
+        if (completedOnlySet.nonEmpty) {
+          val filters: Seq[JsObject] = Seq(
+            Some(
+              Json.obj(
+                "status"                    -> inArray(completedOnlySet),
+                "decision.effectiveEndDate" -> greaterThan(Instant.now(appConfig.clock))(formatInstant)
+              )
+            ),
+            if (otherSet.nonEmpty) Some(Json.obj("status" -> inArray(otherSet))) else None
+          ).flatten
+
+          either(filters)
+        } else {
+          "status" -> inArray(concrete)
+        }
 
       case (concrete: Set[PseudoCaseStatus], pseudo: Set[PseudoCaseStatus]) if concrete.isEmpty =>
         val pseudoFilters: Set[JsObject] = pseudo.map(pseudoStatus).filter(_.isDefined).map(_.get)
