@@ -58,7 +58,7 @@ class SearchMapper @Inject() (appConfig: AppConfig) extends Mapper {
           "application.holder.businessName"   -> contains(source),
           "application.traderName"            -> contains(source),
           "application.correspondenceStarter" -> contains(source),
-          "application.contactName"           -> contains(source)
+          "application.contact.name"          -> contains(source)
         )
       ),
       filter.minDecisionStart.map("decision.effectiveStartDate" -> greaterThan(_)(formatInstant)),
