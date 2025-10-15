@@ -19,13 +19,13 @@ package uk.gov.hmrc.bindingtariffclassification.repository
 import java.time.Instant
 import javax.inject.{Inject, Singleton}
 import play.api.libs.json.Json.JsValueWrapper
-import play.api.libs.json.{Json, _}
+import play.api.libs.json.{Json, *}
 import uk.gov.hmrc.bindingtariffclassification.config.AppConfig
 import uk.gov.hmrc.bindingtariffclassification.model.ApplicationType.ApplicationType
 import uk.gov.hmrc.bindingtariffclassification.model.MongoFormatters.*
 import uk.gov.hmrc.bindingtariffclassification.model.PseudoCaseStatus.PseudoCaseStatus
 import uk.gov.hmrc.bindingtariffclassification.model.{CaseFilter, CaseSort, CaseStatus, PseudoCaseStatus}
-import uk.gov.hmrc.bindingtariffclassification.sort.CaseSortField._
+import uk.gov.hmrc.bindingtariffclassification.sort.CaseSortField.*
 
 import java.util.regex.Pattern
 
@@ -167,10 +167,9 @@ class SearchMapper @Inject() (appConfig: AppConfig) extends Mapper {
 
     search.partition(status => concreteStatuses.contains(status.toString)) match {
       case (concrete: Set[PseudoCaseStatus], pseudo: Set[PseudoCaseStatus]) if pseudo.isEmpty =>
-        val completedOnlySet = concrete.filter(_.toString == "COMPLETED")
+        val completedOnlySet = concrete.filter(_ == PseudoCaseStatus.COMPLETED)
         val otherSet         = concrete -- completedOnlySet
 
-        // Looking for LIVE-COMPLETED cases:
         if (completedOnlySet.nonEmpty) {
           val filters: Seq[JsObject] = Seq(
             Some(
