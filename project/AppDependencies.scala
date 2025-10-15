@@ -1,7 +1,7 @@
 import sbt.*
 
 object AppDependencies {
-  private lazy val mongoHmrcVersion = "2.7.0"
+  private lazy val mongoHmrcVersion = "2.9.0"
   private lazy val bootstrapVersion = "10.1.0"
   private lazy val pekkoVersion     = "1.1.5"
 
