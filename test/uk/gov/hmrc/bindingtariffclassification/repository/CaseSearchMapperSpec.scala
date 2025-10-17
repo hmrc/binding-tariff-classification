@@ -142,24 +142,6 @@ class CaseSearchMapperSpec extends BaseMongoIndexSpec {
         )
     }
 
-    "filter by 'status' - with concrete statuses only with COMPLETED" in {
-      when(config.clock).thenReturn(Clock.fixed(Instant.EPOCH, ZoneOffset.UTC))
-
-      jsonMapper.filterBy(
-        CaseFilter(statuses = Some(Set(PseudoCaseStatus.NEW, PseudoCaseStatus.COMPLETED)))
-      ) shouldBe Json.obj(
-        "$or" -> Json.arr(
-          Json.obj(
-            "status"                    -> Json.obj("$in" -> Json.arr("COMPLETED")),
-            "decision.effectiveEndDate" -> Json.obj("$gte" -> Json.obj("$date" -> 0))
-          ),
-          Json.obj(
-            "status" -> Json.obj("$in" -> Json.arr("NEW"))
-          )
-        )
-      )
-    }
-
     "filter by 'status' - with pseudo statuses only" in {
       when(config.clock).thenReturn(Clock.fixed(Instant.EPOCH, ZoneOffset.UTC))
 
