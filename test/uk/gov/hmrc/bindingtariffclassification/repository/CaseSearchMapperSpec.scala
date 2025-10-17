@@ -71,7 +71,7 @@ class CaseSearchMapperSpec extends BaseMongoIndexSpec {
               Json.obj(
                 "application.correspondenceStarter" -> Json.obj("$regex" -> ".*\\Qcase-source\\E.*", "$options" -> "i")
               ),
-              Json.obj("application.contactName" -> Json.obj("$regex" -> ".*\\Qcase-source\\E.*", "$options" -> "i"))
+              Json.obj("application.contact.name" -> Json.obj("$regex" -> ".*\\Qcase-source\\E.*", "$options" -> "i"))
             )
           ),
           Json.obj(
@@ -228,12 +228,10 @@ class CaseSearchMapperSpec extends BaseMongoIndexSpec {
             Json.obj(
               "application.correspondenceStarter" -> Json.obj("$regex" -> ".*\\Qcase-source\\E.*", "$options" -> "i")
             ),
-            Json.obj("application.contactName" -> Json.obj("$regex" -> ".*\\Qcase-source\\E.*", "$options" -> "i"))
+            Json.obj("application.contact.name" -> Json.obj("$regex" -> ".*\\Qcase-source\\E.*", "$options" -> "i"))
           )
       )
     }
-//    {"$or":[{"application.holder.businessName":{"$regex":".*case\\_source.*","$options":"i"}},{"application.traderName":{"$regex":".*case\\_source.*","$options":"i"}},{"application.correspondenceStarter":{"$regex":".*case\\_source.*","$options":"i"}},{"application.contactName":{"$regex":".*case\\_source.*","$options":"i"}}]}
-//    {"$or":[{"application.goodName":{"$regex":".*case_details.*","$options":"i"}},{"application.summary":{"$regex":".*case_details.*","$options":"i"}},{"application.detailedDescription":{"$regex":".*case_details.*","$options":"i"}},{"application.name":{"$regex":".*case_details.*","$options":"i"}}]}
 
     "filter by 'case details'" in {
       jsonMapper.filterBy(CaseFilter(caseDetails = Some("case_details"))) shouldBe Json.obj(
