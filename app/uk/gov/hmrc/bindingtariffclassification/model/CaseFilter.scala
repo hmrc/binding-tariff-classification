@@ -36,7 +36,8 @@ case class CaseFilter(
   commodityCode: Option[String] = None,
   decisionDetails: Option[String] = None,
   keywords: Option[Set[String]] = None,
-  migrated: Option[Boolean] = None
+  migrated: Option[Boolean] = None,
+  advanceSearch: Option[Boolean] = None
 )
 
 object CaseFilter {
@@ -55,6 +56,7 @@ object CaseFilter {
   private val decisionDetailsKey  = "decision_details"
   private val keywordKey          = "keyword"
   private val migratedKey         = "migrated"
+  private val advanceSearch       = "is_advance_search"
 
   implicit def bindable(implicit
     stringBinder: QueryStringBindable[String],
@@ -81,7 +83,8 @@ object CaseFilter {
             commodityCode = param(commodityCodeKey),
             decisionDetails = param(decisionDetailsKey),
             keywords = params(keywordKey).map(_.map(_.toUpperCase)),
-            migrated = boolBinder.bind(migratedKey, requestParams).flatMap(_.toOption)
+            migrated = boolBinder.bind(migratedKey, requestParams).flatMap(_.toOption),
+            advanceSearch = boolBinder.bind(advanceSearch, requestParams).flatMap(_.toOption)
           )
         )
       )
@@ -101,7 +104,8 @@ object CaseFilter {
         filter.commodityCode.map(stringBinder.unbind(commodityCodeKey, _)),
         filter.decisionDetails.map(stringBinder.unbind(decisionDetailsKey, _)),
         filter.keywords.map(_.map(s => stringBinder.unbind(keywordKey, s)).mkString("&")),
-        filter.migrated.map(boolBinder.unbind(migratedKey, _))
+        filter.migrated.map(boolBinder.unbind(migratedKey, _)),
+        filter.advanceSearch.map(boolBinder.unbind(advanceSearch, _))
       ).filter(_.isDefined).map(_.get).mkString("&")
   }
 }

@@ -78,7 +78,7 @@ class SearchMapper @Inject() (appConfig: AppConfig) extends Mapper {
         )
       ),
       filter.keywords.map("keywords" -> containsAll(_)),
-      filter.statuses.map(filteringByStatus),
+      filter.statuses.map(filteringByStatus(_, filter.advanceSearch)),
       filter.migrated.map(showMigrated => if (showMigrated) exists("dateOfExtract") else notExists("dateOfExtract"))
     ).filter(_.isDefined).map(_.get)
 
@@ -162,12 +162,36 @@ class SearchMapper @Inject() (appConfig: AppConfig) extends Mapper {
   private def filteringByApplicationType(search: Set[ApplicationType]): (String, JsValue) =
     "application.type" -> inArray(search)
 
-  private def filteringByStatus(search: Set[PseudoCaseStatus]): (String, JsValue) = {
+  private def filteringByStatus(search: Set[PseudoCaseStatus], isAdvanceSearch: Option[Boolean]): (String, JsValue) = {
     val concreteStatuses: Set[String] = CaseStatus.values.map(_.toString)
 
     search.partition(status => concreteStatuses.contains(status.toString)) match {
       case (concrete: Set[PseudoCaseStatus], pseudo: Set[PseudoCaseStatus]) if pseudo.isEmpty =>
-        "status" -> inArray(concrete)
+        val completedOnlySet = concrete.filter(_ == PseudoCaseStatus.COMPLETED)
+        val otherSet         = concrete -- completedOnlySet
+        if (isAdvanceSearch.getOrElse(false) && completedOnlySet.nonEmpty) {
+          val filters: Seq[JsObject] = Seq(
+            Some(
+              Json.obj(
+                "$or" -> Json.arr(
+                  Json.obj(
+                    "status"                    -> Json.toJson(PseudoCaseStatus.COMPLETED),
+                    "decision.effectiveEndDate" -> greaterThan(Instant.now(appConfig.clock))(formatInstant)
+                  ),
+                  Json.obj(
+                    "status"                    -> Json.toJson(PseudoCaseStatus.COMPLETED),
+                    "decision.effectiveEndDate" -> JsNull
+                  )
+                )
+              )
+            ),
+            if (otherSet.nonEmpty) Some(Json.obj("status" -> inArray(otherSet))) else None
+          ).flatten
+
+          either(filters)
+        } else {
+          "status" -> inArray(concrete)
+        }
 
       case (concrete: Set[PseudoCaseStatus], pseudo: Set[PseudoCaseStatus]) if concrete.isEmpty =>
         val pseudoFilters: Set[JsObject] = pseudo.map(pseudoStatus).filter(_.isDefined).map(_.get)
