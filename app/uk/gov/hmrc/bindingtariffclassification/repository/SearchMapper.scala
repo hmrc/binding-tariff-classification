@@ -65,11 +65,7 @@ class SearchMapper @Inject() (appConfig: AppConfig) extends Mapper {
       filter.minDecisionEnd.map("decision.effectiveEndDate" -> greaterThan(_)(formatInstant)),
       filter.commodityCode.map("decision.bindingCommodityCode" -> numberStartingWith(_)),
       filter.decisionDetails.map(desc =>
-        either(
-          "decision.goodsDescription"             -> contains(desc),
-          "decision.methodCommercialDenomination" -> contains(desc),
-          "decision.justification"                -> contains(desc)
-        )
+        "$text" -> Json.obj("$search" -> desc)
       ),
       filter.eori.map(e =>
         either(

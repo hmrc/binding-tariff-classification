@@ -19,7 +19,7 @@ package uk.gov.hmrc.bindingtariffclassification.repository
 import cats.data.NonEmptySeq
 import cats.syntax.all._
 import org.mongodb.scala.bson.conversions.Bson
-import org.mongodb.scala.bson.{BsonDocument, BsonNull, BsonValue}
+import org.mongodb.scala.bson.{BsonDocument, BsonNull, BsonValue, Document}
 import org.mongodb.scala.model.Accumulators.{max, push, sum}
 import org.mongodb.scala.model.Aggregates._
 import org.mongodb.scala.model.Filters._
@@ -80,17 +80,18 @@ class CaseMongoRepository @Inject() (
           ),
           IndexOptions().name("decision_compound_Index")
         ),
-
-        // Text search compound index
         IndexModel(
-          Indexes.compoundIndex(
-            asc("decision.goodsDescription"),
-            asc("decision.methodCommercialDenomination"),
-            asc("decision.justification")
-          ),
-          IndexOptions().name("text_search_compound_Index")
+          Indexes.text("decision.goodsDescription decision.methodCommercialDenomination decision.justification"),
+          IndexOptions()
+            .name("text_search_Index")
+            .weights(
+              Document(
+                "decision.goodsDescription" -> 10,       
+                "decision.methodCommercialDenomination" -> 5,
+                "decision.justification" -> 3
+              )
+            )
         ),
-
         // Individual field indexes for specific queries
         IndexModel(asc("assignee.id"), IndexOptions().name("assignee_id_Index")),
         IndexModel(asc("queueId"), IndexOptions().name("queueId_Index")),
