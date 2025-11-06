@@ -32,7 +32,7 @@ class KeywordServiceSpec extends BaseSpec with BeforeAndAfterEach {
   private val addedKeyword = mock[Keyword]
 
   private val keywordRepository      = mock[KeywordsRepository]
-  private val caseKeywordAggregation = mock[CaseKeywordMongoView]
+  private val caseKeywordAggregation = mock[CaseKeywordRepository]
 
   private val pagination = mock[Pagination]
 

@@ -33,4 +33,9 @@ object MongoCodecs {
     DEFAULT_CODEC_REGISTRY
   )
 
+  val caseCodec: CodecRegistry = CodecRegistries.fromRegistries(
+    CodecRegistries.fromCodecs(Codecs.playFormatCodec(MongoFormatters.formatCase)),
+    DEFAULT_CODEC_REGISTRY
+  )
+
 }

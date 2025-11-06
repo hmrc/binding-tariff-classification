@@ -16,33 +16,31 @@
 
 package uk.gov.hmrc.bindingtariffclassification.repository
 
-import org.scalatest.matchers.must.Matchers._
+import org.mongodb.scala.SingleObservableFuture
+import org.mongodb.scala.model.{IndexOptions, Indexes}
+import org.scalatest.matchers.must.Matchers.*
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
 import uk.gov.hmrc.bindingtariffclassification.config.AppConfig
+import uk.gov.hmrc.bindingtariffclassification.model.*
 import uk.gov.hmrc.bindingtariffclassification.model.Role.CLASSIFICATION_OFFICER
-import uk.gov.hmrc.bindingtariffclassification.model._
-import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
 import uk.gov.hmrc.mongo.test.DefaultPlayMongoRepositorySupport
 import util.CaseData.{createBasicBTIApplication, createDecision, createLiabilityOrder}
-import org.mongodb.scala.SingleObservableFuture
-import org.mongodb.scala.ObservableFuture
 
 import java.time.Instant
+import java.util.concurrent.TimeUnit
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class CaseKeywordMongoViewSpec
+class CaseKeywordRepositorySpec
     extends BaseMongoIndexSpec
     with BeforeAndAfterAll
     with BeforeAndAfterEach
     with DefaultPlayMongoRepositorySupport[Case] {
 
-  private val config = mock[AppConfig]
-  private val view   = new CaseKeywordMongoView(mongoComponent)
-  private val repo   = new CaseMongoRepository(config, mongoComponent, new SearchMapper(config), new UpdateMapper)
+  private val config      = mock[AppConfig]
+  private val caseRepo    = new CaseMongoRepository(config, mongoComponent, new SearchMapper(config), new UpdateMapper)
+  private val keywordRepo = new CaseKeywordRepository(mongoComponent)
 
-  override protected val repository: PlayMongoRepository[Case] = repo
-
-  override protected val checkTtlIndex = false
+  override protected val repository = caseRepo
 
   private val secondsInAYear = 3600 * 24 * 365
 
@@ -111,9 +109,36 @@ class CaseKeywordMongoViewSpec
       keywords = Set(caseKeywordTool.keyword.name, caseKeywordCar.keyword.name)
     )
 
+  private def caseToHeader(c: Case): CaseHeader =
+    CaseHeader(
+      reference      = c.reference,
+      assignee       = c.assignee,
+      team           = c.queueId, // queueId maps to `team` now
+      goodsName      = c.application match {
+        case bti: BTIApplication => Some(bti.goodName)
+        case lo: LiabilityOrder  => lo.goodName
+        case corr: CorrespondenceApplication => Some(corr.summary)
+        case misc: MiscApplication => Some(misc.name)
+      },
+      caseType        = c.application.`type`,
+      status         = c.status,
+      daysElapsed    = c.daysElapsed,
+      liabilityStatus = c.application match {
+        case lo: LiabilityOrder => Some(lo.status)
+        case _                  => None
+      }
+    )
+
   override def beforeEach(): Unit = {
     super.beforeEach()
+
     deleteAll()
+
+    await(
+      repository.collection
+        .createIndex(Indexes.ascending("createdDate"), IndexOptions().expireAfter(3600 * 24 * 365, TimeUnit.SECONDS))
+        .toFuture()
+    )
   }
 
   override def afterAll(): Unit = {
@@ -131,63 +156,48 @@ class CaseKeywordMongoViewSpec
 
   private val pagination = Pagination()
 
-  "CaseKeywordMongoView" should {
+  "CaseKeywordRepository" should {
 
-    "dropView will drop the view" in {
-
-      val result                = view.dropView(view.caseKeywordsViewName)
-      val futureCollectionNames = await(result).flatMap(_ => mongoComponent.database.listCollectionNames().toFuture())
-
-      await(futureCollectionNames) mustNot contain(view.caseKeywordsViewName)
-    }
-
-    "createView will create the view" in {
-      val result =
-        view.dropView(view.caseKeywordsViewName).map(_ => view.createView(view.caseKeywordsViewName, "cases"))
-
-      val futureCollectionNames = await(result).flatMap(_ => mongoComponent.database.listCollectionNames().toFuture())
-
-      await(futureCollectionNames).toSeq.sorted mustBe Seq("system.views", "cases", "caseKeywords").sorted
-    }
-
-    "getView will get the view" in {
-      val result = view
-        .dropView(view.caseKeywordsViewName)
-        .map(_ => view.initView)
-        .map(_ =>
-          view
-            .createView(view.caseKeywordsViewName, "cases")
-            .flatMap(_ => view.getView(view.caseKeywordsViewName).countDocuments().head())
-        )
-
-      val futureViewCount = await(result)
-      await(futureViewCount) mustBe 0
-    }
-
-    "fetchKeywordsFromCases should return keywords from the Cases" in {
-      await(repo.insert(caseWithKeywordsBTI))
-      await(repo.insert(caseWithKeywordsLiability))
+    "refreshKeywords and fetch keywords from the Cases" in {
+      await(caseRepo.insert(caseWithKeywordsBTI))
+      await(caseRepo.insert(caseWithKeywordsLiability))
+      await(keywordRepo.refreshKeywords())
 
       collectionSize shouldBe 2
 
       val expected = Seq(caseKeywordBike, caseKeywordTool)
+      val actual   = await(keywordRepo.fetchKeywordsFromCases(pagination)).results
 
-      await(view.fetchKeywordsFromCases(pagination)).results contains expected
+      actual must contain theSameElementsAs expected
     }
 
-    "fetchKeywordsFromCases should return keywords from the Cases and then insert one more" in {
-      await(repo.insert(caseWithKeywordsBTI))
-      await(repo.insert(caseWithKeywordsLiability))
+    "fetchKeywordsFromCases should return updated keywords after adding another case" in {
+      await(caseRepo.insert(caseWithKeywordsBTI))
+      await(caseRepo.insert(caseWithKeywordsLiability))
+      await(keywordRepo.refreshKeywords())
+
       collectionSize shouldBe 2
-      val expected = Seq(caseKeywordBike, caseKeywordTool)
+      await(keywordRepo.refreshKeywords())
 
-      await(view.fetchKeywordsFromCases(pagination)).results contains expected
+      val expected1 = Seq(caseKeywordBike, caseKeywordTool)
+      val actual1   = await(keywordRepo.fetchKeywordsFromCases(pagination)).results
+      actual1 must contain theSameElementsAs expected1
 
-      await(repo.insert(caseWithKeywordsLiability2))
+      // Insert another case
+      await(caseRepo.insert(caseWithKeywordsLiability2))
+      await(keywordRepo.refreshKeywords())
       collectionSize shouldBe 3
-      val expected2 = Seq(caseKeywordBike, caseKeywordTool, caseKeywordCar)
 
-      await(view.fetchKeywordsFromCases(pagination)).results contains expected2
+      val expected2 = Seq(
+        caseKeywordBike,
+        CaseKeyword(
+          Keyword("tool"),
+          List(caseToHeader(caseWithKeywordsLiability), caseToHeader(caseWithKeywordsLiability2))
+        ),
+        CaseKeyword(Keyword("car"), List(caseToHeader(caseWithKeywordsLiability2)))
+      )
+      val actual2 = await(keywordRepo.fetchKeywordsFromCases(pagination)).results
+      actual2 must contain theSameElementsAs expected2
     }
 
   }
