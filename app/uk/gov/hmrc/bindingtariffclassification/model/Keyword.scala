@@ -34,4 +34,4 @@ case class CaseHeader(
   liabilityStatus: Option[LiabilityStatus]
 )
 
-case class CaseKeyword(keyword: Keyword, cases: List[CaseHeader])
+case class CaseKeyword(keyword: Keyword, caseObj: CaseHeader)

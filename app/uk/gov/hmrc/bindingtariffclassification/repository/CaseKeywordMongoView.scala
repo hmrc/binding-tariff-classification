@@ -16,19 +16,15 @@
 
 package uk.gov.hmrc.bindingtariffclassification.repository
 
-import org.mongodb.scala.MongoCollection
-import org.mongodb.scala.bson.{BsonDocument, BsonInt32}
+import org.mongodb.scala.bson.BsonDocument
 import org.mongodb.scala.bson.conversions.Bson
-import org.mongodb.scala.model.Accumulators.push
-import org.mongodb.scala.model.Aggregates._
+import org.mongodb.scala.model.Aggregates.*
 import org.mongodb.scala.model.Projections.include
 import org.mongodb.scala.model.{Aggregates, Field, Projections}
-import play.api.libs.json.Json
+import org.mongodb.scala.{MongoCollection, ObservableFuture, SingleObservableFuture}
 import uk.gov.hmrc.bindingtariffclassification.model.{CaseKeyword, MongoCodecs, Paged, Pagination}
 import uk.gov.hmrc.bindingtariffclassification.repository.BaseMongoOperations.{countField, pagedResults}
 import uk.gov.hmrc.mongo.MongoComponent
-import org.mongodb.scala.SingleObservableFuture
-import org.mongodb.scala.ObservableFuture
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.duration.DurationInt
@@ -83,21 +79,35 @@ class CaseKeywordMongoView @Inject() (mongoComponent: MongoComponent)(implicit e
   )
 
   private val unwindKeywords  = unwind("$keywords")
-  private val group           = Aggregates.group("$keywords", push("cases", "$$ROOT"))
-  private val addKeywordField = addFields(Field("keyword.name", "$_id"))
-  private val project         = Aggregates.project(BsonDocument("_id" -> 0))
+  private val project         = Aggregates.project(BsonDocument(
+    "_id" -> 0,
+    "keyword" -> 1,
+    "caseObj" -> 1
+  ))
 
   protected val pipeline: Seq[Bson] =
     Seq(
       addHeaderFields,
       projectCaseHeader,
       unwindKeywords,
-      group,
-      addKeywordField,
+      addFields(
+        Field("keyword.name", "$keywords"),
+        Field("caseObj", BsonDocument(
+          "reference" -> "$reference",
+          "status" -> "$status",
+          "daysElapsed" -> "$daysElapsed",
+          "assignee" -> "$assignee",
+          "team" -> "$team",
+          "goodsName" -> "$goodsName",
+          "caseType" -> "$caseType",
+          "liabilityStatus" -> "$liabilityStatus"
+        ))
+      ),
       project
     )
 
   def fetchKeywordsFromCases(pagination: Pagination): Future[Paged[CaseKeyword]] = {
+    println(s"Fetching keywords from cases with pagination: $pagination")
     val runAggregation = view
       .aggregate[CaseKeyword] {
         Seq(
