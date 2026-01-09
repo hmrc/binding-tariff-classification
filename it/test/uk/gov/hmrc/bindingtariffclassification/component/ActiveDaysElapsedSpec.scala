@@ -183,7 +183,7 @@ class ActiveDaysElapsedSpec extends BaseFeatureSpec with MockitoSugar {
     Scenario("Calculates elapsed days for a referred case with dynamic dates") {
       Given("A Case which was REFERRED in the past using dynamic dates")
 
-      val referredDate = s"$currentYear-01-15"
+      val referredDate = currentDate.minusDays(10).toString
 
       givenThereIs(aCaseWith(reference = "valid-ref", status = OPEN, createdDate = testDates("case3")))
       givenThereIs(aStatusChangeWith(caseReference = "valid-ref", status = REFERRED, date = referredDate))
@@ -234,7 +234,7 @@ class ActiveDaysElapsedSpec extends BaseFeatureSpec with MockitoSugar {
     Scenario("Calculates elapsed days for a suspended case with dynamic dates") {
       Given("A Case which was SUSPENDED in the past using dynamic dates")
 
-      val suspendedDate = s"$currentYear-01-15"
+      val suspendedDate = currentDate.minusDays(10).toString
 
       givenThereIs(aCaseWith(reference = "valid-ref", status = OPEN, createdDate = testDates("case3")))
       givenThereIs(aStatusChangeWith(caseReference = "valid-ref", status = SUSPENDED, date = suspendedDate))
