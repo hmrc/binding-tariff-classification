@@ -214,7 +214,12 @@ class ActiveDaysElapsedSpec extends BaseFeatureSpec with MockitoSugar {
 
       Then("The Days Elapsed should be correct")
 
-      val expectedDays = calculateExpectedWorkingDays(testDates("case5"), currentDate)
+      val referralStart = LocalDate.parse(testDates("case5"))
+      val daysToExclude = (0L until ChronoUnit.DAYS.between(referralStart, currentDate))
+        .map(referralStart.plusDays)
+        .toSet
+
+      val expectedDays = calculateExpectedWorkingDays(testDates("case5"), currentDate, daysToExclude)
       daysElapsedForCase("valid-ref") shouldBe expectedDays
     }
 
@@ -265,7 +270,12 @@ class ActiveDaysElapsedSpec extends BaseFeatureSpec with MockitoSugar {
 
       Then("The Days Elapsed should be correct")
 
-      val expectedDays = calculateExpectedWorkingDays(testDates("case5"), currentDate)
+      val suspensionStart = LocalDate.parse(testDates("case5"))
+      val daysToExclude = (0L until ChronoUnit.DAYS.between(suspensionStart, currentDate))
+        .map(suspensionStart.plusDays)
+        .toSet
+
+      val expectedDays = calculateExpectedWorkingDays(testDates("case5"), currentDate, daysToExclude)
       daysElapsedForCase("valid-ref") shouldBe expectedDays
     }
 
