@@ -53,21 +53,21 @@ class ActiveDaysElapsedSpec extends BaseFeatureSpec with MockitoSugar {
   private val previousYear = currentYear - 1
 
   private val testDates = Map(
-    "case1"      -> s"$previousYear-12-20",
-    "case2"      -> s"$previousYear-12-30",
-    "case3"      -> s"$currentYear-01-10",
-    "case4"      -> s"$currentYear-02-03",
-    "case5"      -> s"$currentYear-02-01",
-    "liability1" -> s"$previousYear-12-20",
-    "liability2" -> s"$previousYear-12-30",
-    "liability3" -> s"$previousYear-12-10",
-    "liability4" -> s"$previousYear-12-20",
-    "migrated1"  -> s"$previousYear-12-20",
-    "migrated2"  -> s"$previousYear-12-30",
-    "migrated3"  -> s"$previousYear-12-31",
-    "migrated4"  -> s"$currentYear-01-10",
-    "migrated5"  -> s"$currentYear-01-15",
-    "migrated6"  -> s"$currentYear-01-20"
+    "case1"      -> currentDate.minusMonths(13).toString,
+    "case2"      -> currentDate.minusMonths(13).plusDays(10).toString,
+    "case3"      -> currentDate.minusMonths(1).toString,
+    "case4"      -> currentDate.minusDays(3).toString,
+    "case5"      -> currentDate.minusDays(15).toString,
+    "liability1" -> currentDate.minusMonths(13).toString,
+    "liability2" -> currentDate.minusMonths(13).plusDays(10).toString,
+    "liability3" -> currentDate.minusMonths(13).minusDays(10).toString,
+    "liability4" -> currentDate.minusMonths(13).toString,
+    "migrated1"  -> currentDate.minusMonths(13).toString,
+    "migrated2"  -> currentDate.minusMonths(13).plusDays(10).toString,
+    "migrated3"  -> currentDate.minusMonths(13).plusDays(11).toString,
+    "migrated4"  -> currentDate.minusMonths(1).toString,
+    "migrated5"  -> currentDate.minusDays(25).toString,
+    "migrated6"  -> currentDate.minusDays(20).toString
   )
 
   private def calculateExpectedWorkingDays(
