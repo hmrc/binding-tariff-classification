@@ -54,10 +54,7 @@ class KeywordControllerSpec extends BaseSpec with BeforeAndAfterEach {
     caseType = ApplicationType.BTI,
     status = CaseStatus.OPEN,
     liabilityStatus = None,
-    daysElapsed = 10L,
-    overdue = true,
-    approved = false,
-    createdDate = Instant.now()
+    daysElapsed = 10L
   )
 
   private val caseKeywordRow2 = CaseKeywordRow(
@@ -68,10 +65,7 @@ class KeywordControllerSpec extends BaseSpec with BeforeAndAfterEach {
     caseType = ApplicationType.BTI,
     status = CaseStatus.OPEN,
     liabilityStatus = None,
-    daysElapsed = 10L,
-    overdue = true,
-    approved = false,
-    createdDate = Instant.now()
+    daysElapsed = 10L
   )
 
   private val keywordService = mock[KeywordService]
@@ -216,20 +210,20 @@ class KeywordControllerSpec extends BaseSpec with BeforeAndAfterEach {
 
   "fetchCaseKeywords" should {
     "return 200 with all flat keyword rows from the collection" in {
-      when(keywordService.fetchCaseKeywords(refEq(pagination), refEq(None)))
+      when(keywordService.fetchCaseKeywords(refEq(pagination)))
         .thenReturn(successful(Paged(Seq(caseKeywordRow1, caseKeywordRow2))))
 
-      val result = controller.fetchCaseKeywords(pagination, None)(fakeRequest)
+      val result = controller.fetchCaseKeywords(pagination)(fakeRequest)
 
       status(result)        shouldBe OK
       contentAsJson(result) shouldBe toJson(Paged(Seq(caseKeywordRow1, caseKeywordRow2)))
     }
 
     "return 200 with an empty sequence if there are no keyword rows" in {
-      when(keywordService.fetchCaseKeywords(refEq(pagination), refEq(None)))
+      when(keywordService.fetchCaseKeywords(refEq(pagination)))
         .thenReturn(successful(Paged.empty[CaseKeywordRow]))
 
-      val result = controller.fetchCaseKeywords(pagination, None)(fakeRequest)
+      val result = controller.fetchCaseKeywords(pagination)(fakeRequest)
 
       status(result)        shouldBe OK
       contentAsJson(result) shouldBe toJson(Paged.empty[CaseKeywordRow])
@@ -238,10 +232,10 @@ class KeywordControllerSpec extends BaseSpec with BeforeAndAfterEach {
     "return 500 when an error occurred" in {
       val error = new RuntimeException
 
-      when(keywordService.fetchCaseKeywords(refEq(pagination), refEq(None)))
+      when(keywordService.fetchCaseKeywords(refEq(pagination)))
         .thenReturn(failed(error))
 
-      val result = controller.fetchCaseKeywords(pagination, None)(fakeRequest)
+      val result = controller.fetchCaseKeywords(pagination)(fakeRequest)
 
       status(result) shouldBe INTERNAL_SERVER_ERROR
       contentAsJson(result)

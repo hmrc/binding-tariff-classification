@@ -22,15 +22,12 @@ import uk.gov.hmrc.bindingtariffclassification.model.LiabilityStatus.LiabilitySt
 import java.time.Instant
 
 case class CaseKeywordRow(
-  keyword: String,
-  reference: String,
-  user: Option[String],        
-  goods: Option[String],
-  caseType: ApplicationType,
-  status: CaseStatus.Value,
-  liabilityStatus: Option[LiabilityStatus],
-  daysElapsed: Long,
-  overdue: Boolean,
-  approved: Boolean,
-  createdDate: Instant
+ keyword: String,
+ reference: String,
+ user: Option[String],
+ goods: Option[String],
+ caseType: ApplicationType,
+ status: CaseStatus.Value,
+ liabilityStatus: Option[LiabilityStatus],
+ daysElapsed: Long
 )

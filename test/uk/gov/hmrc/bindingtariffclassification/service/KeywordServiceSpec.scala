@@ -20,7 +20,6 @@ import org.mockito.ArgumentMatchers.{any, refEq}
 import org.mockito.Mockito.*
 import org.scalatest.BeforeAndAfterEach
 import uk.gov.hmrc.bindingtariffclassification.base.BaseSpec
-import uk.gov.hmrc.bindingtariffclassification.model.Role.CLASSIFICATION_OFFICER
 import uk.gov.hmrc.bindingtariffclassification.model.*
 import uk.gov.hmrc.bindingtariffclassification.repository.*
 
@@ -45,10 +44,7 @@ class KeywordServiceSpec extends BaseSpec with BeforeAndAfterEach {
     caseType = ApplicationType.BTI,
     status = CaseStatus.OPEN,
     liabilityStatus = None,
-    daysElapsed = 10L,
-    overdue = true,
-    approved = false,
-    createdDate = Instant.now()
+    daysElapsed = 10L
   )
 
   private val caseKeywordRow2 = CaseKeywordRow(
@@ -59,10 +55,7 @@ class KeywordServiceSpec extends BaseSpec with BeforeAndAfterEach {
     caseType = ApplicationType.BTI,
     status = CaseStatus.OPEN,
     liabilityStatus = None,
-    daysElapsed = 10L,
-    overdue = true,
-    approved = false,
-    createdDate = Instant.now()
+    daysElapsed = 10L
   )
 
   private val service =
@@ -161,18 +154,18 @@ class KeywordServiceSpec extends BaseSpec with BeforeAndAfterEach {
 
   "fetchKeywordsFromCases" should {
     "run the aggregation and return the flat keyword rows" in {
-      when(caseKeywordAggregation.fetchKeywordsFromCases(pagination, None))
+      when(caseKeywordAggregation.fetchKeywordsFromCases(pagination))
         .thenReturn(successful(Paged(Seq(caseKeywordRow1, caseKeywordRow2))))
 
-      await(service.fetchCaseKeywords(pagination, None)) shouldBe Paged(Seq(caseKeywordRow1, caseKeywordRow2))
+      await(service.fetchCaseKeywords(pagination)) shouldBe Paged(Seq(caseKeywordRow1, caseKeywordRow2))
     }
 
     "propagate any error" in {
-      when(caseKeywordAggregation.fetchKeywordsFromCases(pagination, None))
+      when(caseKeywordAggregation.fetchKeywordsFromCases(pagination))
         .thenThrow(emulatedFailure)
 
       val caught = intercept[RuntimeException] {
-        await(service.fetchCaseKeywords(pagination, None))
+        await(service.fetchCaseKeywords(pagination))
       }
       caught shouldBe emulatedFailure
     }

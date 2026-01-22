@@ -146,7 +146,7 @@ class CaseKeywordMongoViewSpec
 
       collectionSize shouldBe 2
 
-      val result = await(view.fetchKeywordsFromCases(pagination, approvedFilter = None))
+      val result = await(view.fetchKeywordsFromCases(pagination))
 
       result.resultCount shouldBe 3
 
@@ -159,18 +159,6 @@ class CaseKeywordMongoViewSpec
       references shouldBe Set("0000001", "0000002")
     }
 
-    "fetchKeywordsFromCases should return filtered results by approved status" in {
-      await(repo.insert(caseWithKeywordsBTI))
-      await(repo.insert(caseWithKeywordsLiability))
-
-      collectionSize shouldBe 2
-
-      val result = await(view.fetchKeywordsFromCases(pagination, approvedFilter = Some(false)))
-
-      result.resultCount                         shouldBe 3
-      result.results.forall(_.approved == false) shouldBe true
-    }
-
     "fetchKeywordsFromCases should handle pagination correctly" in {
       await(repo.insert(caseWithKeywordsBTI))
       await(repo.insert(caseWithKeywordsLiability))
@@ -178,15 +166,15 @@ class CaseKeywordMongoViewSpec
 
       collectionSize shouldBe 3
 
-      val page1 = await(view.fetchKeywordsFromCases(Pagination(page = 1, pageSize = 2), None))
+      val page1 = await(view.fetchKeywordsFromCases(Pagination(page = 1, pageSize = 2)))
       page1.results.size shouldBe 2
       page1.resultCount  shouldBe 5
 
-      val page2 = await(view.fetchKeywordsFromCases(Pagination(page = 2, pageSize = 2), None))
+      val page2 = await(view.fetchKeywordsFromCases(Pagination(page = 2, pageSize = 2)))
       page2.results.size shouldBe 2
       page2.resultCount  shouldBe 5
 
-      val page3 = await(view.fetchKeywordsFromCases(Pagination(page = 3, pageSize = 2), None))
+      val page3 = await(view.fetchKeywordsFromCases(Pagination(page = 3, pageSize = 2)))
       page3.results.size shouldBe 1
       page3.resultCount  shouldBe 5
     }
@@ -194,7 +182,7 @@ class CaseKeywordMongoViewSpec
     "fetchKeywordsFromCases should return correct structure for flat rows" in {
       await(repo.insert(caseWithKeywordsBTI))
 
-      val result = await(view.fetchKeywordsFromCases(pagination, None))
+      val result = await(view.fetchKeywordsFromCases(pagination))
       val row    = result.results.head
 
       row.keyword   shouldBe "bike"
@@ -203,7 +191,6 @@ class CaseKeywordMongoViewSpec
       row.goods shouldBe Some("HTC Wildfire smartphone")
       row.caseType  shouldBe ApplicationType.BTI
       row.status    shouldBe CaseStatus.OPEN
-      row.approved  shouldBe false
     }
   }
 }
