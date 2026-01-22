@@ -234,7 +234,7 @@ class BtaCardServiceSpec extends BaseSpec {
               totalApplications = 0,
               actionableApplications = 0,
               totalRulings = 3,
-              expiringRulings = 1,
+              expiringRulings = 0,
               expiryMonths = Some(3),
               expiryDays = Some(1)
             )
@@ -248,5 +248,28 @@ class BtaCardServiceSpec extends BaseSpec {
         res.rulings.get.expiring shouldBe 0
       }
     }
+
+    "supplied with rulings that have an expiry date of 1 month" in {
+      when(caseRepository.getAllByEori(eori))
+        .thenReturn(
+          Future.successful(
+            CaseData.createBtaCardData(
+              eori = eori,
+              totalApplications = 0,
+              actionableApplications = 0,
+              totalRulings = 5,
+              expiringRulings = 2,
+              expiryMonths = Some(1),
+              expiryDays = Some(0)
+            )
+          )
+        )
+
+      whenReady(service.generateBtaCard(eori)) { res =>
+        res.rulings.get.total shouldBe 5
+        res.rulings.get.expiring shouldBe 2
+      }
+    }
+
   }
 }

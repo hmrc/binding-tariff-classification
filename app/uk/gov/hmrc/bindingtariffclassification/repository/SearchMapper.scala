@@ -32,71 +32,109 @@ import java.util.regex.Pattern
 @Singleton
 class SearchMapper @Inject() (appConfig: AppConfig) extends Mapper {
 
-  def sortBy(sort: CaseSort): JsObject =
-    JsObject(
-      sort.field.toSeq.map(field => (toMongoField(field), Json.toJson(toMongoDirection(field, sort.direction.id))))
-    )
+  def sortBy(sort: CaseSort): JsObject = {
+    val fields = sort.field.toSeq
+
+    val sortMap = fields.flatMap { field =>
+      val directionValue = toMongoDirection(field, sort.direction.id)
+      val mainField = toMongoField(field) -> Json.toJson(directionValue)
+
+      if (field == COMMODITY_CODE) {
+        Seq(
+          mainField,
+          toMongoField(APPLICATION_TYPE) -> Json.toJson(directionValue),
+          toMongoField(CREATED_DATE) -> Json.toJson(directionValue),
+        )
+      } else {
+        Seq(mainField)
+      }
+    }
+    JsObject(sortMap)
+  }
 
   def filterBy(filter: CaseFilter): JsObject = {
-    val params = Seq[Option[(String, JsValue)]](
-      filter.reference.map("reference" -> inArray[String](_)),
-      filter.applicationType.map(filteringByApplicationType),
+
+    val caseDetailsVal = filter.caseDetails.toSeq
+    val caseSourceVal = filter.caseSource.toSeq
+    val decisionDetailVal = filter.decisionDetails.toSeq
+    val activeTextValues = caseDetailsVal ++ caseSourceVal ++ decisionDetailVal
+
+    val textSearchFilter = if (activeTextValues.nonEmpty) {
+      Some("$text" -> Json.obj("$search" -> activeTextValues.mkString(" ")))
+    } else {
+      None
+    }
+
+    val params: Seq[(String, JsValue)] = Seq(
+      filter.reference.map(ref => "reference" -> inArray[String](ref)),
+      filter.applicationType.map(types => "application.type" -> inArray[String](types.map(_.toString))),
       filter.queueId
         .filterNot(ids => ids.contains("some") && ids.contains("none"))
-        .map("queueId" -> inArrayOrNone[String](_)),
-      filter.assigneeId.map("assignee.id" -> mappingNoneOrSome(_)),
-      filter.caseDetails.map(details =>
-        either(
-          "application.goodName"            -> contains(details),
-          "application.summary"             -> contains(details),
-          "application.detailedDescription" -> contains(details),
-          "application.name"                -> contains(details)
-        )
-      ),
-      filter.caseSource.map(source =>
-        either(
-          "application.holder.businessName"   -> contains(source),
-          "application.traderName"            -> contains(source),
-          "application.correspondenceStarter" -> contains(source),
-          "application.contact.name"          -> contains(source)
-        )
-      ),
-      filter.minDecisionStart.map("decision.effectiveStartDate" -> greaterThan(_)(formatInstant)),
-      filter.minDecisionEnd.map("decision.effectiveEndDate" -> greaterThan(_)(formatInstant)),
-      filter.commodityCode.map("decision.bindingCommodityCode" -> numberStartingWith(_)),
-      filter.decisionDetails.map(desc =>
-        either(
-          "decision.goodsDescription"             -> contains(desc),
-          "decision.methodCommercialDenomination" -> contains(desc),
-          "decision.justification"                -> contains(desc)
-        )
-      ),
+        .map(ids => "queueId" -> inArrayOrNone[String](ids)),
+      filter.assigneeId.map(id => "assignee.id" -> mappingNoneOrSome(id)),
+
+      if (filter.advanceSearch.getOrElse(false)) {
+        Seq(
+          filter.caseDetails.map(value =>
+            "$or" -> JsArray(Seq(
+              Json.obj("application.goodName" -> containsGuard(value)),
+              Json.obj("application.summary" -> containsGuard(value)),
+              Json.obj("application.detailedDescription" -> containsGuard(value))
+            ))
+          ),
+          filter.caseSource.map(value =>
+            "$or" -> JsArray(Seq(
+              Json.obj("application.holder.businessName" -> containsGuard(value)),
+              Json.obj("application.traderName" -> containsGuard(value))
+            ))
+          ),
+          filter.decisionDetails.map(value =>
+            "$or" -> JsArray(Seq(
+              Json.obj("decision.goodsDescription" -> containsGuard(value)),
+              Json.obj("decision.methodCommercialDenomination" -> containsGuard(value)),
+              Json.obj("decision.justification" -> containsGuard(value))
+            ))
+          )
+        ).flatten
+      } else {
+        Seq.empty
+      },
+
+      textSearchFilter,
+
+      filter.minDecisionStart.map(start => "decision.effectiveStartDate" -> greaterThan(start)(formatInstant)),
+      filter.minDecisionEnd.map(end => "decision.effectiveEndDate" -> greaterThan(end)(formatInstant)),
+      filter.commodityCode.map(code => "decision.bindingCommodityCode" -> numberStartingWith(code)),
+
       filter.eori.map(e =>
-        either(
-          "application.holder.eori"            -> JsString(e),
-          "application.agent.eoriDetails.eori" -> JsString(e)
-        )
+        "$or" -> JsArray(Seq(
+          Json.obj("application.holder.eori" -> JsString(e)),
+          Json.obj("application.agent.eoriDetails.eori" -> JsString(e))
+        ))
       ),
-      filter.keywords.map("keywords" -> containsAll(_)),
-      filter.statuses.map(filteringByStatus(_, filter.advanceSearch)),
+
+      filter.keywords.map(k => "keywords" -> containsAll(k)),
+      filter.statuses.map(s => filteringByStatus(s, filter.advanceSearch)),
       filter.migrated.map(showMigrated => if (showMigrated) exists("dateOfExtract") else notExists("dateOfExtract"))
-    ).filter(_.isDefined).map(_.get)
+    ).flatten
 
     val query: Map[String, JsValue] = params
-      .groupBy(_._1) // Group by Key
+      .groupBy(_._1)
       .view
-      .mapValues(_.map(_._2)) // Map the values from Seq(key -> value) to Seq(value)
+      .mapValues(_.map(_._2))
       .map {
-        // If there is only one entry in params with a specific key, map it how we usually would: (key -> value)
         case (key: String, value: Seq[JsValue]) if value.size == 1 => key -> value.head
-
-        // If there is multiple entries in params with a specific key, wrap them in an $and
-        case (key, value: Seq[JsValue]) => "$and" -> JsArray(value.map(value => Json.obj(key -> value)))
+        case (key, value: Seq[JsValue]) => "$and" -> JsArray(value.map(v => Json.obj(key -> v)))
       }
       .toMap
 
     JsObject(query)
   }
+
+  private def containsGuard(value: String): JsValue = Json.obj(
+    "$regex" -> value,
+    "$options" -> "i"
+  )
 
   private def either(conditions: Iterable[JsObject]): (String, JsArray) = "$or" -> JsArray(conditions.toSeq)
 
@@ -150,14 +188,7 @@ class SearchMapper @Inject() (appConfig: AppConfig) extends Mapper {
     regexFilter(s"^$value\\d*")
   )
 
-  private def contains(value: String): JsObject = Json.obj(
-    regexFilter(s".*${Pattern.quote(value)}.*"),
-    caseInsensitiveFilter
-  )
-
   private def regexFilter(reg: String): (String, JsValueWrapper) = "$regex" -> reg
-
-  private lazy val caseInsensitiveFilter: (String, JsValueWrapper) = "$options" -> "i"
 
   private def filteringByApplicationType(search: Set[ApplicationType]): (String, JsValue) =
     "application.type" -> inArray(search)

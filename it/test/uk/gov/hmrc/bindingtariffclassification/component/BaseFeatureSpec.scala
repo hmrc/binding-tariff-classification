@@ -57,9 +57,9 @@ abstract class BaseFeatureSpec
 
   protected lazy val apiTokenKey = "X-Api-Token"
 
-  private lazy val caseStore: CaseMongoRepository           = app.injector.instanceOf[CaseMongoRepository]
-  private lazy val eventStore: EventMongoRepository         = app.injector.instanceOf[EventMongoRepository]
-  private lazy val sequenceStore: SequenceMongoRepository   = app.injector.instanceOf[SequenceMongoRepository]
+  protected lazy val caseStore: CaseMongoRepository           = app.injector.instanceOf[CaseMongoRepository]
+  protected lazy val eventStore: EventMongoRepository         = app.injector.instanceOf[EventMongoRepository]
+  protected lazy val sequenceStore: SequenceMongoRepository   = app.injector.instanceOf[SequenceMongoRepository]
   private lazy val mongoLockRepository: MongoLockRepository = app.injector.instanceOf[MongoLockRepository]
   private lazy val scheduledJobStores: Iterable[LockRepository] =
     app.injector.instanceOf[ScheduledJobs].jobs.map(_.lockRepository)
@@ -78,6 +78,9 @@ abstract class BaseFeatureSpec
   override protected def beforeEach(): Unit = {
     super.beforeEach()
     dropStores()
+    result(caseStore.ensureIndexes(), timeout)
+    result(eventStore.ensureIndexes(), timeout)
+    result(sequenceStore.ensureIndexes(), timeout)
     ()
   }
 

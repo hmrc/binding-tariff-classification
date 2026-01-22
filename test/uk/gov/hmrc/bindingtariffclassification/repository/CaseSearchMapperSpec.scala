@@ -58,40 +58,13 @@ class CaseSearchMapperSpec extends BaseMongoIndexSpec {
         "queueId"                       -> Json.obj("$in" -> Json.arr("valid_queue")),
         "assignee.id"                   -> "valid_assignee",
         "status"                        -> Json.obj("$in" -> Json.arr("NEW", "OPEN")),
+        "$text"                         -> Json.obj("$search" -> "case-source $1_strawberry"),
         "decision.effectiveStartDate"   -> Json.obj("$gte" -> Json.obj("$date" -> 0)),
         "decision.effectiveEndDate"     -> Json.obj("$gte" -> Json.obj("$date" -> 0)),
         "decision.bindingCommodityCode" -> Json.obj("$regex" -> "^12345\\d*"),
-        "$and" -> Json.arr(
-          Json.obj(
-            "$or" -> Json.arr(
-              Json.obj(
-                "application.holder.businessName" -> Json.obj("$regex" -> ".*\\Qcase-source\\E.*", "$options" -> "i")
-              ),
-              Json.obj("application.traderName" -> Json.obj("$regex" -> ".*\\Qcase-source\\E.*", "$options" -> "i")),
-              Json.obj(
-                "application.correspondenceStarter" -> Json.obj("$regex" -> ".*\\Qcase-source\\E.*", "$options" -> "i")
-              ),
-              Json.obj("application.contact.name" -> Json.obj("$regex" -> ".*\\Qcase-source\\E.*", "$options" -> "i"))
-            )
-          ),
-          Json.obj(
-            "$or" -> Json.arr(
-              Json.obj(
-                "decision.goodsDescription" -> Json.obj("$regex" -> ".*\\Q$1_strawberry\\E.*", "$options" -> "i")
-              ),
-              Json.obj(
-                "decision.methodCommercialDenomination" -> Json
-                  .obj("$regex" -> ".*\\Q$1_strawberry\\E.*", "$options" -> "i")
-              ),
-              Json.obj("decision.justification" -> Json.obj("$regex" -> ".*\\Q$1_strawberry\\E.*", "$options" -> "i"))
-            )
-          ),
-          Json.obj(
-            "$or" -> Json.arr(
-              Json.obj("application.holder.eori"            -> JsString("eori-number")),
-              Json.obj("application.agent.eoriDetails.eori" -> JsString("eori-number"))
-            )
-          )
+        "$or" -> Json.arr(
+          Json.obj("application.holder.eori"            -> JsString("eori-number")),
+          Json.obj("application.agent.eoriDetails.eori" -> JsString("eori-number"))
         ),
         "keywords" -> Json.obj("$all" -> Json.arr("MTB", "BIKE"))
       )
@@ -238,31 +211,13 @@ class CaseSearchMapperSpec extends BaseMongoIndexSpec {
 
     "filter by 'case source'" in {
       jsonMapper.filterBy(CaseFilter(caseSource = Some("case-source"))) shouldBe Json.obj(
-        "$or" ->
-          Json.arr(
-            Json.obj(
-              "application.holder.businessName" -> Json.obj("$regex" -> ".*\\Qcase-source\\E.*", "$options" -> "i")
-            ),
-            Json.obj("application.traderName" -> Json.obj("$regex" -> ".*\\Qcase-source\\E.*", "$options" -> "i")),
-            Json.obj(
-              "application.correspondenceStarter" -> Json.obj("$regex" -> ".*\\Qcase-source\\E.*", "$options" -> "i")
-            ),
-            Json.obj("application.contact.name" -> Json.obj("$regex" -> ".*\\Qcase-source\\E.*", "$options" -> "i"))
-          )
+        "$text" -> Json.obj("$search" -> "case-source")
       )
     }
 
     "filter by 'case details'" in {
       jsonMapper.filterBy(CaseFilter(caseDetails = Some("case_details"))) shouldBe Json.obj(
-        "$or" ->
-          Json.arr(
-            Json.obj("application.goodName" -> Json.obj("$regex" -> ".*\\Qcase_details\\E.*", "$options" -> "i")),
-            Json.obj("application.summary"  -> Json.obj("$regex" -> ".*\\Qcase_details\\E.*", "$options" -> "i")),
-            Json.obj(
-              "application.detailedDescription" -> Json.obj("$regex" -> ".*\\Qcase_details\\E.*", "$options" -> "i")
-            ),
-            Json.obj("application.name" -> Json.obj("$regex" -> ".*\\Qcase_details\\E.*", "$options" -> "i"))
-          )
+        "$text" -> Json.obj("$search" -> "case_details")
       )
     }
 
@@ -271,6 +226,7 @@ class CaseSearchMapperSpec extends BaseMongoIndexSpec {
         "decision.effectiveStartDate" -> Json.obj("$gte" -> Json.obj("$date" -> 0))
       )
     }
+
     "filter by 'min decision end'" in {
       jsonMapper.filterBy(CaseFilter(minDecisionEnd = Some(Instant.EPOCH))) shouldBe Json.obj(
         "decision.effectiveEndDate" -> Json.obj("$gte" -> Json.obj("$date" -> 0))
@@ -285,15 +241,17 @@ class CaseSearchMapperSpec extends BaseMongoIndexSpec {
 
     "filter by 'decision details'" in {
       jsonMapper.filterBy(CaseFilter(decisionDetails = Some("$1_strawberry"))) shouldBe Json.obj(
-        "$or" ->
-          Json.arr(
-            Json.obj("decision.goodsDescription" -> Json.obj("$regex" -> ".*\\Q$1_strawberry\\E.*", "$options" -> "i")),
-            Json.obj(
-              "decision.methodCommercialDenomination" -> Json
-                .obj("$regex" -> ".*\\Q$1_strawberry\\E.*", "$options" -> "i")
-            ),
-            Json.obj("decision.justification" -> Json.obj("$regex" -> ".*\\Q$1_strawberry\\E.*", "$options" -> "i"))
-          )
+        "$text" -> Json.obj("$search" -> "$1_strawberry")
+      )
+    }
+
+    "filter by multiple text fields combined" in {
+      jsonMapper.filterBy(CaseFilter(
+        caseDetails = Some("smartphone"),
+        caseSource = Some("logistics"),
+        decisionDetails = Some("laptop")
+      )) shouldBe Json.obj(
+        "$text" -> Json.obj("$search" -> "smartphone logistics laptop")
       )
     }
 
@@ -356,7 +314,11 @@ class CaseSearchMapperSpec extends BaseMongoIndexSpec {
         direction = SortDirection.DESCENDING
       )
 
-      jsonMapper.sortBy(sort) shouldBe Json.obj("decision.bindingCommodityCode" -> -1)
+      jsonMapper.sortBy(sort) shouldBe Json.obj(
+        "decision.bindingCommodityCode" -> -1,
+        "application.type" -> -1,
+        "createdDate" -> -1
+      )
     }
 
     "sort by passed field and set direction ascending(1)" in {

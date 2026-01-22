@@ -95,7 +95,7 @@ class CaseSpec extends BaseFeatureSpec {
       createCase(decision = Some(createDecision(methodCommercialDenomination = Some("laptop from Mexico"))))
     )
   private val c9 = adaptCaseInstantFormat(
-    createCase(decision = Some(createDecision(justification = "this LLLLaptoppp")))
+    createCase(decision = Some(createDecision(justification = "this laptop!")))
   )
   private val c10 = adaptCaseInstantFormat(createCase(keywords = Set("MTB", "BICYCLE")))
   private val c11 = adaptCaseInstantFormat(
@@ -143,6 +143,9 @@ class CaseSpec extends BaseFeatureSpec {
   private val c2CreateWithExtraFieldsJson = Json.toJson(c2CreateWithExtraFields)
   private val correspondenceCaseJson      = Json.toJson(correspondenceCase)
   private val miscCaseJson                = Json.toJson(miscCase)
+
+
+
 
   Feature("Delete All") {
 
@@ -1086,7 +1089,7 @@ class CaseSpec extends BaseFeatureSpec {
       storeCases(c1, c2, c9)
 
       val responseFuture = httpClient
-        .url(s"$serviceUrl/cases?decision_details=this%20LLLLaptoppp")
+        .url(s"$serviceUrl/cases?decision_details=this%20laptop")
         .withHttpHeaders(apiTokenKey -> appConfig.authorization)
         .get()
       val result = Await.result(responseFuture, Duration(1000L, "ms"))

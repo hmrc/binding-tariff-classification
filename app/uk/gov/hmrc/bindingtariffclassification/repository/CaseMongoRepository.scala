@@ -17,30 +17,32 @@
 package uk.gov.hmrc.bindingtariffclassification.repository
 
 import cats.data.NonEmptySeq
-import cats.syntax.all._
+import cats.syntax.all.*
 import org.mongodb.scala.bson.conversions.Bson
 import org.mongodb.scala.bson.{BsonDocument, BsonNull, BsonValue}
 import org.mongodb.scala.model.Accumulators.{max, push, sum}
-import org.mongodb.scala.model.Aggregates._
-import org.mongodb.scala.model.Filters._
-import org.mongodb.scala.model.Indexes.{ascending => asc, descending => desc}
+import org.mongodb.scala.model.Aggregates.*
+import org.mongodb.scala.model.Filters.*
+import org.mongodb.scala.model.Indexes.{ascending as asc, descending as desc}
 import org.mongodb.scala.model.Sorts.{ascending, descending, orderBy}
-import org.mongodb.scala.model._
+import org.mongodb.scala.model.*
 import org.slf4j.{Logger, LoggerFactory}
 import play.api.libs.json.Json.JsValueWrapper
-import play.api.libs.json._
+import play.api.libs.json.*
 import uk.gov.hmrc.bindingtariffclassification.config.AppConfig
-import uk.gov.hmrc.bindingtariffclassification.model.MongoFormatters._
-import uk.gov.hmrc.bindingtariffclassification.model._
-import uk.gov.hmrc.bindingtariffclassification.model.reporting._
+import uk.gov.hmrc.bindingtariffclassification.model.MongoFormatters.*
+import uk.gov.hmrc.bindingtariffclassification.model.*
+import uk.gov.hmrc.bindingtariffclassification.model.reporting.*
 import uk.gov.hmrc.bindingtariffclassification.repository.BaseMongoOperations.pagedResults
 import uk.gov.hmrc.bindingtariffclassification.sort.SortDirection
 import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.play.json.Codecs.toBson
 import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
 import uk.gov.hmrc.bindingtariffclassification.model.LiabilityStatus.LiabilityStatus
-import org.mongodb.scala.SingleObservableFuture
-import org.mongodb.scala.ObservableFuture
+import org.mongodb.scala.{ObservableFuture, SingleObservable, SingleObservableFuture}
+import org.mongodb.scala.bson.BsonTransformer.TransformImmutableDocument
+import org.mongodb.scala.bson.collection.immutable.Document
+import com.mongodb.MongoCommandException
 
 import java.time.Instant
 import javax.inject.{Inject, Singleton}
@@ -48,67 +50,119 @@ import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class CaseMongoRepository @Inject() (
-  appConfig: AppConfig,
-  mongoComponent: MongoComponent,
-  mapper: SearchMapper,
-  updateMapper: UpdateMapper
-)(implicit ec: ExecutionContext)
-    extends PlayMongoRepository[Case](
-      collectionName = "cases",
-      mongoComponent = mongoComponent,
-      domainFormat = MongoFormatters.formatCase,
-      indexes = Seq(
-        // Primary identifier index
-        IndexModel(asc("reference"), IndexOptions().unique(true).name("reference_Index")),
-
-        // Main search indexes - compound indexes for common query patterns
-        IndexModel(
-          Indexes.compoundIndex(
-            asc("application.type"),
-            asc("status"),
-            asc("decision.bindingCommodityCode")
-          ),
-          IndexOptions().name("search_main_compound_Index")
-        ),
-
-        // Decision-related compound index
-        IndexModel(
-          Indexes.compoundIndex(
-            asc("decision.effectiveEndDate"),
-            asc("decision.bindingCommodityCode"),
-            asc("status")
-          ),
-          IndexOptions().name("decision_compound_Index")
-        ),
-
-        // Text search compound index
-        IndexModel(
-          Indexes.compoundIndex(
-            asc("decision.goodsDescription"),
-            asc("decision.methodCommercialDenomination"),
-            asc("decision.justification")
-          ),
-          IndexOptions().name("text_search_compound_Index")
-        ),
-
-        // Individual field indexes for specific queries
-        IndexModel(asc("assignee.id"), IndexOptions().name("assignee_id_Index")),
-        IndexModel(asc("queueId"), IndexOptions().name("queueId_Index")),
-        IndexModel(asc("status"), IndexOptions().name("status_Index")),
-        IndexModel(asc("application.type"), IndexOptions().name("application_type_Index")),
-        IndexModel(desc("createdDate"), IndexOptions().name("createdDate_Index")),
-        IndexModel(desc("decision.effectiveEndDate"), IndexOptions().name("decision_effectiveEndDate_Index")),
-        IndexModel(asc("application.holder.eori"), IndexOptions().name("application_holder_eori_Index")),
-        IndexModel(
-          asc("application.agent.eoriDetails.eori"),
-          IndexOptions().name("application_agent_eoriDetails_eori_Index")
-        ),
-        IndexModel(asc("daysElapsed"), IndexOptions().name("daysElapsed_Index")),
-        IndexModel(asc("decision.bindingCommodityCode"), IndexOptions().name("decision_bindingCommodityCode_Index")),
-        IndexModel(asc("keywords"), IndexOptions().name("keywords_Index"))
+                                      appConfig: AppConfig,
+                                      mongoComponent: MongoComponent,
+                                      mapper: SearchMapper,
+                                      updateMapper: UpdateMapper
+                                    )(implicit ec: ExecutionContext)
+  extends PlayMongoRepository[Case](
+    collectionName = "cases",
+    mongoComponent = mongoComponent,
+    domainFormat = MongoFormatters.formatCase,
+    indexes = Seq(
+      IndexModel(
+        asc("reference"),
+        IndexOptions().unique(true).name("reference_Index")
       ),
-      replaceIndexes = appConfig.replaceIndexes
-    )
+      IndexModel(
+        asc("status"),
+        IndexOptions().name("status_Index")
+      ),
+
+      IndexModel(
+        asc("keywords"),
+        IndexOptions().name("keywords_Index")
+      ),
+      IndexModel(
+        asc("application.type"),
+        IndexOptions().name("application_type_Index")
+      ),
+
+      IndexModel(
+        Indexes.compoundIndex(
+          asc("application.type"),
+          asc("status"),
+          asc("decision.bindingCommodityCode")
+        ),
+        IndexOptions().name("search_main_compound_Index")
+      ),
+
+      IndexModel(
+        Indexes.compoundIndex(
+          asc("application.type"),
+          asc("status")
+        ),
+        IndexOptions().name("type_status_Index")
+      ),
+
+      IndexModel(
+        Indexes.compoundIndex(
+          asc("status"),
+          asc("keywords")
+        ),
+        IndexOptions().name("status_keywords_Index")
+      ),
+      IndexModel(
+        Indexes.compoundIndex(
+          asc("status"),
+          desc("decision.effectiveEndDate")
+        ),
+        IndexOptions().name("status_effectiveEndDate_Index")
+      ),
+
+      IndexModel(
+        Indexes.compoundIndex(
+          asc("queueId"),
+          asc("status"),
+          asc("assignee.id")
+        ),
+        IndexOptions().name("queue_status_assignee_Index")
+      ),
+
+      IndexModel(
+        desc("createdDate"),
+        IndexOptions().name("createdDate_Index")
+      ),
+
+      IndexModel(
+        asc("application.holder.eori"),
+        IndexOptions().name("application_holder_eori_Index")
+      ),
+      IndexModel(
+        asc("application.agent.eoriDetails.eori"),
+        IndexOptions().name("application_agent_eoriDetails_eori_Index")
+      ),
+
+      IndexModel(
+        asc("daysElapsed"),
+        IndexOptions().name("daysElapsed_Index")
+      ),
+      IndexModel(
+        Indexes.compoundIndex(
+          asc("decision.bindingCommodityCode"),
+          asc("application.type"),
+          asc("reference")
+        ),
+        IndexOptions().name("commodity_type_reference_sort_Index")
+      ),
+      IndexModel(
+        Document(
+          "application.goodName" -> "text",
+          "application.summary" -> "text",
+          "application.detailedDescription" -> "text",
+          "application.holder.businessName" -> "text",
+          "application.traderName" -> "text",
+          "application.correspondenceStarter" -> "text",
+          "application.contact.name" -> "text",
+          "decision.goodsDescription" -> "text",
+          "decision.methodCommercialDenomination" -> "text",
+          "decision.justification" -> "text"
+        ),
+        IndexOptions().name("comprehensive_text_Index")
+      )
+    ),
+    replaceIndexes = appConfig.replaceIndexes
+  )
     with CaseRepository
     with BaseMongoOperations[Case] {
 
@@ -134,12 +188,16 @@ class CaseMongoRepository @Inject() (
   override def getByReference(reference: String): Future[Option[Case]] =
     collection.find(mapper.reference(reference)).limit(1).headOption()
 
-  override def get(search: CaseSearch, pagination: Pagination): Future[Paged[Case]] =
-    countMany(
-      toBson(mapper.filterBy(search.filter)).asDocument(),
-      search.sort.map(cs => toBson(mapper.sortBy(cs)).asDocument()).getOrElse(defaultSortBy),
-      pagination
-    )
+  override def get(search: CaseSearch, pagination: Pagination): Future[Paged[Case]] = {
+    val filterBson = toBson(mapper.filterBy(search.filter)).asDocument()
+
+    val finalSort = search.sort match {
+      case Some(cs) => toBson(mapper.sortBy(cs)).asDocument()
+      case None     => defaultSortBy 
+    }
+
+    countMany(filterBson, finalSort, pagination)
+  }
 
   override def getAllByEori(eori: String): Future[List[Case]] =
     collection.find(equal("application.holder.eori", eori)).toFuture().map(seq => seq.toList)
@@ -345,10 +403,9 @@ class CaseMongoRepository @Inject() (
   }
 
   private def sortStage(
-    sortBy: ReportField[?],
-    sortOrder: SortDirection.Value
-  ) =
-    // If not sorting by reference, add it as a secondary sort field to ensure stable sorting
+                         sortBy: ReportField[?],
+                         sortOrder: SortDirection.Value
+                       ) =
     ((sortOrder, sortBy): @unchecked) match {
       case (SortDirection.ASCENDING, ReportField.Reference) =>
         sort(ascending(sortBy.underlyingField))
@@ -470,9 +527,9 @@ class CaseMongoRepository @Inject() (
   }
 
   override def caseReport(
-    report: CaseReport,
-    pagination: Pagination
-  ): Future[Paged[Map[String, ReportResultField[?]]]] = {
+                           report: CaseReport,
+                           pagination: Pagination
+                         ): Future[Paged[Map[String, ReportResultField[?]]]] = {
     logger.info(s"[CaseMongoRepository][caseReport] Running report: $report with pagination $pagination")
 
     val futureCount = collection
@@ -544,7 +601,6 @@ class CaseMongoRepository @Inject() (
     def countThenTeamThenCaseType =
       sortDirection(ReportField.Count.fieldName) +: teamThenCaseType
 
-    // Ideally we want to sort by both parts of the grouping key to improve sort stability
     (report.sortBy: @unchecked) match {
       case ReportField.Count    => sort(orderBy(countThenTeamThenCaseType*))
       case ReportField.CaseType => sort(orderBy(caseTypeThenTeam*))
@@ -553,9 +609,9 @@ class CaseMongoRepository @Inject() (
   }
 
   override def queueReport(
-    report: QueueReport,
-    pagination: Pagination
-  ): Future[Paged[QueueResultGroup]] = {
+                            report: QueueReport,
+                            pagination: Pagination
+                          ): Future[Paged[QueueResultGroup]] = {
     logger.info(s"[CaseMongoRepository][queueReport] Running report: $report with pagination $pagination")
 
     val rest = Seq(queueGroupStage, count(countField))
