@@ -17,7 +17,6 @@
 package uk.gov.hmrc.bindingtariffclassification.repository
 
 import org.mongodb.scala.MongoCollection
-import org.mongodb.scala.model.Filters.*
 import org.mongodb.scala.bson.BsonDocument
 import org.mongodb.scala.{ObservableFuture, SingleObservableFuture}
 import play.api.Logging
@@ -27,8 +26,7 @@ import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.play.json.Codecs.toBson
 
 import javax.inject.{Inject, Singleton}
-import scala.concurrent.duration.*
-import scala.concurrent.{Await, ExecutionContext, Future}
+import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class CaseKeywordMongoView @Inject() (
@@ -38,24 +36,14 @@ class CaseKeywordMongoView @Inject() (
   private[repository] val caseKeywordsViewName = "caseKeywords"
   private[repository] val collectionName = "cases"
 
-  logger.info(s"Initializing CaseKeywordMongoView with viewName: $caseKeywordsViewName")
-
   private val viewInitialized: Future[Unit] = initView.map(_ => ())
 
-  Await.result(viewInitialized, 30.seconds)
-
-  logger.info("View initialization complete, ready to serve requests")
-
-  private lazy val collection = mongoComponent.database
+  private lazy val collection: MongoCollection[CaseKeywordRow] = mongoComponent.database
     .getCollection[CaseKeywordRow](caseKeywordsViewName)
     .withCodecRegistry(MongoCodecs.caseKeyword)
 
-  /** Flat view pipeline - one document per keyword-case pair
-   */
   private def pipeline: Seq[BsonDocument] = {
-    logger.info("Building aggregation pipeline...")
     val pipelineJson = Json.arr(
-
       Json.obj(
         "$match" -> Json.obj(
           "keywords" -> Json.obj(
@@ -64,85 +52,20 @@ class CaseKeywordMongoView @Inject() (
           )
         )
       ),
-
       Json.obj(
         "$unwind" -> "$keywords"
       ),
-
-      Json.obj(
-        "$lookup" -> Json.obj(
-          "from"         -> "keywords",
-          "localField"   -> "keywords",
-          "foreignField" -> "name",
-          "as"           -> "keywordInfo"
-        )
-      ),
-      Json.obj(
-        "$match" -> Json.obj(
-          "keywordInfo" -> Json.obj("$size" -> 0)
-        )
-      ),
       Json.obj(
         "$project" -> Json.obj(
-          "_id"       -> 0,
-          "keyword"   -> "$keywords",
-          "reference" -> "$reference",
-          "user" -> Json.obj(
-            "$ifNull" -> Json.arr("$assignee.name", null)
-          ),
-          "goods" -> Json.obj(
-            "$ifNull" -> Json.arr("$application.goodName", null)
-          ),
-          "caseType" -> "$application.type",
-          "status"   -> "$status",
-          "liabilityStatus" -> Json.obj(
-            "$ifNull" -> Json.arr("$application.status", null)
-          ),
-          "createdDate" -> "$createdDate",
-          "daysElapsed" -> Json.obj(
-            "$dateDiff" -> Json.obj(
-              "startDate" -> "$createdDate",
-              "endDate"   -> "$$NOW",
-              "unit"      -> "day"
-            )
-          ),
-          "overdue" -> Json.obj(
-            "$or" -> Json.arr(
-              Json.obj(
-                "$and" -> Json.arr(
-                  Json.obj("$eq" -> Json.arr("$application.type", "LIABILITY_ORDER")),
-                  Json.obj("$eq" -> Json.arr("$application.status", "LIVE")),
-                  Json.obj(
-                    "$gte" -> Json.arr(
-                      Json.obj(
-                        "$dateDiff" -> Json.obj(
-                          "startDate" -> "$createdDate",
-                          "endDate"   -> "$$NOW",
-                          "unit"      -> "day"
-                        )
-                      ),
-                      5
-                    )
-                  )
-                )
-              ),
-              Json.obj(
-                "$gte" -> Json.arr(
-                  Json.obj(
-                    "$dateDiff" -> Json.obj(
-                      "startDate" -> "$createdDate",
-                      "endDate"   -> "$$NOW",
-                      "unit"      -> "day"
-                    )
-                  ),
-                  30
-                )
-              )
-            )
-          ),
-          "approved" -> Json.obj(
-            "$literal" -> false
-          )
+          "_id"             -> 0,
+          "keyword"         -> "$keywords",
+          "reference"       -> "$reference",
+          "user"            -> "$assignee.name",
+          "goods"           -> "$application.goodName",
+          "caseType"        -> "$application.type",
+          "status"          -> "$status",
+          "liabilityStatus" -> "$application.status",
+          "daysElapsed"     -> "$daysElapsed"
         )
       ),
       Json.obj(
@@ -151,122 +74,59 @@ class CaseKeywordMongoView @Inject() (
         )
       )
     )
-
-    val result = pipelineJson.value.map(v => toBson(v).asDocument()).toSeq
-    logger.info(s"Pipeline built with ${result.size} stages")
-    result
+    pipelineJson.value.map(v => toBson(v).asDocument()).toSeq
   }
 
-  private[repository] def createView(viewName: String, viewOn: String): Future[Unit] = {
-    logger.info(s"Creating view '$viewName' on collection '$viewOn'...")
+  private[repository] def createView(viewName: String, viewOn: String): Future[Unit] =
     mongoComponent.database
       .createView(viewName, viewOn, pipeline)
       .toFuture()
-      .map { _ =>
-        logger.info(s"View '$viewName' created successfully")
-      }
+      .map(_ => ())
       .recover {
         case ex: Exception =>
           logger.error(s"Failed to create view '$viewName': ${ex.getMessage}", ex)
           throw ex
       }
-  }
 
-  private[repository] def dropView(viewName: String): Future[Unit] = {
-    logger.info(s"Dropping view '$viewName'...")
+  private[repository] def dropView(viewName: String): Future[Unit] =
     mongoComponent.database
       .getCollection(viewName)
       .drop()
       .toFuture()
-      .map { _ =>
-        logger.info(s"View '$viewName' dropped successfully")
-      }
-      .recover {
-        case ex: Exception =>
-          logger.warn(s"Failed to drop view '$viewName' (may not exist): ${ex.getMessage}")
-          ()
-      }
-  }
+      .map(_ => ())
+      .recover { case _: Exception => () }
 
-  private[repository] def getView(viewName: String): MongoCollection[CaseKeywordRow] = {
-    logger.info(s"Getting view collection '$viewName'...")
+  private[repository] def getView(viewName: String): MongoCollection[CaseKeywordRow] =
     mongoComponent.database
       .getCollection[CaseKeywordRow](viewName)
-  }
+      .withCodecRegistry(MongoCodecs.caseKeyword)
 
-  private[repository] def initView: Future[MongoCollection[CaseKeywordRow]] = {
-    logger.info("Starting view initialization...")
-
+  private[repository] def initView: Future[MongoCollection[CaseKeywordRow]] =
     mongoComponent.database
       .listCollectionNames()
       .toFuture()
       .flatMap { collections =>
-        logger.info(s"Existing collections: ${collections.take(10).mkString(", ")}${if (collections.size > 10) "..." else ""}")
-
-        if (collections.contains(caseKeywordsViewName)) {
-          logger.info(s"View '$caseKeywordsViewName' already exists, dropping it first...")
+        if (collections.contains(caseKeywordsViewName))
           dropView(caseKeywordsViewName)
-        } else {
-          logger.info(s"View '$caseKeywordsViewName' does not exist, creating new one...")
+        else
           Future.successful(())
-        }
       }
-      .flatMap { _ =>
-        logger.info("Creating new view...")
-        createView(caseKeywordsViewName, collectionName)
-      }
-      .flatMap { _ =>
-        logger.info("Retrieving view collection and counting documents...")
-        val viewCollection = getView(caseKeywordsViewName)
-
-        viewCollection.countDocuments().toFuture().map { count =>
-          logger.info(s"View created successfully! Total documents in view: $count")
-          viewCollection
-        }
-      }
+      .flatMap(_ => createView(caseKeywordsViewName, collectionName))
+      .map(_ => getView(caseKeywordsViewName))
       .recoverWith {
         case ex: Exception =>
-          logger.error(s"CRITICAL ERROR initializing view: ${ex.getMessage}", ex)
+          logger.error(s"Failed to initialize view: ${ex.getMessage}", ex)
           Future.failed(ex)
       }
-  }
 
-  def fetchKeywordsFromCases(
-                              pagination: Pagination,
-                              approvedFilter: Option[Boolean] = None
-                            ): Future[Paged[CaseKeywordRow]] = {
-    logger.info(s"Fetching keywords with pagination: page=${pagination.page}, pageSize=${pagination.pageSize}, approved=$approvedFilter")
-
-    val filter = approvedFilter match {
-      case Some(approved) =>
-        logger.info(s"Filtering by approved=$approved")
-        equal("approved", approved)
-      case None =>
-        logger.info("No filter applied")
-        BsonDocument()
-    }
-
+  def fetchKeywordsFromCases(pagination: Pagination): Future[Paged[CaseKeywordRow]] =
     for {
-      rows <- collection
-        .find(filter)
+      _     <- viewInitialized
+      rows  <- collection
+        .find()
         .skip((pagination.page - 1) * pagination.pageSize)
         .limit(pagination.pageSize)
         .toFuture()
-        .map { results =>
-          logger.info(s"Fetched ${results.size} rows from view")
-          results
-        }
-      total <- collection
-        .countDocuments(filter)
-        .toFuture()
-        .map { count =>
-          logger.info(s"Total documents matching filter: $count")
-          count
-        }
-    } yield {
-      val paged = Paged(rows, pagination.page, pagination.pageSize, total)
-      logger.info(s"Returning paged result: ${paged.size} results, page ${paged.pageIndex}, total ${paged.resultCount}")
-      paged
-    }
-  }
+      total <- collection.countDocuments().toFuture()
+    } yield Paged(rows, pagination.page, pagination.pageSize, total)
 }

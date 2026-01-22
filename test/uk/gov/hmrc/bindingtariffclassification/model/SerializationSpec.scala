@@ -77,10 +77,7 @@ class SerializationSpec extends BaseSpec {
     caseType = ApplicationType.BTI,
     status = CaseStatus.REFERRED,
     liabilityStatus = Some(LiabilityStatus.LIVE),
-    daysElapsed = 45L,
-    overdue = true,
-    approved = true,
-    createdDate = Instant.EPOCH
+    daysElapsed = 45L
   )
 
   "Details" should {
