@@ -34,6 +34,7 @@ class SearchMapper @Inject() (appConfig: AppConfig) extends Mapper {
 
   def sortBy(sort: CaseSort): JsObject = {
     val fields = sort.field.toSeq
+    println(">>> Fields" + fields)
 
     val sortMap = fields.flatMap { field =>
       val directionValue = toMongoDirection(field, sort.direction.id)
