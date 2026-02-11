@@ -246,11 +246,13 @@ class CaseSearchMapperSpec extends BaseMongoIndexSpec {
     }
 
     "filter by multiple text fields combined" in {
-      jsonMapper.filterBy(CaseFilter(
-        caseDetails = Some("smartphone"),
-        caseSource = Some("logistics"),
-        decisionDetails = Some("laptop")
-      )) shouldBe Json.obj(
+      jsonMapper.filterBy(
+        CaseFilter(
+          caseDetails = Some("smartphone"),
+          caseSource = Some("logistics"),
+          decisionDetails = Some("laptop")
+        )
+      ) shouldBe Json.obj(
         "$text" -> Json.obj("$search" -> "smartphone logistics laptop")
       )
     }
@@ -316,8 +318,8 @@ class CaseSearchMapperSpec extends BaseMongoIndexSpec {
 
       jsonMapper.sortBy(sort) shouldBe Json.obj(
         "decision.bindingCommodityCode" -> -1,
-        "application.type" -> -1,
-        "createdDate" -> -1
+        "application.type"              -> -1,
+        "createdDate"                   -> -1
       )
     }
 

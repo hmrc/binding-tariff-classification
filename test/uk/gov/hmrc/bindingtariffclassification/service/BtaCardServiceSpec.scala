@@ -266,7 +266,7 @@ class BtaCardServiceSpec extends BaseSpec {
         )
 
       whenReady(service.generateBtaCard(eori)) { res =>
-        res.rulings.get.total shouldBe 5
+        res.rulings.get.total    shouldBe 5
         res.rulings.get.expiring shouldBe 2
       }
     }

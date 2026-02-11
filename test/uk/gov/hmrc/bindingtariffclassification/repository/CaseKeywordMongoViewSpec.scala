@@ -187,8 +187,8 @@ class CaseKeywordMongoViewSpec
 
       row.keyword   shouldBe "bike"
       row.reference shouldBe "0000001"
-      row.user  shouldBe Some("001")
-      row.goods shouldBe Some("HTC Wildfire smartphone")
+      row.user      shouldBe Some("001")
+      row.goods     shouldBe Some("HTC Wildfire smartphone")
       row.caseType  shouldBe ApplicationType.BTI
       row.status    shouldBe CaseStatus.OPEN
     }

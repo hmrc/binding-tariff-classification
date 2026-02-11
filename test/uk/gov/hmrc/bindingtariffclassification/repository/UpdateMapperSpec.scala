@@ -29,11 +29,11 @@ class UpdateMapperSpec extends AnyWordSpec with Matchers {
 
     "handle BTIUpdate with applicationPdf" in {
       val attachment = Attachment("id", public = true, None, Instant.now(), None)
-      val update = BTIUpdate(applicationPdf = SetValue(Some(attachment)))
+      val update     = BTIUpdate(applicationPdf = SetValue(Some(attachment)))
 
       val result = mapper.updateApplication(update)
 
-      result should not be empty
+      result           should not be empty
       result.head._1 shouldBe "application.applicationPdf"
     }
 
@@ -50,7 +50,7 @@ class UpdateMapperSpec extends AnyWordSpec with Matchers {
 
       val result = mapper.updateApplication(update)
 
-      result should not be empty
+      result           should not be empty
       result.head._1 shouldBe "application.traderName"
     }
   }

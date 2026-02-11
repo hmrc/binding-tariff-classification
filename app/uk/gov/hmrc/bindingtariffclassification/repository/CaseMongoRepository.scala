@@ -50,119 +50,111 @@ import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class CaseMongoRepository @Inject() (
-                                      appConfig: AppConfig,
-                                      mongoComponent: MongoComponent,
-                                      mapper: SearchMapper,
-                                      updateMapper: UpdateMapper
-                                    )(implicit ec: ExecutionContext)
-  extends PlayMongoRepository[Case](
-    collectionName = "cases",
-    mongoComponent = mongoComponent,
-    domainFormat = MongoFormatters.formatCase,
-    indexes = Seq(
-      IndexModel(
-        asc("reference"),
-        IndexOptions().unique(true).name("reference_Index")
-      ),
-      IndexModel(
-        asc("status"),
-        IndexOptions().name("status_Index")
-      ),
-
-      IndexModel(
-        asc("keywords"),
-        IndexOptions().name("keywords_Index")
-      ),
-      IndexModel(
-        asc("application.type"),
-        IndexOptions().name("application_type_Index")
-      ),
-
-      IndexModel(
-        Indexes.compoundIndex(
+  appConfig: AppConfig,
+  mongoComponent: MongoComponent,
+  mapper: SearchMapper,
+  updateMapper: UpdateMapper
+)(implicit ec: ExecutionContext)
+    extends PlayMongoRepository[Case](
+      collectionName = "cases",
+      mongoComponent = mongoComponent,
+      domainFormat = MongoFormatters.formatCase,
+      indexes = Seq(
+        IndexModel(
+          asc("reference"),
+          IndexOptions().unique(true).name("reference_Index")
+        ),
+        IndexModel(
+          asc("status"),
+          IndexOptions().name("status_Index")
+        ),
+        IndexModel(
+          asc("keywords"),
+          IndexOptions().name("keywords_Index")
+        ),
+        IndexModel(
           asc("application.type"),
-          asc("status"),
-          asc("decision.bindingCommodityCode")
+          IndexOptions().name("application_type_Index")
         ),
-        IndexOptions().name("search_main_compound_Index")
-      ),
-
-      IndexModel(
-        Indexes.compoundIndex(
-          asc("application.type"),
-          asc("status")
+        IndexModel(
+          Indexes.compoundIndex(
+            asc("application.type"),
+            asc("status"),
+            asc("decision.bindingCommodityCode")
+          ),
+          IndexOptions().name("search_main_compound_Index")
         ),
-        IndexOptions().name("type_status_Index")
-      ),
-
-      IndexModel(
-        Indexes.compoundIndex(
-          asc("status"),
-          asc("keywords")
+        IndexModel(
+          Indexes.compoundIndex(
+            asc("application.type"),
+            asc("status")
+          ),
+          IndexOptions().name("type_status_Index")
         ),
-        IndexOptions().name("status_keywords_Index")
-      ),
-      IndexModel(
-        Indexes.compoundIndex(
-          asc("status"),
-          desc("decision.effectiveEndDate")
+        IndexModel(
+          Indexes.compoundIndex(
+            asc("status"),
+            asc("keywords")
+          ),
+          IndexOptions().name("status_keywords_Index")
         ),
-        IndexOptions().name("status_effectiveEndDate_Index")
-      ),
-
-      IndexModel(
-        Indexes.compoundIndex(
-          asc("queueId"),
-          asc("status"),
-          asc("assignee.id")
+        IndexModel(
+          Indexes.compoundIndex(
+            asc("status"),
+            desc("decision.effectiveEndDate")
+          ),
+          IndexOptions().name("status_effectiveEndDate_Index")
         ),
-        IndexOptions().name("queue_status_assignee_Index")
-      ),
-
-      IndexModel(
-        desc("createdDate"),
-        IndexOptions().name("createdDate_Index")
-      ),
-
-      IndexModel(
-        asc("application.holder.eori"),
-        IndexOptions().name("application_holder_eori_Index")
-      ),
-      IndexModel(
-        asc("application.agent.eoriDetails.eori"),
-        IndexOptions().name("application_agent_eoriDetails_eori_Index")
-      ),
-
-      IndexModel(
-        asc("daysElapsed"),
-        IndexOptions().name("daysElapsed_Index")
-      ),
-      IndexModel(
-        Indexes.compoundIndex(
-          asc("decision.bindingCommodityCode"),
-          asc("application.type"),
-          asc("reference")
+        IndexModel(
+          Indexes.compoundIndex(
+            asc("queueId"),
+            asc("status"),
+            asc("assignee.id")
+          ),
+          IndexOptions().name("queue_status_assignee_Index")
         ),
-        IndexOptions().name("commodity_type_reference_sort_Index")
-      ),
-      IndexModel(
-        Document(
-          "application.goodName" -> "text",
-          "application.summary" -> "text",
-          "application.detailedDescription" -> "text",
-          "application.holder.businessName" -> "text",
-          "application.traderName" -> "text",
-          "application.correspondenceStarter" -> "text",
-          "application.contact.name" -> "text",
-          "decision.goodsDescription" -> "text",
-          "decision.methodCommercialDenomination" -> "text",
-          "decision.justification" -> "text"
+        IndexModel(
+          desc("createdDate"),
+          IndexOptions().name("createdDate_Index")
         ),
-        IndexOptions().name("comprehensive_text_Index")
-      )
-    ),
-    replaceIndexes = appConfig.replaceIndexes
-  )
+        IndexModel(
+          asc("application.holder.eori"),
+          IndexOptions().name("application_holder_eori_Index")
+        ),
+        IndexModel(
+          asc("application.agent.eoriDetails.eori"),
+          IndexOptions().name("application_agent_eoriDetails_eori_Index")
+        ),
+        IndexModel(
+          asc("daysElapsed"),
+          IndexOptions().name("daysElapsed_Index")
+        ),
+        IndexModel(
+          Indexes.compoundIndex(
+            asc("decision.bindingCommodityCode"),
+            asc("application.type"),
+            asc("reference")
+          ),
+          IndexOptions().name("commodity_type_reference_sort_Index")
+        ),
+        IndexModel(
+          Document(
+            "application.goodName"                  -> "text",
+            "application.summary"                   -> "text",
+            "application.detailedDescription"       -> "text",
+            "application.holder.businessName"       -> "text",
+            "application.traderName"                -> "text",
+            "application.correspondenceStarter"     -> "text",
+            "application.contact.name"              -> "text",
+            "decision.goodsDescription"             -> "text",
+            "decision.methodCommercialDenomination" -> "text",
+            "decision.justification"                -> "text"
+          ),
+          IndexOptions().name("comprehensive_text_Index")
+        )
+      ),
+      replaceIndexes = appConfig.replaceIndexes
+    )
     with CaseRepository
     with BaseMongoOperations[Case] {
 
@@ -193,7 +185,7 @@ class CaseMongoRepository @Inject() (
 
     val finalSort = search.sort match {
       case Some(cs) => toBson(mapper.sortBy(cs)).asDocument()
-      case None     => defaultSortBy 
+      case None     => defaultSortBy
     }
 
     countMany(filterBson, finalSort, pagination)
@@ -403,9 +395,9 @@ class CaseMongoRepository @Inject() (
   }
 
   private def sortStage(
-                         sortBy: ReportField[?],
-                         sortOrder: SortDirection.Value
-                       ) =
+    sortBy: ReportField[?],
+    sortOrder: SortDirection.Value
+  ) =
     ((sortOrder, sortBy): @unchecked) match {
       case (SortDirection.ASCENDING, ReportField.Reference) =>
         sort(ascending(sortBy.underlyingField))
@@ -527,9 +519,9 @@ class CaseMongoRepository @Inject() (
   }
 
   override def caseReport(
-                           report: CaseReport,
-                           pagination: Pagination
-                         ): Future[Paged[Map[String, ReportResultField[?]]]] = {
+    report: CaseReport,
+    pagination: Pagination
+  ): Future[Paged[Map[String, ReportResultField[?]]]] = {
     logger.info(s"[CaseMongoRepository][caseReport] Running report: $report with pagination $pagination")
 
     val futureCount = collection
@@ -609,9 +601,9 @@ class CaseMongoRepository @Inject() (
   }
 
   override def queueReport(
-                            report: QueueReport,
-                            pagination: Pagination
-                          ): Future[Paged[QueueResultGroup]] = {
+    report: QueueReport,
+    pagination: Pagination
+  ): Future[Paged[QueueResultGroup]] = {
     logger.info(s"[CaseMongoRepository][queueReport] Running report: $report with pagination $pagination")
 
     val rest = Seq(queueGroupStage, count(countField))

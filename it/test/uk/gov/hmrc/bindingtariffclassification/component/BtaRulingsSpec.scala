@@ -37,7 +37,7 @@ class BtaRulingsSpec extends AnyWordSpec with Matchers {
       val model = BtaRulings(total = 20, expiring = 8)
       val json  = Json.toJson(model)
 
-      json shouldBe Json.obj("total" -> 20, "expiring" -> 8)
+      json                shouldBe Json.obj("total" -> 20, "expiring" -> 8)
       json.as[BtaRulings] shouldBe model
     }
 
@@ -46,12 +46,12 @@ class BtaRulingsSpec extends AnyWordSpec with Matchers {
       val result    = Json.fromJson[BtaRulings](emptyJson)
 
       result.isError shouldBe true
-      result shouldBe a[JsError]
+      result         shouldBe a[JsError]
     }
 
     "fail to deserialize when types are incorrect" in {
       val badJson = Json.obj(
-        "total" -> "not-a-number",
+        "total"    -> "not-a-number",
         "expiring" -> true
       )
       val result = BtaRulings.format.reads(badJson)
@@ -61,7 +61,7 @@ class BtaRulingsSpec extends AnyWordSpec with Matchers {
 
     "handle null values by failing validation" in {
       val nullJson = Json.obj(
-        "total" -> JsNull,
+        "total"    -> JsNull,
         "expiring" -> 0
       )
 
@@ -77,8 +77,8 @@ class BtaRulingsSpec extends AnyWordSpec with Matchers {
 
     "cover the Apply and Block statements" in {
       val jsonString = """{"total":10,"expiring":3}"""
-      val expected = BtaRulings(total = 10, expiring = 3)
-      val result = Json.parse(jsonString).validate[BtaRulings]
+      val expected   = BtaRulings(total = 10, expiring = 3)
+      val result     = Json.parse(jsonString).validate[BtaRulings]
       result shouldBe JsSuccess(expected)
 
       val convertedJson = Json.toJson(expected)

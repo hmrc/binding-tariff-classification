@@ -37,13 +37,13 @@ class SearchMapper @Inject() (appConfig: AppConfig) extends Mapper {
 
     val sortMap = fields.flatMap { field =>
       val directionValue = toMongoDirection(field, sort.direction.id)
-      val mainField = toMongoField(field) -> Json.toJson(directionValue)
+      val mainField      = toMongoField(field) -> Json.toJson(directionValue)
 
       if (field == COMMODITY_CODE) {
         Seq(
           mainField,
           toMongoField(APPLICATION_TYPE) -> Json.toJson(directionValue),
-          toMongoField(CREATED_DATE) -> Json.toJson(directionValue),
+          toMongoField(CREATED_DATE)     -> Json.toJson(directionValue)
         )
       } else {
         Seq(mainField)
@@ -54,10 +54,10 @@ class SearchMapper @Inject() (appConfig: AppConfig) extends Mapper {
 
   def filterBy(filter: CaseFilter): JsObject = {
 
-    val caseDetailsVal = filter.caseDetails.toSeq
-    val caseSourceVal = filter.caseSource.toSeq
+    val caseDetailsVal    = filter.caseDetails.toSeq
+    val caseSourceVal     = filter.caseSource.toSeq
     val decisionDetailVal = filter.decisionDetails.toSeq
-    val activeTextValues = caseDetailsVal ++ caseSourceVal ++ decisionDetailVal
+    val activeTextValues  = caseDetailsVal ++ caseSourceVal ++ decisionDetailVal
 
     val textSearchFilter = if (activeTextValues.nonEmpty) {
       Some("$text" -> Json.obj("$search" -> activeTextValues.mkString(" ")))
@@ -72,47 +72,50 @@ class SearchMapper @Inject() (appConfig: AppConfig) extends Mapper {
         .filterNot(ids => ids.contains("some") && ids.contains("none"))
         .map(ids => "queueId" -> inArrayOrNone[String](ids)),
       filter.assigneeId.map(id => "assignee.id" -> mappingNoneOrSome(id)),
-
       if (filter.advanceSearch.getOrElse(false)) {
         Seq(
           filter.caseDetails.map(value =>
-            "$or" -> JsArray(Seq(
-              Json.obj("application.goodName" -> containsGuard(value)),
-              Json.obj("application.summary" -> containsGuard(value)),
-              Json.obj("application.detailedDescription" -> containsGuard(value))
-            ))
+            "$or" -> JsArray(
+              Seq(
+                Json.obj("application.goodName"            -> containsGuard(value)),
+                Json.obj("application.summary"             -> containsGuard(value)),
+                Json.obj("application.detailedDescription" -> containsGuard(value))
+              )
+            )
           ),
           filter.caseSource.map(value =>
-            "$or" -> JsArray(Seq(
-              Json.obj("application.holder.businessName" -> containsGuard(value)),
-              Json.obj("application.traderName" -> containsGuard(value))
-            ))
+            "$or" -> JsArray(
+              Seq(
+                Json.obj("application.holder.businessName" -> containsGuard(value)),
+                Json.obj("application.traderName"          -> containsGuard(value))
+              )
+            )
           ),
           filter.decisionDetails.map(value =>
-            "$or" -> JsArray(Seq(
-              Json.obj("decision.goodsDescription" -> containsGuard(value)),
-              Json.obj("decision.methodCommercialDenomination" -> containsGuard(value)),
-              Json.obj("decision.justification" -> containsGuard(value))
-            ))
+            "$or" -> JsArray(
+              Seq(
+                Json.obj("decision.goodsDescription"             -> containsGuard(value)),
+                Json.obj("decision.methodCommercialDenomination" -> containsGuard(value)),
+                Json.obj("decision.justification"                -> containsGuard(value))
+              )
+            )
           )
         ).flatten
       } else {
         Seq.empty
       },
-
       textSearchFilter,
-
       filter.minDecisionStart.map(start => "decision.effectiveStartDate" -> greaterThan(start)(formatInstant)),
       filter.minDecisionEnd.map(end => "decision.effectiveEndDate" -> greaterThan(end)(formatInstant)),
       filter.commodityCode.map(code => "decision.bindingCommodityCode" -> numberStartingWith(code)),
-
       filter.eori.map(e =>
-        "$or" -> JsArray(Seq(
-          Json.obj("application.holder.eori" -> JsString(e)),
-          Json.obj("application.agent.eoriDetails.eori" -> JsString(e))
-        ))
+        "$or" -> JsArray(
+          Seq(
+            Json.obj("application.holder.eori"            -> JsString(e)),
+            Json.obj("application.agent.eoriDetails.eori" -> JsString(e))
+          )
+        )
       ),
-
       filter.keywords.map(k => "keywords" -> containsAll(k)),
       filter.statuses.map(s => filteringByStatus(s, filter.advanceSearch)),
       filter.migrated.map(showMigrated => if (showMigrated) exists("dateOfExtract") else notExists("dateOfExtract"))
@@ -132,7 +135,7 @@ class SearchMapper @Inject() (appConfig: AppConfig) extends Mapper {
   }
 
   private def containsGuard(value: String): JsValue = Json.obj(
-    "$regex" -> value,
+    "$regex"   -> value,
     "$options" -> "i"
   )
 

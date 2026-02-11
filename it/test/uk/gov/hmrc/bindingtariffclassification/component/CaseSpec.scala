@@ -144,9 +144,6 @@ class CaseSpec extends BaseFeatureSpec {
   private val correspondenceCaseJson      = Json.toJson(correspondenceCase)
   private val miscCaseJson                = Json.toJson(miscCase)
 
-
-
-
   Feature("Delete All") {
 
     Scenario("Clear Collection") {
