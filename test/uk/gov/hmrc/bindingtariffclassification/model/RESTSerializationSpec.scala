@@ -499,20 +499,20 @@ class RESTSerializationSpec extends BaseSpec {
       import uk.gov.hmrc.bindingtariffclassification.model.MongoFormatters.formatSequence
 
       val sequence = Sequence(
-        _id = "ATaR",
+        name = "ATaR",
         value = 100
       )
 
       val json = Json.toJson(sequence)(formatSequence)
       json.shouldBe(Json.obj(
-        "_id" -> "ATaR",
+        "name" -> "ATaR",
         "value" -> 100
       ))
 
       val deserialized = json.as[Sequence](formatSequence)
       deserialized.shouldBe(sequence)
 
-      val rawJson = Json.parse("""{"_id":"ATaR","value":100}""")
+      val rawJson = Json.parse("""{"name":"ATaR","value":100}""")
       rawJson.as[Sequence](formatSequence).shouldBe(sequence)
     }
 
