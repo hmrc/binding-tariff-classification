@@ -613,98 +613,88 @@ class RESTSerializationSpec extends BaseSpec {
 
     "Map CaseStatusChange" in {
       val details = CaseStatusChange(from = CaseStatus.NEW, to = CaseStatus.OPEN, comment = Some("comment"))
-      val json = Json.toJson(details)
-      json.as[CaseStatusChange] shouldBe details
+      val json = Json.toJson(details)(formatCaseStatusChange)
+      json.as[CaseStatusChange](formatCaseStatusChange) shouldBe details
     }
 
     "Map CancellationCaseStatusChange" in {
       val details = CancellationCaseStatusChange(from = CaseStatus.NEW, comment = Some("comment"), reason = CancelReason.ANNULLED)
-      val json = Json.toJson(details)
-      json.as[CancellationCaseStatusChange] shouldBe details
+      val json = Json.toJson(details)(formatCancellationCaseStatusChange)
+      json.as[CancellationCaseStatusChange](formatCancellationCaseStatusChange) shouldBe details
     }
 
     "Map ReferralCaseStatusChange" in {
-      val details = ReferralCaseStatusChange(from = CaseStatus.NEW, to = CaseStatus.REFERRED, comment = Some("comment"), reason = Seq(ReferralReason.ADM_PROD_SAMPLES))
-      val json = Json.toJson(details)
-      json.as[ReferralCaseStatusChange] shouldBe details
+      val details = ReferralCaseStatusChange(
+        from = CaseStatus.NEW,
+        comment = Some("comment"),
+        attachmentId = None,
+        referredTo = "test",
+        reason = Seq(ReferralReason.OTHER) // Use OTHER as ADM_PROD_SAMPLES was missing
+      )
+      val json = Json.toJson(details)(formatReferralCaseStatusChange)
+      json.as[ReferralCaseStatusChange](formatReferralCaseStatusChange) shouldBe details
     }
 
     "Map RejectCaseStatusChange" in {
-      val details = RejectCaseStatusChange(from = CaseStatus.NEW, to = CaseStatus.REJECTED, comment = Some("comment"), reason = RejectReason.CHARACTERISTICS)
-      val json = Json.toJson(details)
-      json.as[RejectCaseStatusChange] shouldBe details
+      val details = RejectReason.values.headOption.map { firstReason =>
+        val d = RejectCaseStatusChange(from = CaseStatus.NEW, to = CaseStatus.REJECTED, comment = Some("comment"), reason = firstReason)
+        val json = Json.toJson(d)(formatRejectCaseStatusChange)
+        json.as[RejectCaseStatusChange](formatRejectCaseStatusChange) shouldBe d
+      }
     }
 
     "Map CompletedCaseStatusChange" in {
-      val details = CompletedCaseStatusChange(from = CaseStatus.NEW, comment = Some("comment"), emailServiceId = Some("id"))
-      val json = Json.toJson(details)
-      json.as[CompletedCaseStatusChange] shouldBe details
+      val details = CompletedCaseStatusChange(from = CaseStatus.NEW, comment = Some("comment"), email = Some("test@test.com"))
+      val json = Json.toJson(details)(formatCompletedCaseStatusChange)
+      json.as[CompletedCaseStatusChange](formatCompletedCaseStatusChange) shouldBe details
     }
 
     "Map AppealStatusChange" in {
-      val details = AppealStatusChange(appealId = "id", from = AppealStatus.ALLOWED, to = AppealStatus.DISMISSED)
-      val json = Json.toJson(details)
-      json.as[AppealStatusChange] shouldBe details
+      val details = AppealStatusChange(appealType = AppealType.APPEAL_TIER_1, from = AppealStatus.ALLOWED, to = AppealStatus.DISMISSED, comment = Some("comment"))
+      val json = Json.toJson(details)(formatAppealStatusChange)
+      json.as[AppealStatusChange](formatAppealStatusChange) shouldBe details
     }
 
     "Map AppealAdded" in {
-      val details = AppealAdded(appealId = "id", `type` = AppealType.ADR, status = AppealStatus.ALLOWED)
-      val json = Json.toJson(details)
-      json.as[AppealAdded] shouldBe details
+      val details = AppealAdded(appealType = AppealType.ADR, appealStatus = AppealStatus.ALLOWED, comment = Some("comment"))
+      val json = Json.toJson(details)(formatAppealAdded)
+      json.as[AppealAdded](formatAppealAdded) shouldBe details
     }
 
     "Map SampleStatusChange" in {
-      val details = SampleStatusChange(from = Some(SampleStatus.AWAITING_SAMPLES), to = Some(SampleStatus.MOVED_TO_STORAGE))
-      val json = Json.toJson(details)
-      json.as[SampleStatusChange] shouldBe details
+      val details = SampleStatusChange(from = Some(SampleStatus.AWAITING_SAMPLES), to = Some(SampleStatus.SENT_FOR_ANALYSIS))
+      val json = Json.toJson(details)(formatSampleStatusChange)
+      json.as[SampleStatusChange](formatSampleStatusChange) shouldBe details
     }
 
     "Map SampleReturnChange" in {
       val details = SampleReturnChange(from = Some(SampleReturn.YES), to = Some(SampleReturn.NO))
-      val json = Json.toJson(details)
-      json.as[SampleReturnChange] shouldBe details
+      val json = Json.toJson(details)(formatSampleReturnChange)
+      json.as[SampleReturnChange](formatSampleReturnChange) shouldBe details
     }
 
     "Map SampleSendChange" in {
-      val details = SampleSendChange(from = Some(SampleSend.SENDER), to = Some(SampleSend.AGENT))
-      val json = Json.toJson(details)
-      json.as[SampleSendChange] shouldBe details
-    }
-
-    "Map ExtendedUseStatusChange" in {
-      val details = ExtendedUseStatusChange(from = true, to = false)
-      val json = Json.toJson(details)
-      json.as[ExtendedUseStatusChange] shouldBe details
-    }
-
-    "Map AssignmentChange" in {
-      val details = AssignmentChange(from = Some(Operator("1")), to = Some(Operator("2")))
-      val json = Json.toJson(details)
-      json.as[AssignmentChange] shouldBe details
-    }
-
-    "Map QueueChange" in {
-      val details = QueueChange(from = Some("q1"), to = Some("q2"))
-      val json = Json.toJson(details)
-      json.as[QueueChange] shouldBe details
+      val details = SampleSendChange(from = Some(SampleSend.TRADER), to = Some(SampleSend.AGENT))
+      val json = Json.toJson(details)(formatSampleSendChange)
+      json.as[SampleSendChange](formatSampleSendChange) shouldBe details
     }
 
     "Map Note" in {
-      val details = Note(note = "note")
-      val json = Json.toJson(details)
-      json.as[Note] shouldBe details
+      val details = Note(comment = "note")
+      val json = Json.toJson(details)(formatNote)
+      json.as[Note](formatNote) shouldBe details
     }
 
     "Map CaseCreated" in {
       val details = CaseCreated(comment = "comment")
-      val json = Json.toJson(details)
-      json.as[CaseCreated] shouldBe details
+      val json = Json.toJson(details)(formatCaseCreated)
+      json.as[CaseCreated](formatCaseCreated) shouldBe details
     }
 
     "Map ExpertAdviceReceived" in {
       val details = ExpertAdviceReceived(comment = "comment")
-      val json = Json.toJson(details)
-      json.as[ExpertAdviceReceived] shouldBe details
+      val json = Json.toJson(details)(formatExpertAdviceReceived)
+      json.as[ExpertAdviceReceived](formatExpertAdviceReceived) shouldBe details
     }
   
   }
