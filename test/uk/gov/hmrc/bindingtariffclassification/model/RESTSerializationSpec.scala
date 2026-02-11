@@ -20,6 +20,7 @@ import cats.data.NonEmptySeq
 import play.api.libs.json.Json
 import uk.gov.hmrc.bindingtariffclassification.base.BaseSpec
 import uk.gov.hmrc.bindingtariffclassification.model.RESTFormatters.{formatAgentDetails, formatAppeal, formatAppealAdded, formatAppealStatusChange, formatAssignmentChange, formatAttachment, formatBTIApplication, formatCancellation, formatCancellationCaseStatusChange, formatCaseKeyword, formatCaseResultGroup, formatCaseStatusChange, formatCaseTypeField, formatCaseTypeResultField, formatChapterField, formatCompletedCaseStatusChange, formatContact, formatCorrespondence, formatDateField, formatDateResultField, formatDaysSinceField, formatEORIDetails, formatEvent, formatExtendedUseStatusChange, formatLiabilityOrder, formatLiabilityStatusField, formatLiabilityStatusResultField, formatMisc, formatNote, formatNumberField, formatNumberResultField, formatOperator, formatQueueChange, formatQueueResultGroup, formatReferralCaseStatusChange, formatRejectCaseStatusChange, formatSample, formatSampleReturnChange, formatSampleSendChange, formatSampleStatusChange, formatSimpleResultGroup, formatStatusField, formatStatusResultField, formatStringField, formatStringResultField, messageLoggedFormat}
+import uk.gov.hmrc.bindingtariffclassification.model.MongoFormatters.{formatKeywords, formatSequence}
 import uk.gov.hmrc.bindingtariffclassification.model.reporting.{CaseResultGroup, CaseTypeField, CaseTypeResultField, ChapterField, DateField, DateResultField, DaysSinceField, LiabilityStatusField, LiabilityStatusResultField, NumberField, NumberResultField, QueueResultGroup, SimpleResultGroup, StatusField, StatusResultField, StringField, StringResultField}
 import util.Cases.btiCaseForFormatters
 
@@ -471,6 +472,48 @@ class RESTSerializationSpec extends BaseSpec {
       val deserialized = json.as[CaseKeywordRow]
 
       deserialized.shouldBe(caseKeywordRow)
+    }
+
+    "Serialize and Deserialize JSON for Keywords" in {
+      import uk.gov.hmrc.bindingtariffclassification.model.MongoFormatters.formatKeywords
+
+      val keyword = Keyword(
+        name = "BIKE",
+        approved = true
+      )
+
+      val json = Json.toJson(keyword)(formatKeywords)
+      json.shouldBe(Json.obj(
+        "name" -> "BIKE",
+        "approved" -> true
+      ))
+
+      val deserialized = json.as[Keyword](formatKeywords)
+      deserialized.shouldBe(keyword)
+
+      val rawJson = Json.parse("""{"name":"BIKE","approved":true}""")
+      rawJson.as[Keyword](formatKeywords).shouldBe(keyword)
+    }
+
+    "Serialize and Deserialize JSON for Sequence" in {
+      import uk.gov.hmrc.bindingtariffclassification.model.MongoFormatters.formatSequence
+
+      val sequence = Sequence(
+        _id = "ATaR",
+        value = 100
+      )
+
+      val json = Json.toJson(sequence)(formatSequence)
+      json.shouldBe(Json.obj(
+        "_id" -> "ATaR",
+        "value" -> 100
+      ))
+
+      val deserialized = json.as[Sequence](formatSequence)
+      deserialized.shouldBe(sequence)
+
+      val rawJson = Json.parse("""{"_id":"ATaR","value":100}""")
+      rawJson.as[Sequence](formatSequence).shouldBe(sequence)
     }
 
     "Serialize and Deserialize JSON for CaseKeyword" in {
