@@ -706,6 +706,6 @@ class RESTSerializationSpec extends BaseSpec {
       val json = Json.toJson(details)
       json.as[ExpertAdviceReceived] shouldBe details
     }
-  }
+  
   }
 }
