@@ -138,15 +138,6 @@ class CaseMongoRepository @Inject() (
           IndexOptions().name("commodity_type_reference_sort_Index")
         ),
         IndexModel(
-          Indexes.compoundIndex(
-            asc("decision.bindingCommodityCode"),
-            asc("application.type"),
-            desc("createdDate"),
-            asc("reference")
-          ),
-          IndexOptions().name("commodity_type_createdDate_reference_sort_Index")
-        ),
-        IndexModel(
           Document(
             "application.goodName"                  -> "text",
             "application.summary"                   -> "text",
