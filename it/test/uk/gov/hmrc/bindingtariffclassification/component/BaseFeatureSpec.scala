@@ -78,6 +78,9 @@ abstract class BaseFeatureSpec
   override protected def beforeEach(): Unit = {
     super.beforeEach()
     dropStores()
+    result(caseStore.collection.dropIndexes().toFuture(), timeout)
+    result(eventStore.collection.dropIndexes().toFuture(), timeout)
+    result(sequenceStore.collection.dropIndexes().toFuture(), timeout)
     result(caseStore.ensureIndexes(), timeout)
     result(eventStore.ensureIndexes(), timeout)
     result(sequenceStore.ensureIndexes(), timeout)
