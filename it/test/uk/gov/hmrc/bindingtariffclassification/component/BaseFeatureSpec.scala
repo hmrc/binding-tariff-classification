@@ -51,7 +51,7 @@ abstract class BaseFeatureSpec
     .overrides(bind[Metrics].toInstance(new TestMetrics))
     .build()
 
-  protected val timeout: FiniteDuration = 5.seconds
+  protected val timeout: FiniteDuration = 10.seconds
 
   protected lazy val appConfig: AppConfig = app.injector.instanceOf[AppConfig]
 

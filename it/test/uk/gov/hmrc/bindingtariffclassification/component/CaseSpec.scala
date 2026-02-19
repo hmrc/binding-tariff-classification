@@ -1268,9 +1268,19 @@ class CaseSpec extends BaseFeatureSpec {
 
     val caseWithEmptyCommCode = adaptCaseInstantFormat(createCase().copy(decision = None))
     val caseY1 =
-      adaptCaseInstantFormat(createCase().copy(decision = Some(createDecision(bindingCommodityCode = "777"))))
+      adaptCaseInstantFormat(
+        createCase().copy(
+          createdDate = Instant.now().minus(1, ChronoUnit.HOURS),
+          decision = Some(createDecision(bindingCommodityCode = "777"))
+        )
+      )
     val caseY2 =
-      adaptCaseInstantFormat(createCase().copy(decision = Some(createDecision(bindingCommodityCode = "777"))))
+      adaptCaseInstantFormat(
+        createCase().copy(
+          createdDate = Instant.now().minus(2, ChronoUnit.HOURS),
+          decision = Some(createDecision(bindingCommodityCode = "777"))
+        )
+      )
     val caseZ =
       adaptCaseInstantFormat(createCase().copy(decision = Some(createDecision(bindingCommodityCode = "1111111111"))))
 
@@ -1307,7 +1317,7 @@ class CaseSpec extends BaseFeatureSpec {
       result.status.intValue shouldEqual OK
 
       And("The expected cases are returned in the JSON response")
-      Json.parse(result.body) shouldBe Json.toJson(Paged(Seq(caseWithEmptyCommCode, caseZ, caseY1, caseY2)))
+      Json.parse(result.body) shouldBe Json.toJson(Paged(Seq(caseWithEmptyCommCode, caseZ, caseY2, caseY1)))
     }
 
     Scenario("Sorting in descending order") {
@@ -1325,7 +1335,7 @@ class CaseSpec extends BaseFeatureSpec {
       result.status.intValue shouldEqual OK
 
       And("The expected cases are returned in the JSON response")
-      Json.parse(result.body) shouldBe Json.toJson(Paged(Seq(caseY2, caseY1, caseZ, caseWithEmptyCommCode)))
+      Json.parse(result.body) shouldBe Json.toJson(Paged(Seq(caseY1, caseY2, caseZ, caseWithEmptyCommCode)))
     }
 
   }
