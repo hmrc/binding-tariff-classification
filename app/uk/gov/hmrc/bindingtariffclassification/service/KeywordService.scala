@@ -43,7 +43,7 @@ class KeywordService @Inject() (
   def deleteKeyword(name: String): Future[Unit] =
     keywordRepository.delete(name)
 
-  def fetchCaseKeywords(pagination: Pagination): Future[Paged[CaseKeyword]] =
+  def fetchCaseKeywords(pagination: Pagination): Future[Paged[CaseKeywordRow]] =
     caseKeywordAggregation.fetchKeywordsFromCases(pagination)
 
 }

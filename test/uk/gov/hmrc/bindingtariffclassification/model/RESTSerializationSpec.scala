@@ -19,9 +19,12 @@ package uk.gov.hmrc.bindingtariffclassification.model
 import cats.data.NonEmptySeq
 import play.api.libs.json.Json
 import uk.gov.hmrc.bindingtariffclassification.base.BaseSpec
-import uk.gov.hmrc.bindingtariffclassification.model.RESTFormatters.{formatAgentDetails, formatAppeal, formatAppealAdded, formatAppealStatusChange, formatAssignmentChange, formatAttachment, formatBTIApplication, formatCancellation, formatCancellationCaseStatusChange, formatCaseHeader, formatCaseKeyword, formatCaseResultGroup, formatCaseStatusChange, formatCaseTypeField, formatCaseTypeResultField, formatChapterField, formatCompletedCaseStatusChange, formatContact, formatCorrespondence, formatDateField, formatDateResultField, formatDaysSinceField, formatEORIDetails, formatEvent, formatExtendedUseStatusChange, formatLiabilityOrder, formatLiabilityStatusField, formatLiabilityStatusResultField, formatMisc, formatNote, formatNumberField, formatNumberResultField, formatOperator, formatQueueChange, formatQueueResultGroup, formatReferralCaseStatusChange, formatRejectCaseStatusChange, formatSample, formatSampleReturnChange, formatSampleSendChange, formatSampleStatusChange, formatSimpleResultGroup, formatStatusField, formatStatusResultField, formatStringField, formatStringResultField, messageLoggedFormat}
+import uk.gov.hmrc.bindingtariffclassification.model.RESTFormatters.{formatAgentDetails, formatAppeal, formatAppealAdded, formatAppealStatusChange, formatAssignmentChange, formatAttachment, formatBTIApplication, formatCancellation, formatCancellationCaseStatusChange, formatCaseKeyword, formatCaseResultGroup, formatCaseStatusChange, formatCaseTypeField, formatCaseTypeResultField, formatChapterField, formatCompletedCaseStatusChange, formatContact, formatCorrespondence, formatDateField, formatDateResultField, formatDaysSinceField, formatEORIDetails, formatEvent, formatExtendedUseStatusChange, formatLiabilityOrder, formatLiabilityStatusField, formatLiabilityStatusResultField, formatMisc, formatNote, formatNumberField, formatNumberResultField, formatOperator, formatQueueChange, formatQueueResultGroup, formatReferralCaseStatusChange, formatRejectCaseStatusChange, formatSample, formatSampleReturnChange, formatSampleSendChange, formatSampleStatusChange, formatSimpleResultGroup, formatStatusField, formatStatusResultField, formatStringField, formatStringResultField, messageLoggedFormat}
+import uk.gov.hmrc.bindingtariffclassification.model.MongoFormatters.{formatKeywords, formatSequence}
 import uk.gov.hmrc.bindingtariffclassification.model.reporting.{CaseResultGroup, CaseTypeField, CaseTypeResultField, ChapterField, DateField, DateResultField, DaysSinceField, LiabilityStatusField, LiabilityStatusResultField, NumberField, NumberResultField, QueueResultGroup, SimpleResultGroup, StatusField, StatusResultField, StringField, StringResultField}
 import util.Cases.btiCaseForFormatters
+import uk.gov.hmrc.bindingtariffclassification.model.bta.BtaRulings
+import play.api.libs.json.{JsError, JsNull, JsSuccess, Json}
 
 import java.time.Instant
 
@@ -69,18 +72,16 @@ class RESTSerializationSpec extends BaseSpec {
 
   private val agentDetails = AgentDetails(eoriDetails = eoriDetails, letterOfAuthorisation = Option(attachment))
 
-  private val caseH = CaseHeader(
+  private val caseKeywordRow = CaseKeywordRow(
+    keyword = "Tom",
     reference = "ref1",
-    assignee = Option(operator),
-    team = Option("custodians"),
-    goodsName = Option("shorts"),
+    user = Some("operatorId"),
+    goods = Some("shorts"),
     caseType = ApplicationType.BTI,
     status = CaseStatus.REFERRED,
-    daysElapsed = 5L,
-    liabilityStatus = Option(LiabilityStatus.LIVE)
+    liabilityStatus = Some(LiabilityStatus.LIVE),
+    daysElapsed = 45L
   )
-
-  private val caseK = CaseKeyword(keyword = Keyword(name = "Tom", approved = true), cases = List(caseH))
 
   "Details" should {
 
@@ -469,17 +470,62 @@ class RESTSerializationSpec extends BaseSpec {
       deserialized.shouldBe(field)
     }
     "Serialize and Deserialize JSON for CaseHeader" in {
-      val json         = Json.toJson(caseH)
-      val deserialized = json.as[CaseHeader]
+      val json         = Json.toJson(caseKeywordRow)
+      val deserialized = json.as[CaseKeywordRow]
 
-      deserialized.shouldBe(caseH)
+      deserialized.shouldBe(caseKeywordRow)
+    }
+
+    "Serialize and Deserialize JSON for Keywords" in {
+      import uk.gov.hmrc.bindingtariffclassification.model.MongoFormatters.formatKeywords
+
+      val keyword = Keyword(
+        name = "BIKE",
+        approved = true
+      )
+
+      val json = Json.toJson(keyword)(formatKeywords)
+      json shouldBe Json.obj(
+        "name"     -> "BIKE",
+        "approved" -> true
+      )
+
+      val deserialized = json.as[Keyword](formatKeywords)
+      deserialized shouldBe keyword
+
+      val rawJson = Json.parse("""{"name":"BIKE","approved":true}""")
+      rawJson.as[Keyword](formatKeywords) shouldBe keyword
+    }
+
+    "Serialize and Deserialize JSON for Sequence" in {
+      import uk.gov.hmrc.bindingtariffclassification.model.MongoFormatters.formatSequence
+
+      val sequence = Sequence(
+        name = "ATaR",
+        value = 100L
+      )
+
+      val json = Json.toJson(sequence)(formatSequence)
+      json shouldBe Json.obj(
+        "name"  -> "ATaR",
+        "value" -> 100
+      )
+
+      val deserialized = json.as[Sequence](formatSequence)
+      deserialized.name  shouldBe sequence.name
+      deserialized.value shouldBe sequence.value
+
+      val rawJson = Json.parse("""{"name":"ATaR","value":100}""")
+      val fromRaw = rawJson.as[Sequence](formatSequence)
+      fromRaw.name  shouldBe sequence.name
+      fromRaw.value shouldBe sequence.value
     }
 
     "Serialize and Deserialize JSON for CaseKeyword" in {
-      val json         = Json.toJson(caseK)
-      val deserialized = json.as[CaseKeyword]
+      val json         = Json.toJson(caseKeywordRow)
+      val deserialized = json.as[CaseKeywordRow]
 
-      deserialized.shouldBe(caseK)
+      deserialized.shouldBe(caseKeywordRow)
     }
 
     "Serialize and Deserialize JSON for CancellationCaseStatusChange" in {
@@ -566,5 +612,48 @@ class RESTSerializationSpec extends BaseSpec {
 
       deserialized.shouldBe(group)
     }
+
+    "BtaRulings Formatter" should {
+
+      "write BtaRulings to JSON correctly" in {
+        val rulings = BtaRulings(total = 10, expiring = 5)
+        // Call the writes directly to ensure coverage on the format line
+        val json = BtaRulings.format.writes(rulings)
+
+        json shouldBe Json.obj(
+          "total"    -> 10,
+          "expiring" -> 5
+        )
+      }
+
+      "read BtaRulings from valid JSON" in {
+        val json = Json.obj("total" -> 20, "expiring" -> 2)
+        // Explicitly calling reads on the format object
+        val result = BtaRulings.format.reads(json)
+
+        result shouldBe JsSuccess(BtaRulings(total = 20, expiring = 2))
+      }
+
+      "fail to read from null JSON" in {
+        // Testing the "null" edge case for coverage
+        val result = BtaRulings.format.reads(JsNull)
+
+        result.isError shouldBe true
+      }
+
+      "fail to read from empty object" in {
+        val result = BtaRulings.format.reads(Json.obj())
+
+        result.isError shouldBe true
+      }
+
+      "fail to read when types are incorrect (e.g. String instead of Int)" in {
+        val json   = Json.obj("total" -> "10", "expiring" -> "5")
+        val result = BtaRulings.format.reads(json)
+
+        result.isError shouldBe true
+      }
+    }
+
   }
 }

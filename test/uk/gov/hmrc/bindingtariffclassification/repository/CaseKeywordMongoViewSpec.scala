@@ -46,43 +46,18 @@ class CaseKeywordMongoViewSpec
 
   private val secondsInAYear = 3600 * 24 * 365
 
-  private val btiCaseHeader = CaseHeader(
-    reference = "0000001",
-    Some(Operator("001", None, None, CLASSIFICATION_OFFICER, List(), List())),
-    Some("3"),
-    Some("HTC Wildfire smartphone"),
-    ApplicationType.BTI,
-    CaseStatus.OPEN,
-    0,
-    None
-  )
-
-  private val liabilityCaseHeader = CaseHeader(
-    reference = "0000002",
-    Some(Operator("002", None, None, CLASSIFICATION_OFFICER, List(), List())),
-    Some("3"),
-    Some("Hair dryer"),
-    ApplicationType.LIABILITY_ORDER,
-    CaseStatus.OPEN,
-    0,
-    Some(LiabilityStatus.LIVE)
-  )
-
-  private val caseKeywordBike = CaseKeyword(Keyword("bike"), List(btiCaseHeader, liabilityCaseHeader))
-  private val caseKeywordTool = CaseKeyword(Keyword("tool"), List(liabilityCaseHeader))
-  private val caseKeywordCar  = CaseKeyword(Keyword("car"), List(liabilityCaseHeader))
-
   private val caseWithKeywordsBTI: Case =
     Case(
       reference = "0000001",
       status = CaseStatus.OPEN,
       createdDate = Instant.now.minusSeconds(secondsInAYear),
       queueId = Some("3"),
-      assignee = Some(Operator("001")),
-      application = createBasicBTIApplication,
+      assignee = Some(Operator("001", name = Some("001"), Some("Officer 1"), CLASSIFICATION_OFFICER, List(), List())),
+      application = createBasicBTIApplication.copy(goodName = "HTC Wildfire smartphone"),
       decision = Some(createDecision()),
       attachments = Seq.empty,
-      keywords = Set(caseKeywordBike.keyword.name)
+      keywords = Set("bike"),
+      daysElapsed = 365
     )
 
   private val caseWithKeywordsLiability: Case =
@@ -91,11 +66,11 @@ class CaseKeywordMongoViewSpec
       status = CaseStatus.OPEN,
       createdDate = Instant.now.minusSeconds(1 * secondsInAYear),
       queueId = Some("3"),
-      assignee = Some(Operator("002")),
-      application = createLiabilityOrder,
+      assignee = Some(Operator("002", None, Some("Officer 2"), CLASSIFICATION_OFFICER, List(), List())),
+      application = createLiabilityOrder.copy(goodName = Some("Hair dryer")),
       decision = Some(createDecision()),
       attachments = Seq.empty,
-      keywords = Set(caseKeywordBike.keyword.name, caseKeywordTool.keyword.name)
+      keywords = Set("bike", "tool")
     )
 
   private val caseWithKeywordsLiability2: Case =
@@ -104,16 +79,18 @@ class CaseKeywordMongoViewSpec
       status = CaseStatus.OPEN,
       createdDate = Instant.now.minusSeconds(1 * secondsInAYear),
       queueId = Some("3"),
-      assignee = Some(Operator("003")),
-      application = createLiabilityOrder,
+      assignee = Some(Operator("003", None, Some("Officer 3"), CLASSIFICATION_OFFICER, List(), List())),
+      application = createLiabilityOrder.copy(goodName = Some("Car parts")),
       decision = Some(createDecision()),
       attachments = Seq.empty,
-      keywords = Set(caseKeywordTool.keyword.name, caseKeywordCar.keyword.name)
+      keywords = Set("tool", "car")
     )
 
   override def beforeEach(): Unit = {
     super.beforeEach()
     deleteAll()
+    await(view.initView)
+    ()
   }
 
   override def afterAll(): Unit = {
@@ -134,7 +111,6 @@ class CaseKeywordMongoViewSpec
   "CaseKeywordMongoView" should {
 
     "dropView will drop the view" in {
-
       val result                = view.dropView(view.caseKeywordsViewName)
       val futureCollectionNames = await(result).flatMap(_ => mongoComponent.database.listCollectionNames().toFuture())
 
@@ -164,31 +140,57 @@ class CaseKeywordMongoViewSpec
       await(futureViewCount) mustBe 0
     }
 
-    "fetchKeywordsFromCases should return keywords from the Cases" in {
+    "fetchKeywordsFromCases should return flat keyword rows" in {
       await(repo.insert(caseWithKeywordsBTI))
       await(repo.insert(caseWithKeywordsLiability))
 
       collectionSize shouldBe 2
 
-      val expected = Seq(caseKeywordBike, caseKeywordTool)
+      val result = await(view.fetchKeywordsFromCases(pagination))
 
-      await(view.fetchKeywordsFromCases(pagination)).results contains expected
+      result.resultCount shouldBe 3
+
+      val keywords = result.results.map(_.keyword).toSet
+      keywords shouldBe Set("bike", "tool")
+
+      result.results.count(_.keyword == "bike") shouldBe 2
+
+      val references = result.results.map(_.reference).toSet
+      references shouldBe Set("0000001", "0000002")
     }
 
-    "fetchKeywordsFromCases should return keywords from the Cases and then insert one more" in {
+    "fetchKeywordsFromCases should handle pagination correctly" in {
       await(repo.insert(caseWithKeywordsBTI))
       await(repo.insert(caseWithKeywordsLiability))
-      collectionSize shouldBe 2
-      val expected = Seq(caseKeywordBike, caseKeywordTool)
-
-      await(view.fetchKeywordsFromCases(pagination)).results contains expected
-
       await(repo.insert(caseWithKeywordsLiability2))
-      collectionSize shouldBe 3
-      val expected2 = Seq(caseKeywordBike, caseKeywordTool, caseKeywordCar)
 
-      await(view.fetchKeywordsFromCases(pagination)).results contains expected2
+      collectionSize shouldBe 3
+
+      val page1 = await(view.fetchKeywordsFromCases(Pagination(page = 1, pageSize = 2)))
+      page1.results.size shouldBe 2
+      page1.resultCount  shouldBe 5
+
+      val page2 = await(view.fetchKeywordsFromCases(Pagination(page = 2, pageSize = 2)))
+      page2.results.size shouldBe 2
+      page2.resultCount  shouldBe 5
+
+      val page3 = await(view.fetchKeywordsFromCases(Pagination(page = 3, pageSize = 2)))
+      page3.results.size shouldBe 1
+      page3.resultCount  shouldBe 5
     }
 
+    "fetchKeywordsFromCases should return correct structure for flat rows" in {
+      await(repo.insert(caseWithKeywordsBTI))
+
+      val result = await(view.fetchKeywordsFromCases(pagination))
+      val row    = result.results.head
+
+      row.keyword   shouldBe "bike"
+      row.reference shouldBe "0000001"
+      row.user  shouldBe Some("001")
+      row.goods shouldBe Some("HTC Wildfire smartphone")
+      row.caseType  shouldBe ApplicationType.BTI
+      row.status    shouldBe CaseStatus.OPEN
+    }
   }
 }

@@ -16,9 +16,18 @@
 
 package uk.gov.hmrc.bindingtariffclassification.model
 
+import uk.gov.hmrc.bindingtariffclassification.model.ApplicationType.ApplicationType
 import uk.gov.hmrc.bindingtariffclassification.model.LiabilityStatus.LiabilityStatus
 
-case class Keyword(
-  name: String,
-  approved: Boolean = false
+import java.time.Instant
+
+case class CaseKeywordRow(
+ keyword: String,
+ reference: String,
+ user: Option[String],
+ goods: Option[String],
+ caseType: ApplicationType,
+ status: CaseStatus.Value,
+ liabilityStatus: Option[LiabilityStatus],
+ daysElapsed: Long
 )

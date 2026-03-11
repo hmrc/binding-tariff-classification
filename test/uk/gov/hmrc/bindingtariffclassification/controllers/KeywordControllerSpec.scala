@@ -32,8 +32,8 @@ import uk.gov.hmrc.bindingtariffclassification.service.KeywordService
 import uk.gov.hmrc.http.HttpVerbs
 import util.{CaseData, DatabaseException}
 
+import java.time.Instant
 import scala.concurrent.Future._
-
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class KeywordControllerSpec extends BaseSpec with BeforeAndAfterEach {
@@ -46,19 +46,27 @@ class KeywordControllerSpec extends BaseSpec with BeforeAndAfterEach {
   private val keyword2: Keyword                    = CaseData.createKeyword()
   private val pagination                           = Pagination()
 
-  private val caseHeader = CaseHeader(
+  private val caseKeywordRow1 = CaseKeywordRow(
+    keyword = "tool",
     reference = "9999999999",
-    Some(Operator("0", None, None, CLASSIFICATION_OFFICER, List(), List())),
-    Some("3"),
-    Some("Smartphone"),
-    ApplicationType.BTI,
-    CaseStatus.OPEN,
-    0,
-    None
+    user = Some("0"),
+    goods = Some("Smartphone"),
+    caseType = ApplicationType.BTI,
+    status = CaseStatus.OPEN,
+    liabilityStatus = None,
+    daysElapsed = 10L
   )
 
-  private val caseKeyword  = CaseKeyword(Keyword("tool"), List(caseHeader))
-  private val caseKeyword2 = CaseKeyword(Keyword("bike"), List(caseHeader))
+  private val caseKeywordRow2 = CaseKeywordRow(
+    keyword = "bike",
+    reference = "9999999999",
+    user = Some("0"),
+    goods = Some("Smartphone"),
+    caseType = ApplicationType.BTI,
+    status = CaseStatus.OPEN,
+    liabilityStatus = None,
+    daysElapsed = 10L
+  )
 
   private val keywordService = mock[KeywordService]
   private val appConfig      = mock[AppConfig]
@@ -71,7 +79,7 @@ class KeywordControllerSpec extends BaseSpec with BeforeAndAfterEach {
 
     val req = FakeRequest(method = HttpVerbs.DELETE, path = "/keyword/name")
 
-    "return 204 idf the test mode is enabled" in {
+    "return 204 if the test mode is enabled" in {
       when(keywordService.deleteKeyword(refEq("name"))).thenReturn(successful(()))
 
       val result = controller.deleteKeyword("name")(req).futureValue
@@ -201,24 +209,24 @@ class KeywordControllerSpec extends BaseSpec with BeforeAndAfterEach {
   }
 
   "fetchCaseKeywords" should {
-    "return 200 with the all cases that contain keywords from the collection" in {
+    "return 200 with all flat keyword rows from the collection" in {
       when(keywordService.fetchCaseKeywords(refEq(pagination)))
-        .thenReturn(successful(Paged(Seq(caseKeyword, caseKeyword2))))
+        .thenReturn(successful(Paged(Seq(caseKeywordRow1, caseKeywordRow2))))
 
       val result = controller.fetchCaseKeywords(pagination)(fakeRequest)
 
       status(result)        shouldBe OK
-      contentAsJson(result) shouldBe toJson(Paged(Seq(caseKeyword, caseKeyword2)))
+      contentAsJson(result) shouldBe toJson(Paged(Seq(caseKeywordRow1, caseKeywordRow2)))
     }
 
-    "return 200 with an empty sequence if there are no cases containing keywords" in {
+    "return 200 with an empty sequence if there are no keyword rows" in {
       when(keywordService.fetchCaseKeywords(refEq(pagination)))
-        .thenReturn(successful(Paged.empty[CaseKeyword]))
+        .thenReturn(successful(Paged.empty[CaseKeywordRow]))
 
       val result = controller.fetchCaseKeywords(pagination)(fakeRequest)
 
       status(result)        shouldBe OK
-      contentAsJson(result) shouldBe toJson(Paged.empty[CaseKeyword])
+      contentAsJson(result) shouldBe toJson(Paged.empty[CaseKeywordRow])
     }
 
     "return 500 when an error occurred" in {
