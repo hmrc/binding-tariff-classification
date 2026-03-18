@@ -1,5 +1,5 @@
 /*
- * Copyright 2026 HM Revenue & Customs
+ * Copyright 2025 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,9 +16,18 @@
 
 package uk.gov.hmrc.bindingtariffclassification.model
 
+import uk.gov.hmrc.bindingtariffclassification.model.ApplicationType.ApplicationType
 import uk.gov.hmrc.bindingtariffclassification.model.LiabilityStatus.LiabilityStatus
 
-case class Keyword(
-  name: String,
-  approved: Boolean = false
+import java.time.Instant
+
+case class CaseKeywordRow(
+ keyword: String,
+ reference: String,
+ user: Option[String],
+ goods: Option[String],
+ caseType: ApplicationType,
+ status: CaseStatus.Value,
+ liabilityStatus: Option[LiabilityStatus],
+ daysElapsed: Long
 )
