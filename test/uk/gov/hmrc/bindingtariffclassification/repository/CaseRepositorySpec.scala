@@ -22,6 +22,7 @@ import org.mockito.Mockito.when
 import org.mongodb.scala.MongoWriteException
 import org.mongodb.scala.bson.conversions.Bson
 import org.mongodb.scala.bson.{BsonDocument, BsonInt32}
+import org.mongodb.scala.bson.collection.immutable.Document
 import org.mongodb.scala.model.Indexes.{ascending, ascending as asc, descending, descending as desc}
 import org.mongodb.scala.model.{Filters, IndexModel, IndexOptions}
 import org.scalatest.concurrent.Eventually
@@ -656,7 +657,7 @@ class CaseRepositorySpec
     val c1 = createCaseForTest(decision = Some(createDecision(goodsDescription = "Amazing HTC smartphone")))
     val c2 =
       createCaseForTest(decision = Some(createDecision(methodCommercialDenomination = Some("amazing football shoes"))))
-    val c3 = createCaseForTest(decision = Some(createDecision(justification = "this is absolutely AAAAMAZINGGGG")))
+    val c3 = createCaseForTest(decision = Some(createDecision(justification = "this is absolutely amazing")))
 
     "return an empty sequence when there are no matches" in {
       store(case1, c1, c2, c3)
@@ -2471,6 +2472,9 @@ class CaseRepositorySpec
       val expectedIndexes = Seq(
         IndexModel(ascending("_id"), IndexOptions().name("_id_")),
         IndexModel(ascending("reference"), IndexOptions().unique(true).name("reference_Index")),
+        IndexModel(asc("status"), IndexOptions().name("status_Index")),
+        IndexModel(asc("keywords"), IndexOptions().name("keywords_Index")),
+        IndexModel(asc("application.type"), IndexOptions().name("application_type_Index")),
         IndexModel(
           Indexes.compoundIndex(
             asc("application.type"),
@@ -2481,26 +2485,34 @@ class CaseRepositorySpec
         ),
         IndexModel(
           Indexes.compoundIndex(
-            asc("decision.effectiveEndDate"),
-            asc("decision.bindingCommodityCode"),
+            asc("application.type"),
             asc("status")
           ),
-          IndexOptions().name("decision_compound_Index")
+          IndexOptions().name("type_status_Index")
         ),
         IndexModel(
           Indexes.compoundIndex(
-            asc("decision.goodsDescription"),
-            asc("decision.methodCommercialDenomination"),
-            asc("decision.justification")
+            asc("status"),
+            asc("keywords")
           ),
-          IndexOptions().name("text_search_compound_Index")
+          IndexOptions().name("status_keywords_Index")
         ),
-        IndexModel(asc("assignee.id"), IndexOptions().name("assignee_id_Index")),
-        IndexModel(asc("queueId"), IndexOptions().name("queueId_Index")),
-        IndexModel(asc("status"), IndexOptions().name("status_Index")),
-        IndexModel(asc("application.type"), IndexOptions().name("application_type_Index")),
+        IndexModel(
+          Indexes.compoundIndex(
+            asc("status"),
+            desc("decision.effectiveEndDate")
+          ),
+          IndexOptions().name("status_effectiveEndDate_Index")
+        ),
+        IndexModel(
+          Indexes.compoundIndex(
+            asc("queueId"),
+            asc("status"),
+            asc("assignee.id")
+          ),
+          IndexOptions().name("queue_status_assignee_Index")
+        ),
         IndexModel(desc("createdDate"), IndexOptions().name("createdDate_Index")),
-        IndexModel(desc("decision.effectiveEndDate"), IndexOptions().name("decision_effectiveEndDate_Index")),
         IndexModel(asc("application.holder.eori"), IndexOptions().name("application_holder_eori_Index")),
         IndexModel(
           asc("application.agent.eoriDetails.eori"),
@@ -2508,10 +2520,17 @@ class CaseRepositorySpec
         ),
         IndexModel(asc("daysElapsed"), IndexOptions().name("daysElapsed_Index")),
         IndexModel(
-          asc("decision.bindingCommodityCode"),
-          IndexOptions().name("decision_bindingCommodityCode_Index")
+          Indexes.compoundIndex(
+            asc("decision.bindingCommodityCode"),
+            asc("application.type"),
+            asc("reference")
+          ),
+          IndexOptions().name("commodity_type_reference_sort_Index")
         ),
-        IndexModel(asc("keywords"), IndexOptions().name("keywords_Index"))
+        IndexModel(
+          Document("_fts" -> "text", "_ftsx" -> BsonInt32(1)),
+          IndexOptions().name("comprehensive_text_Index")
+        )
       )
 
       val repo = newMongoRepository
