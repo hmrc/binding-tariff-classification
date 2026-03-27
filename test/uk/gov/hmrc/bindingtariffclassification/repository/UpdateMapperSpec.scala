@@ -53,6 +53,22 @@ class UpdateMapperSpec extends AnyWordSpec with Matchers {
       result           should not be empty
       result.head._1 shouldBe "application.traderName"
     }
+
+    "handle BTIUpdate with NoChange applicationPdf" in {
+      val update = BTIUpdate(applicationPdf = NoChange)
+
+      val result = mapper.updateApplication(update)
+
+      result shouldBe Seq.empty
+    }
+
+    "handle LiabilityUpdate with NoChange traderName" in {
+      val update = LiabilityUpdate(traderName = NoChange)
+
+      val result = mapper.updateApplication(update)
+
+      result shouldBe Seq.empty
+    }
   }
 
   "updateCase" should {

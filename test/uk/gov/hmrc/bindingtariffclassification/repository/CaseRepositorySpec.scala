@@ -47,7 +47,7 @@ import scala.reflect.ClassTag
 import org.mongodb.scala.model.Indexes
 
 class CaseRepositorySpec
-  extends BaseMongoIndexSpec
+    extends BaseMongoIndexSpec
     with BeforeAndAfterAll
     with BeforeAndAfterEach
     with MongoSupport
@@ -2570,12 +2570,12 @@ class CaseRepositorySpec
     cases.foreach((c: Case) => await(repository.insert(c)))
 
   private def createCaseForTest(
-                                 app: Application = createBasicBTIApplication,
-                                 r: String = RandomGenerator.randomUUID(),
-                                 status: CaseStatus = CaseStatus.NEW,
-                                 decision: Option[Decision] = None,
-                                 keywords: Set[String] = Set.empty
-                               ): Case =
+    app: Application = createBasicBTIApplication,
+    r: String = RandomGenerator.randomUUID(),
+    status: CaseStatus = CaseStatus.NEW,
+    decision: Option[Decision] = None,
+    keywords: Set[String] = Set.empty
+  ): Case =
     adaptCaseInstantFormat(createCase(app = app, r = r, status = status, decision = decision, keywords = keywords))
 
   private def adaptCaseInstantFormat(_case: Case): Case = {

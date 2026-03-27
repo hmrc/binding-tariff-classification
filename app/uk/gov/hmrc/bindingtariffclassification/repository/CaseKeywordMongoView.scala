@@ -30,11 +30,12 @@ import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class CaseKeywordMongoView @Inject() (
-                                       mongoComponent: MongoComponent
-                                     )(implicit ec: ExecutionContext) extends Logging {
+  mongoComponent: MongoComponent
+)(implicit ec: ExecutionContext)
+    extends Logging {
 
   private[repository] val caseKeywordsViewName = "caseKeywords"
-  private[repository] val collectionName = "cases"
+  private[repository] val collectionName       = "cases"
 
   private val viewInitialized: Future[Unit] = initView.map(_ => ())
 
@@ -82,10 +83,9 @@ class CaseKeywordMongoView @Inject() (
       .createView(viewName, viewOn, pipeline)
       .toFuture()
       .map(_ => ())
-      .recover {
-        case ex: Exception =>
-          logger.error(s"Failed to create view '$viewName': ${ex.getMessage}", ex)
-          throw ex
+      .recover { case ex: Exception =>
+        logger.error(s"Failed to create view '$viewName': ${ex.getMessage}", ex)
+        throw ex
       }
 
   private[repository] def dropView(viewName: String): Future[Unit] =
@@ -113,20 +113,19 @@ class CaseKeywordMongoView @Inject() (
       }
       .flatMap(_ => createView(caseKeywordsViewName, collectionName))
       .map(_ => getView(caseKeywordsViewName))
-      .recoverWith {
-        case ex: Exception =>
-          logger.error(s"Failed to initialize view: ${ex.getMessage}", ex)
-          Future.failed(ex)
+      .recoverWith { case ex: Exception =>
+        logger.error(s"Failed to initialize view: ${ex.getMessage}", ex)
+        Future.failed(ex)
       }
 
   def fetchKeywordsFromCases(pagination: Pagination): Future[Paged[CaseKeywordRow]] =
     for {
-      _     <- viewInitialized
-      rows  <- collection
-        .find()
-        .skip((pagination.page - 1) * pagination.pageSize)
-        .limit(pagination.pageSize)
-        .toFuture()
+      _ <- viewInitialized
+      rows <- collection
+                .find()
+                .skip((pagination.page - 1) * pagination.pageSize)
+                .limit(pagination.pageSize)
+                .toFuture()
       total <- collection.countDocuments().toFuture()
     } yield Paged(rows, pagination.page, pagination.pageSize, total)
 }

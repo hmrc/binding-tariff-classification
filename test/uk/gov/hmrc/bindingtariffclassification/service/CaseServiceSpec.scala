@@ -23,6 +23,7 @@ import uk.gov.hmrc.bindingtariffclassification.base.BaseSpec
 import uk.gov.hmrc.bindingtariffclassification.config.AppConfig
 import uk.gov.hmrc.bindingtariffclassification.model._
 import uk.gov.hmrc.bindingtariffclassification.repository.{CaseAttachmentAggregation, CaseRepository, MigrationLockRepository, SequenceRepository}
+import util.CaseData
 
 import scala.concurrent.Future.successful
 
@@ -52,7 +53,7 @@ class CaseServiceSpec extends BaseSpec with BeforeAndAfterEach {
 
   override protected def afterEach(): Unit = {
     super.afterEach()
-    reset(caseRepository, sequenceRepository, migrationRepository, caseAttachmentAggregation, appConfig)
+    reset(caseRepository, sequenceRepository, migrationRepository, caseAttachmentAggregation, appConfig, eventService)
   }
 
   override protected def beforeEach(): Unit =
@@ -237,6 +238,33 @@ class CaseServiceSpec extends BaseSpec with BeforeAndAfterEach {
       caught shouldBe emulatedFailure
     }
 
+  }
+
+  "addInitialSampleStatusIfExists()" should {
+
+    "insert a sample status event when sample has a status" in {
+      val caseWithSample = CaseData.createCase().copy(sample = Sample(status = Some(SampleStatus.AWAITING)))
+      when(eventService.insert(any[Event])).thenReturn(successful(mock[Event]))
+
+      await(service.addInitialSampleStatusIfExists(caseWithSample)) shouldBe ((): Unit)
+      verify(eventService, times(1)).insert(any[Event])
+    }
+
+    "not insert an event when sample has no status" in {
+      val caseNoSample = CaseData.createCase().copy(sample = Sample(status = None))
+
+      await(service.addInitialSampleStatusIfExists(caseNoSample)) shouldBe ((): Unit)
+      verify(eventService, never()).insert(any[Event])
+    }
+  }
+
+  "refreshAttachments()" should {
+
+    "delegate to caseAttachmentAggregation" in {
+      when(caseAttachmentAggregation.refresh()).thenReturn(successful(()))
+      await(service.refreshAttachments()) shouldBe ((): Unit)
+      verify(caseAttachmentAggregation, times(1)).refresh()
+    }
   }
 
   "attachmentExists()" should {

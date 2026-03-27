@@ -429,6 +429,61 @@ class ActiveDaysElapsedJobTest extends BaseSpec with BeforeAndAfterEach {
 
       theCasesUpdated.daysElapsed shouldBe 1L
     }
+
+    "Update Days Elapsed - for a liability case with date of receipt" in {
+      givenNoBankHolidays
+      givenTodaysDateIs("2019-01-04T00:00:00")
+
+      givenUpdatingACaseReturnsItself
+      val liability = CaseData.createLiabilityOrder.copy(
+        dateOfReceipt = Some(LocalDateTime.parse("2019-01-01T00:00:00").toInstant(ZoneOffset.UTC))
+      )
+      val c = CaseData
+        .createCase(app = liability)
+        .copy(
+          reference = "ref-liability-receipt",
+          createdDate = LocalDateTime.parse("2018-12-01T00:00:00").toInstant(ZoneOffset.UTC),
+          daysElapsed = 0
+        )
+      givenAPageOfCases(1, 1, 1, c)
+      givenThereAreNoEventsFor("ref-liability-receipt")
+
+      await(newJob.execute())
+
+      theCasesUpdated.daysElapsed shouldBe 3
+    }
+
+    "Update Days Elapsed - for a liability case without date of receipt" in {
+      givenNoBankHolidays
+      givenTodaysDateIs("2019-01-04T00:00:00")
+
+      givenUpdatingACaseReturnsItself
+      val liability = CaseData.createLiabilityOrder
+      val c = CaseData
+        .createCase(app = liability)
+        .copy(
+          reference = "ref-liability-no-receipt",
+          createdDate = LocalDateTime.parse("2019-01-01T00:00:00").toInstant(ZoneOffset.UTC),
+          daysElapsed = 0
+        )
+      givenAPageOfCases(1, 1, 1, c)
+      givenThereAreNoEventsFor("ref-liability-no-receipt")
+
+      await(newJob.execute())
+
+      theCasesUpdated.daysElapsed shouldBe 3
+    }
+
+    "log warning when case update returns None" in {
+      givenNoBankHolidays
+      givenTodaysDateIs("2019-01-04T00:00:00")
+
+      when(caseService.update(any[Case], any[Boolean])).thenReturn(Future.successful(None))
+      givenAPageOfCases(1, 1, 1, aCaseWith(reference = "reference", createdDate = "2019-01-01T00:00:00"))
+      givenThereAreNoEventsFor("reference")
+
+      await(newJob.execute()) shouldBe ((): Unit)
+    }
   }
 
   private def theCasesUpdated: Case = {

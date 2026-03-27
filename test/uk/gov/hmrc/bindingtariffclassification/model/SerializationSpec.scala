@@ -24,6 +24,8 @@ import uk.gov.hmrc.bindingtariffclassification.model.bta.{BtaApplications, BtaCa
 import uk.gov.hmrc.bindingtariffclassification.model.bta.BtaCard.format
 
 import java.time.Instant
+import play.api.libs.json.{JsError, JsNumber, JsObject, JsString, JsSuccess, Json}
+import uk.gov.hmrc.bindingtariffclassification.model.MongoFormatters.formatInstant
 
 class SerializationSpec extends BaseSpec {
 
@@ -79,6 +81,33 @@ class SerializationSpec extends BaseSpec {
     liabilityStatus = Some(LiabilityStatus.LIVE),
     daysElapsed = 45L
   )
+
+  "formatInstant" should {
+
+    "read Instant from $date with $numberLong" in {
+      val json = Json.obj("$date" -> Json.obj("$numberLong" -> JsString("0")))
+      formatInstant.reads(json) shouldBe JsSuccess(Instant.EPOCH)
+    }
+
+    "return JsError for $date with unknown sub-object" in {
+      val json = Json.obj("$date" -> Json.obj("unknown" -> JsString("value")))
+      formatInstant.reads(json) shouldBe a[JsError]
+    }
+
+    "read Instant from $date with ZonedDateTime string" in {
+      val json = Json.obj("$date" -> JsString("1970-01-01T00:00:00Z"))
+      formatInstant.reads(json) shouldBe JsSuccess(Instant.EPOCH)
+    }
+
+    "return JsError for $date with unexpected value type" in {
+      val json = Json.obj("$date" -> play.api.libs.json.JsTrue)
+      formatInstant.reads(json) shouldBe a[JsError]
+    }
+
+    "return JsError for non-object JSON" in {
+      formatInstant.reads(JsString("invalid")) shouldBe a[JsError]
+    }
+  }
 
   "Details" should {
 

@@ -119,6 +119,18 @@ class SequenceRepositorySpec
     }
   }
 
+  "deleteSequenceByName" should {
+
+    "remove the sequence from the collection" in {
+      val sequence = Sequence("name", 5)
+      await(repository.insert(sequence)) shouldBe sequence
+      collectionSize                     shouldBe 1
+
+      await(repository.deleteSequenceByName("name"))
+      collectionSize shouldBe 0
+    }
+  }
+
   "The 'sequences' collection" should {
 
     "have all expected indexes" in {

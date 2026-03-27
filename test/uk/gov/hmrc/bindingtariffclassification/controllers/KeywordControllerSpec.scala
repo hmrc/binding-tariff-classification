@@ -150,6 +150,26 @@ class KeywordControllerSpec extends BaseSpec with BeforeAndAfterEach {
       result.header.status shouldBe BAD_REQUEST
     }
 
+    "return 400 when the keyword name in the body does not match the URL parameter" in {
+      val keyword = Keyword("correct-name")
+      val result  = controller.approveKeyword("different-name")(fakeRequest.withBody(toJson(keyword)))
+
+      status(result) shouldBe BAD_REQUEST
+      contentAsJson(result)
+        .toString() shouldBe """{"code":"INVALID_REQUEST_PAYLOAD","message":"Invalid keyword name"}"""
+    }
+
+    "return 200 when keyword is approved with a recognised User-Agent header" in {
+      when(appConfig.upsertAgents).thenReturn(Seq("test-agent"))
+      when(keywordService.approveKeyword(keyword1, upsert = true)).thenReturn(successful(Some(keyword1)))
+
+      val result = controller.approveKeyword(keyword1.name)(
+        fakeRequest.withBody(toJson(keyword1)).withHeaders("User-Agent" -> "test-agent")
+      )
+
+      status(result) shouldBe OK
+    }
+
     "return 404 when there are no keywords with the provided name" in {
       val keyword3 = Keyword("not in the list")
       when(keywordService.approveKeyword(keyword3, upsert = false)).thenReturn(successful(None))

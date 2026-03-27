@@ -267,23 +267,23 @@ class ActiveDaysElapsedSpec extends BaseFeatureSpec with MockitoSugar {
     )
 
   private def aMigratedCaseWith(
-                                 reference: String,
-                                 createdDate: String,
-                                 status: CaseStatus,
-                                 dateOfExtract: String,
-                                 migratedDaysElapsed: Long
-                               ): Case =
+    reference: String,
+    createdDate: String,
+    status: CaseStatus,
+    dateOfExtract: String,
+    migratedDaysElapsed: Long
+  ): Case =
     aCaseWith(reference, createdDate, status).copy(
       dateOfExtract = Some(LocalDate.parse(dateOfExtract).atStartOfDay().toInstant(ZoneOffset.UTC)),
       migratedDaysElapsed = Some(migratedDaysElapsed)
     )
 
   private def aLiabilityCaseWith(
-                                  reference: String,
-                                  createdDate: String,
-                                  status: CaseStatus,
-                                  dateOfReceipt: Option[String]
-                                ): Case = {
+    reference: String,
+    createdDate: String,
+    status: CaseStatus,
+    dateOfReceipt: Option[String]
+  ): Case = {
     val liability = createLiabilityOrder
     createCase(app = liability).copy(
       reference = reference,

@@ -305,6 +305,98 @@ class CaseSearchMapperSpec extends BaseMongoIndexSpec {
     "filter nothing" in {
       jsonMapper.filterBy(CaseFilter()) shouldBe Json.obj()
     }
+
+    "filter by 'case details' with advance search enabled" in {
+      jsonMapper.filterBy(
+        CaseFilter(caseDetails = Some("laptop"), advanceSearch = Some(true))
+      ) shouldBe Json.obj(
+        "$text" -> Json.obj("$search" -> "laptop"),
+        "$or" -> Json.arr(
+          Json.obj("application.goodName"            -> Json.obj("$regex" -> "laptop", "$options" -> "i")),
+          Json.obj("application.summary"             -> Json.obj("$regex" -> "laptop", "$options" -> "i")),
+          Json.obj("application.detailedDescription" -> Json.obj("$regex" -> "laptop", "$options" -> "i"))
+        )
+      )
+    }
+
+    "filter by 'case source' with advance search enabled" in {
+      jsonMapper.filterBy(
+        CaseFilter(caseSource = Some("Acme Corp"), advanceSearch = Some(true))
+      ) shouldBe Json.obj(
+        "$text" -> Json.obj("$search" -> "Acme Corp"),
+        "$or" -> Json.arr(
+          Json.obj("application.holder.businessName" -> Json.obj("$regex" -> "Acme Corp", "$options" -> "i")),
+          Json.obj("application.traderName"          -> Json.obj("$regex" -> "Acme Corp", "$options" -> "i"))
+        )
+      )
+    }
+
+    "filter by 'decision details' with advance search enabled" in {
+      jsonMapper.filterBy(
+        CaseFilter(decisionDetails = Some("plastic"), advanceSearch = Some(true))
+      ) shouldBe Json.obj(
+        "$text" -> Json.obj("$search" -> "plastic"),
+        "$or" -> Json.arr(
+          Json.obj("decision.goodsDescription"             -> Json.obj("$regex" -> "plastic", "$options" -> "i")),
+          Json.obj("decision.methodCommercialDenomination" -> Json.obj("$regex" -> "plastic", "$options" -> "i")),
+          Json.obj("decision.justification"                -> Json.obj("$regex" -> "plastic", "$options" -> "i"))
+        )
+      )
+    }
+
+    "combine multiple advance search text fields into $and when keys conflict" in {
+      jsonMapper.filterBy(
+        CaseFilter(caseDetails = Some("laptop"), caseSource = Some("Acme"), advanceSearch = Some(true))
+      ) shouldBe Json.obj(
+        "$text" -> Json.obj("$search" -> "laptop Acme"),
+        "$and" -> Json.arr(
+          Json.obj(
+            "$or" -> Json.arr(
+              Json.obj("application.goodName"            -> Json.obj("$regex" -> "laptop", "$options" -> "i")),
+              Json.obj("application.summary"             -> Json.obj("$regex" -> "laptop", "$options" -> "i")),
+              Json.obj("application.detailedDescription" -> Json.obj("$regex" -> "laptop", "$options" -> "i"))
+            )
+          ),
+          Json.obj(
+            "$or" -> Json.arr(
+              Json.obj("application.holder.businessName" -> Json.obj("$regex" -> "Acme", "$options" -> "i")),
+              Json.obj("application.traderName"          -> Json.obj("$regex" -> "Acme", "$options" -> "i"))
+            )
+          )
+        )
+      )
+    }
+
+    "filter by 'status' - with COMPLETED only and advance search enabled" in {
+      when(config.clock).thenReturn(Clock.fixed(Instant.EPOCH, ZoneOffset.UTC))
+
+      jsonMapper.filterBy(
+        CaseFilter(statuses = Some(Set(PseudoCaseStatus.COMPLETED)), advanceSearch = Some(true))
+      ) shouldBe Json.obj(
+        "$or" -> Json.arr(
+          Json.obj(
+            "$or" -> Json.arr(
+              Json.obj(
+                "status"                    -> "COMPLETED",
+                "decision.effectiveEndDate" -> Json.obj("$gte" -> Json.obj("$date" -> 0))
+              ),
+              Json.obj(
+                "status"                    -> "COMPLETED",
+                "decision.effectiveEndDate" -> JsNull
+              )
+            )
+          )
+        )
+      )
+    }
+
+    "filter by 'status' - with unrecognised pseudo status returns empty $or" in {
+      jsonMapper.filterBy(
+        CaseFilter(statuses = Some(Set(PseudoCaseStatus.UNDER_APPEAL)))
+      ) shouldBe Json.obj(
+        "$or" -> Json.arr()
+      )
+    }
   }
 
   "SortBy " should {
