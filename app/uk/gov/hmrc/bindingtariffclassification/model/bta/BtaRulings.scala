@@ -20,5 +20,6 @@ import play.api.libs.json.{Json, OFormat}
 
 case class BtaRulings(total: Int, expiring: Int)
 
-object BtaRulings:
-  implicit val format: OFormat[BtaRulings] = Json.using[Json.WithDefaultValues].format[BtaRulings]
+object BtaRulings {
+  implicit val format: OFormat[BtaRulings] = Json.format[BtaRulings]
+}
