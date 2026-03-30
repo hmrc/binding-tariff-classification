@@ -1,5 +1,5 @@
 /*
- * Copyright 2025 HM Revenue & Customs
+ * Copyright 2026 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,12 +25,7 @@ import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 class AppConfigWithAFixedDate @Inject() (runModeConfiguration: Configuration, config: ServicesConfig)
     extends AppConfig(runModeConfiguration, config) {
-
-  // Get current year dynamically
-  private val currentYear = Year.now().getValue
-
-  // Build the fixed date dynamically: February 3rd of current year
-  private val defaultSystemDate: Instant = LocalDate.of(currentYear, 2, 3).atStartOfDay().toInstant(ZoneOffset.UTC)
-  private val defaultZoneId              = ZoneOffset.UTC
+  private val defaultSystemDate: Instant = LocalDate.parse("2019-02-03").atStartOfDay().toInstant(ZoneOffset.UTC)
+  private val defaultZoneId              = ZoneId.systemDefault()
   override lazy val clock: Clock         = Clock.fixed(defaultSystemDate, defaultZoneId)
 }
