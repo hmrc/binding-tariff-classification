@@ -17,28 +17,28 @@
 package uk.gov.hmrc.bindingtariffclassification.repository
 
 import cats.data.NonEmptySeq
-import cats.syntax.all.*
+import cats.syntax.all._
 import org.mockito.Mockito.when
 import org.mongodb.scala.MongoWriteException
 import org.mongodb.scala.bson.conversions.Bson
 import org.mongodb.scala.bson.{BsonDocument, BsonInt32}
-import org.mongodb.scala.model.Indexes.{ascending, ascending as asc, descending, descending as desc}
+import org.mongodb.scala.model.Indexes.{ascending, descending}
 import org.mongodb.scala.model.{Filters, IndexModel, IndexOptions}
 import org.scalatest.concurrent.Eventually
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
 import uk.gov.hmrc.bindingtariffclassification.config.AppConfig
 import uk.gov.hmrc.bindingtariffclassification.model.CaseStatus.CaseStatus
-import uk.gov.hmrc.bindingtariffclassification.model.*
-import uk.gov.hmrc.bindingtariffclassification.model.reporting.*
+import uk.gov.hmrc.bindingtariffclassification.model._
+import uk.gov.hmrc.bindingtariffclassification.model.reporting._
 import uk.gov.hmrc.bindingtariffclassification.sort.{CaseSortField, SortDirection}
 import uk.gov.hmrc.bindingtariffclassification.utils.RandomGenerator
 import uk.gov.hmrc.mongo.test.MongoSupport
-import util.CaseData.*
-import util.Cases.*
+import util.CaseData._
+import util.Cases._
 import org.mongodb.scala.SingleObservableFuture
 import org.mongodb.scala.ObservableFuture
 
-import java.time.*
+import java.time._
 import java.time.temporal.ChronoUnit
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -46,7 +46,7 @@ import scala.reflect.ClassTag
 import org.mongodb.scala.model.Indexes
 
 class CaseRepositorySpec
-  extends BaseMongoIndexSpec
+    extends BaseMongoIndexSpec
     with BeforeAndAfterAll
     with BeforeAndAfterEach
     with MongoSupport
@@ -2473,65 +2473,52 @@ class CaseRepositorySpec
         IndexModel(ascending("reference"), IndexOptions().unique(true).name("reference_Index")),
         IndexModel(
           Indexes.compoundIndex(
-            asc("application.type"),
-            asc("status"),
-            asc("decision.bindingCommodityCode")
+            ascending("application.type"),
+            ascending("status"),
+            ascending("decision.bindingCommodityCode")
           ),
           IndexOptions().name("search_main_compound_Index")
         ),
         IndexModel(
           Indexes.compoundIndex(
-            asc("decision.effectiveEndDate"),
-            asc("decision.bindingCommodityCode"),
-            asc("status")
+            ascending("decision.effectiveEndDate"),
+            ascending("decision.bindingCommodityCode"),
+            ascending("status")
           ),
           IndexOptions().name("decision_compound_Index")
         ),
         IndexModel(
           Indexes.compoundIndex(
-            asc("decision.goodsDescription"),
-            asc("decision.methodCommercialDenomination"),
-            asc("decision.justification")
+            ascending("decision.goodsDescription"),
+            ascending("decision.methodCommercialDenomination"),
+            ascending("decision.justification")
           ),
           IndexOptions().name("text_search_compound_Index")
         ),
-        IndexModel(asc("assignee.id"), IndexOptions().name("assignee_id_Index")),
-        IndexModel(asc("queueId"), IndexOptions().name("queueId_Index")),
-        IndexModel(asc("status"), IndexOptions().name("status_Index")),
-        IndexModel(asc("application.type"), IndexOptions().name("application_type_Index")),
-        IndexModel(desc("createdDate"), IndexOptions().name("createdDate_Index")),
-        IndexModel(desc("decision.effectiveEndDate"), IndexOptions().name("decision_effectiveEndDate_Index")),
-        IndexModel(asc("application.holder.eori"), IndexOptions().name("application_holder_eori_Index")),
+        IndexModel(ascending("assignee.id"), IndexOptions().name("assignee_id_Index")),
+        IndexModel(ascending("queueId"), IndexOptions().name("queueId_Index")),
+        IndexModel(ascending("status"), IndexOptions().name("status_Index")),
+        IndexModel(ascending("application.type"), IndexOptions().name("application_type_Index")),
+        IndexModel(descending("createdDate"), IndexOptions().name("createdDate_Index")),
+        IndexModel(descending("decision.effectiveEndDate"), IndexOptions().name("decision_effectiveEndDate_Index")),
+        IndexModel(ascending("application.holder.eori"), IndexOptions().name("application_holder_eori_Index")),
         IndexModel(
-          asc("application.agent.eoriDetails.eori"),
+          ascending("application.agent.eoriDetails.eori"),
           IndexOptions().name("application_agent_eoriDetails_eori_Index")
         ),
-        IndexModel(asc("daysElapsed"), IndexOptions().name("daysElapsed_Index")),
+        IndexModel(ascending("daysElapsed"), IndexOptions().name("daysElapsed_Index")),
         IndexModel(
-          asc("decision.bindingCommodityCode"),
+          ascending("decision.bindingCommodityCode"),
           IndexOptions().name("decision_bindingCommodityCode_Index")
         ),
-        IndexModel(asc("keywords"), IndexOptions().name("keywords_Index"))
+        IndexModel(ascending("keywords"), IndexOptions().name("keywords_Index"))
       )
 
       val repo = newMongoRepository
-      await(repo.collection.dropIndexes().toFuture())
       await(repo.ensureIndexes())
 
       eventually(timeout(5.seconds), interval(100.milliseconds)) {
-        val rawDocs = await(repo.collection.listIndexes().toFuture())
-
-        val actualSummary = rawDocs.map { doc =>
-          val name = doc.get("name").map(_.asString().getValue).getOrElse("unknown")
-          val key  = doc.get[org.mongodb.scala.bson.BsonDocument]("key").get
-          (name, key)
-        }.toSet
-
-        val expectedSummary = expectedIndexes.map { i =>
-          (i.getOptions.getName, i.getKeys.toBsonDocument)
-        }.toSet
-
-        actualSummary shouldBe expectedSummary
+        assertIndexes(expectedIndexes, getIndexes(repo.collection))
       }
 
       await(repo.deleteAll())
@@ -2551,12 +2538,12 @@ class CaseRepositorySpec
     cases.foreach((c: Case) => await(repository.insert(c)))
 
   private def createCaseForTest(
-                                 app: Application = createBasicBTIApplication,
-                                 r: String = RandomGenerator.randomUUID(),
-                                 status: CaseStatus = CaseStatus.NEW,
-                                 decision: Option[Decision] = None,
-                                 keywords: Set[String] = Set.empty
-                               ): Case =
+    app: Application = createBasicBTIApplication,
+    r: String = RandomGenerator.randomUUID(),
+    status: CaseStatus = CaseStatus.NEW,
+    decision: Option[Decision] = None,
+    keywords: Set[String] = Set.empty
+  ): Case =
     adaptCaseInstantFormat(createCase(app = app, r = r, status = status, decision = decision, keywords = keywords))
 
   private def adaptCaseInstantFormat(_case: Case): Case = {
