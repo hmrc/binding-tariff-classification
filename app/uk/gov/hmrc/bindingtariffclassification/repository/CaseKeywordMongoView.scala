@@ -17,116 +17,105 @@
 package uk.gov.hmrc.bindingtariffclassification.repository
 
 import org.mongodb.scala.MongoCollection
-import org.mongodb.scala.bson.BsonDocument
-import org.mongodb.scala.{ObservableFuture, SingleObservableFuture}
-import play.api.Logging
+import org.mongodb.scala.bson.{BsonDocument, BsonInt32}
+import org.mongodb.scala.bson.conversions.Bson
+import org.mongodb.scala.model.Accumulators.push
+import org.mongodb.scala.model.Aggregates._
+import org.mongodb.scala.model.Projections.include
+import org.mongodb.scala.model.{Aggregates, Field, Projections}
 import play.api.libs.json.Json
-import uk.gov.hmrc.bindingtariffclassification.model.{CaseKeywordRow, MongoCodecs, Paged, Pagination}
+import uk.gov.hmrc.bindingtariffclassification.model.{CaseKeyword, MongoCodecs, Paged, Pagination}
+import uk.gov.hmrc.bindingtariffclassification.repository.BaseMongoOperations.{countField, pagedResults}
 import uk.gov.hmrc.mongo.MongoComponent
-import uk.gov.hmrc.mongo.play.json.Codecs.toBson
+import org.mongodb.scala.SingleObservableFuture
+import org.mongodb.scala.ObservableFuture
 
 import javax.inject.{Inject, Singleton}
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.duration.DurationInt
+import scala.concurrent.{Await, ExecutionContext, Future}
 
 @Singleton
-class CaseKeywordMongoView @Inject() (
-                                       mongoComponent: MongoComponent
-                                     )(implicit ec: ExecutionContext) extends Logging {
+class CaseKeywordMongoView @Inject() (mongoComponent: MongoComponent)(implicit ec: ExecutionContext) {
 
   private[repository] val caseKeywordsViewName = "caseKeywords"
-  private[repository] val collectionName = "cases"
 
-  private val viewInitialized: Future[Unit] = initView.map(_ => ())
+  lazy val view: MongoCollection[CaseKeyword] = Await.result(awaitable = initView, atMost = 30.seconds)
 
-  private lazy val collection: MongoCollection[CaseKeywordRow] = mongoComponent.database
-    .getCollection[CaseKeywordRow](caseKeywordsViewName)
-    .withCodecRegistry(MongoCodecs.caseKeyword)
-
-  private def pipeline: Seq[BsonDocument] = {
-    val pipelineJson = Json.arr(
-      Json.obj(
-        "$match" -> Json.obj(
-          "keywords" -> Json.obj(
-            "$exists" -> true,
-            "$ne"     -> Json.arr()
-          )
-        )
-      ),
-      Json.obj(
-        "$unwind" -> "$keywords"
-      ),
-      Json.obj(
-        "$project" -> Json.obj(
-          "_id"             -> 0,
-          "keyword"         -> "$keywords",
-          "reference"       -> "$reference",
-          "user"            -> "$assignee.name",
-          "goods"           -> "$application.goodName",
-          "caseType"        -> "$application.type",
-          "status"          -> "$status",
-          "liabilityStatus" -> "$application.status",
-          "daysElapsed"     -> "$daysElapsed"
-        )
-      ),
-      Json.obj(
-        "$sort" -> Json.obj(
-          "keyword" -> 1
-        )
-      )
-    )
-    pipelineJson.value.map(v => toBson(v).asDocument()).toSeq
-  }
-
-  private[repository] def createView(viewName: String, viewOn: String): Future[Unit] =
-    mongoComponent.database
-      .createView(viewName, viewOn, pipeline)
-      .toFuture()
-      .map(_ => ())
-      .recover {
-        case ex: Exception =>
-          logger.error(s"Failed to create view '$viewName': ${ex.getMessage}", ex)
-          throw ex
-      }
+  private[repository] def createView(viewName: String, viewOn: String): Future[?] =
+    mongoComponent.database.createView(viewName, viewOn, pipeline).toFuture()
 
   private[repository] def dropView(viewName: String): Future[Unit] =
-    mongoComponent.database
-      .getCollection(viewName)
+    getView(viewName)
       .drop()
       .toFuture()
-      .map(_ => ())
-      .recover { case _: Exception => () }
 
-  private[repository] def getView(viewName: String): MongoCollection[CaseKeywordRow] =
+  private[repository] def getView(viewName: String): MongoCollection[CaseKeyword] =
     mongoComponent.database
-      .getCollection[CaseKeywordRow](viewName)
+      .getCollection[CaseKeyword](viewName)
       .withCodecRegistry(MongoCodecs.caseKeyword)
 
-  private[repository] def initView: Future[MongoCollection[CaseKeywordRow]] =
-    mongoComponent.database
-      .listCollectionNames()
-      .toFuture()
-      .flatMap { collections =>
-        if (collections.contains(caseKeywordsViewName))
-          dropView(caseKeywordsViewName)
-        else
-          Future.successful(())
-      }
-      .flatMap(_ => createView(caseKeywordsViewName, collectionName))
+  private[repository] def initView: Future[MongoCollection[CaseKeyword]] =
+    dropView(caseKeywordsViewName)
+      .map(_ => createView(caseKeywordsViewName, "cases"))
       .map(_ => getView(caseKeywordsViewName))
-      .recoverWith {
-        case ex: Exception =>
-          logger.error(s"Failed to initialize view: ${ex.getMessage}", ex)
-          Future.failed(ex)
-      }
 
-  def fetchKeywordsFromCases(pagination: Pagination): Future[Paged[CaseKeywordRow]] =
-    for {
-      _     <- viewInitialized
-      rows  <- collection
-        .find()
-        .skip((pagination.page - 1) * pagination.pageSize)
-        .limit(pagination.pageSize)
-        .toFuture()
-      total <- collection.countDocuments().toFuture()
-    } yield Paged(rows, pagination.page, pagination.pageSize, total)
+  private val projectCaseHeader = Aggregates.project(
+    Projections.fields(
+      include(
+        "reference",
+        "status",
+        "assignee",
+        "team",
+        "goodsName",
+        "caseType",
+        "keywords",
+        "daysElapsed",
+        "liabilityStatus"
+      )
+    )
+  )
+
+  private val addHeaderFields = addFields(
+    Field("team", "$queueId"),
+    Field("goodsName", "$application.goodName"),
+    Field("caseType", "$application.type"),
+    Field("liabilityStatus", "$application.status")
+  )
+
+  private val unwindKeywords  = unwind("$keywords")
+  private val group           = Aggregates.group("$keywords", push("cases", "$$ROOT"))
+  private val addKeywordField = addFields(Field("keyword.name", "$_id"))
+  private val project         = Aggregates.project(BsonDocument("_id" -> 0))
+
+  protected val pipeline: Seq[Bson] =
+    Seq(
+      addHeaderFields,
+      projectCaseHeader,
+      unwindKeywords,
+      group,
+      addKeywordField,
+      project
+    )
+
+  def fetchKeywordsFromCases(pagination: Pagination): Future[Paged[CaseKeyword]] = {
+    val runAggregation = view
+      .aggregate[CaseKeyword] {
+        Seq(
+          Aggregates.project(BsonDocument("_id" -> 0)),
+          skip((pagination.page - 1) * pagination.pageSize),
+          limit(pagination.pageSize)
+        )
+      }
+      .allowDiskUse(true)
+      .toFuture()
+
+    val futureCount = view
+      .aggregate[BsonDocument] {
+        Seq(count(countField))
+      }
+      .allowDiskUse(true)
+      .headOption()
+
+    pagedResults(futureCount, runAggregation, pagination)
+  }
 }

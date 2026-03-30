@@ -17,13 +17,13 @@
 package uk.gov.hmrc.bindingtariffclassification.service
 
 import org.mockito.ArgumentMatchers.{any, refEq}
-import org.mockito.Mockito.*
+import org.mockito.Mockito._
 import org.scalatest.BeforeAndAfterEach
 import uk.gov.hmrc.bindingtariffclassification.base.BaseSpec
-import uk.gov.hmrc.bindingtariffclassification.model.*
-import uk.gov.hmrc.bindingtariffclassification.repository.*
+import uk.gov.hmrc.bindingtariffclassification.model.Role.CLASSIFICATION_OFFICER
+import uk.gov.hmrc.bindingtariffclassification.model._
+import uk.gov.hmrc.bindingtariffclassification.repository._
 
-import java.time.Instant
 import scala.concurrent.Future.{failed, successful}
 
 class KeywordServiceSpec extends BaseSpec with BeforeAndAfterEach {
@@ -36,27 +36,19 @@ class KeywordServiceSpec extends BaseSpec with BeforeAndAfterEach {
 
   private val pagination = mock[Pagination]
 
-  private val caseKeywordRow1 = CaseKeywordRow(
-    keyword = "tool",
+  private val caseHeader = CaseHeader(
     reference = "9999999999",
-    user = Some("0"),
-    goods = Some("Smartphone"),
-    caseType = ApplicationType.BTI,
-    status = CaseStatus.OPEN,
-    liabilityStatus = None,
-    daysElapsed = 10L
+    Some(Operator("0", None, None, CLASSIFICATION_OFFICER, List(), List())),
+    Some("3"),
+    Some("Smartphone"),
+    ApplicationType.BTI,
+    CaseStatus.OPEN,
+    0,
+    None
   )
 
-  private val caseKeywordRow2 = CaseKeywordRow(
-    keyword = "bike",
-    reference = "9999999999",
-    user = Some("0"),
-    goods = Some("Smartphone"),
-    caseType = ApplicationType.BTI,
-    status = CaseStatus.OPEN,
-    liabilityStatus = None,
-    daysElapsed = 10L
-  )
+  private val caseKeyword  = CaseKeyword(Keyword("tool"), List(caseHeader))
+  private val caseKeyword2 = CaseKeyword(Keyword("bike"), List(caseHeader))
 
   private val service =
     new KeywordService(keywordRepository, caseKeywordAggregation)
@@ -152,12 +144,12 @@ class KeywordServiceSpec extends BaseSpec with BeforeAndAfterEach {
     }
   }
 
-  "fetchKeywordsFromCases" should {
-    "run the aggregation and return the flat keyword rows" in {
+  "fetchCaseKeywords" should {
+    "run the aggregation and return the results" in {
       when(caseKeywordAggregation.fetchKeywordsFromCases(pagination))
-        .thenReturn(successful(Paged(Seq(caseKeywordRow1, caseKeywordRow2))))
+        .thenReturn(successful(Paged(Seq(caseKeyword, caseKeyword2))))
 
-      await(service.fetchCaseKeywords(pagination)) shouldBe Paged(Seq(caseKeywordRow1, caseKeywordRow2))
+      await(service.fetchCaseKeywords(pagination)) shouldBe Paged(Seq(caseKeyword, caseKeyword2))
     }
 
     "propagate any error" in {

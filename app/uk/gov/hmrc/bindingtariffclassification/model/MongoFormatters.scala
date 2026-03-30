@@ -110,7 +110,8 @@ object MongoFormatters {
   implicit val formatDecision: OFormat[Decision]         = Json.format[Decision]
   implicit val formatSample: OFormat[Sample]             = Json.format[Sample]
   implicit val formatCase: OFormat[Case] = JsonUtil.convertToOFormat(Json.using[Json.WithDefaultValues].format[Case])
-  implicit val formatCaseKeyword: OFormat[CaseKeywordRow] = Json.format[CaseKeywordRow]
+  implicit val formatCaseHeader: OFormat[CaseHeader]   = Json.format[CaseHeader]
+  implicit val formatCaseKeyword: OFormat[CaseKeyword] = Json.format[CaseKeyword]
 
   // `Event` formatters
   implicit val formatCaseStatusChange: OFormat[CaseStatusChange] = Json.format[CaseStatusChange]

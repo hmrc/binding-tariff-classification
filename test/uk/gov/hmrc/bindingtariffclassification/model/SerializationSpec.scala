@@ -18,7 +18,7 @@ package uk.gov.hmrc.bindingtariffclassification.model
 
 import play.api.libs.json.Json
 import uk.gov.hmrc.bindingtariffclassification.base.BaseSpec
-import uk.gov.hmrc.bindingtariffclassification.model.MongoFormatters.{formatAgentDetails, formatAppeal, formatAppealAdded, formatAssignmentChange, formatAttachment, formatBTIApplication, formatCancellation, formatCancellationCaseStatusChange, formatCaseKeyword, formatCaseStatusChange, formatCompletedCaseStatusChange, formatContact, formatCorrespondence, formatEORIDetails, formatEvent, formatExtendedUseStatusChange, formatLiabilityOrder, formatMisc, formatNote, formatOperator, formatQueueChange, formatReferralCaseStatusChange, formatRejectCaseStatusChange, formatSample, formatSampleReturnChange, formatSampleSendChange, formatSampleStatusChange, messageLoggedFormat}
+import uk.gov.hmrc.bindingtariffclassification.model.MongoFormatters.{formatAgentDetails, formatAppeal, formatAppealAdded, formatAssignmentChange, formatAttachment, formatBTIApplication, formatCancellation, formatCancellationCaseStatusChange, formatCaseHeader, formatCaseKeyword, formatCaseStatusChange, formatCompletedCaseStatusChange, formatContact, formatCorrespondence, formatEORIDetails, formatEvent, formatExtendedUseStatusChange, formatLiabilityOrder, formatMisc, formatNote, formatOperator, formatQueueChange, formatReferralCaseStatusChange, formatRejectCaseStatusChange, formatSample, formatSampleReturnChange, formatSampleSendChange, formatSampleStatusChange, messageLoggedFormat}
 import uk.gov.hmrc.bindingtariffclassification.model.bta.BtaApplications.format
 import uk.gov.hmrc.bindingtariffclassification.model.bta.{BtaApplications, BtaCard, BtaRulings}
 import uk.gov.hmrc.bindingtariffclassification.model.bta.BtaCard.format
@@ -69,16 +69,18 @@ class SerializationSpec extends BaseSpec {
 
   private val agentDetails = AgentDetails(eoriDetails = eoriDetails, letterOfAuthorisation = Option(attachment))
 
-  private val caseKeywordRow = CaseKeywordRow(
-    keyword = "Tom",
+  private val caseH = CaseHeader(
     reference = "ref1",
-    user = Some("operatorId"),
-    goods = Some("shorts"),
+    assignee = Option(operator),
+    team = Option("custodians"),
+    goodsName = Option("shorts"),
     caseType = ApplicationType.BTI,
     status = CaseStatus.REFERRED,
-    liabilityStatus = Some(LiabilityStatus.LIVE),
-    daysElapsed = 45L
+    daysElapsed = 5L,
+    liabilityStatus = Option(LiabilityStatus.LIVE)
   )
+
+  private val caseK = CaseKeyword(keyword = Keyword(name = "Tom", approved = true), cases = List(caseH))
 
   "Details" should {
 
@@ -375,17 +377,17 @@ class SerializationSpec extends BaseSpec {
       deserialized.shouldBe(sample)
     }
     "Serialize and Deserialize JSON for CaseHeader" in {
-      val json         = Json.toJson(caseKeywordRow)
-      val deserialized = json.as[CaseKeywordRow]
+      val json         = Json.toJson(caseH)
+      val deserialized = json.as[CaseHeader]
 
-      deserialized.shouldBe(caseKeywordRow)
+      deserialized.shouldBe(caseH)
     }
 
     "Serialize and Deserialize JSON for CaseKeyword" in {
-      val json         = Json.toJson(caseKeywordRow)
-      val deserialized = json.as[CaseKeywordRow]
+      val json         = Json.toJson(caseK)
+      val deserialized = json.as[CaseKeyword]
 
-      deserialized.shouldBe(caseKeywordRow)
+      deserialized.shouldBe(caseK)
     }
 
     "Serialize and Deserialize JSON for CancellationCaseStatusChange" in {

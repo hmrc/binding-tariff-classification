@@ -22,3 +22,16 @@ case class Keyword(
   name: String,
   approved: Boolean = false
 )
+
+case class CaseHeader(
+  reference: String,
+  assignee: Option[Operator],
+  team: Option[String],
+  goodsName: Option[String],
+  caseType: ApplicationType.Value,
+  status: CaseStatus.Value,
+  daysElapsed: Long,
+  liabilityStatus: Option[LiabilityStatus]
+)
+
+case class CaseKeyword(keyword: Keyword, cases: List[CaseHeader])
