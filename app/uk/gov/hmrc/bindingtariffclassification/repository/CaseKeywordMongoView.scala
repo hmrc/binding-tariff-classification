@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.bindingtariffclassification.repository
 
-import org.mongodb.scala.{MongoCollection, ObservableFuture, SingleObservableFuture, bsonDocumentToUntypedDocument}
+import org.mongodb.scala.MongoCollection
 import org.mongodb.scala.bson.{BsonArray, BsonDocument, BsonInt32, BsonString}
 import org.mongodb.scala.bson.conversions.Bson
 import org.mongodb.scala.model.Accumulators.push
@@ -24,17 +24,17 @@ import org.mongodb.scala.model.Aggregates.*
 import org.mongodb.scala.model.Projections.include
 import org.mongodb.scala.model.{Field, Filters, Sorts}
 import uk.gov.hmrc.bindingtariffclassification.model.{CaseKeyword, MongoCodecs, Paged, Pagination}
-import uk.gov.hmrc.bindingtariffclassification.repository.BaseMongoOperations.countField
+import uk.gov.hmrc.bindingtariffclassification.repository.BaseMongoOperations.{countField, pagedResults}
 import uk.gov.hmrc.mongo.MongoComponent
+import org.mongodb.scala.SingleObservableFuture
+import org.mongodb.scala.ObservableFuture
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.duration.DurationInt
 import scala.concurrent.{Await, ExecutionContext, Future}
 
 @Singleton
-class CaseKeywordMongoView @Inject() (mongoComponent: MongoComponent, keywordCountCache: KeywordCountCache)(implicit
-  ec: ExecutionContext
-) {
+class CaseKeywordMongoView @Inject() (mongoComponent: MongoComponent)(implicit ec: ExecutionContext) {
 
   private[repository] val caseKeywordsViewName = "caseKeywords"
 
@@ -47,9 +47,7 @@ class CaseKeywordMongoView @Inject() (mongoComponent: MongoComponent, keywordCou
       .map(_ => ())
 
   private[repository] def dropView(viewName: String): Future[Unit] =
-    getView(viewName)
-      .drop()
-      .toFuture()
+    getView(viewName).drop().toFuture()
 
   private[repository] def getView(viewName: String): MongoCollection[CaseKeyword] =
     mongoComponent.database
@@ -87,6 +85,7 @@ class CaseKeywordMongoView @Inject() (mongoComponent: MongoComponent, keywordCou
         "$keywords",
         push("cases", "$$ROOT")
       ),
+      sort(Sorts.ascending("_id")),
       lookup(
         "keywords",
         "_id",
@@ -115,62 +114,53 @@ class CaseKeywordMongoView @Inject() (mongoComponent: MongoComponent, keywordCou
     )
 
   def fetchKeywordsFromCases(pagination: Pagination): Future[Paged[CaseKeyword]] = {
-    val skipCount  = (pagination.page - 1) * pagination.pageSize
-    val limitCount = pagination.pageSize
 
-    val runAggregation = view
-      .aggregate[CaseKeyword](
-        Seq(
-          `match`(matchNotApproved),
-          unwind("$cases"),
-          sort(
-            Sorts.orderBy(
-              Sorts.ascending("keyword.name"),
-              Sorts.ascending("cases.reference")
-            )
-          ),
-          skip(skipCount),
-          limit(limitCount),
-          group(
-            id = "$keyword",
-            push("cases", "$cases")
-          ),
-          project(
-            BsonDocument(
-              "_id"     -> 0,
-              "keyword" -> "$_id",
-              "cases"   -> "$cases"
-            )
+    val runAggregation =
+      view
+        .aggregate[CaseKeyword](
+          Seq(
+            org.mongodb.scala.model.Aggregates.`match`(matchNotApproved),
+            skip((pagination.page - 1) * pagination.pageSize),
+            limit(pagination.pageSize)
           )
         )
-      )
-      .allowDiskUse(true)
-      .toFuture()
+        .allowDiskUse(true)
+        .toFuture()
 
-    val futureCount = keywordCountCache.getOrUpdate {
+    val futureCount =
       view
         .aggregate[BsonDocument](
           Seq(
-            `match`(matchNotApproved),
-            unwind("$cases"),
+            org.mongodb.scala.model.Aggregates.`match`(matchNotApproved),
             count(countField)
           )
         )
         .allowDiskUse(true)
         .headOption()
         .map {
-          case Some(doc) => doc.getInteger(countField, 0).toLong
-          case None      => 0L
+          case Some(doc) => doc
+          case None      => BsonDocument(countField -> BsonInt32(0))
         }
-    }
+
+    pagedResultsSafe(futureCount, runAggregation, pagination)
+  }
+
+  private def pagedResultsSafe(
+    futureCount: Future[BsonDocument],
+    results: Future[Seq[CaseKeyword]],
+    pagination: Pagination
+  ): Future[Paged[CaseKeyword]] =
 
     for {
-      total   <- futureCount
-      results <- runAggregation
-    } yield Paged(
-      results = results,
-      pagination = pagination,
-      resultCount = total
-    )
-  }
+      countDoc <- futureCount
+      data     <- results
+    } yield {
+      val total = countDoc.getNumber(countField).longValue()
+
+      Paged(
+        results = data,
+        pagination = pagination,
+        resultCount = total
+      )
+    }
 }
