@@ -51,7 +51,8 @@ class KeywordsMongoRepository @Inject() (mongoComponent: MongoComponent, appConf
       mongoComponent = mongoComponent,
       domainFormat = formatKeywords,
       indexes = Seq(
-        IndexModel(ascending("name"), IndexOptions().unique(true).name("name_Index"))
+        IndexModel(ascending("name"), IndexOptions().unique(true).name("name_Index")),
+        IndexModel(ascending("approved"), IndexOptions().name("approved_index"))
       ),
       replaceIndexes = appConfig.replaceIndexes
     )
@@ -78,4 +79,8 @@ class KeywordsMongoRepository @Inject() (mongoComponent: MongoComponent, appConf
   override def delete(name: String): Future[Unit] =
     collection.deleteOne(equal("name", name)).map(_ => ()).head()
 
+  def approvedKeywords(): Future[Seq[Keyword]] =
+    collection
+      .find(equal("approved", true))
+      .toFuture()
 }
