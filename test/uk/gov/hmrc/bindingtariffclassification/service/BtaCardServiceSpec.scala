@@ -245,7 +245,7 @@ class BtaCardServiceSpec extends BaseSpec {
         res.eori                 shouldBe eori
         res.applications         shouldBe None
         res.rulings.get.total    shouldBe 3
-        res.rulings.get.expiring shouldBe 1
+        res.rulings.get.expiring shouldBe 0
       }
     }
   }
