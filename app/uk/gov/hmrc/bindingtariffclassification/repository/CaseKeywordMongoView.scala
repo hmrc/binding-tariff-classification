@@ -16,18 +16,16 @@
 
 package uk.gov.hmrc.bindingtariffclassification.repository
 
-import org.mongodb.scala.MongoCollection
-import org.mongodb.scala.bson.{BsonArray, BsonDocument, BsonInt32, BsonString}
+import org.mongodb.scala.{MongoCollection, ObservableFuture, SingleObservableFuture}
 import org.mongodb.scala.bson.conversions.Bson
+import org.mongodb.scala.bson.{BsonArray, BsonDocument, BsonInt32, BsonString}
 import org.mongodb.scala.model.Accumulators.push
 import org.mongodb.scala.model.Aggregates.*
 import org.mongodb.scala.model.Projections.include
 import org.mongodb.scala.model.{Field, Filters, Sorts}
 import uk.gov.hmrc.bindingtariffclassification.model.{CaseKeyword, MongoCodecs, Paged, Pagination}
-import uk.gov.hmrc.bindingtariffclassification.repository.BaseMongoOperations.{countField, pagedResults}
+import uk.gov.hmrc.bindingtariffclassification.repository.BaseMongoOperations.countField
 import uk.gov.hmrc.mongo.MongoComponent
-import org.mongodb.scala.SingleObservableFuture
-import org.mongodb.scala.ObservableFuture
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.duration.DurationInt
@@ -36,7 +34,7 @@ import scala.concurrent.{Await, ExecutionContext, Future}
 @Singleton
 class CaseKeywordMongoView @Inject() (mongoComponent: MongoComponent)(implicit ec: ExecutionContext) {
 
-  private[repository] val caseKeywordsViewName = "caseKeywords"
+  private[repository] val caseKeywordsViewName = "caseKeywordsFlat"
 
   lazy val view: MongoCollection[CaseKeyword] = Await.result(awaitable = initView, atMost = 30.seconds)
 
@@ -81,18 +79,12 @@ class CaseKeywordMongoView @Inject() (mongoComponent: MongoComponent)(implicit e
         )
       ),
       unwind("$keywords"),
-      group(
-        "$keywords",
-        push("cases", "$$ROOT")
-      ),
-      sort(Sorts.ascending("_id")),
       lookup(
         "keywords",
-        "_id",
+        "keywords",
         "name",
         "keywordMeta"
       ),
-      addFields(Field("keyword.name", "$_id")),
       addFields(
         Field(
           "approved",
@@ -103,8 +95,7 @@ class CaseKeywordMongoView @Inject() (mongoComponent: MongoComponent)(implicit e
             )
           )
         )
-      ),
-      project(BsonDocument("_id" -> 0))
+      )
     )
 
   private val matchNotApproved: Bson =
@@ -120,8 +111,27 @@ class CaseKeywordMongoView @Inject() (mongoComponent: MongoComponent)(implicit e
         .aggregate[CaseKeyword](
           Seq(
             org.mongodb.scala.model.Aggregates.`match`(matchNotApproved),
+            sort(Sorts.ascending("keywords", "reference")),
             skip((pagination.page - 1) * pagination.pageSize),
-            limit(pagination.pageSize)
+            limit(pagination.pageSize),
+            group(
+              "$keywords",
+              push("cases", "$$ROOT")
+            ),
+            sort(Sorts.ascending("_id")),
+            addFields(Field("keyword.name", "$_id")),
+            addFields(
+              Field(
+                "approved",
+                BsonDocument(
+                  "$arrayElemAt" -> BsonArray(
+                    BsonString("$keywordMeta.approved"),
+                    BsonInt32(0)
+                  )
+                )
+              )
+            ),
+            project(BsonDocument("_id" -> 0))
           )
         )
         .allowDiskUse(true)
