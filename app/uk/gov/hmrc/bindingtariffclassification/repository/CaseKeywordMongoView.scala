@@ -16,9 +16,9 @@
 
 package uk.gov.hmrc.bindingtariffclassification.repository
 
-import org.mongodb.scala.{MongoCollection, ObservableFuture, SingleObservableFuture}
-import org.mongodb.scala.bson.conversions.Bson
+import org.mongodb.scala.{MongoCollection, ObservableFuture, SingleObservableFuture, bsonDocumentToUntypedDocument}
 import org.mongodb.scala.bson.{BsonArray, BsonDocument, BsonInt32, BsonString}
+import org.mongodb.scala.bson.conversions.Bson
 import org.mongodb.scala.model.Accumulators.push
 import org.mongodb.scala.model.Aggregates.*
 import org.mongodb.scala.model.Projections.include
@@ -34,7 +34,7 @@ import scala.concurrent.{Await, ExecutionContext, Future}
 @Singleton
 class CaseKeywordMongoView @Inject() (mongoComponent: MongoComponent)(implicit ec: ExecutionContext) {
 
-  private[repository] val caseKeywordsViewName = "caseKeywordsFlat"
+  private[repository] val caseKeywordsViewName = "caseKeywords"
 
   lazy val view: MongoCollection[CaseKeyword] = Await.result(awaitable = initView, atMost = 30.seconds)
 
@@ -45,7 +45,9 @@ class CaseKeywordMongoView @Inject() (mongoComponent: MongoComponent)(implicit e
       .map(_ => ())
 
   private[repository] def dropView(viewName: String): Future[Unit] =
-    getView(viewName).drop().toFuture()
+    getView(viewName)
+      .drop()
+      .toFuture()
 
   private[repository] def getView(viewName: String): MongoCollection[CaseKeyword] =
     mongoComponent.database
@@ -79,12 +81,18 @@ class CaseKeywordMongoView @Inject() (mongoComponent: MongoComponent)(implicit e
         )
       ),
       unwind("$keywords"),
+      group(
+        "$keywords",
+        push("cases", "$$ROOT")
+      ),
+      sort(Sorts.ascending("_id")),
       lookup(
         "keywords",
-        "keywords",
+        "_id",
         "name",
         "keywordMeta"
       ),
+      addFields(Field("keyword.name", "$_id")),
       addFields(
         Field(
           "approved",
@@ -95,7 +103,8 @@ class CaseKeywordMongoView @Inject() (mongoComponent: MongoComponent)(implicit e
             )
           )
         )
-      )
+      ),
+      project(BsonDocument("_id" -> 0))
     )
 
   private val matchNotApproved: Bson =
@@ -105,72 +114,61 @@ class CaseKeywordMongoView @Inject() (mongoComponent: MongoComponent)(implicit e
     )
 
   def fetchKeywordsFromCases(pagination: Pagination): Future[Paged[CaseKeyword]] = {
+    val skipCount  = (pagination.page - 1) * pagination.pageSize
+    val limitCount = pagination.pageSize
 
-    val runAggregation =
-      view
-        .aggregate[CaseKeyword](
-          Seq(
-            org.mongodb.scala.model.Aggregates.`match`(matchNotApproved),
-            sort(Sorts.ascending("keywords", "reference")),
-            skip((pagination.page - 1) * pagination.pageSize),
-            limit(pagination.pageSize),
-            group(
-              "$keywords",
-              push("cases", "$$ROOT")
-            ),
-            sort(Sorts.ascending("_id")),
-            addFields(Field("keyword.name", "$_id")),
-            addFields(
-              Field(
-                "approved",
-                BsonDocument(
-                  "$arrayElemAt" -> BsonArray(
-                    BsonString("$keywordMeta.approved"),
-                    BsonInt32(0)
-                  )
-                )
-              )
-            ),
-            project(BsonDocument("_id" -> 0))
+    val runAggregation = view
+      .aggregate[CaseKeyword](
+        Seq(
+          `match`(matchNotApproved),
+          unwind("$cases"),
+          sort(
+            Sorts.orderBy(
+              Sorts.ascending("keyword.name"),
+              Sorts.ascending("cases.reference")
+            )
+          ),
+          skip(skipCount),
+          limit(limitCount),
+          group(
+            id = "$keyword",
+            push("cases", "$cases")
+          ),
+          sort(Sorts.ascending("_id.name")),
+          project(
+            BsonDocument(
+              "_id" -> 0,
+              "keyword" -> "$_id",
+              "cases" -> "$cases"
+            )
           )
         )
-        .allowDiskUse(true)
-        .toFuture()
+      )
+      .allowDiskUse(true)
+      .toFuture()
 
-    val futureCount =
-      view
-        .aggregate[BsonDocument](
-          Seq(
-            org.mongodb.scala.model.Aggregates.`match`(matchNotApproved),
-            count(countField)
-          )
+    val futureCount = view
+      .aggregate[BsonDocument](
+        Seq(
+          `match`(matchNotApproved),
+          unwind("$cases"),
+          count(countField)
         )
-        .allowDiskUse(true)
-        .headOption()
-        .map {
-          case Some(doc) => doc
-          case None      => BsonDocument(countField -> BsonInt32(0))
-        }
-
-    pagedResultsSafe(futureCount, runAggregation, pagination)
-  }
-
-  private def pagedResultsSafe(
-    futureCount: Future[BsonDocument],
-    results: Future[Seq[CaseKeyword]],
-    pagination: Pagination
-  ): Future[Paged[CaseKeyword]] =
+      )
+      .allowDiskUse(true)
+      .headOption()
+      .map {
+        case Some(doc) => doc.getInteger(countField, 0).toLong
+        case None      => 0L
+      }
 
     for {
-      countDoc <- futureCount
-      data     <- results
-    } yield {
-      val total = countDoc.getNumber(countField).longValue()
-
-      Paged(
-        results = data,
-        pagination = pagination,
-        resultCount = total
-      )
-    }
+      total   <- futureCount
+      results <- runAggregation
+    } yield Paged(
+      results = results,
+      pagination = pagination,
+      resultCount = total
+    )
+  }
 }
