@@ -84,9 +84,14 @@ class KeywordController @Inject() (
 
   def fetchCaseKeywords(pagination: Pagination): Action[AnyContent] =
     Action.async {
+      val start = System.currentTimeMillis()
+
       keywordService.fetchCaseKeywords(pagination).map { keywords =>
+        val duration = System.currentTimeMillis() - start
+        logger.info(s"[FLAT STRUCTURE] fetchCaseKeywords completed in ${duration}ms")
+
         Ok(Json.toJson(keywords))
-      } recover recovery
+      }.recover(recovery)
     }
 
   private[controllers] def handleNotFound: PartialFunction[Option[Keyword], Result] = {
