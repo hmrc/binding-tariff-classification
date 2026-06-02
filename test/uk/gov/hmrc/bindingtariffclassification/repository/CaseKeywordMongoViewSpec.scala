@@ -26,6 +26,7 @@ import uk.gov.hmrc.mongo.test.DefaultPlayMongoRepositorySupport
 import util.CaseData.{createBasicBTIApplication, createDecision, createLiabilityOrder}
 import org.mongodb.scala.SingleObservableFuture
 import org.mongodb.scala.ObservableFuture
+import org.mongodb.scala.bsonDocumentToDocument
 
 import java.time.Instant
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -188,6 +189,71 @@ class CaseKeywordMongoViewSpec
       val expected2 = Seq(caseKeywordBike, caseKeywordTool, caseKeywordCar)
 
       await(view.fetchKeywordsFromCases(pagination)).results contains expected2
+    }
+
+    "fetchKeywordsFromCases should return keywords sorted alphabetically" in {
+      await(repo.insert(caseWithKeywordsBTI))
+      await(repo.insert(caseWithKeywordsLiability))
+      await(repo.insert(caseWithKeywordsLiability2))
+
+      collectionSize shouldBe 3
+
+      val result = await(view.fetchKeywordsFromCases(pagination)).results
+
+      val expected = Seq(caseKeywordBike, caseKeywordCar, caseKeywordTool)
+
+      result contains expected
+    }
+
+    "fetchKeywordsFromCases should support pagination" in {
+
+      await(repo.insert(caseWithKeywordsBTI))
+      await(repo.insert(caseWithKeywordsLiability))
+      await(repo.insert(caseWithKeywordsLiability2))
+
+      val firstPage  = await(view.fetchKeywordsFromCases(Pagination(page = 1, pageSize = 2)))
+      val secondPage = await(view.fetchKeywordsFromCases(Pagination(page = 2, pageSize = 2)))
+
+      val expectedPage1 = Seq(caseKeywordBike, caseKeywordCar)
+      val expectedPage2 = Seq(caseKeywordTool)
+
+      firstPage.results contains expectedPage1
+      secondPage.results contains expectedPage2
+    }
+
+    "fetchKeywordsFromCases should exclude approved keywords" in {
+
+      await(repo.insert(caseWithKeywordsBTI))
+      await(repo.insert(caseWithKeywordsLiability))
+
+      await(
+        mongoComponent.database
+          .getCollection("keywords")
+          .insertOne(
+            org.mongodb.scala.bson.BsonDocument(
+              "name"     -> org.mongodb.scala.bson.BsonString("tool"),
+              "approved" -> org.mongodb.scala.bson.BsonBoolean(true)
+            )
+          )
+          .toFuture()
+      )
+
+      val result = await(view.fetchKeywordsFromCases(pagination)).results
+
+      val expected = Seq(caseKeywordBike)
+
+      result contains expected
+    }
+
+    "fetchKeywordsFromCases should include keywords with no approval metadata" in {
+
+      await(repo.insert(caseWithKeywordsBTI))
+
+      val result = await(view.fetchKeywordsFromCases(pagination)).results
+
+      val expected = Seq(caseKeywordBike)
+
+      result contains expected
     }
 
   }
