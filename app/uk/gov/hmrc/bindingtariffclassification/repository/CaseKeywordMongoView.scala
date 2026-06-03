@@ -16,13 +16,15 @@
 
 package uk.gov.hmrc.bindingtariffclassification.repository
 
-import org.mongodb.scala.{MongoCollection, ObservableFuture, SingleObservableFuture, bsonDocumentToUntypedDocument}
-import org.mongodb.scala.bson.{BsonArray, BsonDocument, BsonInt32, BsonString}
 import org.mongodb.scala.bson.conversions.Bson
+import org.mongodb.scala.bson.{BsonArray, BsonDocument, BsonInt32, BsonString, Document}
 import org.mongodb.scala.model.Accumulators.push
 import org.mongodb.scala.model.Aggregates.*
 import org.mongodb.scala.model.Projections.include
 import org.mongodb.scala.model.{Field, Filters, Sorts}
+import org.mongodb.scala.{MongoCollection, ObservableFuture, SingleObservableFuture}
+import play.api.libs.json.Json
+import uk.gov.hmrc.bindingtariffclassification.model.MongoFormatters.formatCaseKeyword
 import uk.gov.hmrc.bindingtariffclassification.model.{CaseKeyword, MongoCodecs, Paged, Pagination}
 import uk.gov.hmrc.bindingtariffclassification.repository.BaseMongoOperations.countField
 import uk.gov.hmrc.mongo.MongoComponent
@@ -34,7 +36,7 @@ import scala.concurrent.{Await, ExecutionContext, Future}
 @Singleton
 class CaseKeywordMongoView @Inject() (mongoComponent: MongoComponent)(implicit ec: ExecutionContext) {
 
-  private[repository] val caseKeywordsViewName = "caseKeywords"
+  private[repository] val caseKeywordsViewName = "caseKeywordsRow"
 
   lazy val view: MongoCollection[CaseKeyword] = Await.result(awaitable = initView, atMost = 30.seconds)
 
@@ -45,9 +47,7 @@ class CaseKeywordMongoView @Inject() (mongoComponent: MongoComponent)(implicit e
       .map(_ => ())
 
   private[repository] def dropView(viewName: String): Future[Unit] =
-    getView(viewName)
-      .drop()
-      .toFuture()
+    getView(viewName).drop().toFuture()
 
   private[repository] def getView(viewName: String): MongoCollection[CaseKeyword] =
     mongoComponent.database
@@ -81,18 +81,12 @@ class CaseKeywordMongoView @Inject() (mongoComponent: MongoComponent)(implicit e
         )
       ),
       unwind("$keywords"),
-      group(
-        "$keywords",
-        push("cases", "$$ROOT")
-      ),
-      sort(Sorts.ascending("_id")),
       lookup(
         "keywords",
-        "_id",
+        "keywords",
         "name",
         "keywordMeta"
       ),
-      addFields(Field("keyword.name", "$_id")),
       addFields(
         Field(
           "approved",
@@ -103,8 +97,7 @@ class CaseKeywordMongoView @Inject() (mongoComponent: MongoComponent)(implicit e
             )
           )
         )
-      ),
-      project(BsonDocument("_id" -> 0))
+      )
     )
 
   private val matchNotApproved: Bson =
@@ -113,62 +106,100 @@ class CaseKeywordMongoView @Inject() (mongoComponent: MongoComponent)(implicit e
       Filters.exists("approved", false)
     )
 
-  def fetchKeywordsFromCases(pagination: Pagination): Future[Paged[CaseKeyword]] = {
-    val skipCount  = (pagination.page - 1) * pagination.pageSize
-    val limitCount = pagination.pageSize
+  private val excludeIdProjection  = BsonDocument("_id" -> 0)
+  private val defaultCountResponse = BsonDocument(countField -> BsonInt32(0))
 
-    val runAggregation = view
-      .aggregate[CaseKeyword](
+  private val approvedMetaExpression = BsonDocument(
+    "$arrayElemAt" -> BsonArray(
+      BsonString("$keywordMeta.approved"),
+      BsonInt32(0)
+    )
+  )
+
+  private val groupPreProjection = project(
+    include(
+      "keywords",
+      "reference",
+      "status",
+      "assignee",
+      "team",
+      "goodsName",
+      "caseType",
+      "daysElapsed",
+      "liabilityStatus",
+      "keywordMeta"
+    )
+  )
+
+  private val countPreProjection = project(include("approved"))
+
+  def fetchKeywordsFromCases(pagination: Pagination): Future[Paged[CaseKeyword]] = {
+
+    val runAggregation = mongoComponent.database
+      .getCollection[Document](caseKeywordsViewName)
+      .aggregate(
         Seq(
           `match`(matchNotApproved),
-          unwind("$cases"),
-          sort(
-            Sorts.orderBy(
-              Sorts.ascending("keyword.name"),
-              Sorts.ascending("cases.reference")
-            )
-          ),
-          skip(skipCount),
-          limit(limitCount),
+          sort(Sorts.ascending("keywords", "reference")),
+          skip((pagination.page - 1) * pagination.pageSize),
+          limit(pagination.pageSize),
+          groupPreProjection,
           group(
-            id = "$keyword",
-            push("cases", "$cases")
-          ),
-          sort(Sorts.ascending("_id.name")),
-          project(
-            BsonDocument(
-              "_id" -> 0,
-              "keyword" -> "$_id",
-              "cases" -> "$cases"
+            "$keywords",
+            push(
+              "cases",
+              BsonDocument(
+                "reference"       -> "$reference",
+                "status"          -> "$status",
+                "assignee"        -> "$assignee",
+                "team"            -> "$team",
+                "goodsName"       -> "$goodsName",
+                "caseType"        -> "$caseType",
+                "daysElapsed"     -> "$daysElapsed",
+                "liabilityStatus" -> "$liabilityStatus"
+              )
             )
-          )
+          ),
+          addFields(
+            Field("keyword.name", "$_id"),
+            Field("approved", approvedMetaExpression)
+          ),
+          project(excludeIdProjection)
         )
       )
       .allowDiskUse(true)
       .toFuture()
 
-    val futureCount = view
-      .aggregate[BsonDocument](
-        Seq(
-          `match`(matchNotApproved),
-          unwind("$cases"),
-          count(countField)
+    val futureCount =
+      view
+        .aggregate[BsonDocument](
+          Seq(
+            `match`(matchNotApproved),
+            countPreProjection,
+            count(countField)
+          )
         )
-      )
-      .allowDiskUse(true)
-      .headOption()
-      .map {
-        case Some(doc) => doc.getInteger(countField, 0).toLong
-        case None      => 0L
-      }
+        .headOption()
+        .map {
+          case Some(doc) => doc
+          case None      => defaultCountResponse
+        }
 
     for {
-      total   <- futureCount
-      results <- runAggregation
-    } yield Paged(
-      results = results,
-      pagination = pagination,
-      resultCount = total
-    )
+      countDoc <- futureCount
+      rawData  <- runAggregation
+    } yield {
+      val total = countDoc.getNumber(countField).longValue()
+      val results = rawData.map { doc =>
+        val jsonString = doc.toJson()
+        Json.parse(jsonString).as[CaseKeyword]
+      }.toList
+
+      Paged(
+        results = results,
+        pagination = pagination,
+        resultCount = total
+      )
+    }
   }
 }
