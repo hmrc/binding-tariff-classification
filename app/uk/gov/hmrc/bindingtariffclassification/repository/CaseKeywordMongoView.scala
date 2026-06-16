@@ -32,7 +32,9 @@ import scala.concurrent.duration.DurationInt
 import scala.concurrent.{Await, ExecutionContext, Future}
 
 @Singleton
-class CaseKeywordMongoView @Inject() (mongoComponent: MongoComponent)(implicit ec: ExecutionContext) {
+class CaseKeywordMongoView @Inject() (mongoComponent: MongoComponent, keywordCountCache: KeywordCountCache)(implicit
+  ec: ExecutionContext
+) {
 
   private[repository] val caseKeywordsViewName = "caseKeywords"
 
@@ -85,7 +87,6 @@ class CaseKeywordMongoView @Inject() (mongoComponent: MongoComponent)(implicit e
         "$keywords",
         push("cases", "$$ROOT")
       ),
-      sort(Sorts.ascending("_id")),
       lookup(
         "keywords",
         "_id",
@@ -134,12 +135,11 @@ class CaseKeywordMongoView @Inject() (mongoComponent: MongoComponent)(implicit e
             id = "$keyword",
             push("cases", "$cases")
           ),
-          sort(Sorts.ascending("_id.name")),
           project(
             BsonDocument(
-              "_id" -> 0,
+              "_id"     -> 0,
               "keyword" -> "$_id",
-              "cases" -> "$cases"
+              "cases"   -> "$cases"
             )
           )
         )
@@ -147,20 +147,22 @@ class CaseKeywordMongoView @Inject() (mongoComponent: MongoComponent)(implicit e
       .allowDiskUse(true)
       .toFuture()
 
-    val futureCount = view
-      .aggregate[BsonDocument](
-        Seq(
-          `match`(matchNotApproved),
-          unwind("$cases"),
-          count(countField)
+    val futureCount = keywordCountCache.getOrUpdate {
+      view
+        .aggregate[BsonDocument](
+          Seq(
+            `match`(matchNotApproved),
+            unwind("$cases"),
+            count(countField)
+          )
         )
-      )
-      .allowDiskUse(true)
-      .headOption()
-      .map {
-        case Some(doc) => doc.getInteger(countField, 0).toLong
-        case None      => 0L
-      }
+        .allowDiskUse(true)
+        .headOption()
+        .map {
+          case Some(doc) => doc.getInteger(countField, 0).toLong
+          case None      => 0L
+        }
+    }
 
     for {
       total   <- futureCount
