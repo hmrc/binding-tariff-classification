@@ -23,10 +23,10 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.duration.DurationInt
 
 @Singleton
-class KeywordCountCache @Inject()()(implicit ec: ExecutionContext) {
+class KeywordCountCache @Inject() ()(implicit ec: ExecutionContext) {
 
   @volatile private var cachedCount: Option[Long] = None
-  @volatile private var expiresAt: Long = 0
+  @volatile private var expiresAt: Long           = 0
 
   private val ttlMillis = 5.minutes.toMillis
 
@@ -34,10 +34,8 @@ class KeywordCountCache @Inject()()(implicit ec: ExecutionContext) {
     val now = System.currentTimeMillis()
 
     if (cachedCount.isDefined && now < expiresAt) {
-      println("Using cached count")
       Future.successful(cachedCount.get)
     } else {
-      println("Loading count")
       loader.map { count =>
         cachedCount = Some(count)
         expiresAt = now + ttlMillis
