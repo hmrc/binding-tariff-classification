@@ -35,7 +35,7 @@ class CaseKeywordAggregation @Inject() (
     val skipCount  = (pagination.page - 1) * pagination.pageSize
     val limitCount = pagination.pageSize
 
-    keywordsRepository.collection.find(equal("approved", true)).toFuture().flatMap { approvedKeywords =>
+    keywordsRepository.approvedKeywords().flatMap { approvedKeywords =>
       val approvedNames  = approvedKeywords.map(_.name)
       val filterCriteria = if (approvedNames.nonEmpty) not(in("keyword", approvedNames*)) else empty()
 

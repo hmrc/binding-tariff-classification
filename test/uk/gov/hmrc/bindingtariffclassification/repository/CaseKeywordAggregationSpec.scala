@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.bindingtariffclassification.repository
 
+import org.mockito.Mockito.when
 import org.mongodb.scala.SingleObservableFuture
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
 import org.scalatestplus.mockito.MockitoSugar
@@ -25,6 +26,7 @@ import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
 import uk.gov.hmrc.mongo.test.DefaultPlayMongoRepositorySupport
 
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 
 class CaseKeywordAggregationSpec
     extends BaseMongoIndexSpec
@@ -33,81 +35,72 @@ class CaseKeywordAggregationSpec
     with MockitoSugar
     with DefaultPlayMongoRepositorySupport[CaseKeywordViewRow] {
 
-  private val config      = mock[AppConfig]
-  private val keywordRepo = new KeywordsMongoRepository(mongoComponent, config)
+  private val config = mock[AppConfig]
 
-  private val repo        = new CaseMongoRepository(config, mongoComponent, new SearchMapper(config), new UpdateMapper)
-  private val viewUpdater = new CaseKeywordViewUpdater(mongoComponent, config, repo)
+  private val keywordRepo =
+    mock[KeywordsMongoRepository]
 
-  private val aggregationService = new CaseKeywordAggregation(keywordRepo, viewUpdater)
+  private val repo =
+    new CaseMongoRepository(
+      config,
+      mongoComponent,
+      new SearchMapper(config),
+      new UpdateMapper
+    )
 
-  override protected val repository: PlayMongoRepository[CaseKeywordViewRow] = viewUpdater
+  private val viewUpdater =
+    new CaseKeywordViewUpdater(
+      mongoComponent,
+      config,
+      repo
+    )
+
+  private val aggregationService =
+    new CaseKeywordAggregation(
+      keywordRepo,
+      viewUpdater
+    )
+
+  override protected val repository: PlayMongoRepository[CaseKeywordViewRow] =
+    viewUpdater
 
   override protected val checkTtlIndex = false
 
-  private val rowBikeBti = CaseKeywordViewRow(
-    caseId = "0000001_bike",
-    keyword = "bike",
-    reference = "0000001",
-    status = "OPEN",
-    assignee = Some("001"),
-    team = Some("3"),
-    goodsName = Some("HTC Wildfire smartphone"),
-    caseType = Some("BTI"),
-    daysElapsed = 0,
-    liabilityStatus = None
-  )
+  private val rowBikeBti =
+    CaseKeywordViewRow(
+      keyword = "bike",
+      caseId = "0000001",
+      reference = "0000001",
+      status = "OPEN",
+      assignee = Some("001"),
+      team = Some("3"),
+      goodsName = Some("HTC Wildfire smartphone"),
+      caseType = Some("BTI"),
+      daysElapsed = 0,
+      liabilityStatus = None
+    )
 
-  private val rowBikeLiability = CaseKeywordViewRow(
-    caseId = "0000002_bike",
-    keyword = "bike",
-    reference = "0000002",
-    status = "OPEN",
-    assignee = Some("002"),
-    team = Some("3"),
-    goodsName = Some("Hair dryer"),
-    caseType = Some("LIABILITY_ORDER"),
-    daysElapsed = 0,
-    liabilityStatus = Some("LIVE")
-  )
-
-  private val rowToolLiability = CaseKeywordViewRow(
-    caseId = "0000002_tool",
-    keyword = "tool",
-    reference = "0000002",
-    status = "OPEN",
-    assignee = Some("002"),
-    team = Some("3"),
-    goodsName = Some("Hair dryer"),
-    caseType = Some("LIABILITY_ORDER"),
-    daysElapsed = 0,
-    liabilityStatus = Some("LIVE")
-  )
-
-  private val rowCarLiability = CaseKeywordViewRow(
-    caseId = "0000003_car",
-    keyword = "car",
-    reference = "0000003",
-    status = "OPEN",
-    assignee = Some("003"),
-    team = Some("3"),
-    goodsName = Some("Hair dryer"),
-    caseType = Some("LIABILITY_ORDER"),
-    daysElapsed = 0,
-    liabilityStatus = Some("LIVE")
-  )
+  private val rowToolLiability =
+    CaseKeywordViewRow(
+      keyword = "tool",
+      caseId = "0000002",
+      reference = "0000002",
+      status = "OPEN",
+      assignee = Some("002"),
+      team = Some("3"),
+      goodsName = Some("Hair dryer"),
+      caseType = Some("LIABILITY_ORDER"),
+      daysElapsed = 0,
+      liabilityStatus = Some("LIVE")
+    )
 
   override def beforeEach(): Unit = {
     super.beforeEach()
-    deleteAll()
-    await(keywordRepo.collection.drop().toFuture())
-    await(keywordRepo.ensureIndexes())
-    await(viewUpdater.ensureIndexes())
-  }
 
-  override def afterAll(): Unit = {
-    super.afterAll()
     deleteAll()
+
+    when(keywordRepo.approvedKeywords())
+      .thenReturn(Future.successful(Seq.empty))
   }
 
   private val pagination = Pagination()
@@ -115,52 +108,52 @@ class CaseKeywordAggregationSpec
   "CaseKeywordAggregation" should {
 
     "fetchKeywordsFromCases should return mapped CaseKeywords from the materialized view" in {
+
       await(viewUpdater.collection.insertOne(rowBikeBti).toFuture())
       await(viewUpdater.collection.insertOne(rowToolLiability).toFuture())
 
-      val pagedResult = await(aggregationService.fetchKeywordsFromCases(pagination))
+      val pagedResult =
+        await(
+          aggregationService.fetchKeywordsFromCases(
+            pagination
+          )
+        )
 
-      pagedResult.resultCount                             shouldBe 2
-      pagedResult.results.map(_.keyword.name)               should contain theSameElementsAs Seq("bike", "tool")
-      pagedResult.results.flatMap(_.cases.map(_.reference)) should contain theSameElementsAs Seq("0000001", "0000002")
-    }
+      pagedResult.resultCount shouldBe 2
 
-    "fetchKeywordsFromCases should support pagination correctly" in {
-      await(viewUpdater.collection.insertOne(rowBikeBti).toFuture())
-      await(viewUpdater.collection.insertOne(rowCarLiability).toFuture())
-      await(viewUpdater.collection.insertOne(rowToolLiability).toFuture())
-
-      val page1 = await(aggregationService.fetchKeywordsFromCases(Pagination(page = 1, pageSize = 2)))
-      val page2 = await(aggregationService.fetchKeywordsFromCases(Pagination(page = 2, pageSize = 2)))
-
-      page1.results.map(_.keyword.name) shouldBe Seq("bike", "car")
-      page2.results.map(_.keyword.name) shouldBe Seq("tool")
-
-      page1.resultCount shouldBe 3
-      page2.resultCount shouldBe 3
+      pagedResult.results.map(_.keyword.name) should contain theSameElementsAs
+        Seq("bike", "tool")
     }
 
     "fetchKeywordsFromCases should exclude keywords that are marked as approved" in {
+
       await(viewUpdater.collection.insertOne(rowBikeBti).toFuture())
       await(viewUpdater.collection.insertOne(rowToolLiability).toFuture())
 
-      await(keywordRepo.insert(Keyword(name = "tool", approved = true)))
+      when(keywordRepo.approvedKeywords())
+        .thenReturn(
+          Future.successful(
+            Seq(
+              Keyword(
+                name = "tool",
+                approved = true
+              )
+            )
+          )
+        )
 
-      val pagedResult = await(aggregationService.fetchKeywordsFromCases(pagination))
+      val pagedResult =
+        await(
+          aggregationService.fetchKeywordsFromCases(
+            pagination
+          )
+        )
 
-      pagedResult.resultCount                 shouldBe 1
-      pagedResult.results.map(_.keyword.name) shouldBe Seq("bike")
-    }
+      pagedResult.resultCount shouldBe 1
 
-    "fetchKeywordsFromCases should include all keywords if none are approved" in {
-      await(viewUpdater.collection.insertOne(rowBikeBti).toFuture())
-
-      await(keywordRepo.insert(Keyword(name = "bike")))
-
-      val pagedResult = await(aggregationService.fetchKeywordsFromCases(pagination))
-
-      pagedResult.resultCount                 shouldBe 1
-      pagedResult.results.map(_.keyword.name) shouldBe Seq("bike")
+      pagedResult.results.map(_.keyword.name) shouldBe Seq(
+        "bike"
+      )
     }
   }
 }

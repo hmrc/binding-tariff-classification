@@ -79,4 +79,8 @@ class KeywordsMongoRepository @Inject() (mongoComponent: MongoComponent, appConf
   override def delete(name: String): Future[Unit] =
     collection.deleteOne(equal("name", name)).map(_ => ()).head()
 
+  def approvedKeywords(): Future[Seq[Keyword]] =
+    collection
+      .find(equal("approved", true))
+      .toFuture()
 }
