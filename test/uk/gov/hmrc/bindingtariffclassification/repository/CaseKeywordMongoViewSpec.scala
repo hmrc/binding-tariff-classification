@@ -26,7 +26,6 @@ import uk.gov.hmrc.mongo.test.DefaultPlayMongoRepositorySupport
 import util.CaseData.{createBasicBTIApplication, createDecision, createLiabilityOrder}
 import org.mongodb.scala.SingleObservableFuture
 import org.mongodb.scala.ObservableFuture
-import org.mongodb.scala.bsonDocumentToDocument
 
 import java.time.Instant
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -38,7 +37,7 @@ class CaseKeywordMongoViewSpec
     with DefaultPlayMongoRepositorySupport[Case] {
 
   private val config = mock[AppConfig]
-  private val view   = new CaseKeywordMongoView(mongoComponent, KeywordCountCache())
+  private val view   = new CaseKeywordMongoView(mongoComponent)
   private val repo   = new CaseMongoRepository(config, mongoComponent, new SearchMapper(config), new UpdateMapper)
 
   override protected val repository: PlayMongoRepository[Case] = repo
@@ -189,104 +188,6 @@ class CaseKeywordMongoViewSpec
       val expected2 = Seq(caseKeywordBike, caseKeywordTool, caseKeywordCar)
 
       await(view.fetchKeywordsFromCases(pagination)).results contains expected2
-    }
-
-    "fetchKeywordsFromCases should return keywords sorted alphabetically" in {
-      await(repo.insert(caseWithKeywordsBTI))
-      await(repo.insert(caseWithKeywordsLiability))
-      await(repo.insert(caseWithKeywordsLiability2))
-
-      collectionSize shouldBe 3
-
-      val result = await(view.fetchKeywordsFromCases(pagination)).results
-
-      val expected = Seq(caseKeywordBike, caseKeywordCar, caseKeywordTool)
-
-      result contains expected
-    }
-
-    "fetchKeywordsFromCases should support pagination" in {
-
-      await(repo.insert(caseWithKeywordsBTI))
-      await(repo.insert(caseWithKeywordsLiability))
-      await(repo.insert(caseWithKeywordsLiability2))
-
-      val firstPage  = await(view.fetchKeywordsFromCases(Pagination(page = 1, pageSize = 2)))
-      val secondPage = await(view.fetchKeywordsFromCases(Pagination(page = 2, pageSize = 2)))
-
-      val expectedPage1 = Seq(caseKeywordBike, caseKeywordCar)
-      val expectedPage2 = Seq(caseKeywordTool)
-
-      firstPage.results contains expectedPage1
-      secondPage.results contains expectedPage2
-    }
-
-    "fetchKeywordsFromCases should exclude approved keywords" in {
-
-      await(repo.insert(caseWithKeywordsBTI))
-      await(repo.insert(caseWithKeywordsLiability))
-
-      await(
-        mongoComponent.database
-          .getCollection("keywords")
-          .insertOne(
-            org.mongodb.scala.bson.BsonDocument(
-              "name"     -> org.mongodb.scala.bson.BsonString("tool"),
-              "approved" -> org.mongodb.scala.bson.BsonBoolean(true)
-            )
-          )
-          .toFuture()
-      )
-
-      val result = await(view.fetchKeywordsFromCases(pagination)).results
-
-      val expected = Seq(caseKeywordBike)
-
-      result contains expected
-    }
-
-    "fetchKeywordsFromCases should include keywords with no approval metadata" in {
-
-      await(repo.insert(caseWithKeywordsBTI))
-
-      val result = await(view.fetchKeywordsFromCases(pagination)).results
-
-      val expected = Seq(caseKeywordBike)
-
-      result contains expected
-    }
-
-    "fetchKeywordsFromCases should cache the total result count and reuse it on subsequent calls" in {
-      await(view.dropView(view.caseKeywordsViewName))
-      await(view.createView(view.caseKeywordsViewName, repository.collectionName))
-
-      await(repo.insert(caseWithKeywordsBTI))
-      await(repo.insert(caseWithKeywordsLiability))
-      collectionSize shouldBe 2
-
-      val firstCallResult = await(view.fetchKeywordsFromCases(pagination))
-      val initialCount    = firstCallResult.resultCount
-
-      // caseWithKeywordsBTI has 1 keyword ("bike")
-      // caseWithKeywordsLiability has 2 keywords ("bike", "tool")
-      // Because your count pipeline runs `unwind("$cases")`, the count matches total keyword references
-      initialCount mustBe 3L
-
-      // Insert a new case that would increase the count if the DB were hit directly
-      await(repo.insert(caseWithKeywordsLiability2))
-      collectionSize shouldBe 3
-
-      // Second call: Should still return the cached total count (3), proving it bypassed recalculation
-      val secondCallResult = await(view.fetchKeywordsFromCases(pagination))
-      secondCallResult.resultCount mustBe initialCount
-
-      // Verify that the actual data results ARE fresh/updated (because only the count query is cached)
-      val firstCallKeywords  = firstCallResult.results.map(_.keyword.name).toSet
-      val secondCallKeywords = secondCallResult.results.map(_.keyword.name).toSet
-
-      // The second call data results will include the new keyword ("car")
-      secondCallKeywords must contain("car")
-      secondCallKeywords.size mustNot be(firstCallKeywords.size)
     }
 
   }
