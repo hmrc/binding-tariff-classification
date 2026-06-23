@@ -2511,7 +2511,14 @@ class CaseRepositorySpec
           ascending("decision.bindingCommodityCode"),
           IndexOptions().name("decision_bindingCommodityCode_Index")
         ),
-        IndexModel(ascending("keywords"), IndexOptions().name("keywords_Index"))
+        IndexModel(ascending("keywords"), IndexOptions().name("keywords_Index")),
+        IndexModel(
+          Indexes.compoundIndex(
+            Indexes.ascending("keyword"),
+            Indexes.ascending("reference")
+          ),
+          IndexOptions().name("keyword_reference_view_idx")
+        )
       )
 
       val repo = newMongoRepository
