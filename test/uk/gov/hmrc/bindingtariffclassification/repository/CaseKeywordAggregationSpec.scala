@@ -34,9 +34,10 @@ class CaseKeywordAggregationSpec
     with BeforeAndAfterEach
     with DefaultPlayMongoRepositorySupport[Case] {
 
-  private val config = mock[AppConfig]
-  private val view   = new CaseKeywordAggregation(mongoComponent)
-  private val repo   = new CaseMongoRepository(config, mongoComponent, new SearchMapper(config), new UpdateMapper)
+  private val config      = mock[AppConfig]
+  private val view        = new CaseKeywordAggregation(mongoComponent)
+  private val repo        = new CaseMongoRepository(config, mongoComponent, new SearchMapper(config), new UpdateMapper)
+  private val keywordRepo = new KeywordsMongoRepository(mongoComponent, config)
 
   override protected val repository: PlayMongoRepository[Case] = repo
 
@@ -129,7 +130,7 @@ class CaseKeywordAggregationSpec
 
   private val pagination = Pagination()
 
-  "CaseKeywordMongoView" should {
+  "CaseKeywordAggregationSpec" should {
 
     "fetchKeywordsFromCases should return keywords from the Cases" in {
       await(repo.insert(caseWithKeywordsBTI))
@@ -193,11 +194,20 @@ class CaseKeywordAggregationSpec
       await(repo.insert(caseWithKeywordsLiability))
 
       await(
+        keywordRepo.insert(
+          Keyword(
+            name = "toolApproved",
+            approved = true
+          )
+        )
+      )
+
+      await(
         mongoComponent.database
           .getCollection("keywords")
           .insertOne(
             org.mongodb.scala.bson.BsonDocument(
-              "name"     -> org.mongodb.scala.bson.BsonString("tool"),
+              "name"     -> org.mongodb.scala.bson.BsonString("toolApproved"),
               "approved" -> org.mongodb.scala.bson.BsonBoolean(true)
             )
           )
