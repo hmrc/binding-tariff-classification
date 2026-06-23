@@ -21,8 +21,8 @@ import play.api.{Configuration, Environment}
 import uk.gov.hmrc.bindingtariffclassification.controllers.MigrationController
 import uk.gov.hmrc.bindingtariffclassification.crypto.LocalCrypto
 import uk.gov.hmrc.bindingtariffclassification.migrations.{AddKeywordsMigrationJob, AmendDateOfExtractMigrationJob, MigrationJobs}
-import uk.gov.hmrc.bindingtariffclassification.repository.{CaseMongoRepository, CaseRepository, EncryptedCaseMongoRepository}
-import uk.gov.hmrc.bindingtariffclassification.scheduler._
+import uk.gov.hmrc.bindingtariffclassification.repository.{CaseKeywordViewComponentsInitializer, CaseMongoRepository, CaseRepository, EncryptedCaseMongoRepository}
+import uk.gov.hmrc.bindingtariffclassification.scheduler.*
 import uk.gov.hmrc.crypto.AesCrypto
 
 import javax.inject.{Inject, Provider}
@@ -47,6 +47,7 @@ class Module extends play.api.inject.Module {
         bind[ScheduledJobs].toProvider[ScheduledJobProvider],
         bind[MigrationJobs].toProvider[MigrationJobProvider],
         bind[Scheduler].toSelf.eagerly(),
+        bind[CaseKeywordViewComponentsInitializer].toSelf.eagerly(),
         // THIS NEEDS TO BE TRIGGERED IN ORDER TO RUN MIGRATION JOBS
         bind[MigrationController].toSelf.eagerly()
       )

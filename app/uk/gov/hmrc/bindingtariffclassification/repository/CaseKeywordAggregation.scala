@@ -16,108 +16,66 @@
 
 package uk.gov.hmrc.bindingtariffclassification.repository
 
-import org.mongodb.scala.bson.conversions.Bson
-import org.mongodb.scala.bson.{BsonArray, BsonDocument, BsonInt32, BsonString, Document}
-import org.mongodb.scala.model.Accumulators.push
-import org.mongodb.scala.model.Aggregates.*
-import org.mongodb.scala.model.Projections.include
-import org.mongodb.scala.model.{Field, Filters, Sorts}
-import org.mongodb.scala.{MongoCollection, ObservableFuture, SingleObservableFuture, documentToUntypedDocument}
-import play.api.libs.json.Json
-import uk.gov.hmrc.bindingtariffclassification.model.MongoFormatters.formatCaseKeyword
-import uk.gov.hmrc.bindingtariffclassification.model.{CaseKeyword, MongoCodecs, Paged, Pagination}
-import uk.gov.hmrc.bindingtariffclassification.repository.BaseMongoOperations.countField
-import uk.gov.hmrc.mongo.MongoComponent
+import org.mongodb.scala.model.Filters.{empty, equal, in, not}
+import org.mongodb.scala.model.Sorts.ascending
+import org.mongodb.scala.model.{Filters, Sorts}
+import org.mongodb.scala.{ObservableFuture, SingleObservableFuture}
+import uk.gov.hmrc.bindingtariffclassification.model.*
 
 import javax.inject.{Inject, Singleton}
-import scala.concurrent.duration.DurationInt
-import scala.concurrent.{Await, ExecutionContext, Future}
-import scala.jdk.CollectionConverters.*
+import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class CaseKeywordAggregation @Inject() (mongoComponent: MongoComponent)(implicit
-  ec: ExecutionContext
-) {
+class CaseKeywordAggregation @Inject() (
+  keywordsRepository: KeywordsMongoRepository,
+  viewUpdater: CaseKeywordViewUpdater
+)(implicit ec: ExecutionContext) {
 
   def fetchKeywordsFromCases(pagination: Pagination): Future[Paged[CaseKeyword]] = {
     val skipCount  = (pagination.page - 1) * pagination.pageSize
     val limitCount = pagination.pageSize
 
-    // 1. Önce onaylıları çekiyoruz
-    mongoComponent.database
-      .getCollection[Document]("keywords")
-      .find(Filters.equal("approved", true))
-      .projection(include("name"))
-      .toFuture()
-      .flatMap { approvedKeywordDocs =>
-        val approvedNames = approvedKeywordDocs.map(_.getString("name")).filter(_ != null).toList
+    keywordsRepository.collection.find(equal("approved", true)).toFuture().flatMap { approvedKeywords =>
+      val approvedNames  = approvedKeywords.map(_.name)
+      val filterCriteria = if (approvedNames.nonEmpty) not(in("keyword", approvedNames*)) else empty()
 
-        val totalCountFuture = mongoComponent.database
-          .getCollection[Document]("cases")
-          .aggregate(
-            Seq(
-              project(include("keywords")),
-              unwind("$keywords"),
-              `match`(Filters.not(Filters.in("keywords", approvedNames: _*))),
-              count(countField)
-            )
-          )
-          .headOption()
-          .map {
-            case Some(doc) =>
-              doc
-                .get[org.mongodb.scala.bson.BsonNumber](countField)
-                .map(_.doubleValue().toLong)
-                .getOrElse(0L)
-            case None => 0L
-          }
+      val totalCountFuture = viewUpdater.collection.countDocuments(filterCriteria).toFuture()
 
-        val rawDataFuture = mongoComponent.database
-          .getCollection[Document]("cases")
-          .aggregate(
-            Seq(
-              unwind("$keywords"),
-              `match`(Filters.not(Filters.in("keywords", approvedNames: _*))),
-              skip(skipCount),
-              limit(limitCount),
-              lookup("keywords", "keywords", "name", "keywordMeta"),
-              project(
-                BsonDocument(
-                  "keyword" -> BsonDocument("name" -> "$keywords"),
-                  "cases" -> BsonArray(
-                    BsonDocument(
-                      "reference"       -> "$reference",
-                      "status"          -> "$status",
-                      "assignee"        -> "$assignee",
-                      "team"            -> "$queueId",
-                      "goodsName"       -> "$application.goodName",
-                      "caseType"        -> "$application.type",
-                      "daysElapsed"     -> "$daysElapsed",
-                      "liabilityStatus" -> "$application.status"
-                    )
-                  )
-                )
+      val dataFuture = viewUpdater.collection
+        .find(filterCriteria)
+        .sort(ascending("keyword", "reference"))
+        .skip(skipCount)
+        .limit(limitCount)
+        .toFuture()
+
+      for {
+        totalCount <- totalCountFuture
+        rows       <- dataFuture
+      } yield {
+        val results = rows.map { row =>
+          CaseKeyword(
+            keyword = Keyword(name = row.keyword),
+            cases = List(
+              CaseHeader(
+                reference = row.reference,
+                status = CaseStatus.withName(row.status),
+                assignee = row.assignee.map(id => Operator(id)),
+                team = row.team,
+                goodsName = row.goodsName,
+                caseType = ApplicationType.withName(row.caseType.getOrElse("BTI")),
+                daysElapsed = row.daysElapsed.toLong,
+                liabilityStatus = row.liabilityStatus.map(s => LiabilityStatus.withName(s))
               )
             )
           )
-          .allowDiskUse(true)
-          .toFuture()
+        }.toList
 
-        for {
-          totalCount <- totalCountFuture
-          rawData    <- rawDataFuture
-        } yield {
-          val results = rawData.map { doc =>
-            val jsonString = doc.toJson()
-            Json.parse(jsonString).as[CaseKeyword]
-          }.toList
-
-          Paged(
-            results = results,
-            pagination = pagination,
-            resultCount = totalCount
-          )
-        }
+        Paged(
+          results = results,
+          pagination = pagination,
+          resultCount = totalCount
+        )
       }
+    }
   }
 }

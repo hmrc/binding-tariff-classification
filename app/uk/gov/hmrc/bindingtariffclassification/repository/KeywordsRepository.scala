@@ -51,7 +51,8 @@ class KeywordsMongoRepository @Inject() (mongoComponent: MongoComponent, appConf
       mongoComponent = mongoComponent,
       domainFormat = formatKeywords,
       indexes = Seq(
-        IndexModel(ascending("name"), IndexOptions().unique(true).name("name_Index"))
+        IndexModel(ascending("name"), IndexOptions().unique(true).name("name_Index")),
+        IndexModel(ascending("approved"), IndexOptions().name("approved_index"))
       ),
       replaceIndexes = appConfig.replaceIndexes
     )

@@ -105,14 +105,7 @@ class CaseMongoRepository @Inject() (
         ),
         IndexModel(asc("daysElapsed"), IndexOptions().name("daysElapsed_Index")),
         IndexModel(asc("decision.bindingCommodityCode"), IndexOptions().name("decision_bindingCommodityCode_Index")),
-        IndexModel(asc("keywords"), IndexOptions().name("keywords_Index")),
-        IndexModel(
-          Indexes.compoundIndex(
-            asc("keywords"),
-            asc("reference")
-          ),
-          IndexOptions().name("keywords_reference_compound_Index")
-        )
+        IndexModel(asc("keywords"), IndexOptions().name("keywords_Index"))
       ),
       replaceIndexes = appConfig.replaceIndexes
     )
