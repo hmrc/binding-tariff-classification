@@ -38,7 +38,7 @@ class CaseKeywordMongoViewSpec
     with DefaultPlayMongoRepositorySupport[Case] {
 
   private val config = mock[AppConfig]
-  private val view   = new CaseKeywordMongoView(mongoComponent)
+  private val view   = new CaseKeywordAggregation(mongoComponent)
   private val repo   = new CaseMongoRepository(config, mongoComponent, new SearchMapper(config), new UpdateMapper)
 
   override protected val repository: PlayMongoRepository[Case] = repo

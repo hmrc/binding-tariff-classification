@@ -26,7 +26,7 @@ import scala.concurrent.{ExecutionContext, Future}
 @Singleton
 class KeywordService @Inject() (
   keywordRepository: KeywordsRepository,
-  caseKeywordAggregation: CaseKeywordMongoView
+  caseKeywordAggregation: CaseKeywordAggregation
 )(implicit mat: Materializer) {
 
   implicit val ec: ExecutionContext = mat.executionContext
