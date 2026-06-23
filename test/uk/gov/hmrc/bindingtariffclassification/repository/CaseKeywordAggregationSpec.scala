@@ -16,22 +16,19 @@
 
 package uk.gov.hmrc.bindingtariffclassification.repository
 
-import org.scalatest.matchers.must.Matchers._
+import org.mongodb.scala.{SingleObservableFuture, bsonDocumentToDocument}
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
 import uk.gov.hmrc.bindingtariffclassification.config.AppConfig
+import uk.gov.hmrc.bindingtariffclassification.model.*
 import uk.gov.hmrc.bindingtariffclassification.model.Role.CLASSIFICATION_OFFICER
-import uk.gov.hmrc.bindingtariffclassification.model._
 import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
 import uk.gov.hmrc.mongo.test.DefaultPlayMongoRepositorySupport
 import util.CaseData.{createBasicBTIApplication, createDecision, createLiabilityOrder}
-import org.mongodb.scala.SingleObservableFuture
-import org.mongodb.scala.ObservableFuture
-import org.mongodb.scala.bsonDocumentToDocument
 
 import java.time.Instant
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class CaseKeywordMongoViewSpec
+class CaseKeywordAggregationSpec
     extends BaseMongoIndexSpec
     with BeforeAndAfterAll
     with BeforeAndAfterEach
@@ -133,37 +130,6 @@ class CaseKeywordMongoViewSpec
   private val pagination = Pagination()
 
   "CaseKeywordMongoView" should {
-
-    "dropView will drop the view" in {
-
-      val result                = view.dropView(view.caseKeywordsViewName)
-      val futureCollectionNames = await(result).flatMap(_ => mongoComponent.database.listCollectionNames().toFuture())
-
-      await(futureCollectionNames) mustNot contain(view.caseKeywordsViewName)
-    }
-
-    "createView will create the view" in {
-      val result =
-        view.dropView(view.caseKeywordsViewName).map(_ => view.createView(view.caseKeywordsViewName, "cases"))
-
-      val futureCollectionNames = await(result).flatMap(_ => mongoComponent.database.listCollectionNames().toFuture())
-
-      await(futureCollectionNames).toSeq.sorted mustBe Seq("system.views", "cases", "caseKeywordsRow").sorted
-    }
-
-    "getView will get the view" in {
-      val result = view
-        .dropView(view.caseKeywordsViewName)
-        .map(_ => view.initView)
-        .map(_ =>
-          view
-            .createView(view.caseKeywordsViewName, "cases")
-            .flatMap(_ => view.getView(view.caseKeywordsViewName).countDocuments().head())
-        )
-
-      val futureViewCount = await(result)
-      await(futureViewCount) mustBe 0
-    }
 
     "fetchKeywordsFromCases should return keywords from the Cases" in {
       await(repo.insert(caseWithKeywordsBTI))
