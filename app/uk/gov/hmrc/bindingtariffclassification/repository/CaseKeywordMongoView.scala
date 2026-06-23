@@ -16,16 +16,19 @@
 
 package uk.gov.hmrc.bindingtariffclassification.repository
 
-import org.mongodb.scala.{MongoCollection, ObservableFuture, SingleObservableFuture, bsonDocumentToUntypedDocument}
-import org.mongodb.scala.bson.{BsonArray, BsonDocument, BsonInt32, BsonString}
+import org.mongodb.scala.MongoCollection
+import org.mongodb.scala.bson.{BsonDocument, BsonInt32}
 import org.mongodb.scala.bson.conversions.Bson
 import org.mongodb.scala.model.Accumulators.push
-import org.mongodb.scala.model.Aggregates.*
+import org.mongodb.scala.model.Aggregates._
 import org.mongodb.scala.model.Projections.include
-import org.mongodb.scala.model.{Field, Filters, Sorts}
+import org.mongodb.scala.model.{Aggregates, Field, Projections}
+import play.api.libs.json.Json
 import uk.gov.hmrc.bindingtariffclassification.model.{CaseKeyword, MongoCodecs, Paged, Pagination}
-import uk.gov.hmrc.bindingtariffclassification.repository.BaseMongoOperations.countField
+import uk.gov.hmrc.bindingtariffclassification.repository.BaseMongoOperations.{countField, pagedResults}
 import uk.gov.hmrc.mongo.MongoComponent
+import org.mongodb.scala.SingleObservableFuture
+import org.mongodb.scala.ObservableFuture
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.duration.DurationInt
@@ -38,11 +41,8 @@ class CaseKeywordMongoView @Inject() (mongoComponent: MongoComponent)(implicit e
 
   lazy val view: MongoCollection[CaseKeyword] = Await.result(awaitable = initView, atMost = 30.seconds)
 
-  private[repository] def createView(viewName: String, viewOn: String): Future[Unit] =
-    mongoComponent.database
-      .createView(viewName, viewOn, pipeline)
-      .toFuture()
-      .map(_ => ())
+  private[repository] def createView(viewName: String, viewOn: String): Future[?] =
+    mongoComponent.database.createView(viewName, viewOn, pipeline).toFuture()
 
   private[repository] def dropView(viewName: String): Future[Unit] =
     getView(viewName)
@@ -56,119 +56,66 @@ class CaseKeywordMongoView @Inject() (mongoComponent: MongoComponent)(implicit e
 
   private[repository] def initView: Future[MongoCollection[CaseKeyword]] =
     dropView(caseKeywordsViewName)
-      .flatMap(_ => createView(caseKeywordsViewName, "cases"))
+      .map(_ => createView(caseKeywordsViewName, "cases"))
       .map(_ => getView(caseKeywordsViewName))
 
-  private val pipeline: Seq[Bson] =
-    Seq(
-      addFields(
-        Field("team", "$queueId"),
-        Field("goodsName", "$application.goodName"),
-        Field("caseType", "$application.type"),
-        Field("liabilityStatus", "$application.status")
-      ),
-      project(
-        include(
-          "reference",
-          "status",
-          "assignee",
-          "team",
-          "goodsName",
-          "caseType",
-          "keywords",
-          "daysElapsed",
-          "liabilityStatus"
-        )
-      ),
-      unwind("$keywords"),
-      group(
-        "$keywords",
-        push("cases", "$$ROOT")
-      ),
-      sort(Sorts.ascending("_id")),
-      lookup(
+  private val projectCaseHeader = Aggregates.project(
+    Projections.fields(
+      include(
+        "reference",
+        "status",
+        "assignee",
+        "team",
+        "goodsName",
+        "caseType",
         "keywords",
-        "_id",
-        "name",
-        "keywordMeta"
-      ),
-      addFields(Field("keyword.name", "$_id")),
-      addFields(
-        Field(
-          "approved",
-          BsonDocument(
-            "$arrayElemAt" -> BsonArray(
-              BsonString("$keywordMeta.approved"),
-              BsonInt32(0)
-            )
-          )
-        )
-      ),
-      project(BsonDocument("_id" -> 0))
+        "daysElapsed",
+        "liabilityStatus"
+      )
     )
+  )
 
-  private val matchNotApproved: Bson =
-    Filters.or(
-      Filters.equal("approved", false),
-      Filters.exists("approved", false)
+  private val addHeaderFields = addFields(
+    Field("team", "$queueId"),
+    Field("goodsName", "$application.goodName"),
+    Field("caseType", "$application.type"),
+    Field("liabilityStatus", "$application.status")
+  )
+
+  private val unwindKeywords  = unwind("$keywords")
+  private val group           = Aggregates.group("$keywords", push("cases", "$$ROOT"))
+  private val addKeywordField = addFields(Field("keyword.name", "$_id"))
+  private val project         = Aggregates.project(BsonDocument("_id" -> 0))
+
+  protected val pipeline: Seq[Bson] =
+    Seq(
+      addHeaderFields,
+      projectCaseHeader,
+      unwindKeywords,
+      group,
+      addKeywordField,
+      project
     )
 
   def fetchKeywordsFromCases(pagination: Pagination): Future[Paged[CaseKeyword]] = {
-    val skipCount  = (pagination.page - 1) * pagination.pageSize
-    val limitCount = pagination.pageSize
-
     val runAggregation = view
-      .aggregate[CaseKeyword](
+      .aggregate[CaseKeyword] {
         Seq(
-          `match`(matchNotApproved),
-          unwind("$cases"),
-          sort(
-            Sorts.orderBy(
-              Sorts.ascending("keyword.name"),
-              Sorts.ascending("cases.reference")
-            )
-          ),
-          skip(skipCount),
-          limit(limitCount),
-          group(
-            id = "$keyword",
-            push("cases", "$cases")
-          ),
-          sort(Sorts.ascending("_id.name")),
-          project(
-            BsonDocument(
-              "_id" -> 0,
-              "keyword" -> "$_id",
-              "cases" -> "$cases"
-            )
-          )
+          Aggregates.project(BsonDocument("_id" -> 0)),
+          skip((pagination.page - 1) * pagination.pageSize),
+          limit(pagination.pageSize)
         )
-      )
+      }
       .allowDiskUse(true)
       .toFuture()
 
     val futureCount = view
-      .aggregate[BsonDocument](
-        Seq(
-          `match`(matchNotApproved),
-          unwind("$cases"),
-          count(countField)
-        )
-      )
+      .aggregate[BsonDocument] {
+        Seq(count(countField))
+      }
       .allowDiskUse(true)
       .headOption()
-      .map {
-        case Some(doc) => doc.getInteger(countField, 0).toLong
-        case None      => 0L
-      }
 
-    for {
-      total   <- futureCount
-      results <- runAggregation
-    } yield Paged(
-      results = results,
-      pagination = pagination,
-      resultCount = total
-    )
+    pagedResults(futureCount, runAggregation, pagination)
   }
 }
