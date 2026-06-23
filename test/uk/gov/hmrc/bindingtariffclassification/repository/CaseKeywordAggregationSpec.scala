@@ -16,18 +16,14 @@
 
 package uk.gov.hmrc.bindingtariffclassification.repository
 
-import org.mongodb.scala.model.Indexes.ascending
-import org.mongodb.scala.{SingleObservableFuture, bsonDocumentToDocument}
+import org.mongodb.scala.SingleObservableFuture
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
 import org.scalatestplus.mockito.MockitoSugar
 import uk.gov.hmrc.bindingtariffclassification.config.AppConfig
 import uk.gov.hmrc.bindingtariffclassification.model.*
-import uk.gov.hmrc.bindingtariffclassification.model.Role.CLASSIFICATION_OFFICER
 import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
 import uk.gov.hmrc.mongo.test.DefaultPlayMongoRepositorySupport
-import util.CaseData.{createBasicBTIApplication, createDecision, createLiabilityOrder}
 
-import java.time.Instant
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class CaseKeywordAggregationSpec
@@ -105,12 +101,8 @@ class CaseKeywordAggregationSpec
     super.beforeEach()
     deleteAll()
     await(keywordRepo.collection.drop().toFuture())
-    await(
-      mongoComponent.database
-        .getCollection("keywords")
-        .createIndex(ascending("approved"))
-        .toFuture()
-    )
+    await(keywordRepo.ensureIndexes())
+    await(viewUpdater.ensureIndexes())
   }
 
   override def afterAll(): Unit = {
