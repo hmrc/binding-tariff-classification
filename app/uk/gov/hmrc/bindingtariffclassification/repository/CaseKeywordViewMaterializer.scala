@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.bindingtariffclassification.repository
 
+import org.bson.{BsonDocument, BsonObjectId}
 import org.mongodb.scala.bson.conversions.Bson
 import org.mongodb.scala.model.Filters.equal
 import org.mongodb.scala.model.changestream.ChangeStreamDocument
@@ -127,45 +128,76 @@ class CaseKeywordViewMaterializer @Inject() (
     }
   }
 
-  private[repository] def handleStreamChange(change: ChangeStreamDocument[Case]): Future[Unit] = {
+  private[repository] def handleStreamChange(
+    change: ChangeStreamDocument[Case]
+  ): Future[Unit] = {
 
-    val caseId =
-      Option(change.getDocumentKey)
-        .flatMap(k => Option(k.get("_id")))
-        .map(_.asObjectId().getValue.toString)
-        .getOrElse("")
+    val caseId = extractCaseId(Option(change.getDocumentKey))
 
-    change.getOperationType.name() match {
+    resolveCase(change, caseId)
+      .flatMap { caseOpt =>
+        applyChange(
+          change.getOperationType.name(),
+          caseId,
+          caseOpt
+        )
+      }
+  }
 
-      case "INSERT" | "UPDATE" | "REPLACE" =>
-        Option(change.getFullDocument) match {
+  private[repository] def extractCaseId(documentKey: Option[BsonDocument]): Option[String] =
+    documentKey.flatMap { k =>
+      Option(k.get("_id")).map(_.asObjectId().getValue.toString)
+    }
 
-          case Some(updatedCase) =>
-            syncSingleCase(updatedCase)
+  private[repository] def resolveCase(
+    change: ChangeStreamDocument[Case],
+    caseId: Option[String]
+  ): Future[Option[Case]] =
+    Option(change.getFullDocument) match {
+      case some @ Some(_) => Future.successful(some)
 
-          case None if caseId.nonEmpty =>
+      case None =>
+        caseId match {
+          case Some(id) =>
             caseRepository.collection
-              .find(equal("_id", caseId))
+              .find(equal("_id", id))
               .headOption()
-              .flatMap {
-                case Some(c) => syncSingleCase(c)
-                case None    => Future.unit
-              }
 
-          case _ =>
+          case None =>
+            Future.successful(None)
+        }
+    }
+
+  private[repository] def applyChange(
+    op: String,
+    caseId: Option[String],
+    caseOpt: Option[Case]
+  ): Future[Unit] =
+    op match {
+      case "DELETE" =>
+        caseId match {
+          case Some(id) =>
+            collection
+              .deleteMany(equal("caseId", id))
+              .toFuture()
+              .map(_ => ())
+
+          case None =>
             Future.unit
         }
 
-      case "DELETE" if caseId.nonEmpty =>
-        collection
-          .deleteMany(equal("caseId", caseId))
-          .toFuture()
-          .map(_ => ())
+      case "INSERT" | "UPDATE" | "REPLACE" =>
+        caseOpt match {
+          case Some(c) =>
+            syncSingleCase(c)
+
+          case None =>
+            Future.unit
+        }
 
       case _ =>
         Future.unit
     }
-  }
 
   private[repository] def syncSingleCase(c: Case): Future[Unit] =
 

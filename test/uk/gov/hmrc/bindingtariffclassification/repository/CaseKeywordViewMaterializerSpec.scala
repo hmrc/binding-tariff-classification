@@ -18,12 +18,8 @@ package uk.gov.hmrc.bindingtariffclassification.repository
 
 import org.bson.{BsonDocument, BsonObjectId}
 import org.bson.types.ObjectId
-import org.mockito.Mockito.when
 import org.mongodb.scala.model.Filters.{equal => mongoEqual}
-import org.mongodb.scala.bson.conversions.Bson
 import org.mongodb.scala.model.Indexes.ascending
-import org.mongodb.scala.model.changestream.ChangeStreamDocument
-import com.mongodb.client.model.changestream.OperationType
 import org.mongodb.scala.{ObservableFuture, SingleObservableFuture}
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
 import org.scalatestplus.mockito.MockitoSugar
@@ -169,6 +165,21 @@ class CaseKeywordViewMaterializerSpec
       row.liabilityStatus shouldBe None
     }
 
+    "rebuildViewFromScratch should ignore cases without keywords" in {
+      val noKeywordCase = btiCase.copy(
+        reference = "0000003",
+        keywords = Set.empty
+      )
+
+      await(caseRepository.insert(noKeywordCase))
+
+      await(viewRepo.startListening())
+
+      val rows = await(viewRepo.collection.find().toFuture())
+
+      rows shouldBe empty
+    }
+
     "syncSingleCase should clear old rows and insert new keyword rows when a case is updated" in {
       await(caseRepository.insert(btiCase))
       await(viewRepo.rebuildViewFromScratch())
@@ -205,6 +216,81 @@ class CaseKeywordViewMaterializerSpec
       val rows = await(viewRepo.collection.find().toFuture())
 
       rows.map(_.keyword) shouldBe Seq("apple")
+    }
+
+    "extractCaseId should return caseId" in {
+      val objectId = new ObjectId()
+      val docKey   = new BsonDocument("_id", new BsonObjectId(objectId))
+
+      val result = viewRepo.extractCaseId(Some(docKey))
+
+      result shouldBe Some(objectId.toString)
+    }
+
+    "extractCaseId should return None when empty" in {
+      val result = viewRepo.extractCaseId(None)
+
+      result shouldBe None
+    }
+
+    "applyChange should delete rows when DELETE event" in {
+      await(caseRepository.insert(btiCase))
+      await(viewRepo.rebuildViewFromScratch())
+
+      val result =
+        viewRepo.applyChange(
+          "DELETE",
+          Some(btiCase.reference),
+          None
+        )
+
+      await(result)
+
+      val rows = await(viewRepo.collection.find().toFuture())
+      rows shouldBe empty
+    }
+
+    "applyChange should sync case on INSERT event" in {
+      val updated = btiCase.copy(keywords = Set("new-keyword"))
+
+      val result =
+        viewRepo.applyChange(
+          "INSERT",
+          Some(updated.reference),
+          Some(updated)
+        )
+
+      await(result)
+
+      val rows = await(viewRepo.collection.find().toFuture())
+      rows.map(_.keyword) should contain("new-keyword")
+    }
+
+    "applyChange should do nothing when caseOpt is missing" in {
+      await(caseRepository.insert(btiCase))
+      await(viewRepo.rebuildViewFromScratch())
+
+      val result =
+        viewRepo.applyChange(
+          "UPDATE",
+          Some("123"),
+          None
+        )
+
+      await(result)
+      succeed
+    }
+
+    "applyChange should ignore unknown operation types" in {
+      val result =
+        viewRepo.applyChange(
+          "RANDOM_EVENT",
+          Some("123"),
+          None
+        )
+
+      await(result)
+      succeed
     }
 
     "findRows should return rows matching the filter" in {
