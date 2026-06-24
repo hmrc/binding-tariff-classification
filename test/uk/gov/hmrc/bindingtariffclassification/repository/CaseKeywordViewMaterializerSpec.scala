@@ -221,7 +221,7 @@ class CaseKeywordViewMaterializerSpec
 
     "syncSingleCase should do nothing when case has no keywords" in {
       val noKeywordCase = btiCase.copy(keywords = Set.empty)
-      val result = viewRepo.syncSingleCase(noKeywordCase)
+      val result        = viewRepo.syncSingleCase(noKeywordCase)
 
       await(result)
 
