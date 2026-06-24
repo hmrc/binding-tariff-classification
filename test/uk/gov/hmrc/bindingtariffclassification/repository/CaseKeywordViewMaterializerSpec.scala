@@ -19,7 +19,6 @@ package uk.gov.hmrc.bindingtariffclassification.repository
 import com.mongodb.client.model.changestream.ChangeStreamDocument
 import org.bson.{BsonDocument, BsonObjectId}
 import org.bson.types.ObjectId
-import org.mockito.Mockito.when
 import org.mongodb.scala.model.Filters.{equal => mongoEqual}
 import org.mongodb.scala.model.Indexes.ascending
 import org.mongodb.scala.{ObservableFuture, SingleObservableFuture}
@@ -220,6 +219,16 @@ class CaseKeywordViewMaterializerSpec
       rows.map(_.keyword) shouldBe Seq("apple")
     }
 
+    "syncSingleCase should do nothing when case has no keywords" in {
+      val noKeywordCase = btiCase.copy(keywords = Set.empty)
+      val result = viewRepo.syncSingleCase(noKeywordCase)
+
+      await(result)
+
+      val rows = await(viewRepo.collection.find().toFuture())
+      rows shouldBe empty
+    }
+
     "extractCaseId should return caseId" in {
       val objectId = new ObjectId()
       val docKey   = new BsonDocument("_id", new BsonObjectId(objectId))
@@ -237,14 +246,23 @@ class CaseKeywordViewMaterializerSpec
 
     "resolveCase should return fullDocument when present" in {
       val fullDoc = btiCase
-      val change = classOf[ChangeStreamDocument[Case]]
-        .getConstructors.head
+      val change = classOf[ChangeStreamDocument[Case]].getConstructors.head
         .newInstance(
-          null, null, null,
+          null,
+          null,
+          null,
           null,
           null,
           fullDoc,
-          null, null, null, null, null, null, null, null, null
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
         )
         .asInstanceOf[ChangeStreamDocument[Case]]
 
@@ -252,16 +270,11 @@ class CaseKeywordViewMaterializerSpec
 
       result shouldBe Some(fullDoc)
     }
-    
+
     "resolveCase should return None when everything missing" in {
-      val change = classOf[ChangeStreamDocument[Case]]
-        .getConstructors.head
+      val change = classOf[ChangeStreamDocument[Case]].getConstructors.head
         .newInstance(
-          null, null, null,
-          null,
-          null,
-          null,
-          null, null, null, null, null, null, null, null, null
+          null, null, null, null, null, null, null, null, null, null, null, null, null, null, null
         )
         .asInstanceOf[ChangeStreamDocument[Case]]
 
@@ -323,6 +336,18 @@ class CaseKeywordViewMaterializerSpec
         viewRepo.applyChange(
           "RANDOM_EVENT",
           Some("123"),
+          None
+        )
+
+      await(result)
+      succeed
+    }
+
+    "applyChange should do nothing on DELETE when caseId is missing" in {
+      val result =
+        viewRepo.applyChange(
+          "DELETE",
+          None,
           None
         )
 
