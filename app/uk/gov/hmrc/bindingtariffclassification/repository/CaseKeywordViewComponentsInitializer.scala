@@ -22,11 +22,11 @@ import scala.concurrent.Future
 
 @Singleton
 class CaseKeywordViewComponentsInitializer @Inject() (
-  updater: CaseKeywordViewUpdater,
+  viewMaterializer: CaseKeywordViewMaterializer,
   lifecycle: ApplicationLifecycle
 ) {
 
-  updater.startListening()
+  viewMaterializer.startListening()
 
   lifecycle.addStopHook { () =>
     Future.successful(())

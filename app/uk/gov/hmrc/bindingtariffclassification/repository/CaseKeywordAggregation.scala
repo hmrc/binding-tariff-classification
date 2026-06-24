@@ -16,10 +16,8 @@
 
 package uk.gov.hmrc.bindingtariffclassification.repository
 
-import org.mongodb.scala.model.Filters.{empty, equal, in, not}
-import org.mongodb.scala.model.Sorts.ascending
-import org.mongodb.scala.model.{Filters, Sorts}
-import org.mongodb.scala.{ObservableFuture, SingleObservableFuture}
+import org.mongodb.scala.model.Filters
+import org.mongodb.scala.model.Filters.{empty, in, not}
 import uk.gov.hmrc.bindingtariffclassification.model.*
 
 import javax.inject.{Inject, Singleton}
@@ -28,7 +26,7 @@ import scala.concurrent.{ExecutionContext, Future}
 @Singleton
 class CaseKeywordAggregation @Inject() (
   keywordsRepository: KeywordsMongoRepository,
-  viewUpdater: CaseKeywordViewUpdater
+  viewMaterializer: CaseKeywordViewMaterializer
 )(implicit ec: ExecutionContext) {
 
   def fetchKeywordsFromCases(pagination: Pagination): Future[Paged[CaseKeyword]] = {
@@ -39,14 +37,12 @@ class CaseKeywordAggregation @Inject() (
       val approvedNames  = approvedKeywords.map(_.name)
       val filterCriteria = if (approvedNames.nonEmpty) not(in("keyword", approvedNames*)) else empty()
 
-      val totalCountFuture = viewUpdater.collection.countDocuments(filterCriteria).toFuture()
-
-      val dataFuture = viewUpdater.collection
-        .find(filterCriteria)
-        .sort(ascending("keyword", "reference"))
-        .skip(skipCount)
-        .limit(limitCount)
-        .toFuture()
+      val totalCountFuture = viewMaterializer.countRows(filterCriteria)
+      val dataFuture = viewMaterializer.findRows(
+        filterCriteria,
+        skipCount,
+        limitCount
+      )
 
       for {
         totalCount <- totalCountFuture

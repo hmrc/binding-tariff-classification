@@ -29,7 +29,7 @@ import util.CaseData.{createBasicBTIApplication, createLiabilityOrder}
 import java.time.Instant
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class CaseKeywordViewUpdaterSpec
+class CaseKeywordViewMaterializerSpec
     extends BaseMongoIndexSpec
     with BeforeAndAfterAll
     with BeforeAndAfterEach
@@ -39,9 +39,9 @@ class CaseKeywordViewUpdaterSpec
   private val config = mock[AppConfig]
   private val caseRepository =
     new CaseMongoRepository(config, mongoComponent, new SearchMapper(config), new UpdateMapper)
-  private val viewUpdater = new CaseKeywordViewUpdater(mongoComponent, config, caseRepository)
+  private val viewRepo = new CaseKeywordViewMaterializer(mongoComponent, config, caseRepository)
 
-  override protected val repository: PlayMongoRepository[CaseKeywordViewRow] = viewUpdater
+  override protected val repository: PlayMongoRepository[CaseKeywordViewRow] = viewRepo
   override protected val checkTtlIndex                                       = false
 
   private val btiCase: Case = Case(
@@ -89,9 +89,9 @@ class CaseKeywordViewUpdaterSpec
       await(caseRepository.insert(btiCase))
       await(caseRepository.insert(liabilityCase))
 
-      await(viewUpdater.startListening())
+      await(viewRepo.startListening())
 
-      val viewRows = await(viewUpdater.collection.find().toFuture())
+      val viewRows = await(viewRepo.collection.find().toFuture())
       viewRows.size shouldBe 3
 
       val phoneRow = viewRows.find(_.keyword == "phone").get
@@ -109,17 +109,17 @@ class CaseKeywordViewUpdaterSpec
 
     "syncSingleCase should clear old rows and insert new keyword rows when a case is updated" in {
       await(caseRepository.insert(btiCase))
-      await(viewUpdater.startListening())
+      await(viewRepo.startListening())
 
       val updatedBtiCase = btiCase.copy(keywords = Set("phone", "apple", "mobile"))
       await(caseRepository.update(updatedBtiCase, upsert = false))
 
-      val rowsBefore = await(viewUpdater.collection.find().toFuture())
+      val rowsBefore = await(viewRepo.collection.find().toFuture())
       rowsBefore.map(_.keyword) should contain allOf ("phone", "tech")
 
-      await(viewUpdater.startListening())
+      await(viewRepo.startListening())
 
-      val rowsAfter     = await(viewUpdater.collection.find().toFuture())
+      val rowsAfter     = await(viewRepo.collection.find().toFuture())
       val keywordsAfter = rowsAfter.map(_.keyword)
 
       keywordsAfter should contain("apple")

@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.bindingtariffclassification.repository
 
+import org.mongodb.scala.bson.conversions.Bson
 import org.mongodb.scala.model.Filters.equal
 import org.mongodb.scala.model.changestream.ChangeStreamDocument
 import org.mongodb.scala.model.{Filters, IndexModel, IndexOptions, Indexes}
@@ -29,7 +30,7 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class CaseKeywordViewUpdater @Inject() (
+class CaseKeywordViewMaterializer @Inject() (
   mongoComponent: MongoComponent,
   appConfig: AppConfig,
   caseRepository: CaseMongoRepository
@@ -175,4 +176,10 @@ class CaseKeywordViewUpdater @Inject() (
       )
     }
   }
+
+  def findRows(filter: Bson, skip: Int, limit: Int): Future[Seq[CaseKeywordViewRow]] =
+    collection.find(filter).skip(skip).limit(limit).toFuture()
+
+  def countRows(filter: Bson): Future[Long] =
+    collection.countDocuments(filter).toFuture()
 }
