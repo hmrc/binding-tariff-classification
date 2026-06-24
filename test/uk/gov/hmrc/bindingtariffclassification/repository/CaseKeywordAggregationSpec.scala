@@ -26,16 +26,12 @@ import uk.gov.hmrc.bindingtariffclassification.model.*
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class CaseKeywordAggregationSpec
-  extends AnyWordSpec
-    with Matchers
-    with MockitoSugar
-    with ScalaFutures {
+class CaseKeywordAggregationSpec extends AnyWordSpec with Matchers with MockitoSugar with ScalaFutures {
 
   implicit val ec: ExecutionContext = ExecutionContext.global
 
   private val keywordRepo = mock[KeywordsMongoRepository]
-  private val viewRepo = mock[CaseKeywordViewMaterializer]
+  private val viewRepo    = mock[CaseKeywordViewMaterializer]
 
   private val service =
     new CaseKeywordAggregation(keywordRepo, viewRepo)
@@ -85,7 +81,7 @@ class CaseKeywordAggregationSpec
       val result =
         service.fetchKeywordsFromCases(pagination).futureValue
 
-      result.resultCount shouldBe 2
+      result.resultCount               shouldBe 2
       result.results.map(_.keyword.name) should contain theSameElementsAs Seq("bike", "tool")
     }
 
@@ -109,7 +105,7 @@ class CaseKeywordAggregationSpec
       val result =
         service.fetchKeywordsFromCases(pagination).futureValue
 
-      result.resultCount shouldBe 1
+      result.resultCount                 shouldBe 1
       result.results.map(_.keyword.name) shouldBe Seq("bike")
     }
   }

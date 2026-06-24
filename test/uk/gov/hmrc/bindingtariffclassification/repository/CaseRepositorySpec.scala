@@ -22,7 +22,7 @@ import org.mockito.Mockito.when
 import org.mongodb.scala.MongoWriteException
 import org.mongodb.scala.bson.conversions.Bson
 import org.mongodb.scala.bson.{BsonDocument, BsonInt32}
-import org.mongodb.scala.model.Indexes.{ascending, descending, ascending as asc}
+import org.mongodb.scala.model.Indexes.{ascending, ascending as asc, descending}
 import org.mongodb.scala.model.{Filters, IndexModel, IndexOptions}
 import org.scalatest.concurrent.Eventually
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}

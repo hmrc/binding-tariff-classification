@@ -46,6 +46,10 @@ class CaseKeywordViewMaterializer @Inject() (
             Indexes.ascending("reference")
           ),
           IndexOptions().name("keyword_reference_view_idx")
+        ),
+        IndexModel(
+          Indexes.ascending("caseId"),
+          IndexOptions().name("case_id_idx")
         )
       ),
       replaceIndexes = appConfig.replaceIndexes
@@ -60,37 +64,44 @@ class CaseKeywordViewMaterializer @Inject() (
     rebuildViewFromScratch()
       .flatMap { _ =>
         logger.info("View rebuild completed. Starting live Change Stream listener.")
-
-        caseRepository.collection
-          .watch()
-          .subscribe(
-            (change: ChangeStreamDocument[Case]) => handleStreamChange(change),
-            (e: Throwable) =>
-              if (e.getMessage.contains("replica sets")) {
-                logger.warn(
-                  "Local Standalone MongoDB detected. Change Stream (live updates) is disabled. Rebuild on startup will still work fine."
-                )
-              } else {
-                logger.error("Error in Case Keyword View Change Stream", e)
-              },
-            () => logger.info("Case Keyword View Change Stream closed.")
-          )
-        Future.successful(())
+        startChangeStream()
       }
-      .recover { case e: Throwable =>
+      .recover { case e =>
         logger.error("Failed to initialize or listen to Change Stream", e)
       }
   }
 
-  private def rebuildViewFromScratch(): Future[Unit] = {
+  private def startChangeStream(): Future[Unit] = {
+    caseRepository.collection
+      .watch()
+      .subscribe(
+        (change: ChangeStreamDocument[Case]) => handleStreamChange(change),
+        (e: Throwable) =>
+          if (e.getMessage.contains("replica sets")) {
+            logger.warn(
+              "Local Standalone MongoDB detected. Change Stream disabled."
+            )
+          } else {
+            logger.error("Error in Case Keyword View Change Stream", e)
+          },
+        () => logger.info("Case Keyword View Change Stream closed.")
+      )
+
+    Future.unit
+  }
+
+  private[repository] def rebuildViewFromScratch(): Future[Unit] = {
+
     logger.info("Clearing view collection sequentially.")
+
     collection.deleteMany(Filters.empty()).toFuture().flatMap { _ =>
       caseRepository.collection.countDocuments().toFuture().flatMap { totalCases =>
-        logger.info(s"Total cases to sync: $totalCases. Processing batches.")
+
+        logger.info(s"Total cases to sync: $totalCases")
 
         def processBatch(skipCount: Int): Future[Unit] =
           if (skipCount >= totalCases) {
-            Future.successful(())
+            Future.unit
           } else {
             caseRepository.collection
               .find()
@@ -98,66 +109,93 @@ class CaseKeywordViewMaterializer @Inject() (
               .limit(batchSize)
               .toFuture()
               .flatMap { batchCases =>
-                val viewRows = batchCases.flatMap(transformCaseToRows)
-                if (viewRows.nonEmpty) {
-                  collection.insertMany(viewRows).toFuture().flatMap { _ =>
-                    processBatch(skipCount + batchSize)
-                  }
-                } else {
+
+                val rows = batchCases.flatMap(transformCaseToRows)
+
+                if (rows.nonEmpty)
+                  collection
+                    .insertMany(rows)
+                    .toFuture()
+                    .flatMap(_ => processBatch(skipCount + batchSize))
+                else
                   processBatch(skipCount + batchSize)
-                }
               }
           }
+
         processBatch(0)
       }
     }
   }
 
-  private def handleStreamChange(change: ChangeStreamDocument[Case]): Future[Unit] = {
-    val caseId = Option(change.getDocumentKey)
-      .flatMap(k => Option(k.get("_id")))
-      .map(_.asObjectId().getValue.toString)
-      .getOrElse("")
+  private[repository] def handleStreamChange(change: ChangeStreamDocument[Case]): Future[Unit] = {
+
+    val caseId =
+      Option(change.getDocumentKey)
+        .flatMap(k => Option(k.get("_id")))
+        .map(_.asObjectId().getValue.toString)
+        .getOrElse("")
 
     change.getOperationType.name() match {
+
       case "INSERT" | "UPDATE" | "REPLACE" =>
         Option(change.getFullDocument) match {
+
           case Some(updatedCase) =>
             syncSingleCase(updatedCase)
+
           case None if caseId.nonEmpty =>
-            caseRepository.collection.find(equal("_id", caseId)).headOption().flatMap {
-              case Some(c) => syncSingleCase(c)
-              case None    => Future.successful(())
-            }
-          case _ => Future.successful(())
+            caseRepository.collection
+              .find(equal("_id", caseId))
+              .headOption()
+              .flatMap {
+                case Some(c) => syncSingleCase(c)
+                case None    => Future.unit
+              }
+
+          case _ =>
+            Future.unit
         }
+
       case "DELETE" if caseId.nonEmpty =>
-        collection.deleteMany(equal("caseId", caseId)).toFuture().map(_ => ())
-      case _ => Future.successful(())
+        collection
+          .deleteMany(equal("caseId", caseId))
+          .toFuture()
+          .map(_ => ())
+
+      case _ =>
+        Future.unit
     }
   }
 
-  private def syncSingleCase(c: Case): Future[Unit] = {
-    val caseId = c.reference
-    collection.deleteMany(equal("caseId", caseId)).toFuture().flatMap { _ =>
-      val rows = transformCaseToRows(c)
-      if (rows.nonEmpty) collection.insertMany(rows).toFuture().map(_ => ())
-      else Future.successful(())
-    }
-  }
+  private[repository] def syncSingleCase(c: Case): Future[Unit] =
+
+    collection
+      .deleteMany(equal("caseId", c.reference))
+      .toFuture()
+      .flatMap { _ =>
+
+        val rows = transformCaseToRows(c)
+
+        if (rows.nonEmpty)
+          collection.insertMany(rows).toFuture().map(_ => ())
+        else
+          Future.unit
+      }
 
   private def transformCaseToRows(c: Case): List[CaseKeywordViewRow] = {
+
     val (goodsName, liabilityStatus) = c.application match {
+
       case bti: BTIApplication =>
         (Option(bti.goodName), None)
 
       case liability: LiabilityOrder =>
         (liability.goodName, Some(liability.status.toString))
 
-      case correspondence: CorrespondenceApplication =>
+      case _: CorrespondenceApplication =>
         (None, None)
 
-      case misc: MiscApplication =>
+      case _: MiscApplication =>
         (None, None)
     }
 
@@ -170,16 +208,26 @@ class CaseKeywordViewMaterializer @Inject() (
         assignee = c.assignee.map(_.name.getOrElse("")),
         team = c.queueId,
         goodsName = goodsName,
-        caseType = Option(c.application.`type`.toString),
+        caseType = Some(c.application.`type`.toString),
         daysElapsed = c.daysElapsed.toInt,
         liabilityStatus = liabilityStatus
       )
     }
   }
 
-  def findRows(filter: Bson, skip: Int, limit: Int): Future[Seq[CaseKeywordViewRow]] =
-    collection.find(filter).skip(skip).limit(limit).toFuture()
+  def findRows(
+    filter: Bson,
+    skip: Int,
+    limit: Int
+  ): Future[Seq[CaseKeywordViewRow]] =
+    collection
+      .find(filter)
+      .skip(skip)
+      .limit(limit)
+      .toFuture()
 
   def countRows(filter: Bson): Future[Long] =
-    collection.countDocuments(filter).toFuture()
+    collection
+      .countDocuments(filter)
+      .toFuture()
 }
