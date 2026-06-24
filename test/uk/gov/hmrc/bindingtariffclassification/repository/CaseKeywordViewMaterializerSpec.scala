@@ -16,8 +16,10 @@
 
 package uk.gov.hmrc.bindingtariffclassification.repository
 
+import com.mongodb.client.model.changestream.ChangeStreamDocument
 import org.bson.{BsonDocument, BsonObjectId}
 import org.bson.types.ObjectId
+import org.mockito.Mockito.when
 import org.mongodb.scala.model.Filters.{equal => mongoEqual}
 import org.mongodb.scala.model.Indexes.ascending
 import org.mongodb.scala.{ObservableFuture, SingleObservableFuture}
@@ -229,6 +231,41 @@ class CaseKeywordViewMaterializerSpec
 
     "extractCaseId should return None when empty" in {
       val result = viewRepo.extractCaseId(None)
+
+      result shouldBe None
+    }
+
+    "resolveCase should return fullDocument when present" in {
+      val fullDoc = btiCase
+      val change = classOf[ChangeStreamDocument[Case]]
+        .getConstructors.head
+        .newInstance(
+          null, null, null,
+          null,
+          null,
+          fullDoc,
+          null, null, null, null, null, null, null, null, null
+        )
+        .asInstanceOf[ChangeStreamDocument[Case]]
+
+      val result = await(viewRepo.resolveCase(change, Some("123")))
+
+      result shouldBe Some(fullDoc)
+    }
+    
+    "resolveCase should return None when everything missing" in {
+      val change = classOf[ChangeStreamDocument[Case]]
+        .getConstructors.head
+        .newInstance(
+          null, null, null,
+          null,
+          null,
+          null,
+          null, null, null, null, null, null, null, null, null
+        )
+        .asInstanceOf[ChangeStreamDocument[Case]]
+
+      val result = await(viewRepo.resolveCase(change, None))
 
       result shouldBe None
     }
