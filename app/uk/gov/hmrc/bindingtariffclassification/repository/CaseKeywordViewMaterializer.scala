@@ -57,7 +57,7 @@ class CaseKeywordViewMaterializer @Inject() (
     )
     with Logging {
 
-  private val batchSize = 10000
+  private val batchSize = 5000
 
   def startListening(): Future[Unit] = {
     logger.info("Initializing and rebuilding Case Keywords View.")
