@@ -124,5 +124,13 @@ class AppConfigTest extends BaseSpec {
       configWith("atar-case-reference-offset" -> "10").atarCaseReferenceOffset   shouldBe 10
       configWith("other-case-reference-offset" -> "20").otherCaseReferenceOffset shouldBe 20
     }
+
+    "build 'appName'" in {
+      configWith("appName" -> "binding-tariff-classification").appName shouldBe "binding-tariff-classification"
+    }
+
+    "build 'maxUriLength'" in {
+      configWith("pekko.http.parsing.max-uri-length" -> "255").maxUriLength shouldBe 255
+    }
   }
 }

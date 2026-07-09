@@ -17,28 +17,28 @@
 package uk.gov.hmrc.bindingtariffclassification.repository
 
 import cats.data.NonEmptySeq
-import cats.syntax.all._
+import cats.syntax.all.*
 import org.mockito.Mockito.when
 import org.mongodb.scala.MongoWriteException
 import org.mongodb.scala.bson.conversions.Bson
 import org.mongodb.scala.bson.{BsonDocument, BsonInt32}
-import org.mongodb.scala.model.Indexes.{ascending, descending}
+import org.mongodb.scala.model.Indexes.{ascending, ascending as asc, descending}
 import org.mongodb.scala.model.{Filters, IndexModel, IndexOptions}
 import org.scalatest.concurrent.Eventually
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
 import uk.gov.hmrc.bindingtariffclassification.config.AppConfig
 import uk.gov.hmrc.bindingtariffclassification.model.CaseStatus.CaseStatus
-import uk.gov.hmrc.bindingtariffclassification.model._
-import uk.gov.hmrc.bindingtariffclassification.model.reporting._
+import uk.gov.hmrc.bindingtariffclassification.model.*
+import uk.gov.hmrc.bindingtariffclassification.model.reporting.*
 import uk.gov.hmrc.bindingtariffclassification.sort.{CaseSortField, SortDirection}
 import uk.gov.hmrc.bindingtariffclassification.utils.RandomGenerator
 import uk.gov.hmrc.mongo.test.MongoSupport
-import util.CaseData._
-import util.Cases._
+import util.CaseData.*
+import util.Cases.*
 import org.mongodb.scala.SingleObservableFuture
 import org.mongodb.scala.ObservableFuture
 
-import java.time._
+import java.time.*
 import java.time.temporal.ChronoUnit
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
