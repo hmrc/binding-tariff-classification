@@ -48,9 +48,7 @@ class CaseKeywordViewMaterializer @Inject() (
             Indexes.ascending("keyword"),
             Indexes.ascending("reference")
           ),
-          IndexOptions()
-            .name("keyword_reference_view_idx")
-            .unique(true)
+          IndexOptions().name("keyword_reference_view_idx")
         ),
         IndexModel(
           Indexes.ascending("caseId"),
