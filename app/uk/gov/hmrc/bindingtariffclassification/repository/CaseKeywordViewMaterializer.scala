@@ -18,15 +18,16 @@ package uk.gov.hmrc.bindingtariffclassification.repository
 
 import org.bson.{BsonDocument, BsonObjectId}
 import org.mongodb.scala.bson.conversions.Bson
-import org.mongodb.scala.model.Filters.equal
+import org.mongodb.scala.model.Filters.{and, equal}
 import org.mongodb.scala.model.changestream.ChangeStreamDocument
-import org.mongodb.scala.model.{Filters, IndexModel, IndexOptions, Indexes}
+import org.mongodb.scala.model.{Filters, IndexModel, IndexOptions, Indexes, ReplaceOptions}
 import uk.gov.hmrc.bindingtariffclassification.common.Logging
 import uk.gov.hmrc.bindingtariffclassification.config.AppConfig
 import uk.gov.hmrc.bindingtariffclassification.model.*
 import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
 
+import java.time.ZonedDateTime
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -34,7 +35,8 @@ import scala.concurrent.{ExecutionContext, Future}
 class CaseKeywordViewMaterializer @Inject() (
   mongoComponent: MongoComponent,
   appConfig: AppConfig,
-  caseRepository: CaseMongoRepository
+  caseRepository: CaseMongoRepository,
+  migrationLockRepository: MigrationLockRepository
 )(implicit ec: ExecutionContext)
     extends PlayMongoRepository[CaseKeywordViewRow](
       collectionName = "caseKeywordsRowView",
@@ -46,7 +48,9 @@ class CaseKeywordViewMaterializer @Inject() (
             Indexes.ascending("keyword"),
             Indexes.ascending("reference")
           ),
-          IndexOptions().name("keyword_reference_view_idx")
+          IndexOptions()
+            .name("keyword_reference_view_idx")
+            .unique(true)
         ),
         IndexModel(
           Indexes.ascending("caseId"),
@@ -57,19 +61,41 @@ class CaseKeywordViewMaterializer @Inject() (
     )
     with Logging {
 
+  private val rebuildLock =
+    JobRunEvent(
+      name = "case-keyword-view-rebuild",
+      runDate = ZonedDateTime.now()
+    )
   private val batchSize = 5000
 
   def startListening(): Future[Unit] = {
     logger.info("Initializing and rebuilding Case Keywords View.")
 
-    rebuildViewFromScratch()
-      .flatMap { _ =>
-        logger.info("View rebuild completed. Starting live Change Stream listener.")
+    migrationLockRepository.lock(rebuildLock).flatMap {
+
+      case true =>
+        logger.info("Acquired Case Keywords View rebuild lock.")
+
+        rebuildViewFromScratch()
+          .flatMap { _ =>
+            logger.info("View rebuild completed.")
+            startChangeStream()
+          }
+          .recoverWith { case e =>
+            logger.error("Failed to rebuild Case Keywords View.", e)
+            Future.failed(e)
+          }
+          .andThen { case _ =>
+            migrationLockRepository.delete(rebuildLock)
+          }
+
+      case false =>
+        logger.info(
+          "Another instance is already rebuilding Case Keywords View. Skipping rebuild."
+        )
+
         startChangeStream()
-      }
-      .recover { case e =>
-        logger.error("Failed to initialize or listen to Change Stream", e)
-      }
+    }
   }
 
   private def startChangeStream(): Future[Unit] = {
@@ -199,20 +225,35 @@ class CaseKeywordViewMaterializer @Inject() (
         Future.unit
     }
 
-  private[repository] def syncSingleCase(c: Case): Future[Unit] =
+  private[repository] def syncSingleCase(c: Case): Future[Unit] = {
 
-    collection
-      .deleteMany(equal("caseId", c.reference))
-      .toFuture()
-      .flatMap { _ =>
+    val rows = transformCaseToRows(c)
 
-        val rows = transformCaseToRows(c)
+    if (rows.isEmpty) {
+      collection
+        .deleteMany(equal("caseId", c.reference))
+        .toFuture()
+        .map(_ => ())
+    } else {
 
-        if (rows.nonEmpty)
-          collection.insertMany(rows).toFuture().map(_ => ())
-        else
-          Future.unit
-      }
+      Future
+        .sequence(
+          rows.map { row =>
+            collection
+              .replaceOne(
+                and(
+                  equal("caseId", row.caseId),
+                  equal("keyword", row.keyword)
+                ),
+                row,
+                ReplaceOptions().upsert(true)
+              )
+              .toFuture()
+          }
+        )
+        .map(_ => ())
+    }
+  }
 
   private def transformCaseToRows(c: Case): List[CaseKeywordViewRow] = {
 
