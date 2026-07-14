@@ -46,15 +46,11 @@ class CaseKeywordViewMaterializer @Inject() (
         IndexModel(
           Indexes.compoundIndex(
             Indexes.ascending("keyword"),
-            Indexes.ascending("reference")
+            Indexes.ascending("caseId")
           ),
           IndexOptions()
-            .name("keyword_reference_view_idx")
+            .name("keyword_caseId_view_idx")
             .unique(true)
-        ),
-        IndexModel(
-          Indexes.ascending("caseId"),
-          IndexOptions().name("case_id_idx")
         )
       ),
       replaceIndexes = appConfig.replaceIndexes
