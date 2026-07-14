@@ -69,30 +69,40 @@ class CaseKeywordViewMaterializer @Inject() (
   def startListening(): Future[Unit] = {
     logger.info("Initializing and rebuilding Case Keywords View.")
 
-    migrationLockRepository.lock(rebuildLock).flatMap {
-
-      case true =>
-        logger.info("Acquired Case Keywords View rebuild lock.")
-
-        rebuildViewFromScratch()
-          .flatMap { _ =>
-            logger.info("View rebuild completed.")
-            startChangeStream()
-          }
-          .recoverWith { case e =>
-            logger.error("Failed to rebuild Case Keywords View.", e)
-            Future.failed(e)
-          }
-          .andThen { case _ =>
-            migrationLockRepository.delete(rebuildLock)
-          }
-
-      case false =>
+    migrationLockRepository.findOne(rebuildLock.name).flatMap {
+      case Some(_) =>
         logger.info(
-          "Another instance is already rebuilding Case Keywords View. Skipping rebuild."
+          "Another instance is already rebuilding Case Keywords View. Starting Change Stream only."
         )
-
         startChangeStream()
+
+      case None =>
+        migrationLockRepository.lock(rebuildLock).flatMap {
+          case true =>
+            logger.info("Acquired Case Keywords View rebuild lock.")
+
+            rebuildViewFromScratch()
+              .flatMap { _ =>
+                logger.info("View rebuild completed. Starting Change Stream.")
+                startChangeStream()
+              }
+              .recoverWith { case e =>
+                logger.error(
+                  "Failed to rebuild Case Keywords View.",
+                  e
+                )
+                Future.failed(e)
+              }
+              .andThen { case _ =>
+                migrationLockRepository.delete(rebuildLock)
+              }
+
+          case false =>
+            logger.info(
+              "Failed to acquire rebuild lock. Another instance is rebuilding. Starting Change Stream only."
+            )
+            startChangeStream()
+        }
     }
   }
 
@@ -116,9 +126,7 @@ class CaseKeywordViewMaterializer @Inject() (
   }
 
   private[repository] def rebuildViewFromScratch(): Future[Unit] = {
-
     logger.info("Clearing view collection sequentially.")
-
     for {
       deleteResult <- collection
         .deleteMany(Filters.empty())
