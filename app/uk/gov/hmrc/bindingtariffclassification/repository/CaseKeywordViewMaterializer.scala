@@ -48,7 +48,9 @@ class CaseKeywordViewMaterializer @Inject() (
             Indexes.ascending("keyword"),
             Indexes.ascending("caseId")
           ),
-          IndexOptions().name("keyword_caseId_view_idx")
+          IndexOptions()
+            .name("keyword_caseId_view_idx")
+            .unique(true)
         )
       ),
       replaceIndexes = appConfig.replaceIndexes
@@ -77,17 +79,17 @@ class CaseKeywordViewMaterializer @Inject() (
           case true =>
             logger.info("Acquired Case Keywords View rebuild lock.")
 
-            rebuildViewFromScratch()
+            rebuildWithRetry()
               .flatMap { _ =>
                 logger.info("View rebuild completed. Starting Change Stream.")
                 startChangeStream()
               }
               .recoverWith { case e =>
-                logger.error(
-                  "Failed to rebuild Case Keywords View.",
-                  e
-                )
-                Future.failed(e)
+                logger.error("Failed to rebuild Case Keywords View after retry.", e)
+
+                migrationLockRepository
+                  .delete(rebuildLock)
+                  .transformWith(_ => Future.failed(e))
               }
               .andThen { case _ =>
                 migrationLockRepository.delete(rebuildLock)
@@ -101,6 +103,13 @@ class CaseKeywordViewMaterializer @Inject() (
         }
     }
   }
+
+  private def rebuildWithRetry(retriesLeft: Int = 3): Future[Unit] =
+    rebuildViewFromScratch().recoverWith {
+      case e if retriesLeft > 0 =>
+        logger.warn(s"Case Keyword View rebuild failed. Retrying once. Cause: ${e.getMessage}", e)
+        rebuildWithRetry(retriesLeft - 1)
+    }
 
   private def startChangeStream(): Future[Unit] = {
     caseRepository.collection
