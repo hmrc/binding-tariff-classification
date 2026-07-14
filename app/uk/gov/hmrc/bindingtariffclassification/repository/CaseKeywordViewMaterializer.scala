@@ -121,37 +121,62 @@ class CaseKeywordViewMaterializer @Inject() (
 
     logger.info("Clearing view collection sequentially.")
 
-    collection.deleteMany(Filters.empty()).toFuture().flatMap { _ =>
-      caseRepository.collection.countDocuments().toFuture().flatMap { totalCases =>
+    for {
+      deleteResult <- collection
+        .deleteMany(Filters.empty())
+        .toFuture()
 
-        logger.info(s"Total cases to sync: $totalCases")
+      _ = logger.info(
+        s"Deleted ${deleteResult.getDeletedCount} existing rows"
+      )
 
-        def processBatch(skipCount: Int): Future[Unit] =
-          if (skipCount >= totalCases) {
-            Future.unit
-          } else {
-            caseRepository.collection
-              .find()
-              .skip(skipCount)
-              .limit(batchSize)
-              .toFuture()
-              .flatMap { batchCases =>
+      totalCases <- caseRepository.collection
+        .countDocuments()
+        .toFuture()
 
-                val rows = batchCases.flatMap(transformCaseToRows)
+      _ = logger.info(
+        s"Total cases to sync: $totalCases"
+      )
 
-                if (rows.nonEmpty)
-                  collection
-                    .insertMany(rows)
-                    .toFuture()
-                    .flatMap(_ => processBatch(skipCount + batchSize))
-                else
+      _ <- processBatches(totalCases)
+
+    } yield ()
+  }
+
+  private def processBatches(totalCases: Long): Future[Unit] = {
+
+    def processBatch(skipCount: Int): Future[Unit] =
+      if (skipCount >= totalCases) {
+        Future.unit
+      } else {
+
+        caseRepository.collection
+          .find()
+          .skip(skipCount)
+          .limit(batchSize)
+          .toFuture()
+          .flatMap { batchCases =>
+
+            val rows = batchCases.flatMap(transformCaseToRows)
+
+            if (rows.nonEmpty) {
+              collection
+                .insertMany(rows)
+                .toFuture()
+                .flatMap { _ =>
+                  logger.info(
+                    s"Inserted ${rows.size} keyword rows. Progress: ${skipCount + batchCases.size}/$totalCases cases"
+                  )
+
                   processBatch(skipCount + batchSize)
-              }
+                }
+            } else {
+              processBatch(skipCount + batchSize)
+            }
           }
-
-        processBatch(0)
       }
-    }
+
+    processBatch(0)
   }
 
   private[repository] def handleStreamChange(
