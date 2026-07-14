@@ -48,9 +48,7 @@ class CaseKeywordViewMaterializer @Inject() (
             Indexes.ascending("keyword"),
             Indexes.ascending("caseId")
           ),
-          IndexOptions()
-            .name("keyword_caseId_view_idx")
-            .unique(true)
+          IndexOptions().name("keyword_caseId_view_idx")
         )
       ),
       replaceIndexes = appConfig.replaceIndexes
@@ -256,32 +254,22 @@ class CaseKeywordViewMaterializer @Inject() (
 
   private[repository] def syncSingleCase(c: Case): Future[Unit] = {
 
-    val rows = transformCaseToRows(c)
+    collection
+      .deleteMany(equal("caseId", c.reference))
+      .toFuture()
+      .flatMap { _ =>
 
-    if (rows.isEmpty) {
-      collection
-        .deleteMany(equal("caseId", c.reference))
-        .toFuture()
-        .map(_ => ())
-    } else {
+        val rows = transformCaseToRows(c)
 
-      Future
-        .sequence(
-          rows.map { row =>
-            collection
-              .replaceOne(
-                and(
-                  equal("caseId", row.caseId),
-                  equal("keyword", row.keyword)
-                ),
-                row,
-                ReplaceOptions().upsert(true)
-              )
-              .toFuture()
-          }
-        )
-        .map(_ => ())
-    }
+        if (rows.nonEmpty) {
+          collection
+            .insertMany(rows)
+            .toFuture()
+            .map(_ => ())
+        } else {
+          Future.unit
+        }
+      }
   }
 
   private def transformCaseToRows(c: Case): List[CaseKeywordViewRow] = {

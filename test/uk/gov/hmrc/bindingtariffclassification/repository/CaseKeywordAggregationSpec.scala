@@ -69,8 +69,8 @@ class CaseKeywordAggregationSpec extends AnyWordSpec with Matchers with MockitoS
 
     "return keywords from cases" in {
 
-      when(keywordRepo.approvedKeywords())
-        .thenReturn(Future.successful(Seq.empty))
+      when(keywordRepo.findAll(any[Pagination]()))
+        .thenReturn(Future.successful(Paged(Seq.empty)))
 
       when(viewRepo.countRows(any()))
         .thenReturn(Future.successful(2L))
@@ -87,13 +87,13 @@ class CaseKeywordAggregationSpec extends AnyWordSpec with Matchers with MockitoS
 
     "exclude approved keywords" in {
 
-      when(keywordRepo.approvedKeywords())
+      when(keywordRepo.findAll(any[Pagination]()))
         .thenReturn(
           Future.successful(
-            Seq(
+            Paged(Seq(
               Keyword(name = "tool", approved = true)
             )
-          )
+          ))
         )
 
       when(viewRepo.countRows(any()))
