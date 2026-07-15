@@ -406,6 +406,26 @@ class CaseKeywordViewMaterializerSpec
       succeed
     }
 
+    "applyChange should sync case on REPLACE event" in {
+      val updated =
+        btiCase.copy(
+          keywords = Set("replacement-keyword")
+        )
+
+      await(
+        viewRepo.applyChange(
+          "REPLACE",
+          Some(updated.reference),
+          Some(updated)
+        )
+      )
+
+      val rows =
+        await(viewRepo.collection.find().toFuture())
+
+      rows.map(_.keyword) should contain("replacement-keyword")
+    }
+
     "findRows should return rows matching the filter" in {
       await(caseRepository.insert(btiCase))
       await(caseRepository.insert(liabilityCase))
@@ -419,6 +439,42 @@ class CaseKeywordViewMaterializerSpec
       rows.head.keyword shouldBe "phone"
     }
 
+    "findRows should respect skip and limit" in {
+      await(caseRepository.insert(btiCase))
+      await(caseRepository.insert(liabilityCase))
+
+      await(viewRepo.rebuildViewFromScratch())
+
+      val rows =
+        await(
+          viewRepo.findRows(
+            mongoEqual("caseId", btiCase.reference),
+            1,
+            1
+          )
+        )
+
+      rows should have size 1
+    }
+
+    "findRows should respect limit" in {
+      await(caseRepository.insert(btiCase))
+      await(caseRepository.insert(liabilityCase))
+
+      await(viewRepo.rebuildViewFromScratch())
+
+      val rows =
+        await(
+          viewRepo.findRows(
+            org.mongodb.scala.model.Filters.empty(),
+            0,
+            1
+          )
+        )
+
+      rows should have size 1
+    }
+
     "countRows should count rows matching the filter" in {
       await(caseRepository.insert(btiCase))
       await(caseRepository.insert(liabilityCase))
@@ -429,6 +485,22 @@ class CaseKeywordViewMaterializerSpec
         await(viewRepo.countRows(mongoEqual("keyword", "phone")))
 
       count shouldBe 1
+    }
+
+    "countRows should return zero when no rows match the filter" in {
+      await(caseRepository.insert(btiCase))
+      await(caseRepository.insert(liabilityCase))
+
+      await(viewRepo.rebuildViewFromScratch())
+
+      val count =
+        await(
+          viewRepo.countRows(
+            mongoEqual("keyword", "does-not-exist")
+          )
+        )
+
+      count shouldBe 0
     }
   }
 }
