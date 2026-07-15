@@ -20,7 +20,7 @@ import com.mongodb.client.model.changestream.ChangeStreamDocument
 import org.bson.types.ObjectId
 import org.bson.{BsonDocument, BsonObjectId}
 import org.mockito.ArgumentMatchers.any
-import org.mockito.Mockito.{atLeastOnce, verify, when, inOrder as mockitoInOrder}
+import org.mockito.Mockito.{atLeastOnce, inOrder as mockitoInOrder, verify, when}
 import org.mongodb.scala.model.Filters.equal as mongoEqual
 import org.mongodb.scala.model.Indexes.ascending
 import org.mongodb.scala.{ObservableFuture, SingleObservableFuture}
