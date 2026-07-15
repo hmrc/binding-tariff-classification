@@ -90,10 +90,12 @@ class CaseKeywordAggregationSpec extends AnyWordSpec with Matchers with MockitoS
       when(keywordRepo.findAll(any[Pagination]()))
         .thenReturn(
           Future.successful(
-            Paged(Seq(
-              Keyword(name = "tool", approved = true)
+            Paged(
+              Seq(
+                Keyword(name = "tool", approved = true)
+              )
             )
-          ))
+          )
         )
 
       when(viewRepo.countRows(any()))

@@ -134,20 +134,20 @@ class CaseKeywordViewMaterializer @Inject() (
     logger.info("Clearing view collection sequentially.")
     for {
       deleteResult <- collection
-        .deleteMany(Filters.empty())
-        .toFuture()
+                        .deleteMany(Filters.empty())
+                        .toFuture()
 
       _ = logger.info(
-        s"Deleted ${deleteResult.getDeletedCount} existing rows"
-      )
+            s"Deleted ${deleteResult.getDeletedCount} existing rows"
+          )
 
       totalCases <- caseRepository.collection
-        .countDocuments()
-        .toFuture()
+                      .countDocuments()
+                      .toFuture()
 
       _ = logger.info(
-        s"Total cases to sync: $totalCases"
-      )
+            s"Total cases to sync: $totalCases"
+          )
 
       _ <- processBatches(totalCases)
 
@@ -261,7 +261,7 @@ class CaseKeywordViewMaterializer @Inject() (
         Future.unit
     }
 
-  private[repository] def syncSingleCase(c: Case): Future[Unit] = {
+  private[repository] def syncSingleCase(c: Case): Future[Unit] =
 
     collection
       .deleteMany(equal("caseId", c.reference))
@@ -279,7 +279,6 @@ class CaseKeywordViewMaterializer @Inject() (
           Future.unit
         }
       }
-  }
 
   private def transformCaseToRows(c: Case): List[CaseKeywordViewRow] = {
 
