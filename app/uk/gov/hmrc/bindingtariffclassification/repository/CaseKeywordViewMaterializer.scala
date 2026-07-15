@@ -73,11 +73,25 @@ class CaseKeywordViewMaterializer @Inject() (
     logger.info("Initializing and rebuilding Case Keywords View.")
 
     migrationLockRepository.findOne(rebuildLock.name).flatMap {
-      case Some(_) =>
-        logger.info(
-          "Another instance is already rebuilding Case Keywords View. Starting Change Stream only."
-        )
+      case Some(lock) if lock.runDate.isAfter(ZonedDateTime.now().minusDays(1)) =>
+        logger.info("Another instance is rebuilding. Starting Change Stream only.")
         startChangeStream()
+
+      case Some(lock) => // This one is for just in case the lock stayed for at least a day and now is stale.
+        logger.warn(s"Found stale lock from ${lock.runDate}. Removing it.")
+
+        migrationLockRepository
+          .delete(lock)
+          .flatMap(_ => migrationLockRepository.lock(rebuildLock))
+          .flatMap {
+            case true =>
+              rebuildWithRetry()
+                .flatMap(_ => startChangeStream())
+                .andThen { case _ => migrationLockRepository.delete(rebuildLock) }
+
+            case false =>
+              startChangeStream()
+          }
 
       case None =>
         migrationLockRepository.lock(rebuildLock).flatMap {
