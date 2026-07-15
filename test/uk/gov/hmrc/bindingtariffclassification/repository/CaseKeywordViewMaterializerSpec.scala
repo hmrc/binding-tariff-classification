@@ -17,22 +17,25 @@
 package uk.gov.hmrc.bindingtariffclassification.repository
 
 import com.mongodb.client.model.changestream.ChangeStreamDocument
-import org.bson.{BsonDocument, BsonObjectId}
 import org.bson.types.ObjectId
-import org.mongodb.scala.model.Filters.{equal => mongoEqual}
+import org.bson.{BsonDocument, BsonObjectId}
+import org.mockito.ArgumentMatchers.any
+import org.mockito.Mockito.{atLeastOnce, verify, when, inOrder as mockitoInOrder}
+import org.mongodb.scala.model.Filters.equal as mongoEqual
 import org.mongodb.scala.model.Indexes.ascending
 import org.mongodb.scala.{ObservableFuture, SingleObservableFuture}
+import org.scalatest.matchers.should.Matchers.*
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
 import org.scalatestplus.mockito.MockitoSugar
-import org.scalatest.matchers.should.Matchers._
 import uk.gov.hmrc.bindingtariffclassification.config.AppConfig
 import uk.gov.hmrc.bindingtariffclassification.model.*
 import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
 import uk.gov.hmrc.mongo.test.DefaultPlayMongoRepositorySupport
 import util.CaseData.{createBasicBTIApplication, createCorrespondenceApplication, createLiabilityOrder, createMiscApplication}
 
-import java.time.Instant
+import java.time.{Instant, ZonedDateTime}
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 
 class CaseKeywordViewMaterializerSpec
     extends BaseMongoIndexSpec
@@ -121,6 +124,54 @@ class CaseKeywordViewMaterializerSpec
   }
 
   "CaseKeywordViewUpdater" should {
+
+    "startListening should remove a stale lock and continue when lock cannot be reacquired" in {
+      val staleLock =
+        JobRunEvent(
+          "case-keyword-view-rebuild",
+          ZonedDateTime.now().minusDays(2)
+        )
+
+      when(migrationLockRepository.findOne("case-keyword-view-rebuild"))
+        .thenReturn(Future.successful(Some(staleLock)))
+
+      when(migrationLockRepository.delete(staleLock))
+        .thenReturn(Future.successful(()))
+
+      when(migrationLockRepository.lock(any[JobRunEvent]))
+        .thenReturn(Future.successful(false))
+
+      await(viewRepo.startListening())
+
+      verify(migrationLockRepository).delete(staleLock)
+      verify(migrationLockRepository).lock(any[JobRunEvent])
+    }
+
+    "startListening should delete a stale lock before acquiring a new one" in {
+      val staleLock =
+        JobRunEvent(
+          "case-keyword-view-rebuild",
+          ZonedDateTime.now().minusDays(2)
+        )
+
+      when(migrationLockRepository.findOne("case-keyword-view-rebuild"))
+        .thenReturn(Future.successful(Some(staleLock)))
+
+      when(migrationLockRepository.delete(staleLock))
+        .thenReturn(Future.successful(()))
+
+      when(migrationLockRepository.lock(any[JobRunEvent]))
+        .thenReturn(Future.successful(true))
+
+      await(viewRepo.startListening())
+
+      val inOrderVerifier = mockitoInOrder(migrationLockRepository)
+      inOrderVerifier.verify(migrationLockRepository).delete(staleLock)
+      inOrderVerifier.verify(migrationLockRepository).lock(any[JobRunEvent])
+
+      verify(migrationLockRepository, atLeastOnce())
+        .delete(any[JobRunEvent])
+    }
 
     "rebuildViewFromScratch should empty the view and completely rebuild it from caseRepository" in {
       await(caseRepository.insert(btiCase))
