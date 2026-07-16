@@ -18,15 +18,16 @@ package uk.gov.hmrc.bindingtariffclassification.repository
 
 import org.bson.{BsonDocument, BsonObjectId}
 import org.mongodb.scala.bson.conversions.Bson
-import org.mongodb.scala.model.Filters.equal
+import org.mongodb.scala.model.Filters.{and, equal}
 import org.mongodb.scala.model.changestream.ChangeStreamDocument
-import org.mongodb.scala.model.{Filters, IndexModel, IndexOptions, Indexes}
+import org.mongodb.scala.model.{Filters, IndexModel, IndexOptions, Indexes, ReplaceOptions}
 import uk.gov.hmrc.bindingtariffclassification.common.Logging
 import uk.gov.hmrc.bindingtariffclassification.config.AppConfig
 import uk.gov.hmrc.bindingtariffclassification.model.*
 import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
 
+import java.time.ZonedDateTime
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -34,7 +35,8 @@ import scala.concurrent.{ExecutionContext, Future}
 class CaseKeywordViewMaterializer @Inject() (
   mongoComponent: MongoComponent,
   appConfig: AppConfig,
-  caseRepository: CaseMongoRepository
+  caseRepository: CaseMongoRepository,
+  migrationLockRepository: MigrationLockRepository
 )(implicit ec: ExecutionContext)
     extends PlayMongoRepository[CaseKeywordViewRow](
       collectionName = "caseKeywordsRowView",
@@ -44,33 +46,89 @@ class CaseKeywordViewMaterializer @Inject() (
         IndexModel(
           Indexes.compoundIndex(
             Indexes.ascending("keyword"),
-            Indexes.ascending("reference")
+            Indexes.ascending("caseId")
           ),
-          IndexOptions().name("keyword_reference_view_idx")
+          IndexOptions()
+            .name("keyword_caseId_view_idx")
+            .unique(true)
         ),
         IndexModel(
           Indexes.ascending("caseId"),
-          IndexOptions().name("case_id_idx")
+          IndexOptions()
+            .name("caseId_idx")
         )
       ),
       replaceIndexes = appConfig.replaceIndexes
     )
     with Logging {
 
+  private val rebuildLock =
+    JobRunEvent(
+      name = "case-keyword-view-rebuild",
+      runDate = ZonedDateTime.now()
+    )
   private val batchSize = 5000
 
   def startListening(): Future[Unit] = {
     logger.info("Initializing and rebuilding Case Keywords View.")
 
-    rebuildViewFromScratch()
-      .flatMap { _ =>
-        logger.info("View rebuild completed. Starting live Change Stream listener.")
+    migrationLockRepository.findOne(rebuildLock.name).flatMap {
+      case Some(lock) if lock.runDate.isAfter(ZonedDateTime.now().minusDays(1)) =>
+        logger.info("Another instance is rebuilding. Starting Change Stream only.")
         startChangeStream()
-      }
-      .recover { case e =>
-        logger.error("Failed to initialize or listen to Change Stream", e)
-      }
+
+      case Some(lock) => // This one is for just in case the lock stayed for at least a day and now is stale.
+        logger.warn(s"Found stale lock from ${lock.runDate}. Removing it.")
+
+        migrationLockRepository
+          .delete(lock)
+          .flatMap(_ => migrationLockRepository.lock(rebuildLock))
+          .flatMap {
+            case true =>
+              rebuildWithRetry()
+                .flatMap(_ => startChangeStream())
+                .andThen { case _ => migrationLockRepository.delete(rebuildLock) }
+
+            case false =>
+              startChangeStream()
+          }
+
+      case None =>
+        migrationLockRepository.lock(rebuildLock).flatMap {
+          case true =>
+            logger.info("Acquired Case Keywords View rebuild lock.")
+
+            rebuildWithRetry()
+              .flatMap { _ =>
+                logger.info("View rebuild completed. Starting Change Stream.")
+                startChangeStream()
+              }
+              .recoverWith { case e =>
+                logger.error("Failed to rebuild Case Keywords View after retry.", e)
+
+                migrationLockRepository
+                  .delete(rebuildLock)
+                  .transformWith(_ => Future.failed(e))
+              }
+              .andThen { case _ =>
+                migrationLockRepository.delete(rebuildLock)
+              }
+
+          case false =>
+            logger.info(
+              "Failed to acquire rebuild lock. Another instance is rebuilding. Starting Change Stream only."
+            )
+            startChangeStream()
+        }
+    }
   }
+
+  private def rebuildWithRetry(retriesLeft: Int = 3): Future[Unit] =
+    rebuildViewFromScratch().recoverWith {
+      case e if retriesLeft > 0 =>
+        logger.warn(s"Case Keyword View rebuild failed. Retrying once. Cause: ${e.getMessage}", e)
+        rebuildWithRetry(retriesLeft - 1)
+    }
 
   private def startChangeStream(): Future[Unit] = {
     caseRepository.collection
@@ -92,40 +150,63 @@ class CaseKeywordViewMaterializer @Inject() (
   }
 
   private[repository] def rebuildViewFromScratch(): Future[Unit] = {
-
     logger.info("Clearing view collection sequentially.")
+    for {
+      deleteResult <- collection
+                        .deleteMany(Filters.empty())
+                        .toFuture()
 
-    collection.deleteMany(Filters.empty()).toFuture().flatMap { _ =>
-      caseRepository.collection.countDocuments().toFuture().flatMap { totalCases =>
+      _ = logger.info(
+            s"Deleted ${deleteResult.getDeletedCount} existing rows"
+          )
 
-        logger.info(s"Total cases to sync: $totalCases")
+      totalCases <- caseRepository.collection
+                      .countDocuments()
+                      .toFuture()
 
-        def processBatch(skipCount: Int): Future[Unit] =
-          if (skipCount >= totalCases) {
-            Future.unit
-          } else {
-            caseRepository.collection
-              .find()
-              .skip(skipCount)
-              .limit(batchSize)
-              .toFuture()
-              .flatMap { batchCases =>
+      _ = logger.info(
+            s"Total cases to sync: $totalCases"
+          )
 
-                val rows = batchCases.flatMap(transformCaseToRows)
+      _ <- processBatches(totalCases)
 
-                if (rows.nonEmpty)
-                  collection
-                    .insertMany(rows)
-                    .toFuture()
-                    .flatMap(_ => processBatch(skipCount + batchSize))
-                else
+    } yield ()
+  }
+
+  private def processBatches(totalCases: Long): Future[Unit] = {
+
+    def processBatch(skipCount: Int): Future[Unit] =
+      if (skipCount >= totalCases) {
+        Future.unit
+      } else {
+
+        caseRepository.collection
+          .find()
+          .skip(skipCount)
+          .limit(batchSize)
+          .toFuture()
+          .flatMap { batchCases =>
+
+            val rows = batchCases.flatMap(transformCaseToRows)
+
+            if (rows.nonEmpty) {
+              collection
+                .insertMany(rows)
+                .toFuture()
+                .flatMap { _ =>
+                  logger.info(
+                    s"Inserted ${rows.size} keyword rows. Progress: ${skipCount + batchCases.size}/$totalCases cases"
+                  )
+
                   processBatch(skipCount + batchSize)
-              }
+                }
+            } else {
+              processBatch(skipCount + batchSize)
+            }
           }
-
-        processBatch(0)
       }
-    }
+
+    processBatch(0)
   }
 
   private[repository] def handleStreamChange(
@@ -208,10 +289,14 @@ class CaseKeywordViewMaterializer @Inject() (
 
         val rows = transformCaseToRows(c)
 
-        if (rows.nonEmpty)
-          collection.insertMany(rows).toFuture().map(_ => ())
-        else
+        if (rows.nonEmpty) {
+          collection
+            .insertMany(rows)
+            .toFuture()
+            .map(_ => ())
+        } else {
           Future.unit
+        }
       }
 
   private def transformCaseToRows(c: Case): List[CaseKeywordViewRow] = {
