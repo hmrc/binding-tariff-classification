@@ -35,7 +35,7 @@ class BtaCardService @Inject() (caseRepository: CaseRepository)(implicit ec: Exe
   private case class RulingTotals(total: Int, expiring: Int)
 
   def generateBtaCard(eori: String): Future[BtaCard] = caseRepository.getAllByEori(eori).map { cases =>
-    logger.info(s"[BtaCardService][generateBtaCard] Found records linked to EORI: ${cases.size}")
+    logger.info(s"Found records linked to EORI: ${cases.size}")
     val data              = cases.filterNot(ignoredStatuses.contains).groupBy(_.status)
     val totalRulings      = calculateRulingTotals(data.getOrElse(COMPLETED, List.empty))
     val totalApplications = data.filter { case (caseStatus, _) => applicationStatuses.contains(caseStatus) }
