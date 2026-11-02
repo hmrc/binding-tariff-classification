@@ -47,7 +47,7 @@ class AuthAction @Inject() (override val authConnector: AuthConnector, val parse
           .copy(authorization = Some(Authorization(authHeader)))
         retrievalData(request, block)
       case _ =>
-        logger.warn(s"[AuthAction][invokeBlock] An error occurred during auth action: No Authorization header provided")
+        logger.warn(s"An error occurred during auth action: No Authorization header provided")
         Future.successful(Forbidden)
     }
 
@@ -56,7 +56,7 @@ class AuthAction @Inject() (override val authConnector: AuthConnector, val parse
   ): Future[Result] =
     getEnrolmentsAndEori().flatMap {
       case Right(eori) =>
-        logger.info(s"[AuthAction][retrievalData] EORI retrieved: $eori")
+        logger.info(s"EORI retrieved: $eori")
         block(BtaRequest(request, eori))
       case Left(status) => Future.successful(status)
     }
@@ -71,16 +71,16 @@ class AuthAction @Inject() (override val authConnector: AuthConnector, val parse
         (maybeEnrolment, maybeEori) match {
           case (Some(_), Some(eori)) => Future.successful(Right(eori))
           case (Some(_), None) =>
-            logger.warn(s"[AuthAction][getEnrolmentsAndEori] An error occurred during auth action: Missing Identifier")
+            logger.warn(s"An error occurred during auth action: Missing Identifier")
             Future.successful(Left(Forbidden))
           case _ =>
-            logger.warn(s"[AuthAction][getEnrolmentsAndEori] An error occurred during auth action: Missing Enrolment")
+            logger.warn(s"An error occurred during auth action: Missing Enrolment")
             Future.successful(Left(Forbidden))
         }
       }
       .recover { case e =>
         logger
-          .error(s"[AuthAction][getEnrolmentsAndEori] An exception occurred during auth action: ${e.getMessage}", e)
+          .error(s"An exception occurred during auth action: ${e.getMessage}", e)
         Left(Forbidden)
       }
 

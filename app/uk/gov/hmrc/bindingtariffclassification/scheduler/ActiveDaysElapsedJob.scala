@@ -139,11 +139,11 @@ class ActiveDaysElapsedJob @Inject() (
     updated match {
       case Some(c) if original.daysElapsed != c.daysElapsed =>
         logger.info(
-          s"[ActiveDaysElapsedJob][logResult] $name: Updated Days Elapsed of Case [${original.reference}] from [${original.daysElapsed}] to [${c.daysElapsed}]"
+          s"$name: Updated Days Elapsed of Case [${original.reference}] from [${original.daysElapsed}] to [${c.daysElapsed}]"
         )
       case None =>
         logger.warn(
-          s"[ActiveDaysElapsedJob][logResult] $name: Failed to update Days Elapsed of Case [${original.reference}]"
+          s"$name: Failed to update Days Elapsed of Case [${original.reference}]"
         )
       case _ =>
         ()

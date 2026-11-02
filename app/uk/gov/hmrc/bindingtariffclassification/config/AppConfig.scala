@@ -88,9 +88,9 @@ class AppConfig @Inject() (
       }
 
     if (encryptionEnabled && encryptionKey.isDefined) {
-      logger.info("[AppConfig][mongoEncryption] Mongo encryption enabled")
+      logger.info("Mongo encryption enabled")
     } else {
-      logger.info("[AppConfig][mongoEncryption] Mongo encryption disabled")
+      logger.info("Mongo encryption disabled")
     }
 
     MongoEncryption(encryptionEnabled, encryptionKey)

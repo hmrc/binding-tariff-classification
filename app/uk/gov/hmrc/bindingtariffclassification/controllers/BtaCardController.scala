@@ -33,15 +33,15 @@ class BtaCardController @Inject() (
     extends CommonController(mcc) {
 
   def getBtaCard: Action[AnyContent] = authAction.async { implicit request =>
-    logger.info(s"[BtaCardController][getBtaCard] Count request received")
+    logger.info(s"BTA Card Count request received")
     btaCardService
       .generateBtaCard(request.eori)
       .map { card =>
-        logger.info(s"[BtaCardController][getBtaCard] Card generated: ${Json.toJson(card).toString()}")
+        logger.info(s"BTA Card generated: ${Json.toJson(card).toString()}")
         Ok(Json.toJson(card))
       }
       .recover { case ex: Exception =>
-        logger.error(s"[BtaCardController][getBtaCard] Failure generating BTA Card counts: ${ex.getMessage}")
+        logger.error(s"Failure generating BTA Card counts: ${ex.getMessage}")
         InternalServerError
       }
   }
